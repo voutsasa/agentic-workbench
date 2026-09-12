@@ -6,14 +6,14 @@ now, and nothing else.
 ## Why this folder exists
 
 `workstation/` used to mix three kinds of fact with three different lifetimes, which is why
-`claude/CLAUDE.md` — a file every machine shares unmodified — ended up carrying a Windows-only
+`agent/AGENT-INSTRUCTIONS.md` — a file every machine shares unmodified — ended up carrying a Windows-only
 `## Environment` section, and why each `install.md` carried a `status:` field it could not honestly
 answer. The split is by **lifetime**, not by platform:
 
 | Kind | Lives in | Scope | Goes stale |
 |---|---|---|---|
-| **Policy** — how the agent should work | [`../claude/CLAUDE.md`](../claude/CLAUDE.md) | every machine, every platform | no |
-| **Route** — how to install or link something | [`../cli/<tool>/install.md`](../cli/), [`../claude/setup/`](../claude/setup/) | per platform, machine-independent | slowly, one tool at a time |
+| **Policy** — how the agent should work | [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) | every machine, every platform | no |
+| **Route** — how to install or link something | [`../cli/<tool>/install.md`](../cli/), [`../agent/setup/`](../agent/setup/) | per platform, machine-independent | slowly, one tool at a time |
 | **State** — what is present, and what is broken | **here** | one box | constantly |
 
 The test for which file a fact belongs in: *would this still be true on the other machine?* If yes it
@@ -45,7 +45,7 @@ without it falls back to the only file for the platform.
    content here — a tool that is absent costs one install, a tool that fails *silently* costs a
    session.
 4. Add a row to the table above.
-5. Follow the matching [`../claude/setup/`](../claude/setup/) file to put the config in place.
+5. Follow the matching [`../agent/setup/`](../agent/setup/) file to put the config in place.
 
 A new **platform** additionally needs one `setup/<platform>.md` and a third row in each
 `install.md` platform table. Write those when a machine exists — twelve guessed `apt` package names
@@ -53,7 +53,7 @@ would be twelve unverified claims, which is worse than an absent row.
 
 ## How the agent reads this
 
-Nothing here is loaded automatically. [`../claude/CLAUDE.md`](../claude/CLAUDE.md) closes by
+Nothing here is loaded automatically. [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) closes by
 instructing the agent to read `~/.claude/machine.md`, which is a path that is **identical on every
 machine while its content differs** — that indirection is what lets the shared file point at
 per-machine truth without naming a platform.

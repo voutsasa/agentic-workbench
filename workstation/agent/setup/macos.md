@@ -1,6 +1,6 @@
 # Claude Code config — setup on macOS
 
-Puts this repo's [`../CLAUDE.md`](../CLAUDE.md) and [`../skills/`](../skills/) in place at
+Puts this repo's [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) and [`../skills/`](../skills/) in place at
 `~/.claude/`, so the config is versioned instead of scattered through a home directory.
 
 **`settings.json` is not in that list, and must not be.** See *Settings: merge, do not link* below.
@@ -20,7 +20,7 @@ exception to the venv rule — see [`../../scripts/README.md`](../../scripts/REA
 subset of the repo copy, so compare the two and keep the union before running anything:
 
 ```sh
-diff ~/.claude/CLAUDE.md "$(git rev-parse --show-toplevel)/workstation/claude/CLAUDE.md"
+diff ~/.claude/CLAUDE.md "$(git rev-parse --show-toplevel)/workstation/agent/AGENT-INSTRUCTIONS.md"
 ```
 
 Nothing below writes `~/.claude/settings.json`. If you are adapting these commands, do not add it.
@@ -32,10 +32,10 @@ wherever you cloned it.
 
 ```sh
 cd /path/to/your/agentic-workbench
-REPO="$(git rev-parse --show-toplevel)/workstation/claude"
+REPO="$(git rev-parse --show-toplevel)/workstation/agent"
 
 mkdir -p ~/.claude/skills
-ln -sfn "$REPO/CLAUDE.md" ~/.claude/CLAUDE.md
+ln -sfn "$REPO/AGENT-INSTRUCTIONS.md" ~/.claude/CLAUDE.md
 
 for skill in review python-quality verify-docs fix-findings; do
   ln -sfn "$REPO/skills/$skill" ~/.claude/skills/"$skill"
@@ -58,14 +58,14 @@ non-sensitive keys, and the two are expected to differ permanently.
 List the keys the live file is missing, then add them by hand:
 
 ```sh
-python3 -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/claude/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
+python3 -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
 ```
 
 Leave `env` exactly as it is, and do not move it to `settings.local.json`.
 
 ## The machine note
 
-[`../CLAUDE.md`](../CLAUDE.md) closes by telling the agent to read `~/.claude/machine.md`. Point it at
+[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) closes by telling the agent to read `~/.claude/machine.md`. Point it at
 this machine's file in [`../../machines/`](../../machines/) — `link_config.py` will do it, and finds the
 right file without being told when there is only one for this platform:
 
@@ -89,7 +89,7 @@ The `review` skill ships a pre-push documentation gate. Link it from each repo t
 
 ```sh
 cd /path/to/your/agentic-workbench
-ln -sfn ../../workstation/claude/skills/review/scripts/pre-push .git/hooks/pre-push
+ln -sfn ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
 ```
 
 The path is relative to `.git/hooks/`, which is why it climbs two levels. In a repo other than this
@@ -114,7 +114,7 @@ ls -l ~/.claude/CLAUDE.md ~/.claude/machine.md ~/.claude/skills/
 ```
 
 **A symlink into a renamed directory still prints, but resolves to nothing.** This repo's config used to
-live in `workstation-claude/`; if this machine carries links from that era they are dangling. `ls -l`
+live in `workstation-agent/`; if this machine carries links from that era they are dangling. `ls -l`
 shows the stale target, and `link_config.py` reports `detached`, naming it — then `--apply` replaces it.
 See [`../../machines/macos-workstation.md`](../../machines/macos-workstation.md#claude-code-config).
 

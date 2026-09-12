@@ -23,7 +23,7 @@ Where to find guidance for the MCP servers listed under *Cross-cutting aspects �
 
 ## Config lives outside this repo
 
-A CLI tool is reproducible from `install.md` because the command is the whole story. An MCP server is not: registering it writes into a client's own config — for Claude Code at user scope, `~/.claude.json`, which is **not** symlinked into [`../claude/`](../claude/) and therefore not tracked here.
+A CLI tool is reproducible from `install.md` because the command is the whole story. An MCP server is not: registering it writes into a client's own config — for Claude Code at user scope, `~/.claude.json`, which is **not** symlinked into [`../agent/`](../agent/) and therefore not tracked here.
 
 So `setup.md` is the reproducibility record, not a convenience. If it does not carry the exact registration command, the server cannot be rebuilt on a fresh machine from this repo.
 

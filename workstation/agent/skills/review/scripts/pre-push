@@ -8,7 +8,7 @@
 #                         pushed, ~0.3s for a typical change.
 #
 # Install (from the repo root):
-#   ln -sf ../../workstation/claude/skills/review/scripts/pre-push .git/hooks/pre-push
+#   ln -sf ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
 #
 # The symlink keeps the hook versioned — .git/hooks is not tracked, so a copied
 # hook silently rots and never reaches a fresh clone.
@@ -19,7 +19,7 @@
 # and a claim you did not touch is one you did not break. Run the full sweep on
 # demand instead:
 #
-#   python3 workstation/claude/skills/verify-docs/scripts/verify_claims.py --repo .
+#   python3 workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 #   …--online     also checks external URLs and package registries
 #   …--strict     UNVERIFIABLE fails too, not just REFUTED
 #
@@ -41,8 +41,8 @@ if [ "${SKIP_REPO_CHECK:-0}" = "1" ]; then
 fi
 
 REPO_ROOT="$(git rev-parse --show-toplevel)" || exit 0
-CHECKER="$REPO_ROOT/workstation/claude/skills/review/scripts/repo_check.py"
-VERIFIER="$REPO_ROOT/workstation/claude/skills/verify-docs/scripts/verify_claims.py"
+CHECKER="$REPO_ROOT/workstation/agent/skills/review/scripts/repo_check.py"
+VERIFIER="$REPO_ROOT/workstation/agent/skills/verify-docs/scripts/verify_claims.py"
 
 if [ ! -f "$CHECKER" ]; then
   echo "pre-push: checker not found at $CHECKER — skipping." >&2

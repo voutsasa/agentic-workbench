@@ -10,7 +10,7 @@ What this workbench **runs on**, as opposed to what it reads. `docs/` is the cor
 |---|---|---|
 | [`cli/`](cli/) | The CLI toolchain that ingests and converts sources. One folder per tool, each with an authored `install.md` and `quick_start.md` plus an ingested `reference.md`. | [`cli/README.md`](cli/README.md) — the `command → product → folder` map, and the version-currency rule. |
 | [`mcp/`](mcp/) | Third-party MCP servers registered with this machine's agent clients. One folder per server, each with an authored `setup.md` plus an ingested `reference.md`. | [`mcp/README.md`](mcp/README.md) — the server table, and why that contract is two files. |
-| [`claude/`](claude/) | Claude Code's own configuration, **linked into `~/.claude/`** so it is versioned instead of scattered through a home directory. Shared by every machine, unmodified. | [`claude/README.md`](claude/README.md) — the contract, and what is deliberately left untracked. Per-platform setup is in [`claude/setup/`](claude/setup/). |
+| [`agent/`](agent/) | Claude Code's own configuration, **linked into `~/.claude/`** so it is versioned instead of scattered through a home directory. Shared by every machine, unmodified. | [`agent/README.md`](agent/README.md) — the contract, and what is deliberately left untracked. Per-platform setup is in [`agent/setup/`](agent/setup/). |
 | [`machines/`](machines/) | One file per machine this workbench runs on: paths, shell, which tools actually run, what is broken. The only place machine-specific facts belong. | [`machines/README.md`](machines/README.md) — the index, and the test for which file a fact belongs in. |
 | [`scripts/`](scripts/) | Scripts that maintain this tree — the inventory probe that generates a machine's tool table, and the link checker for `~/.claude`. | [`scripts/README.md`](scripts/README.md) |
 
@@ -25,18 +25,18 @@ different rates, so they live in different files:
 
 | Kind | Lives in | Expires |
 |---|---|---|
-| **Policy** — how the agent should work | `claude/CLAUDE.md` | never |
-| **Route** — how to install or link something | `cli/<tool>/install.md`, `claude/setup/` | slowly, one tool at a time |
+| **Policy** — how the agent should work | `agent/AGENT-INSTRUCTIONS.md` | never |
+| **Route** — how to install or link something | `cli/<tool>/install.md`, `agent/setup/` | slowly, one tool at a time |
 | **State** — what is present, what is broken | `machines/<id>.md` | constantly |
 
 Putting all three in one file means the slowest-changing content gets edited at the rate of the
 fastest. [`machines/README.md`](machines/README.md) carries the test: *would this still be true on the
 other machine?*
 
-**`claude/` is live configuration.** Editing `~/.claude/CLAUDE.md` or any of the `review`, `python-quality`, `verify-docs` and `fix-findings` skills writes into this directory through the link. Check `git status` before overwriting any of them, and if this directory is ever moved or renamed, **repoint the links** — otherwise every session silently loses its global instructions. On Windows the files are hardlinks, which any atomic-saving editor severs without warning; [`claude/setup/windows.md`](claude/setup/windows.md) has the detection command.
+**`agent/` is live configuration.** Editing `~/.claude/CLAUDE.md` or any of the `review`, `python-quality`, `verify-docs` and `fix-findings` skills writes into this directory through the link. Check `git status` before overwriting any of them, and if this directory is ever moved or renamed, **repoint the links** — otherwise every session silently loses its global instructions. On Windows the files are hardlinks, which any atomic-saving editor severs without warning; [`agent/setup/windows.md`](agent/setup/windows.md) has the detection command.
 
-**`claude/settings.json` is the exception: merged by hand, never linked.** `~/.claude/settings.json` must keep its Bedrock `env` block for compliance, and this repo deliberately does not carry it, so the two files differ permanently and no route here overwrites the live one. [`claude/README.md`](claude/README.md#settings-are-merged-never-linked) has the procedure.
+**`agent/settings.json` is the exception: merged by hand, never linked.** `~/.claude/settings.json` must keep its Bedrock `env` block for compliance, and this repo deliberately does not carry it, so the two files differ permanently and no route here overwrites the live one. [`agent/README.md`](agent/README.md#settings-are-merged-never-linked) has the procedure.
 
 ## What is tracked
 
-The authored guidance: `install.md`, `quick_start.md`, `setup.md`, every `README.md`, all of `claude/`, all of `machines/`, and `scripts/`. **Not** the ingested pages — `cli/*/reference.md` and `mcp/*/reference.md` are gitignored like the rest of the corpus, and are rebuildable from the URLs in the register.
+The authored guidance: `install.md`, `quick_start.md`, `setup.md`, every `README.md`, all of `agent/`, all of `machines/`, and `scripts/`. **Not** the ingested pages — `cli/*/reference.md` and `mcp/*/reference.md` are gitignored like the rest of the corpus, and are rebuildable from the URLs in the register.

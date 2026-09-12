@@ -19,7 +19,7 @@ Each tool has a folder here at `<tool>/` holding three files with distinct jobs.
 **The user installs; these files record** — see [`CLAUDE.md`](../../CLAUDE.md#the-user-installs-the-agent-records). An entry means the route is known, not that the command runs here.
 
 Each `install.md` carries a `| Platform | Command |` table, currently macOS and Windows. **Adding a
-platform means adding a row to each of the twelve** — plus one `../claude/setup/<platform>.md` and one
+platform means adding a row to each of the twelve** — plus one `../agent/setup/<platform>.md` and one
 file in [`../machines/`](../machines/). Do that when a machine of that platform exists, not in advance:
 twelve guessed `apt` package names would be twelve unverified claims, and the *Do not cross ecosystems
 by name* trap at the bottom of this page is exactly how guessing goes wrong.

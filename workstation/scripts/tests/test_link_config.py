@@ -24,12 +24,12 @@ import link_config as lc  # noqa: E402
 
 def build_repo(root: Path) -> Path:
     """A minimal repo tree carrying everything plan() expects."""
-    claude = root / "workstation" / "claude"
-    (claude / "skills").mkdir(parents=True)
-    (claude / "CLAUDE.md").write_text("policy\n", encoding="utf-8")
-    (claude / "settings.json").write_text("{}\n", encoding="utf-8")
+    agent = root / "workstation" / "agent"
+    (agent / "skills").mkdir(parents=True)
+    (agent / "AGENT-INSTRUCTIONS.md").write_text("policy\n", encoding="utf-8")
+    (agent / "settings.json").write_text("{}\n", encoding="utf-8")
     for skill in lc.SKILLS:
-        skill_dir = claude / "skills" / skill
+        skill_dir = agent / "skills" / skill
         skill_dir.mkdir()
         (skill_dir / "SKILL.md").write_text(f"# {skill}\n", encoding="utf-8")
     (root / "workstation" / "machines").mkdir(parents=True)
@@ -401,8 +401,8 @@ class TestMachineFile(TempTree):
 class TestDanglingSymlink(TempTree):
     """A symlink whose target has been renamed away.
 
-    This repo's config moved from ``workstation-claude/`` to
-    ``workstation/claude/``, so it is the state a macOS box carrying links from
+    This repo's config moved from ``workstation-agent/`` to
+    ``workstation/agent/``, so it is the state a macOS box carrying links from
     that era is actually in. ``Path.exists()`` follows the link and reports
     ``False``, but the entry is there and blocks ``os.symlink``.
     """

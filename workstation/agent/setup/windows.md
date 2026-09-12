@@ -1,6 +1,6 @@
 # Claude Code config — setup on Windows
 
-Puts this repo's [`../CLAUDE.md`](../CLAUDE.md) and [`../skills/`](../skills/) in place at
+Puts this repo's [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) and [`../skills/`](../skills/) in place at
 `~/.claude/`, so the config is versioned instead of scattered through a home directory.
 
 **`settings.json` is not in that list, and must not be.** See *Settings: merge, do not link* below.
@@ -38,11 +38,11 @@ Run from your clone. The repo root comes from git, so no path below is hard-code
 ```powershell
 Set-Location C:\path\to\your\sdd-workbench
 $Root = (git rev-parse --show-toplevel)
-$Repo = Join-Path $Root "workstation\claude"
+$Repo = Join-Path $Root "workstation\agent"
 
 New-Item -ItemType Directory -Force -Path "$HOME\.claude\skills" | Out-Null
 
-New-Item -ItemType HardLink -Force -Path "$HOME\.claude\CLAUDE.md" -Target "$Repo\CLAUDE.md"
+New-Item -ItemType HardLink -Force -Path "$HOME\.claude\CLAUDE.md" -Target "$Repo\AGENT-INSTRUCTIONS.md"
 
 foreach ($s in "review","python-quality","verify-docs","fix-findings") {
   New-Item -ItemType Junction -Force -Path "$HOME\.claude\skills\$s" -Target "$Repo\skills\$s"
@@ -62,14 +62,14 @@ non-sensitive keys, and the two are expected to differ permanently.
 List the keys the live file is missing, then add them by hand:
 
 ```powershell
-python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/claude/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
+python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
 ```
 
 Leave `env` exactly as it is, and do not move it to `settings.local.json`.
 
 ## The machine note
 
-[`../CLAUDE.md`](../CLAUDE.md) closes by telling the agent to read `~/.claude/machine.md`. Point it at
+[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) closes by telling the agent to read `~/.claude/machine.md`. Point it at
 this machine's file in [`../../machines/`](../../machines/):
 
 ```powershell
@@ -89,7 +89,7 @@ Being a hardlink, this one is subject to the severance trap below.
 severed by the next editor save. Copy it instead:
 
 ```powershell
-Copy-Item (Join-Path $Root "workstation\claude\skills\review\scripts\pre-push") `
+Copy-Item (Join-Path $Root "workstation\agent\skills\review\scripts\pre-push") `
           (Join-Path $Root ".git\hooks\pre-push") -Force
 ```
 
@@ -102,14 +102,14 @@ existed keeps its CRLF while `check-attr` cheerfully reports `eol: lf`. Ask abou
 instead:
 
 ```powershell
-git ls-files --eol workstation/claude/skills/review/scripts/pre-push
+git ls-files --eol workstation/agent/skills/review/scripts/pre-push
 ```
 
 `i/lf w/lf` is correct. **`i/lf w/crlf` means the hook will fail** with
 `bad interpreter: /usr/bin/env bash^M`, and the fix is to make git rewrite the file:
 
 ```powershell
-$f = "workstation\claude\skills\review\scripts\pre-push"
+$f = "workstation\agent\skills\review\scripts\pre-push"
 Remove-Item $f -Force; git checkout -- $f
 ```
 
@@ -186,7 +186,7 @@ Get-ChildItem "$HOME\.claude\skills" | Select-Object Name, LinkType
 Content is the real test, since a link can be live and still point at the wrong file:
 
 ```powershell
-(Get-FileHash "$HOME\.claude\CLAUDE.md").Hash -eq (Get-FileHash "$Repo\CLAUDE.md").Hash
+(Get-FileHash "$HOME\.claude\CLAUDE.md").Hash -eq (Get-FileHash "$Repo\AGENT-INSTRUCTIONS.md").Hash
 ```
 
 Then start a session and confirm the four skills are offered.

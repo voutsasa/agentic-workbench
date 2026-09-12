@@ -5,7 +5,7 @@
 #
 #   - `pre-push` gets a CRLF after `#!/usr/bin/env bash`, and git refuses the
 #     hook with "bad interpreter". This is the fix referred to in
-#     `workstation/claude/setup/windows.md`.
+#     `workstation/agent/setup/windows.md`.
 #   - Python scripts show every line as modified when the same file is edited
 #     on another machine, which buries real diffs.
 #

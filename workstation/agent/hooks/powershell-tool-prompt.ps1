@@ -14,10 +14,10 @@
 #
 # The rule this enforces is in ~/.claude/machine.md, "There is a PowerShell tool".
 #
-# This copy is the tracked reference — see workstation/claude/README.md. The registration
+# This copy is the tracked reference — see workstation/agent/README.md. The registration
 # itself (the hooks block naming this script's absolute path and pwsh.exe location) stays
 # machine-local in the live ~/.claude/settings.json, never in this repo's settings.json: that
-# path is Windows-absolute and user-specific, and workstation/claude/ is shared unmodified
+# path is Windows-absolute and user-specific, and workstation/agent/ is shared unmodified
 # with macOS.
 
 $ErrorActionPreference = 'Stop'

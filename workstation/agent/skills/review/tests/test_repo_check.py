@@ -571,14 +571,14 @@ class TestConfigAndExitCodes(unittest.TestCase):
     def test_skill_schema_requires_a_name_matching_its_directory(self):
         """A SKILL.md whose name does not match its folder does not load at all."""
         cfg = repo_check.load_config(repo_check.DEFAULT_CONFIG)
-        rel = "workstation/claude/skills/review/SKILL.md"
+        rel = "workstation/agent/skills/review/SKILL.md"
         with TempRepo({rel: "---\nname: reviewer\ndescription: x\n---\n\n# R\n"}) as repo:
             v, = repo_check.check_metadata_header(repo.root, [rel], cfg)
             self.assertIn("directory is 'review'", v["detail"])
 
     def test_skill_schema_requires_a_description(self):
         cfg = repo_check.load_config(repo_check.DEFAULT_CONFIG)
-        rel = "workstation/claude/skills/review/SKILL.md"
+        rel = "workstation/agent/skills/review/SKILL.md"
         with TempRepo({rel: "---\nname: review\n---\n\n# R\n"}) as repo:
             v, = repo_check.check_metadata_header(repo.root, [rel], cfg)
             self.assertIn("missing `description`", v["detail"])

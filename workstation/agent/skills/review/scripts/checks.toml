@@ -135,7 +135,7 @@ fields = [
 
 [[checks.metadata_header.schemas]]
 name = "skill"
-paths = ["workstation/claude/skills/*/SKILL.md"]
+paths = ["workstation/agent/skills/*/SKILL.md"]
 # A SKILL.md missing either field does not load in Claude Code at all — a sharper
 # failure than a stale date, and the cheapest thing on this list to catch. `name`
 # must equal its folder because that pairing is what the loader resolves; no date

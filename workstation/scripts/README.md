@@ -3,7 +3,7 @@
 Scripts that maintain the `workstation/` tree itself. Standard library only, no venv, no install step —
 they have to run on a fresh clone of any machine, which is the one situation where nothing is set up yet.
 
-**These two scripts are the deliberate exception to [`../claude/CLAUDE.md`](../claude/CLAUDE.md)'s
+**These two scripts are the deliberate exception to [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md)'s
 "every Python invocation goes through the project's venv".** They exist to be run *before* there is a
 venv, import nothing outside the standard library, and touch no project code. Every command below is
 written `python`, which is what the interpreter is called on Windows and inside an activated venv;
@@ -13,10 +13,10 @@ else in this repo follows the venv rule.
 | Script | Job |
 |---|---|
 | [`inventory.py`](inventory.py) | Probe this machine for the CLI toolchain and print the inventory table for [`../machines/`](../machines/) |
-| [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../claude/`](../claude/) in `~/.claude` |
+| [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude` |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
-`../claude/skills/*/tests/`. Run them from the repo root:
+`../agent/skills/*/tests/`. Run them from the repo root:
 
 ```
 python -m unittest discover -s workstation/scripts/tests -t workstation/scripts/tests
@@ -81,7 +81,7 @@ disambiguate. Two candidates and no hostname match is reported as `no_source` ra
 **`settings.json` is excluded structurally.** The live file carries provider configuration required for
 compliance, and every link primitive replaces its target rather than merging. It is held in a
 `NEVER_LINK` constant that `plan()` asserts against, so adding it back raises rather than quietly
-linking it. See [`../claude/README.md`](../claude/README.md#settings-are-merged-never-linked).
+linking it. See [`../agent/README.md`](../agent/README.md#settings-are-merged-never-linked).
 
 ### Six statuses, because "not linked" hides the dangerous case
 

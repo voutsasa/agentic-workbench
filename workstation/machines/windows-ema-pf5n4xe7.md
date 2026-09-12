@@ -10,7 +10,7 @@ verified: 2026-08-26
 
 # Windows 11 — `EMA-PF5N4XE7`
 
-State for this box only. Policy is in [`../claude/CLAUDE.md`](../claude/CLAUDE.md); install routes are
+State for this box only. Policy is in [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md); install routes are
 in [`../cli/<tool>/install.md`](../cli/). **Where this file contradicts either, this file wins** — it
 is the one that was measured.
 
@@ -33,7 +33,7 @@ PowerShell 7.6.5, not bash.
 - **`>` and `Out-File` default to UTF-16LE and corrupt markdown.** Use `Set-Content -Encoding utf8`,
   or write from Python.
 - There is no `sed`, `awk`, `tr` or `head`, so there is no shell route to an in-place substitution at
-  all. That makes [`../claude/CLAUDE.md`](../claude/CLAUDE.md)'s *editing a file is an editor's job*
+  all. That makes [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md)'s *editing a file is an editor's job*
   the only route here, not a preference: use the editor tool. Where an edit is genuinely programmatic,
   it goes through the project's venv like any other Python, and this repo has **no `.venv`** — see
   *Python scaffolding* below.
@@ -109,7 +109,7 @@ $env:CLAUDE_CODE_USE_POWERSHELL_TOOL = '1'; claude
 
 **Two other files stay out of this.** `~/.claude/settings.json` may never be written by an agent, per
 *`settings.json` is not drift* below. `~/.claude/settings.local.json` — the user-level layer — is kept
-absent by design, per [`../claude/README.md`](../claude/README.md#deliberately-not-tracked): it was
+absent by design, per [`../agent/README.md`](../agent/README.md#deliberately-not-tracked): it was
 created holding this flag on 2 September 2026 and removed the same day, because one file there puts
 **every** session on a preview tool, including the folders the route above already serves.
 
@@ -119,7 +119,7 @@ Still a preview, and not yet exercised on real work here: **pending, not cleared
 
 Verified 2026-09-03 by reading `~/.claude/settings.json` directly: `env.CLAUDE_CODE_USE_POWERSHELL_TOOL`
 is `"1"`, added by hand to the live file. **It must not be added to
-[`../claude/settings.json`](../claude/settings.json)** — that copy is shared unmodified with macOS, and
+[`../agent/settings.json`](../agent/settings.json)** — that copy is shared unmodified with macOS, and
 every reason for the flag above (Git Bash's MSYS `PATH` injection) is specific to this machine's shell,
 not to the tool in general. Where this repo needs a record of the need, it belongs here, not there.
 
@@ -131,7 +131,7 @@ key list is now `env, permissions, model, enabledPlugins, fastMode, tui, theme, 
 backup was taken, so the 26 August `~/.claude/settings.json.bak` is the only fallback on disk.
 
 **The block belongs in the live file only.** It was pasted into
-[`../claude/settings.json`](../claude/settings.json) as well, and reverted the same day: that copy is
+[`../agent/settings.json`](../agent/settings.json) as well, and reverted the same day: that copy is
 shared with macOS, where this Windows absolute path would open every session with a failing hook.
 
 ```json
@@ -141,7 +141,7 @@ shared with macOS, where this Windows absolute path would open every session wit
 ```
 
 The script itself now has a tracked reference copy at
-[`../claude/hooks/powershell-tool-prompt.ps1`](../claude/hooks/powershell-tool-prompt.ps1) — same
+[`../agent/hooks/powershell-tool-prompt.ps1`](../agent/hooks/powershell-tool-prompt.ps1) — same
 treatment as `settings.json`: the body is portable, the registration stays machine-local, copied by
 hand into `~/.claude/hooks/powershell-tool-prompt.ps1`. It stays silent unless the folder needs the
 question, logs every decision to `powershell-tool-prompt.log` beside itself, and always exits 0 so a
@@ -163,7 +163,7 @@ stream closed)"*, which fits a single-shot print session, and no `managed-settin
 restart, and the evidence is a new line in that log.**
 
 **Outstanding: a `PreToolUse` registration the tracked script expects but the live file doesn't have.**
-The script's own header comment (`../claude/hooks/powershell-tool-prompt.ps1`) documents itself as
+The script's own header comment (`../agent/hooks/powershell-tool-prompt.ps1`) documents itself as
 registered under both `hooks.SessionStart` and `hooks.PreToolUse` (matcher `"Bash"`), with the latter as
 the backstop that fires right before the first Bash call. Verified 2026-09-03 by reading
 `~/.claude/settings.json` directly: only `hooks.SessionStart` is present; there is no `PreToolUse` entry.
@@ -193,7 +193,7 @@ an open call.
 
 ## Python scaffolding — one piece missing
 
-Measured 2026-08-26 in this repo. [`../claude/CLAUDE.md`](../claude/CLAUDE.md) requires every Python
+Measured 2026-08-26 in this repo. [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) requires every Python
 invocation to run through the project's venv, so this table is the gate on any `python` command here:
 
 | Piece | State | Note |
@@ -274,7 +274,7 @@ the second fires on ordinary work:**
 
 **Git operations.** These links were made while the repo sat on `workstation-multi-machine`. Git replaces
 a tracked file rather than writing through it, so merging to `main`, switching branches, or pulling a
-change to `claude/CLAUDE.md` detaches both — silently, frozen at the old content.
+change to `agent/AGENT-INSTRUCTIONS.md` detaches both — silently, frozen at the old content.
 
 **Any atomic-saving writer, including Claude Code's own `Edit` tool.** Observed 26 August 2026: editing
 this file through the repo path severed `machine.md` within minutes of linking it. An atomic save writes
@@ -282,7 +282,7 @@ a temporary file and renames it over the target, which creates a new inode, so t
 tracking the repo while still looking fine. The report read `diverged`, and `~/.claude/machine.md` was
 still serving the pre-edit text to any session that read it.
 
-**So: any edit to `claude/CLAUDE.md` or this file is followed by a re-link, not just a commit.**
+**So: any edit to `agent/AGENT-INSTRUCTIONS.md` or this file is followed by a re-link, not just a commit.**
 
 ```powershell
 python workstation\scripts\link_config.py --apply
@@ -296,14 +296,14 @@ lines only in the severed copy, all of them text the edit had replaced — and t
 ### The `pre-push` gate is installed, as a copy
 
 `.git/hooks/pre-push` is a **plain copy** of
-[`../claude/skills/review/scripts/pre-push`](../claude/skills/review/scripts/pre-push), not a link — git
+[`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push), not a link — git
 will not run a hook through a junction. Verified 26 August 2026 to execute via its own shebang, with 0 CR
 bytes in the copy.
 
 Because it is a copy, **re-copy it after pulling a change to the hook.** Nothing detects that for you:
 
 ```powershell
-Copy-Item workstation\claude\skills\review\scripts\pre-push .git\hooks\pre-push -Force
+Copy-Item workstation\agent\skills\review\scripts\pre-push .git\hooks\pre-push -Force
 ```
 
 ### `settings.json` is not drift
@@ -313,7 +313,7 @@ Bedrock-prefixed model IDs — that this repo deliberately does not. **Claude Co
 Bedrock on this machine for compliance reasons**, so that block stays where it is:
 
 - **Never link, overwrite or regenerate `~/.claude/settings.json`**, and do not move the `env` block to
-  `settings.local.json`. [`../claude/setup/windows.md`](../claude/setup/windows.md) omits the file from
+  `settings.local.json`. [`../agent/setup/windows.md`](../agent/setup/windows.md) omits the file from
   its link block for this reason.
 - Shared keys are merged into it **by hand**, by the user. **The four top-level keys were merged on 26
   August 2026** and the delta now prints `in sync`; a backup remains at `~/.claude/settings.json.bak`
@@ -336,7 +336,7 @@ last row is the only edit `env` needs.
 **`in sync` alone does not clear that last row, and this is how it was found.** The delta compares only
 the keys the repo copy has, and the repo copy has no `env` block, so it printed `in sync` on 26 August
 while `ANTHROPIC_MODEL` was still `sonnet-5`. The `env` model IDs have to be read separately — step 6 of
-the procedure in [`../claude/README.md`](../claude/README.md#the-merge-procedure) now runs both checks
+the procedure in [`../agent/README.md`](../agent/README.md#the-merge-procedure) now runs both checks
 for that reason.
 
 ## CLI toolchain

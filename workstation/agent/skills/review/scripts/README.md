@@ -110,7 +110,7 @@ over the network genuinely is a download, and the corpus is mostly that.
 
 ```bash
 cd "$(git rev-parse --show-toplevel)"
-ln -sf ../../workstation/claude/skills/review/scripts/pre-push .git/hooks/pre-push
+ln -sf ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
 ```
 
 A symlink rather than a copy, because `.git/hooks` is not tracked — a copied hook rots

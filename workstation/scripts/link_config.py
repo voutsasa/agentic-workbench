@@ -52,7 +52,7 @@ SEVERITY = {
 REPAIRABLE = (MISSING, DETACHED)
 
 #: Never linked, never copied, never regenerated, under any flag. The live file
-#: is authoritative and is merged by hand; see workstation/claude/README.md.
+#: is authoritative and is merged by hand; see workstation/agent/README.md.
 NEVER_LINK = frozenset({"settings.json"})
 
 SKILLS = ("review", "python-quality", "verify-docs", "fix-findings")
@@ -145,13 +145,17 @@ def plan(repo_root: Path, home: Path, platform: str | None = None,
     which no git operation can detach. Getting them in place is never blocked by
     the file-level reconciliation that ``CLAUDE.md`` may need.
     """
-    claude = repo_root / "workstation" / "claude"
+    agent = repo_root / "workstation" / "agent"
     links = [
-        Link(f"skills/{skill}", claude / "skills" / skill,
+        Link(f"skills/{skill}", agent / "skills" / skill,
              home / ".claude" / "skills" / skill, is_dir=True)
         for skill in SKILLS
     ]
-    links.append(Link("CLAUDE.md", claude / "CLAUDE.md",
+    # Source and destination names differ on purpose: the repo calls this file
+    # AGENT-INSTRUCTIONS.md because more than one agent reads it, but Claude Code
+    # only ever loads ``~/.claude/CLAUDE.md``, so the destination name is fixed.
+    # Every label here names the destination artefact, not the source.
+    links.append(Link("CLAUDE.md", agent / "AGENT-INSTRUCTIONS.md",
                       home / ".claude" / "CLAUDE.md", is_dir=False))
     links.append(Link("machine.md",
                       machine_file(repo_root, platform, hostname, machine),
@@ -186,8 +190,8 @@ def inspect(link: Link) -> LinkState:
     if not link.dest.exists():
         # `exists()` follows the link, so a symlink pointing at a path that has
         # since been renamed reads as absent. It is not: the entry is there and
-        # blocks `os.symlink`. This repo's config moved from `workstation-claude/`
-        # to `workstation/claude/`, so links from that era are exactly this.
+        # blocks `os.symlink`. This repo's config moved from `workstation-agent/`
+        # to `workstation/agent/`, so links from that era are exactly this.
         if link.dest.is_symlink():
             return LinkState(link, DETACHED,
                              f"dangling symlink → {os.readlink(link.dest)}")

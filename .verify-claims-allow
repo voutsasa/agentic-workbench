@@ -15,7 +15,7 @@
 
 # The pre-push hook is installed per clone and is never tracked, so it cannot
 # exist on a fresh checkout of any machine. Both references to it are true as
-# written — claude/setup/*.md gives the command that creates it, and a machine
+# written — agent/setup/*.md gives the command that creates it, and a machine
 # file records whether it is in place. This is the same category the checker
 # already exempts for `~/…` paths: machine state, not repo truth.
 .git/**

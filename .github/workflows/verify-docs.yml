@@ -40,7 +40,7 @@ jobs:
       - name: Install the verify-docs skill
         run: |
           mkdir -p ~/.claude/skills
-          cp -R workstation/claude/skills/verify-docs ~/.claude/skills/verify-docs
+          cp -R workstation/agent/skills/verify-docs ~/.claude/skills/verify-docs
 
       - name: Check the extractor still works
         run: python -m unittest discover -s ~/.claude/skills/verify-docs/tests
@@ -55,7 +55,7 @@ jobs:
       - name: Verify claims deterministically
         continue-on-error: true
         run: |
-          VC=workstation/claude/skills/verify-docs/scripts/verify_claims.py
+          VC=workstation/agent/skills/verify-docs/scripts/verify_claims.py
           python "$VC" --repo . --online --json > claims.json
           python "$VC" --repo . --online --report-from claims.json | tee CLAIMS-VERIFICATION.md
 

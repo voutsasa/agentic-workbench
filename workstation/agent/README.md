@@ -67,7 +67,7 @@ Copy-Item ~/.claude/settings.json ~/.claude/settings.json.bak
 **2. Print the delta.** Run from the repo root. This reads both files and writes neither:
 
 ```
-python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/claude/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
+python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
 ```
 
 The comparison is **one level deep**, so a key whose value is an object — `enabledPlugins`,

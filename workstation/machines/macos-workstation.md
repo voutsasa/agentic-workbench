@@ -37,7 +37,7 @@ back to the only file for the platform, so nothing depends on the two matching.
   variable unset. This is what broke the `pre-push` gate on this branch until 4f6085f.
 - **BSD `sed`, not GNU.** `sed -i` takes a mandatory backup suffix and the regex dialect differs, and
   a substitution that matches nothing exits 0. Confirm with `git diff --stat`, never the exit code.
-  [`../claude/CLAUDE.md`](../claude/CLAUDE.md)'s *editing a file is an editor's job* makes this moot
+  [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md)'s *editing a file is an editor's job* makes this moot
   for most edits.
 - **Never assign to `$PATH` as a shell loop variable** — `for PATH in …` destroys the shell's own
   lookup for the rest of the script.
@@ -84,7 +84,7 @@ hand.
 there and `machine.md` was absent. `--force` was needed because a destination pointing at the sibling
 reads as `occupied`, not `detached`. The rollback is the same command run from `sdd-workbench`.
 
-The consequence worth knowing: **`workstation/claude/` in this repo is now the live global config**, so
+The consequence worth knowing: **`workstation/agent/` in this repo is now the live global config**, so
 an edit to `~/.claude/CLAUDE.md` or any of the four skills writes here and shows up in `git status`.
 
 The pre-push documentation gate is **not** installed in this clone — `ls .git/hooks/pre-push` returns
@@ -92,14 +92,14 @@ The pre-push documentation gate is **not** installed in this clone — `ls .git/
 created here:
 
 ```sh
-ln -s ../../workstation/claude/skills/review/scripts/pre-push .git/hooks/pre-push
+ln -s ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
 ```
 
 ## Known blockers
 
 ### `~/.claude/settings.json` is a symlink into the *sibling* repo
 
-`ls -l ~/.claude/settings.json` → `… -> …/sdd-workbench/workstation/claude/settings.json`, measured
+`ls -l ~/.claude/settings.json` → `… -> …/sdd-workbench/workstation/agent/settings.json`, measured
 2026-09-12. Every route in this repo says that file is **merged by hand and never linked**, because the
 live copy is supposed to carry the Bedrock `env` block. On this machine it carries no `env` block at
 all — the live file *is* a repo file, so any settings change Claude Code writes (a `/config` toggle, a
@@ -116,7 +116,7 @@ mv ~/.claude/settings.json.new ~/.claude/settings.json
 ```
 
 Then reconcile against the repo copy per
-[`../claude/setup/macos.md`](../claude/setup/macos.md#settings-merge-do-not-link). Whether this
+[`../agent/setup/macos.md`](../agent/setup/macos.md#settings-merge-do-not-link). Whether this
 machine needs the Bedrock `env` block at all is the user's call; it does not have one today.
 
 ### Full Disk Access is unrecorded
