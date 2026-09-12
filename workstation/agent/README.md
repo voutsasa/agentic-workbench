@@ -122,7 +122,12 @@ Nothing in this procedure, and nothing anywhere in this repo, writes the live fi
 
 ## Setup on a new machine
 
-The link mechanism is per-platform, so the routes live in [`setup/`](setup/):
+**Start at [`setup/README.md`](setup/README.md)** — it indexes the four agent-and-provider routes
+(Claude on macOS, Claude on Bedrock under Windows, Copilot on either) and carries what differs between
+them, including what Copilot reads and where.
+
+The link mechanism itself is per-platform, so those steps live in [`setup/`](setup/) and the index
+points at them rather than repeating them:
 
 | Platform | Route | Guide |
 |---|---|---|
