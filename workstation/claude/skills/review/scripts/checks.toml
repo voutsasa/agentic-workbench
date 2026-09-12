@@ -1,0 +1,171 @@
+# Configuration for repo_check.py.
+#
+# Every rule below is data, not code: tune this file rather than the script.
+# Terms and the header schema are seeded from the review standard, then scoped
+# to what this repo actually is — see the comments on each rule.
+
+[checks.links]
+enabled = true
+# Relative markdown links only. External http(s) links are never fetched — a push
+# must not depend on someone else's uptime. Percent escapes are decoded, targets
+# inside fenced code are skipped, and placeholders (<tool>/, ..., {name}) are not
+# treated as paths.
+#
+# Allowed not to exist — same reason and same files as checks.bare_paths below:
+# the ingested reference.md pages are gitignored by design, so a machine that
+# has not ingested a given source yet would otherwise fail the gate on a link
+# that is only broken because nothing here is wrong.
+allow_globs = [
+  "workstation/cli/*/reference.md",
+  "workstation/mcp/*/reference.md",
+]
+
+[checks.bare_paths]
+enabled = true
+# Repo-relative paths written in prose or in backticks rather than as a markdown
+# link — the ones `links` never sees, because it only reads [text](target).
+#
+# Scoped by prefix: a path is checkable only when its root is known, so this
+# names the trees whose layout is this repo's to keep true. `docs/` or `src/`
+# inside someone else's quoted example is not ours to resolve. Add a prefix
+# here rather than teaching the script about it.
+prefixes = ["workstation/cli/", "workstation/machines/", "workstation/scripts/"]
+# Allowed not to exist. The ingested reference.md files are gitignored by
+# design and absent on a fresh clone, so requiring them would fail the gate on
+# exactly the checkout where nothing is wrong.
+allow_globs = [
+  "workstation/cli/*/reference.md",
+  "workstation/mcp/*/reference.md",
+]
+
+[checks.terminology]
+enabled = true
+# [[checks.terminology.rules]] — `wrong` is the term to flag, `right` is the
+# replacement, `why` is shown in the violation so a reader can judge it.
+# `allow_paths` and `allow_context` carve out legitimate uses; without them a
+# blanket rule flags the repo's own vocabulary.
+
+[[checks.terminology.rules]]
+wrong = "download"
+right = "export"
+why = "Getting data OUT of a system we control is an export."
+# Fetching a third-party artefact over the network is genuinely a download.
+allow_context = [
+  "models download on first run",
+  "download browser binaries",
+  "download the file itself",
+  "a second Chromium",
+  "separate download",
+  "download and disk",
+  "over the network genuinely is a download",
+  "imagemagick.org",
+]
+
+[checks.metadata_header]
+enabled = true
+# Schemas are per document family. A file matching no schema is not checked, so
+# families opt IN by being named — there is no exemption list to keep in sync.
+# First matching `paths` entry wins, so order is precedence.
+#
+# Per field: `allowed_values` constrains an enum, `format = "date"` demands an
+# ISO date, `equals_directory` asserts the value matches its own folder name.
+#
+# `updated` is when the prose last changed. `verified` is when its claims were
+# last checked against reality. They are different facts and drift apart — a file
+# edited yesterday can carry claims nobody has run since March.
+
+[[checks.metadata_header.schemas]]
+name = "cli-install"
+paths = ["workstation/cli/*/install.md"]
+# An install.md answers "how do I get this tool", which is the same on every
+# machine of a given platform. It deliberately carries no `version_observed` and
+# no `status`: both describe one box, and a single-valued field cannot answer
+# them once the repo runs on more than one. They moved to
+# workstation/machines/<id>.md, where they are measured by scripts/inventory.py
+# rather than hand-written. `verified` here dates the *route*, not an install.
+fields = [
+  { name = "tool", equals_directory = true },
+  { name = "command" },
+  { name = "product" },
+  { name = "verified", format = "date" },
+]
+
+[[checks.metadata_header.schemas]]
+name = "machine"
+# `*-*.md` and not `*.md`: every machine file is <platform>-<hostname>.md, so the
+# dash is what distinguishes one from README.md, which is the folder's index and
+# carries no frontmatter. A file matching no schema is simply not checked.
+paths = ["workstation/machines/*-*.md"]
+# Per-machine state. `verified` is when inventory.py last ran there; `never` is
+# the honest answer for a machine that has only ever been written about, and the
+# one case where the rest of the file must be read as unknown rather than absent.
+fields = [
+  { name = "machine" },
+  { name = "platform" },
+  { name = "shell" },
+  { name = "repo" },
+  { name = "verified", format = "date", sentinels = ["never"] },
+]
+
+[[checks.metadata_header.schemas]]
+name = "cli-quick-start"
+paths = ["workstation/cli/*/quick_start.md"]
+# Deliberately no version or status: those live in install.md, and duplicating
+# them across the pair manufactures the drift this check exists to prevent.
+fields = [
+  { name = "tool", equals_directory = true },
+  { name = "command" },
+  { name = "updated", format = "date" },
+]
+
+[[checks.metadata_header.schemas]]
+name = "mcp-setup"
+paths = ["workstation/mcp/*/setup.md"]
+fields = [
+  { name = "server", equals_directory = true },
+  { name = "package" },
+  { name = "transport", allowed_values = ["stdio", "http", "sse"] },
+  { name = "version_observed" },
+  { name = "verified", format = "date" },
+  # registered drives the "Registered" column in workstation/mcp/README.md.
+  { name = "registered", allowed_values = ["true", "false"] },
+  # pinned = false means `npx -y` resolves latest on every launch.
+  { name = "pinned", allowed_values = ["true", "false"] },
+]
+
+[[checks.metadata_header.schemas]]
+name = "skill"
+paths = ["workstation/claude/skills/*/SKILL.md"]
+# A SKILL.md missing either field does not load in Claude Code at all — a sharper
+# failure than a stale date, and the cheapest thing on this list to catch. `name`
+# must equal its folder because that pairing is what the loader resolves; no date
+# fields, because a skill's claims are prose about how to work, not observations
+# of a tool that moves underneath them.
+fields = [
+  { name = "name", equals_directory = true },
+  { name = "description" },
+]
+
+[[checks.metadata_header.schemas]]
+name = "key-document"
+paths = ["DEVELOPMENT-PLAN.md", "INGESTION_GUIDE.md", "SOURCES.md", "SOURCE_CATALOGUE.md"]
+# No `title` — it would restate the `# Heading` each of these already carries,
+# and two places holding one string is how they diverge.
+fields = [
+  { name = "role" },
+  { name = "updated", format = "date" },
+  # `never` = nobody has run verify-docs over this file's claims yet. An honest
+  # answer, and the one verify-docs should sort to the front of its queue.
+  { name = "verified", format = "date", sentinels = ["never"] },
+]
+
+[scope]
+# Only tracked markdown is checked. The ingested corpus is machine-written and
+# excluded from git, so it is not ours to hold to a house style.
+include_globs = ["**/*.md"]
+exclude_globs = [
+  "docs/sources/web/**",
+  "docs/sources/ema/**",
+  "workstation/cli/*/reference.md",
+  "workstation/mcp/*/reference.md",
+]

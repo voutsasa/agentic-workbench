@@ -1,0 +1,23 @@
+name: check
+
+# Runs exactly what `make check` runs locally, so the two cannot disagree about what passing means.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      # Pins verified 2026-08-22. checkout publishes a floating major tag, so @v7
+      # picks up patches on its own. setup-uv stopped publishing them after v7 —
+      # v8, v9 and v10 exist only as exact release tags — so this pin is exact and
+      # has to be raised by hand. Check https://github.com/astral-sh/setup-uv/releases.
+      - uses: actions/checkout@v7
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          python-version: "3.14"
+          enable-cache: true
+      - run: uv sync --locked
+      - run: make check

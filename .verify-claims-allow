@@ -1,0 +1,26 @@
+# Path claims exempt from verify_claims.py, one glob per line.
+#
+# This file is repo-local and tracked on purpose. The pre-push hook lives in the
+# globally symlinked skills tree, so one copy of it serves every repo that links
+# it — a glob written into the hook would silently exempt paths in unrelated
+# repos. Globs live here instead, where they show up in a diff and apply to this
+# repo only. No file means no globs; nothing is inherited.
+#
+# Only add a path that is *meant* not to exist here. A path that should exist and
+# does not is a defect to fix, not to exempt.
+
+# Files python-quality writes into a TARGET project, tabulated in its SKILL.md
+# against the templates that generate them. They are not this repo's files.
+.github/**
+
+# The pre-push hook is installed per clone and is never tracked, so it cannot
+# exist on a fresh checkout of any machine. Both references to it are true as
+# written — claude/setup/*.md gives the command that creates it, and a machine
+# file records whether it is in place. This is the same category the checker
+# already exempts for `~/…` paths: machine state, not repo truth.
+.git/**
+
+# drawio-mcp/setup.md quotes upstream's snippet in order to warn against it:
+# "Do not follow the README's .claude/settings.json snippet." Documenting a
+# thing to avoid does not assert that it exists here.
+.claude/**

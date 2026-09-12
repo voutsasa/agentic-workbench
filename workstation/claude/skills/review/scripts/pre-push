@@ -1,0 +1,160 @@
+#!/usr/bin/env bash
+#
+# Pre-push documentation gate. Two checks, both deterministic, neither calling a
+# model and neither touching the network:
+#
+#   1. repo_check.py    — is the prose internally consistent? Whole repo, ~0.07s.
+#   2. verify_claims.py — is each claim still true? Only the markdown being
+#                         pushed, ~0.3s for a typical change.
+#
+# Install (from the repo root):
+#   ln -sf ../../workstation/claude/skills/review/scripts/pre-push .git/hooks/pre-push
+#
+# The symlink keeps the hook versioned — .git/hooks is not tracked, so a copied
+# hook silently rots and never reaches a fresh clone.
+#
+# Why the second check is scoped to changed files: verifying every claim in the
+# repo runs 644 of them and takes ~18s, because it executes `--help` for every
+# documented tool. Scoped to what is actually being pushed it is under a second,
+# and a claim you did not touch is one you did not break. Run the full sweep on
+# demand instead:
+#
+#   python3 workstation/claude/skills/verify-docs/scripts/verify_claims.py --repo .
+#   …--online     also checks external URLs and package registries
+#   …--strict     UNVERIFIABLE fails too, not just REFUTED
+#
+# Escape hatches, in order of preference:
+#   edit .verify-claims-allow      — exempt a path that is meant not to exist
+#   SKIP_VERIFY_CLAIMS=1 git push  — skip the claim verifier, keep repo_check
+#   SKIP_REPO_CHECK=1 git push     — skip both checks in this hook
+#   git push --no-verify           — skip every hook in the repository
+#
+# Reach for the narrowest one that unblocks you. A claim that is REFUTED because
+# a tool is genuinely absent on this machine already reports UNVERIFIABLE and
+# does not block; a REFUTED row means the documentation and reality disagree.
+
+set -uo pipefail
+
+if [ "${SKIP_REPO_CHECK:-0}" = "1" ]; then
+  echo "pre-push: SKIP_REPO_CHECK=1 — skipping the documentation gate." >&2
+  exit 0
+fi
+
+REPO_ROOT="$(git rev-parse --show-toplevel)" || exit 0
+CHECKER="$REPO_ROOT/workstation/claude/skills/review/scripts/repo_check.py"
+VERIFIER="$REPO_ROOT/workstation/claude/skills/verify-docs/scripts/verify_claims.py"
+
+if [ ! -f "$CHECKER" ]; then
+  echo "pre-push: checker not found at $CHECKER — skipping." >&2
+  exit 0
+fi
+
+python3 "$CHECKER" --repo-root "$REPO_ROOT"
+status=$?
+
+case "$status" in
+  0) ;;
+  1) echo "" >&2
+     echo "pre-push: push refused — fix the violations above, or bypass with" >&2
+     echo "          SKIP_REPO_CHECK=1 git push" >&2
+     exit "$status" ;;
+  *) echo "" >&2
+     echo "pre-push: the gate could not run (exit $status). Refusing rather than" >&2
+     echo "          assuming a pass. Bypass with SKIP_REPO_CHECK=1 git push" >&2
+     exit "$status" ;;
+esac
+
+# --- claim verification, scoped to the markdown in this push -------------------
+
+if [ "${SKIP_VERIFY_CLAIMS:-0}" = "1" ]; then
+  echo "pre-push: SKIP_VERIFY_CLAIMS=1 — skipping claim verification." >&2
+  exit 0
+fi
+
+if [ ! -f "$VERIFIER" ]; then
+  exit 0            # the verifier is optional; repo_check has already passed
+fi
+
+# Path exemptions come from the repo being pushed, never from this file. This
+# hook lives in the globally symlinked skills tree, so one copy of it serves
+# every repo that links it; a glob hard-coded here would silently exempt paths
+# in unrelated repos. Absent the file, no globs apply — nothing is inherited.
+ALLOW_FILE="$REPO_ROOT/.verify-claims-allow"
+allow_args=()
+allow_globs=()
+if [ -f "$ALLOW_FILE" ]; then
+  while IFS= read -r glob || [ -n "$glob" ]; do
+    glob="${glob%%#*}"                                  # drop trailing comments
+    glob="${glob#"${glob%%[![:space:]]*}"}"             # trim leading space
+    glob="${glob%"${glob##*[![:space:]]}"}"             # trim trailing space
+    if [ -n "$glob" ]; then
+      allow_globs+=("$glob")
+      allow_args+=(--allow "$glob")
+    fi
+  done < "$ALLOW_FILE"
+fi
+
+# Say what is being exempted. An exemption nobody sees is one nobody revisits.
+if [ "${#allow_globs[@]}" -gt 0 ]; then
+  echo "pre-push: ${#allow_globs[@]} path exemption(s) from .verify-claims-allow:" >&2
+  printf '          %s\n' "${allow_globs[@]}" >&2
+fi
+
+# git feeds the hook "<local ref> <local sha> <remote ref> <remote sha>" per ref.
+# A remote sha of all zeros means the branch is new there, so compare against the
+# default branch instead of against nothing.
+ZERO="0000000000000000000000000000000000000000"
+changed=""
+while read -r _local_ref local_sha _remote_ref remote_sha; do
+  [ -z "${local_sha:-}" ] && continue
+  [ "$local_sha" = "$ZERO" ] && continue          # a deletion carries no files
+  if [ "${remote_sha:-$ZERO}" = "$ZERO" ]; then
+    base="$(git merge-base "$local_sha" refs/heads/main 2>/dev/null)" || base=""
+    [ -z "$base" ] && base="$local_sha^"
+  else
+    base="$remote_sha"
+  fi
+  changed+="$(git diff --name-only --diff-filter=ACMR "$base" "$local_sha" -- '*.md' 2>/dev/null)"$'\n'
+done
+
+# Deduplicate, drop blanks, and keep only files that still exist in the worktree.
+# Pure-bash dedup rather than `sort -u`: an EDR policy on at least one machine
+# (Windows, git's bundled usr/bin run from an agent session) blocks that binary
+# by name+location, and a hook that silently sees zero files on such a machine
+# is worse than one that doesn't need the binary at all.
+#
+# A delimited string, not an associative array: `declare -A` is bash 4, and
+# macOS ships bash 3.2, where it fails and every `${_seen[$file]}` after it is
+# an arithmetic error — leaving `files` empty and the hook exiting 0 with
+# nothing checked. That is the same silent pass this block exists to avoid, so
+# the dedup uses only constructs bash 3.2 has. A path cannot contain a newline
+# here (git would quote it), so \n is a safe delimiter.
+_seen=$'\n'
+files=()
+while IFS= read -r file; do
+  [ -z "$file" ] && continue
+  case "$_seen" in *$'\n'"$file"$'\n'*) continue ;; esac
+  _seen="$_seen$file"$'\n'
+  [ -f "$REPO_ROOT/$file" ] && files+=("$file")
+done < <(printf '%s\n' "$changed")
+
+if [ "${#files[@]}" -eq 0 ]; then
+  exit 0
+fi
+
+python3 "$VERIFIER" --repo "$REPO_ROOT" ${allow_args[@]+"${allow_args[@]}"} --files "${files[@]}"
+status=$?
+
+case "$status" in
+  0) ;;
+  1) echo "" >&2
+     echo "pre-push: push refused — the REFUTED claims above contradict reality." >&2
+     echo "          Fix the documentation, or bypass with" >&2
+     echo "          SKIP_VERIFY_CLAIMS=1 git push" >&2 ;;
+  *) echo "" >&2
+     echo "pre-push: the claim verifier could not run (exit $status). Refusing" >&2
+     echo "          rather than assuming a pass. Bypass with" >&2
+     echo "          SKIP_VERIFY_CLAIMS=1 git push" >&2 ;;
+esac
+
+exit $status

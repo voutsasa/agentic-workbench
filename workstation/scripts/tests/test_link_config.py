@@ -1,0 +1,455 @@
+"""Tests for link_config.py.
+
+Every test works in a temporary tree, so nothing here can reach a real
+``~/.claude``. The link-creation tests exercise the platform's actual mechanism
+rather than a stub, because the whole point of the script is that a hardlink and
+a plain copy are indistinguishable to anything that only compares content.
+"""
+
+from __future__ import annotations
+
+import contextlib
+import io
+import json
+import os
+import sys
+import unittest
+from pathlib import Path
+from tempfile import TemporaryDirectory
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+
+import link_config as lc  # noqa: E402
+
+
+def build_repo(root: Path) -> Path:
+    """A minimal repo tree carrying everything plan() expects."""
+    claude = root / "workstation" / "claude"
+    (claude / "skills").mkdir(parents=True)
+    (claude / "CLAUDE.md").write_text("policy\n", encoding="utf-8")
+    (claude / "settings.json").write_text("{}\n", encoding="utf-8")
+    for skill in lc.SKILLS:
+        skill_dir = claude / "skills" / skill
+        skill_dir.mkdir()
+        (skill_dir / "SKILL.md").write_text(f"# {skill}\n", encoding="utf-8")
+    (root / "workstation" / "machines").mkdir(parents=True)
+    return root
+
+
+class TempTree(unittest.TestCase):
+    def setUp(self) -> None:
+        self._tmp = TemporaryDirectory()
+        self.base = Path(self._tmp.name)
+        self.repo = build_repo(self.base / "repo")
+        self.home = self.base / "home"
+        (self.home / ".claude").mkdir(parents=True)
+        self.addCleanup(self._tmp.cleanup)
+
+    def machine_file(self, platform: str = "win32", hostname: str = "box") -> Path:
+        name = f"{lc.platform_token(platform)}-{hostname}.md"
+        path = self.repo / "workstation" / "machines" / name
+        path.write_text("state\n", encoding="utf-8")
+        return path
+
+
+    def plan(self, platform: str = "win32", hostname: str = "box") -> list[lc.Link]:
+        return lc.plan(self.repo, self.home, platform=platform, hostname=hostname)
+
+
+class TestPlatformToken(unittest.TestCase):
+    def test_maps_the_three_platforms(self) -> None:
+        self.assertEqual(lc.platform_token("win32"), "windows")
+        self.assertEqual(lc.platform_token("darwin"), "macos")
+        self.assertEqual(lc.platform_token("linux"), "linux")
+
+    def test_unknown_platform_falls_back_to_linux(self) -> None:
+        self.assertEqual(lc.platform_token("freebsd14"), "linux")
+
+    def test_windows_variants_all_match(self) -> None:
+        for plat in ("win32", "windows", "win"):
+            self.assertEqual(lc.platform_token(plat), "windows")
+
+
+class TestShortHostname(unittest.TestCase):
+    def test_takes_the_first_label_and_lowercases(self) -> None:
+        self.assertEqual(lc.short_hostname("EMA-PF5N4XE7.corp.example"), "ema-pf5n4xe7")
+
+    def test_bare_hostname_survives(self) -> None:
+        self.assertEqual(lc.short_hostname("Workstation"), "workstation")
+
+
+class TestPlan(TempTree):
+    def test_covers_the_four_skills_claude_md_and_the_machine_note(self) -> None:
+        labels = [link.label for link in self.plan()]
+        self.assertEqual(
+            labels,
+            [f"skills/{s}" for s in lc.SKILLS] + ["CLAUDE.md", "machine.md"],
+        )
+
+    def test_skills_come_first_so_junctions_are_never_blocked(self) -> None:
+        links = self.plan()
+        self.assertTrue(all(link.is_dir for link in links[:len(lc.SKILLS)]))
+        self.assertFalse(any(link.is_dir for link in links[len(lc.SKILLS):]))
+
+    def test_settings_json_is_absent_from_the_plan(self) -> None:
+        dests = [link.dest.name for link in self.plan()]
+        sources = [link.source.name for link in self.plan()]
+        self.assertNotIn("settings.json", dests)
+        self.assertNotIn("settings.json", sources)
+
+    def test_machine_note_is_named_from_platform_and_host(self) -> None:
+        link = next(l for l in self.plan("darwin", "Air.local") if l.label == "machine.md")
+        self.assertEqual(link.source.name, "macos-air.md")
+        self.assertEqual(link.dest.name, "machine.md")
+
+    def test_every_destination_is_under_dot_claude(self) -> None:
+        for link in self.plan():
+            self.assertEqual(link.dest.parts[len(self.home.parts)], ".claude")
+
+    def test_a_never_link_destination_raises(self) -> None:
+        """The guard is structural: widen it and plan() refuses to emit that link."""
+        original = lc.NEVER_LINK
+        try:
+            lc.NEVER_LINK = frozenset({"CLAUDE.md"})
+            with self.assertRaises(AssertionError):
+                self.plan()
+        finally:
+            lc.NEVER_LINK = original
+
+
+class TestNeverLink(unittest.TestCase):
+    def test_settings_json_is_the_guarded_name(self) -> None:
+        self.assertIn("settings.json", lc.NEVER_LINK)
+
+
+class TestInspect(TempTree):
+    def test_missing_destination(self) -> None:
+        self.machine_file()
+        state = lc.inspect(next(l for l in self.plan() if l.label == "CLAUDE.md"))
+        self.assertEqual(state.status, lc.MISSING)
+
+    def test_no_source_when_the_machine_file_does_not_exist(self) -> None:
+        state = lc.inspect(next(l for l in self.plan() if l.label == "machine.md"))
+        self.assertEqual(state.status, lc.NO_SOURCE)
+        self.assertIn("no source", state.detail)
+
+    def test_detached_when_content_matches(self) -> None:
+        link = next(l for l in self.plan() if l.label == "CLAUDE.md")
+        link.dest.write_text("policy\n", encoding="utf-8")
+        state = lc.inspect(link)
+        self.assertEqual(state.status, lc.DETACHED)
+        self.assertIn("content still matches", state.detail)
+
+    def test_diverged_when_content_differs(self) -> None:
+        link = next(l for l in self.plan() if l.label == "CLAUDE.md")
+        link.dest.write_text("an older policy\n", encoding="utf-8")
+        state = lc.inspect(link)
+        self.assertEqual(state.status, lc.DIVERGED)
+        self.assertIn("reconcile", state.detail)
+
+    def test_empty_directory_is_detached_not_occupied(self) -> None:
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        link.dest.mkdir(parents=True)
+        self.assertEqual(lc.inspect(link).status, lc.DETACHED)
+
+    def test_directory_holding_files_is_occupied(self) -> None:
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        link.dest.mkdir(parents=True)
+        (link.dest / "mine.md").write_text("x", encoding="utf-8")
+        state = lc.inspect(link)
+        self.assertEqual(state.status, lc.OCCUPIED)
+        self.assertIn("1 entry", state.detail)
+
+    def test_occupied_pluralises_beyond_one_entry(self) -> None:
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        link.dest.mkdir(parents=True)
+        (link.dest / "a").write_text("x", encoding="utf-8")
+        (link.dest / "b").write_text("y", encoding="utf-8")
+        self.assertIn("2 entries", lc.inspect(link).detail)
+
+
+class TestSameTarget(TempTree):
+    def test_a_plain_copy_is_not_the_same_target(self) -> None:
+        a = self.base / "a.md"
+        b = self.base / "b.md"
+        a.write_text("same", encoding="utf-8")
+        b.write_text("same", encoding="utf-8")
+        self.assertFalse(lc.same_target(a, b))
+
+    def test_a_real_link_is_the_same_target(self) -> None:
+        a = self.base / "a.md"
+        a.write_text("x", encoding="utf-8")
+        b = self.base / "b.md"
+        if os.name == "nt":
+            os.link(a, b)
+        else:
+            os.symlink(a, b)
+        self.assertTrue(lc.same_target(a, b))
+
+    def test_a_missing_path_is_not_the_same_target(self) -> None:
+        a = self.base / "a.md"
+        a.write_text("x", encoding="utf-8")
+        self.assertFalse(lc.same_target(a, self.base / "nope.md"))
+
+
+class TestApply(TempTree):
+    def test_links_everything_from_a_clean_home(self) -> None:
+        self.machine_file()
+        report = lc.apply(lc.inspect_all(self.plan()))
+        self.assertTrue(report.ok,
+                        msg=[(s.link.label, s.status, s.detail) for s in report.states])
+        self.assertTrue(all(s.repaired for s in report.states))
+
+    def test_a_second_run_is_a_no_op(self) -> None:
+        self.machine_file()
+        lc.apply(lc.inspect_all(self.plan()))
+        second = lc.inspect_all(self.plan())
+        self.assertTrue(second.ok)
+        self.assertFalse(any(s.repaired for s in second.states))
+
+    def test_repairs_a_detached_copy_whose_content_matches(self) -> None:
+        self.machine_file()
+        link = next(l for l in self.plan() if l.label == "CLAUDE.md")
+        link.dest.write_text("policy\n", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([link]))
+        self.assertEqual(report.states[0].status, lc.LINKED)
+        self.assertTrue(lc.same_target(link.source, link.dest))
+
+    def test_refuses_a_diverged_copy_without_force(self) -> None:
+        link = next(l for l in self.plan() if l.label == "CLAUDE.md")
+        link.dest.write_text("older\n", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([link]))
+        self.assertEqual(report.states[0].status, lc.DIVERGED)
+        self.assertEqual(link.dest.read_text(encoding="utf-8"), "older\n")
+
+    def test_force_replaces_a_diverged_copy(self) -> None:
+        link = next(l for l in self.plan() if l.label == "CLAUDE.md")
+        link.dest.write_text("older\n", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([link]), force=True)
+        self.assertEqual(report.states[0].status, lc.LINKED)
+        self.assertEqual(link.dest.read_text(encoding="utf-8"), "policy\n")
+
+    def test_refuses_an_occupied_directory_without_force(self) -> None:
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        link.dest.mkdir(parents=True)
+        (link.dest / "mine.md").write_text("keep me", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([link]))
+        self.assertEqual(report.states[0].status, lc.OCCUPIED)
+        self.assertEqual((link.dest / "mine.md").read_text(encoding="utf-8"), "keep me")
+
+    def test_no_source_is_never_linked(self) -> None:
+        link = next(l for l in self.plan() if l.label == "machine.md")
+        report = lc.apply(lc.inspect_all([link]), force=True)
+        self.assertEqual(report.states[0].status, lc.NO_SOURCE)
+        self.assertFalse(link.dest.exists())
+
+    def test_a_link_failure_is_reported_not_raised(self) -> None:
+        self.machine_file()
+        link = next(l for l in self.plan() if l.label == "skills/review")
+
+        def boom(*_args, **_kwargs):
+            raise OSError("no reparse points here")
+
+        original = lc.make_link
+        try:
+            lc.make_link = boom
+            report = lc.apply(lc.inspect_all([link]))
+        finally:
+            lc.make_link = original
+        self.assertNotEqual(report.states[0].status, lc.LINKED)
+        self.assertIn("could not link", report.states[0].detail)
+
+    def test_a_real_directory_link_survives_inspection(self) -> None:
+        self.machine_file()
+        link = next(l for l in self.plan() if l.label == "skills/verify-docs")
+        lc.apply(lc.inspect_all([link]))
+        self.assertEqual(lc.inspect(link).status, lc.LINKED)
+        self.assertTrue((link.dest / "SKILL.md").exists())
+
+
+class TestClearDest(TempTree):
+    def test_removing_a_directory_link_leaves_the_target_alone(self) -> None:
+        self.machine_file()
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        lc.apply(lc.inspect_all([link]))
+        lc.clear_dest(lc.LinkState(link, lc.DETACHED))
+        self.assertFalse(link.dest.exists())
+        self.assertTrue((link.source / "SKILL.md").exists())
+
+    def test_clearing_an_absent_destination_is_a_no_op(self) -> None:
+        link = next(l for l in self.plan() if l.label == "CLAUDE.md")
+        lc.clear_dest(lc.LinkState(link, lc.MISSING))  # must not raise
+
+
+class TestReport(TempTree):
+    def test_status_is_the_worst_of_the_set(self) -> None:
+        report = lc.Report([
+            lc.LinkState(self.plan()[0], lc.LINKED),
+            lc.LinkState(self.plan()[1], lc.DIVERGED),
+            lc.LinkState(self.plan()[2], lc.MISSING),
+        ])
+        self.assertEqual(report.status, lc.DIVERGED)
+
+    def test_ok_only_when_everything_is_linked(self) -> None:
+        links = self.plan()
+        self.assertTrue(lc.Report([lc.LinkState(links[0], lc.LINKED)]).ok)
+        self.assertFalse(lc.Report([lc.LinkState(links[0], lc.DETACHED)]).ok)
+
+    def test_an_empty_report_is_not_ok_by_status(self) -> None:
+        self.assertEqual(lc.Report([]).status, lc.NO_SOURCE)
+
+
+class TestRender(TempTree):
+    def test_table_has_a_row_per_link_plus_a_header(self) -> None:
+        self.machine_file()
+        report = lc.inspect_all(self.plan())
+        lines = lc.render(report).splitlines()
+        self.assertEqual(lines[0].count("|"), 5)
+        rows = [ln for ln in lines if ln.startswith("| `")]
+        self.assertEqual(len(rows), len(report.states))
+
+    def test_names_settings_json_as_excluded(self) -> None:
+        self.machine_file()
+        self.assertIn("settings.json", lc.render(lc.inspect_all(self.plan())))
+
+    def test_escapes_pipes_so_the_table_survives(self) -> None:
+        link = self.plan()[0]
+        report = lc.Report([lc.LinkState(link, lc.DETACHED, "a | b")])
+        row = next(ln for ln in lc.render(report).splitlines() if ln.startswith("| `"))
+        self.assertEqual(row.count(r"\|"), 1)
+
+    def test_empty_detail_renders_as_a_dash(self) -> None:
+        link = self.plan()[0]
+        report = lc.Report([lc.LinkState(link, lc.LINKED, "")])
+        row = next(ln for ln in lc.render(report).splitlines() if ln.startswith("| `"))
+        self.assertIn("—", row)
+
+
+class TestMain(TempTree):
+    """``main()`` takes no platform override, so it derives the machine filename
+    from the real host. The fixture has to match that name or the machine note
+    reads as ``no_source`` and no run could ever reach ``ok``. Overriding the
+    default here keeps the suite valid on Windows and macOS alike."""
+
+    def machine_file(self, platform: str | None = None,
+                     hostname: str | None = None) -> Path:
+        return super().machine_file(platform or sys.platform,
+                                    hostname or lc.short_hostname())
+
+    def test_reports_nonzero_when_nothing_is_linked(self) -> None:
+        self.machine_file()
+        code = lc.main(["--repo", str(self.repo), "--home", str(self.home)])
+        self.assertEqual(code, 1)
+
+    def test_apply_then_check_returns_zero(self) -> None:
+        self.machine_file()
+        lc.main(["--repo", str(self.repo), "--home", str(self.home), "--apply"])
+        code = lc.main(["--repo", str(self.repo), "--home", str(self.home)])
+        self.assertEqual(code, 0)
+
+    def test_default_run_writes_nothing(self) -> None:
+        self.machine_file()
+        lc.main(["--repo", str(self.repo), "--home", str(self.home)])
+        self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
+
+    def test_json_output_parses_and_lists_every_link(self) -> None:
+        self.machine_file()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            lc.main(["--repo", str(self.repo), "--home", str(self.home), "--json"])
+        payload = json.loads(buf.getvalue())
+        self.assertEqual(len(payload["links"]), len(lc.SKILLS) + 2)
+        self.assertFalse(payload["ok"])
+        self.assertNotIn("settings.json", [l["dest"] for l in payload["links"]])
+
+
+class TestMachineFile(TempTree):
+    """Resolution order, so a machine file need not be named after a hostname."""
+
+    def resolve(self, platform: str = "darwin", hostname: str = "box",
+                machine: str | None = None) -> Path:
+        return lc.machine_file(self.repo, platform, hostname, machine)
+
+    def test_explicit_machine_wins_over_everything(self) -> None:
+        self.machine_file("darwin", "box")
+        self.assertEqual(self.resolve(machine="macos-chosen").name, "macos-chosen.md")
+
+    def test_explicit_machine_accepts_a_name_that_already_ends_in_md(self) -> None:
+        self.assertEqual(self.resolve(machine="macos-chosen.md").name, "macos-chosen.md")
+
+    def test_the_conventional_name_is_used_when_it_exists(self) -> None:
+        self.machine_file("darwin", "box")
+        self.assertEqual(self.resolve().name, "macos-box.md")
+
+    def test_the_only_file_for_this_platform_is_used_when_the_host_does_not_match(self) -> None:
+        self.machine_file("darwin", "workstation")
+        self.assertEqual(self.resolve(hostname="unmatched").name, "macos-workstation.md")
+
+    def test_another_platforms_file_is_never_borrowed(self) -> None:
+        self.machine_file("win32", "some-pc")
+        self.assertEqual(self.resolve(hostname="unmatched").name, "macos-unmatched.md")
+
+    def test_two_candidates_and_no_host_match_is_not_guessed_at(self) -> None:
+        self.machine_file("darwin", "one")
+        self.machine_file("darwin", "two")
+        resolved = self.resolve(hostname="unmatched")
+        self.assertEqual(resolved.name, "macos-unmatched.md")
+        self.assertFalse(resolved.exists())
+
+
+@unittest.skipIf(os.name == "nt", "creating a symlink on Windows needs elevation")
+class TestDanglingSymlink(TempTree):
+    """A symlink whose target has been renamed away.
+
+    This repo's config moved from ``workstation-claude/`` to
+    ``workstation/claude/``, so it is the state a macOS box carrying links from
+    that era is actually in. ``Path.exists()`` follows the link and reports
+    ``False``, but the entry is there and blocks ``os.symlink``.
+    """
+
+    def dangle(self, label: str) -> lc.Link:
+        self.machine_file()
+        link = next(l for l in self.plan() if l.label == label)
+        link.dest.parent.mkdir(parents=True, exist_ok=True)
+        os.symlink(self.repo / "gone" / link.dest.name, link.dest)
+        return link
+
+    def test_a_dangling_file_link_is_detached_not_missing(self) -> None:
+        link = self.dangle("CLAUDE.md")
+        state = lc.inspect(link)
+        self.assertEqual(state.status, lc.DETACHED)
+        self.assertIn("dangling symlink", state.detail)
+
+    def test_the_detail_names_the_stale_target(self) -> None:
+        state = lc.inspect(self.dangle("CLAUDE.md"))
+        self.assertIn("gone", state.detail)
+
+    def test_a_dangling_directory_link_is_detached_too(self) -> None:
+        self.assertEqual(lc.inspect(self.dangle("skills/review")).status, lc.DETACHED)
+
+    def test_clear_dest_removes_it(self) -> None:
+        link = self.dangle("CLAUDE.md")
+        lc.clear_dest(lc.LinkState(link, lc.DETACHED))
+        self.assertFalse(link.dest.is_symlink())
+
+    def test_apply_repairs_it_rather_than_raising_file_exists(self) -> None:
+        link = self.dangle("CLAUDE.md")
+        state = lc.apply(lc.inspect_all([link])).states[0]
+        self.assertEqual(state.status, lc.LINKED, state.detail)
+        self.assertTrue(lc.same_target(link.source, link.dest))
+
+    def test_apply_repairs_a_dangling_directory_link(self) -> None:
+        link = self.dangle("skills/review")
+        state = lc.apply(lc.inspect_all([link])).states[0]
+        self.assertEqual(state.status, lc.LINKED, state.detail)
+        self.assertTrue((link.dest / "SKILL.md").exists())
+
+    def test_a_whole_dangling_home_reaches_ok(self) -> None:
+        self.dangle("CLAUDE.md")
+        self.dangle("skills/review")
+        report = lc.apply(lc.inspect_all(self.plan()))
+        self.assertTrue(report.ok, lc.render(report))
+
+
+if __name__ == "__main__":
+    unittest.main()

@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "defaultMode": "auto"
+  },
+  "model": "opus",
+  "enabledPlugins": {
+    "pyright-lsp@claude-plugins-official": true
+  },
+  "tui": "fullscreen",
+  "fastMode": true
+}

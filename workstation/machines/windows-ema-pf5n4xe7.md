@@ -1,0 +1,470 @@
+---
+machine: windows-ema-pf5n4xe7
+platform: Windows 11
+os_version: 10.0.26200
+shell: PowerShell 7.6.5
+python: 3.14.7
+repo: C:\Users\voutsas\Work\Development\sdd-workbench
+verified: 2026-08-26
+---
+
+# Windows 11 — `EMA-PF5N4XE7`
+
+State for this box only. Policy is in [`../claude/CLAUDE.md`](../claude/CLAUDE.md); install routes are
+in [`../cli/<tool>/install.md`](../cli/). **Where this file contradicts either, this file wins** — it
+is the one that was measured.
+
+## Paths
+
+| What | Where |
+|---|---|
+| This repo | `C:\Users\voutsas\Work\Development\sdd-workbench` |
+| Home | `C:\Users\voutsas` |
+| `pwsh` | `C:\Users\voutsas\scoop\apps\pwsh\current\pwsh.exe` |
+| Package manager | `scoop` |
+
+Not the `~/Development/agentic-coding/` path the macOS notes use.
+
+## Shell
+
+PowerShell 7.6.5, not bash.
+
+- `$env:VAR = 'x'`, not `export`.
+- **`>` and `Out-File` default to UTF-16LE and corrupt markdown.** Use `Set-Content -Encoding utf8`,
+  or write from Python.
+- There is no `sed`, `awk`, `tr` or `head`, so there is no shell route to an in-place substitution at
+  all. That makes [`../claude/CLAUDE.md`](../claude/CLAUDE.md)'s *editing a file is an editor's job*
+  the only route here, not a preference: use the editor tool. Where an edit is genuinely programmatic,
+  it goes through the project's venv like any other Python, and this repo has **no `.venv`** — see
+  *Python scaffolding* below.
+
+**The Bash tool cannot resolve anything on `PATH`.** It receives the Windows semicolon-separated
+`PATH` and hands it to Git Bash, which expects colons, so every bare command fails
+`command not found` — `ls` and `git` included. Call binaries by absolute POSIX path, and drive real
+work through pwsh:
+
+```
+/c/Users/voutsas/scoop/apps/pwsh/current/pwsh.exe -NoProfile -Command '…'
+```
+
+### `PATH` differs between the agent and the user
+
+Measured 2026-08-26. **The `PATH` an agent observes is not this machine's `PATH`**, so never report one
+as the other:
+
+| Source | Entries | Git-related entries |
+|---|---|---|
+| Registry — `Machine` + `User`, what a fresh shell gets | 45 | `scoop\apps\git\current\cmd` only |
+| Runtime, in a `pwsh` launched from the Bash tool | 57 | `…\git\2.55.0.5\usr\bin` ×3 at positions 4/5/7, plus `mingw64\bin` and `usr\local\bin` — all **ahead of** `C:\WINDOWS\system32` at 13 |
+
+The cause is that the Bash tool *is* Git Bash — `MSYSTEM=MINGW64` and
+`SHELL=…\git\current\bin\bash.exe` — and it prepends its MSYS directories before `pwsh` inherits them.
+The extra 12 entries are that injection plus scoop shims.
+
+Check the scopes separately, and quote which one you read:
+
+```powershell
+$env:PATH -split ';'                                     # process scope
+[Environment]::GetEnvironmentVariable('PATH','User')      # the GUI User table
+[Environment]::GetEnvironmentVariable('PATH','Machine')   # the GUI System table
+```
+
+`Get-Command <name> -All` shows resolution order **for the calling process only**. It is not evidence
+about what the user's terminal does.
+
+### There is a PowerShell tool — ask before switching a folder to it
+
+It replaces Git Bash as the shell tool, which is what removes the defect above. Measured 2026-09-02 on
+`@anthropic-ai/claude-code` 2.1.258, by running the same headless prompt in two empty folders:
+
+| Folder holds | `claude -p "Do you have a PowerShell tool…"` |
+|---|---|
+| nothing | `NO` |
+| `.claude/settings.local.json` with `env.CLAUDE_CODE_USE_POWERSHELL_TOOL` = `"1"` | `YES:PowerShell` |
+
+So the switch is **per project folder**, and the tool is named `PowerShell`. The flag is read at session
+start: a file written mid-session changes nothing until a session is started in that folder again.
+
+**Ask once per folder, and never create the file unasked.** The first time work in a folder needs the
+shell:
+
+1. Read `.claude/settings.local.json` there. If it already carries the flag, say nothing and carry on.
+2. If it does not, **ask the user whether to create it, and wait.** A decline holds for the rest of the
+   session — fall back to the absolute-path `pwsh` route above and do not ask twice.
+3. On a yes, write exactly this, then tell them it takes a restart in that folder:
+
+   ```json
+   { "env": { "CLAUDE_CODE_USE_POWERSHELL_TOOL": "1" } }
+   ```
+
+4. If the file exists already, **merge into its `env` block** rather than replacing the file, and check
+   the folder's `.gitignore` covers `.claude/settings.local.json` — it is machine-local, not shared.
+
+Without a file at all, one line in the launching shell does the same thing for a single run — the shape
+of the LibreOffice `PATH` switch under *docling* below:
+
+```powershell
+$env:CLAUDE_CODE_USE_POWERSHELL_TOOL = '1'; claude
+```
+
+**Two other files stay out of this.** `~/.claude/settings.json` may never be written by an agent, per
+*`settings.json` is not drift* below. `~/.claude/settings.local.json` — the user-level layer — is kept
+absent by design, per [`../claude/README.md`](../claude/README.md#deliberately-not-tracked): it was
+created holding this flag on 2 September 2026 and removed the same day, because one file there puts
+**every** session on a preview tool, including the folders the route above already serves.
+
+Still a preview, and not yet exercised on real work here: **pending, not cleared.**
+
+#### The flag belongs to this machine's live `settings.json`, not the shared repo copy
+
+Verified 2026-09-03 by reading `~/.claude/settings.json` directly: `env.CLAUDE_CODE_USE_POWERSHELL_TOOL`
+is `"1"`, added by hand to the live file. **It must not be added to
+[`../claude/settings.json`](../claude/settings.json)** — that copy is shared unmodified with macOS, and
+every reason for the flag above (Git Bash's MSYS `PATH` injection) is specific to this machine's shell,
+not to the tool in general. Where this repo needs a record of the need, it belongs here, not there.
+
+#### A `SessionStart` hook raises the question, so it does not depend on being remembered
+
+Registered in `~/.claude/settings.json` on 2 September 2026 — the file that is merged by hand, so the
+block is the user's edit, not an agent's. Verified afterwards: the `env` block came through intact and the
+key list is now `env, permissions, model, enabledPlugins, fastMode, tui, theme, hooks`. No pre-merge
+backup was taken, so the 26 August `~/.claude/settings.json.bak` is the only fallback on disk.
+
+**The block belongs in the live file only.** It was pasted into
+[`../claude/settings.json`](../claude/settings.json) as well, and reverted the same day: that copy is
+shared with macOS, where this Windows absolute path would open every session with a failing hook.
+
+```json
+"hooks": { "SessionStart": [ { "hooks": [ { "type": "command",
+  "command": "…\\pwsh.exe -NoProfile -File C:\\Users\\voutsas\\.claude\\hooks\\powershell-tool-prompt.ps1"
+} ] } ] }
+```
+
+The script itself now has a tracked reference copy at
+[`../claude/hooks/powershell-tool-prompt.ps1`](../claude/hooks/powershell-tool-prompt.ps1) — same
+treatment as `settings.json`: the body is portable, the registration stays machine-local, copied by
+hand into `~/.claude/hooks/powershell-tool-prompt.ps1`. It stays silent unless the folder needs the
+question, logs every decision to `powershell-tool-prompt.log` beside itself, and always exits 0 so a
+fault can never block a session. Measured 2026-09-02 by invoking it directly:
+
+| Case | Result |
+|---|---|
+| folder without the flag | 794-char `additionalContext`, `hookEventName` = `SessionStart` |
+| folder carrying the flag | silent |
+| `cwd` read from the stdin payload, spawned as a child with stdin redirected | silent — reads the session's folder, not `$PWD` |
+| internal failure | written to the log, exit 0 |
+
+**Whether Claude Code actually calls it is unverified: pending.** `claude -p` fired it in no
+configuration tried — fresh temp folder or this repo, via `--settings`, via a project
+`.claude/settings.local.json`, and via the registered user-level block; `--debug` returned a single line
+with nothing matching `hook`. `claude.exe` carries the string *"SessionStart hooks cancelled (control
+stream closed)"*, which fits a single-shot print session, and no `managed-settings.json` or
+`disableAllHooks` exists here to explain it otherwise. **The only test that settles it is an interactive
+restart, and the evidence is a new line in that log.**
+
+**Outstanding: a `PreToolUse` registration the tracked script expects but the live file doesn't have.**
+The script's own header comment (`../claude/hooks/powershell-tool-prompt.ps1`) documents itself as
+registered under both `hooks.SessionStart` and `hooks.PreToolUse` (matcher `"Bash"`), with the latter as
+the backstop that fires right before the first Bash call. Verified 2026-09-03 by reading
+`~/.claude/settings.json` directly: only `hooks.SessionStart` is present; there is no `PreToolUse` entry.
+Needs adding to the live file, by hand, in the same shape as the `SessionStart` block above:
+
+```json
+"hooks": {
+  "PreToolUse": [
+    {
+      "matcher": "Bash",
+      "hooks": [
+        {
+          "type": "command",
+          "command": "C:/Users/voutsas/scoop/apps/pwsh/current/pwsh.exe -NoProfile -File C:/Users/voutsas/.claude/hooks/powershell-tool-prompt.ps1"
+        }
+      ]
+    }
+  ]
+}
+```
+
+Until this is added, the script's `PreToolUse` branch is dead code on this machine — only the
+`SessionStart` path can ever fire.
+
+If `~/.claude` is ever rebuilt, the script has to be recreated; whether it moves into the tracked tree is
+an open call.
+
+## Python scaffolding — one piece missing
+
+Measured 2026-08-26 in this repo. [`../claude/CLAUDE.md`](../claude/CLAUDE.md) requires every Python
+invocation to run through the project's venv, so this table is the gate on any `python` command here:
+
+| Piece | State | Note |
+|---|---|---|
+| `.python-version` | present, tracked | `3.14` — so there is nothing to ask about |
+| `pyproject.toml` | present, tracked | `requires-python = ">=3.14"`, `dependencies = []` |
+| `.venv` | **absent** | the one thing outstanding |
+| `uv` | 0.11.25 | `…\scoop\apps\python314\current\Scripts\uv.exe` |
+| Global interpreter | 3.14.7 | `…\scoop\apps\python314\current\python.exe` — **not to be used** |
+
+**One command closes it, and it is the user's to run:**
+
+```powershell
+uv venv
+```
+
+The version is already pinned, so `uv` needs no argument. Until then every `python` call in this repo is
+running on the global interpreter, which is the case the rule exists to stop — including
+`workstation/scripts/inventory.py` and `link_config.py`. Those two are deliberately stdlib-only so they
+work on a fresh clone, which is why nothing has broken yet; it is not a reason to keep using the global
+interpreter. After `uv venv`, call `.venv\Scripts\python.exe`.
+
+## Git
+
+`core.autocrlf=true` and `core.symlinks=false`.
+
+The repo carries a [`.gitattributes`](../../.gitattributes) pinning `eol=lf` on `pre-push` and `*.py`,
+which fixes the `#!/usr/bin/env bash` *bad interpreter* failure — **for files checked out after it
+landed.** This working tree predated it: `.gitattributes` was committed 25 August 2026 at 12:30, while
+`pre-push` had been written at 18:20 the day before, so 11 files sat at `i/lf w/crlf` until they were
+re-checked-out on 26 August.
+
+**`git check-attr` cannot detect this** — it reported `eol: lf` on a file the working tree held as CRLF,
+because the attribute governs writes and is never applied retroactively. Ask about the working tree:
+
+```powershell
+git ls-files --eol | Select-String "w/crlf" | Where-Object { $_ -match "eol=lf" }
+```
+
+Empty is correct. Anything listed is fixed by `Remove-Item <file>; git checkout -- <file>`, which loses
+nothing because the index already holds LF.
+
+Because `core.symlinks=false`, a symlink committed to this repo would check out here as a text file
+containing its target path. Nothing in the repo relies on one.
+
+## Claude Code config — installed
+
+**6 of 6 linked**, applied 26 August 2026 by
+[`../scripts/link_config.py`](../scripts/link_config.py) `--apply --force`, which then exited 0:
+
+| Artefact | Kind | Status |
+|---|---|---|
+| `skills/review` | junction | linked |
+| `skills/python-quality` | junction | linked |
+| `skills/verify-docs` | junction | linked |
+| `skills/fix-findings` | junction | linked |
+| `CLAUDE.md` | hardlink | linked |
+| `machine.md` | hardlink | linked |
+| `settings.json` | — | excluded by design; merged by hand — see below |
+
+Re-check with `python workstation/scripts/link_config.py`. Do not edit this table by hand.
+
+Confirmed independently of the script, because a report is not evidence: `os.path.samefile` returns
+`True` for both hardlinks and each shows `st_nlink=2`; the four junctions resolve to real `SKILL.md`
+files; and a session started afterwards offered all four skills.
+
+`--force` was needed because `CLAUDE.md` read `diverged` — the live copy was a plain edited file, not a
+link. That was safe only because the drift had already been triaged: of its 14 live-only lines, 12 were
+superseded by expanded versions in the repo copy, and the remaining two were macOS facts rescued into
+[`macos-workstation.md`](macos-workstation.md) first. The pre-`--force` file was kept as
+`~/.claude/CLAUDE.md.bak`. **Do not reach for `--force` without doing that triage** — the script compares
+bytes and cannot know whether it happened.
+
+### The two hardlinks sever constantly — assume they are broken
+
+Only `CLAUDE.md` and `machine.md` are at risk; the four junctions survive everything. **Two causes, and
+the second fires on ordinary work:**
+
+**Git operations.** These links were made while the repo sat on `workstation-multi-machine`. Git replaces
+a tracked file rather than writing through it, so merging to `main`, switching branches, or pulling a
+change to `claude/CLAUDE.md` detaches both — silently, frozen at the old content.
+
+**Any atomic-saving writer, including Claude Code's own `Edit` tool.** Observed 26 August 2026: editing
+this file through the repo path severed `machine.md` within minutes of linking it. An atomic save writes
+a temporary file and renames it over the target, which creates a new inode, so the live copy stops
+tracking the repo while still looking fine. The report read `diverged`, and `~/.claude/machine.md` was
+still serving the pre-edit text to any session that read it.
+
+**So: any edit to `claude/CLAUDE.md` or this file is followed by a re-link, not just a commit.**
+
+```powershell
+python workstation\scripts\link_config.py --apply
+```
+
+Plain `--apply` repairs a `detached` link — one whose content still matches. It reports `diverged` and
+refuses when the two have drifted, which is the case above: the severed copy held the old text while the
+repo held the new. There, confirm the stale side carries nothing unique — `Compare-Object` showed 44
+lines only in the severed copy, all of them text the edit had replaced — and then use `--force`.
+
+### The `pre-push` gate is installed, as a copy
+
+`.git/hooks/pre-push` is a **plain copy** of
+[`../claude/skills/review/scripts/pre-push`](../claude/skills/review/scripts/pre-push), not a link — git
+will not run a hook through a junction. Verified 26 August 2026 to execute via its own shebang, with 0 CR
+bytes in the copy.
+
+Because it is a copy, **re-copy it after pulling a change to the hook.** Nothing detects that for you:
+
+```powershell
+Copy-Item workstation\claude\skills\review\scripts\pre-push .git\hooks\pre-push -Force
+```
+
+### `settings.json` is not drift
+
+The live file carries an `env` block — `CLAUDE_CODE_USE_BEDROCK`, `AWS_REGION`, `AWS_PROFILE` and
+Bedrock-prefixed model IDs — that this repo deliberately does not. **Claude Code must run against
+Bedrock on this machine for compliance reasons**, so that block stays where it is:
+
+- **Never link, overwrite or regenerate `~/.claude/settings.json`**, and do not move the `env` block to
+  `settings.local.json`. [`../claude/setup/windows.md`](../claude/setup/windows.md) omits the file from
+  its link block for this reason.
+- Shared keys are merged into it **by hand**, by the user. **The four top-level keys were merged on 26
+  August 2026** and the delta now prints `in sync`; a backup remains at `~/.claude/settings.json.bak`
+  and the live file was **not** written by any agent. One row is still outstanding:
+
+| Key | Value wanted | Where it goes | Live now — measured 2026-08-26 | State |
+|---|---|---|---|---|
+| `permissions` | `{"defaultMode": "auto"}` | top level | matches | merged |
+| `enabledPlugins` | `{"pyright-lsp@claude-plugins-official": true}` | top level | matches | merged |
+| `tui` | `"fullscreen"` | top level | matches | merged |
+| `fastMode` | `true` | top level | matches | merged |
+| `env.ANTHROPIC_MODEL` | `eu.anthropic.claude-opus-5` | inside `env` | `eu.anthropic.claude-sonnet-5` | **outstanding** |
+
+`env` survived the merge intact — all five members present, `CLAUDE_CODE_USE_BEDROCK=1`,
+`ANTHROPIC_SMALL_FAST_MODEL=eu.anthropic.claude-haiku-4-5` — which was the thing at risk. Top-level
+`model: "opus"` already matches and is the setting a session actually resolves to;
+`env.ANTHROPIC_MODEL` is the Bedrock ID passed through to the provider. They are independent, so the
+last row is the only edit `env` needs.
+
+**`in sync` alone does not clear that last row, and this is how it was found.** The delta compares only
+the keys the repo copy has, and the repo copy has no `env` block, so it printed `in sync` on 26 August
+while `ANTHROPIC_MODEL` was still `sonnet-5`. The `env` model IDs have to be read separately — step 6 of
+the procedure in [`../claude/README.md`](../claude/README.md#the-merge-procedure) now runs both checks
+for that reason.
+
+## CLI toolchain
+
+Probed on `EMA-PF5N4XE7` (Windows 10.0.26200, Python 3.14.7) by
+[`../scripts/inventory.py`](../scripts/inventory.py) on 26 August 2026.
+
+**9 of 12 usable.**
+
+| Command | Product | Status | Version | Detail |
+|---|---|---|---|---|
+| `d2` | D2 (Terrastruct) | installed | 0.7.1 | — |
+| `dbml2sql`, `sql2dbml`, `db2dbml` | DBML CLI | installed | 9.0.0 | — |
+| `defuddle` | Defuddle | absent | — | not on PATH |
+| `docling` | Docling | installed | 2.122.0 | — |
+| `magick` | ImageMagick | installed | 7.1.2-30 | — |
+| `mmdc` | Mermaid CLI | installed | 11.16.0 | — |
+| `pandoc` | Pandoc | installed | 3.10.2 | — |
+| `plantuml` | PlantUML | installed | 1.2026.7 | — |
+| `playwright` | Playwright | installed | 1.61.0 | — |
+| `sem` | Sem (Ataraxy Labs) | installed | 0.13.0 | — |
+| `tesseract` | Tesseract OCR | absent | — | not on PATH |
+| `weasyprint` | WeasyPrint | absent | — | not on PATH |
+
+Regenerate with `python workstation/scripts/inventory.py`. Do not edit the table by hand.
+
+### `docling` was quarantined and is now cleared
+
+Blocked 24–25 August 2026 as an EDR/antivirus quarantine: `docling.exe` could not even be **read**,
+while the identical 46,080-byte `playwright.exe` shim beside it read fine and the ACL granted
+`EMEA\voutsas Allow FullControl`. Resolved by the user on 26 August 2026. Verified the same day, by the
+same readability test that diagnosed it:
+
+| Check | Result |
+|---|---|
+| `[IO.File]::ReadAllBytes(…\.local\bin\docling.exe)` | reads — 46,080 bytes |
+| Same call on `docling-tools.exe` | reads — 46,080 bytes |
+| `docling --version` | `Docling version: 2.122.0`, on `cpython-312 (3.12.10)` |
+| `docling --to md` on a 132 KB `.docx` | converted in 3.45 s |
+
+pipx runs it from `C:\Users\voutsas\AppData\Local\pipx\pipx\venvs`, not the `~\.local\pipx\venvs` path
+the original diagnosis probed. **Ingestion of PDF and Office formats is no longer blocked here.** The
+general form of the readability test stays in
+[`../cli/docling/install.md`](../cli/docling/install.md) — it is the discriminator that separates this
+from the `whoami` case below.
+
+#### Images need LibreOffice on `PATH`, and it is deliberately not there
+
+LibreOffice **26.2.5 is installed** at `~\scoop\apps\libreoffice\current\LibreOffice\program`, but scoop
+created **no shim**, so `soffice` is on neither `PATH` scope and docling drops every image by default.
+That is the intended state, not an oversight — measured 26 August 2026 on the 132 KB
+`Enterprise architecture principles.docx`:
+
+| `soffice` resolvable | Convert time | Output | Images |
+|---|---|---|---|
+| no — the default here | 3.45 s | 25,646 bytes | 0 |
+| yes — `PATH` prepended for one shell | **356.62 s** | 367,658 bytes | **14** |
+
+100× slower, so a permanent shim would tax every conversion for a feature most do not need. **Turn it on
+for the run that needs it:**
+
+```powershell
+$env:PATH = "$HOME\scoop\apps\libreoffice\current\LibreOffice\program;" + $env:PATH
+```
+
+The 367,658-byte result matches the 366,040-byte reference copy of the same document measured when
+this was recorded — 14 images, 18 headings both. Without it, headings
+and table rows still match exactly, so **a size drop of that scale is missing images, not a failed
+conversion.** Check the image count, never the exit code.
+
+`DOCLING_LIBREOFFICE_CMD` is inert despite docling's own warning naming it; the evidence and the `.com`
+vs `.exe` trap are in
+[`../cli/docling/install.md`](../cli/docling/install.md#embedded-images-need-libreoffice).
+
+If a permanent shim is ever wanted, the command is the user's to run — and note it uses `.com`:
+
+```powershell
+scoop shim add soffice "$HOME\scoop\apps\libreoffice\current\LibreOffice\program\soffice.com"
+```
+
+### `whoami` and `hostname` are blocked in git's `usr/bin`, and it does not matter
+
+Measured 2026-08-25. Not the `docling` case, and **not worth an IT request**:
+
+| Check | Result |
+|---|---|
+| `C:\WINDOWS\system32\whoami.exe` | runs — `emea\voutsas` |
+| `…\scoop\apps\git\2.55.0.5\usr\bin\whoami.exe` | **Access is denied** on launch |
+| Same file, `[IO.File]::ReadAllBytes` | **reads fine**, 33,887 bytes |
+| Same file, `(Get-Acl …).Access` | `EMEA\voutsas Allow FullControl` |
+| Siblings `basename`, `sed`, `grep`, `id` | all run |
+| Sibling `hostname.exe` | also denied |
+
+Readable file, permissive ACL, working siblings, two specific names refused: that is a process-creation
+rule, not a quarantine. `whoami` and `hostname` are standard reconnaissance commands, and a copy of one
+running from a user-writable directory is a much stronger signal than the System32 original — which is
+why System32's copies work and these do not.
+
+**Consequence: none, and none for the user's own shell at all.** Git's `usr\bin` is *not* on this
+machine's `PATH` — neither scope carries it, and resolving `whoami` against the registry-built `PATH`
+gives `C:\WINDOWS\system32\whoami.exe`. The blocked copies are reachable only from the agent's shell,
+for the reason in *`PATH` differs between the agent and the user* above. Use `$env:USERNAME` and
+`$env:COMPUTERNAME`, or call System32 by absolute path.
+
+### Three installs are behind their recorded version
+
+Found by the probe above, and left alone deliberately —
+[the version-currency rule](../cli/README.md#version-currency--raise-it-dont-fix-it) says raise it,
+don't fix it, because an upgrade can change output format part-way through a piece of work.
+
+| Command | Installed here | `install.md` recorded | Route to upgrade |
+|---|---|---|---|
+| `sem` | 0.13.0 | 0.22.1 (2026-08-24) | see [`../cli/sem-cli/install.md`](../cli/sem-cli/install.md) |
+| `dbml2sql` | 9.0.0 | 10.1.1 (2026-08-20) | `npm install -g @dbml/cli@latest` |
+| `d2` | 0.7.1 | 0.8.1-HEAD (2026-08-20) | `scoop update d2` |
+
+These are the user's call. Nothing here is a hold, so nothing is recorded as one.
+
+## Not yet installed
+
+Deliberate gaps, so they are not rediscovered as faults:
+
+- `defuddle`, `tesseract`, `weasyprint` — never installed here.
+- **LibreOffice is installed but deliberately off `PATH`** — see the docling section above. Not a gap.
+
+Resolved 26 August 2026 and no longer gaps: `~/.claude/machine.md`, the four skills, and the `pre-push`
+hook are all in place per *Claude Code config* above; `docling` is unblocked.
+
+**Still outstanding, and the user's to do:** one key — `env.ANTHROPIC_MODEL`, per *`settings.json` is not
+drift* above. The four top-level keys are merged. Plus one interactive restart, to prove the
+`SessionStart` hook fires — see *There is a PowerShell tool* above.

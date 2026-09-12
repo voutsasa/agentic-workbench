@@ -1,0 +1,119 @@
+name: verify-docs
+
+# Weekly evidence-verified documentation audit. Runs the verify-docs skill
+# headlessly, then opens a pull request carrying the report. The workflow never
+# edits documentation itself — a human decides which refutations to act on.
+
+on:
+  schedule:
+    - cron: '17 6 * * 1'   # Mondays, 06:17 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: verify-docs
+  cancel-in-progress: false
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          fetch-depth: 0   # git-state claims need real history, not a shallow clone
+
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
+        with:
+          python-version-file: .python-version
+
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+        with:
+          node-version: '22'
+
+      - name: Install Claude Code
+        run: npm install -g @anthropic-ai/claude-code
+
+      - name: Install the verify-docs skill
+        run: |
+          mkdir -p ~/.claude/skills
+          cp -R workstation/claude/skills/verify-docs ~/.claude/skills/verify-docs
+
+      - name: Check the extractor still works
+        run: python -m unittest discover -s ~/.claude/skills/verify-docs/tests
+
+      # Deterministic first, and --online deliberately. On this runner the offline
+      # tier is weak — docling, pandoc and the rest are not installed, so their
+      # claims can only come back UNVERIFIABLE. What the runner does have is a
+      # network, which is exactly the tier a push gate refuses to depend on. So
+      # the 179 URL and 26 registry claims get checked here, weekly, where nobody
+      # is waiting on them. Never fails the job: this workflow reports drift and
+      # opens a pull request, it does not gate.
+      - name: Verify claims deterministically
+        continue-on-error: true
+        run: |
+          VC=workstation/claude/skills/verify-docs/scripts/verify_claims.py
+          python "$VC" --repo . --online --json > claims.json
+          python "$VC" --repo . --online --report-from claims.json | tee CLAIMS-VERIFICATION.md
+
+      - name: Verify documentation
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # Reuse the pass above rather than paying for a second round trip per
+          # URL. The model then verifies only what it left UNVERIFIABLE.
+          VERIFY_DOCS_SETTLED: claims.json
+          # The runner is a disposable container and verification must invoke
+          # `--help` for arbitrary binaries, which no static allowlist covers.
+          VERIFY_DOCS_BYPASS: '1'
+          VERIFY_DOCS_BUDGET: '10'
+        run: ./scripts/verify-docs.sh
+
+      - name: Open the corrections pull request
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain -- DOCS-VERIFICATION.md CLAIMS-VERIFICATION.md)" ]; then
+            echo "No documentation drift found; nothing to open."
+            exit 0
+          fi
+
+          BRANCH="docs/verify-$(date -u +%Y%m%d)"
+          git config user.name  'github-actions[bot]'
+          git config user.email 'github-actions[bot]@users.noreply.github.com'
+          git checkout -b "$BRANCH"
+          git add -- DOCS-VERIFICATION.md CLAIMS-VERIFICATION.md
+          git commit -m 'docs: evidence-verified corrections'
+          git push --force-with-lease -u origin "$BRANCH"
+
+          REFUTED="$(grep -c '| REFUTED |' DOCS-VERIFICATION.md || true)"
+          MECHANICAL="$(grep -c '| REFUTED |' CLAIMS-VERIFICATION.md || true)"
+          cat > /tmp/pr-body.md <<BODY
+          Weekly documentation audit, in two passes.
+
+          **\`CLAIMS-VERIFICATION.md\` — ${MECHANICAL:-0} refuted.** Deterministic, no
+          model: \`verify_claims.py --online\`. This is the pass that checks external
+          URLs and package registries, which the pre-push gate deliberately will not do.
+          Tool-specific claims come back \`UNVERIFIABLE\` here because the runner has no
+          workstation toolchain — that is expected, not drift.
+
+          **\`DOCS-VERIFICATION.md\` — ${REFUTED:-0} refuted.** The model-driven pass, for
+          claims no single command settles.
+
+          Every row in both carries the command that was run and its real output.
+          \`UNVERIFIABLE\` rows are ones no command could settle on the runner — they are
+          not failures.
+
+          No documentation was edited by this job; the reports propose corrections for
+          review.
+          BODY
+          sed -i 's/^          //' /tmp/pr-body.md
+
+          gh pr create \
+            --title 'docs: evidence-verified corrections' \
+            --body-file /tmp/pr-body.md \
+            --base "${GITHUB_REF_NAME}" \
+            --head "$BRANCH"

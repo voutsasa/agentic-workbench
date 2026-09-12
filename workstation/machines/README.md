@@ -1,0 +1,62 @@
+# Machines
+
+One file per machine this workbench runs on. Each records **state**: what is true of that box right
+now, and nothing else.
+
+## Why this folder exists
+
+`workstation/` used to mix three kinds of fact with three different lifetimes, which is why
+`claude/CLAUDE.md` — a file every machine shares unmodified — ended up carrying a Windows-only
+`## Environment` section, and why each `install.md` carried a `status:` field it could not honestly
+answer. The split is by **lifetime**, not by platform:
+
+| Kind | Lives in | Scope | Goes stale |
+|---|---|---|---|
+| **Policy** — how the agent should work | [`../claude/CLAUDE.md`](../claude/CLAUDE.md) | every machine, every platform | no |
+| **Route** — how to install or link something | [`../cli/<tool>/install.md`](../cli/), [`../claude/setup/`](../claude/setup/) | per platform, machine-independent | slowly, one tool at a time |
+| **State** — what is present, and what is broken | **here** | one box | constantly |
+
+The test for which file a fact belongs in: *would this still be true on the other machine?* If yes it
+is policy or route. If no it belongs here.
+
+## Files
+
+| Machine | Platform | Repo path | Inventory verified |
+|---|---|---|---|
+| [`windows-ema-pf5n4xe7.md`](windows-ema-pf5n4xe7.md) | Windows 11 (build 26200) | `C:\Users\voutsas\Work\Development\sdd-workbench` | 25 August 2026 |
+| [`macos-workstation.md`](macos-workstation.md) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 4 September 2026 |
+
+The filename is `<platform>-<id>.md`, lowercased. The id is usually the hostname —
+`python workstation/scripts/inventory.py --json` prints that form under `suggested_id` — but it does
+not have to be: this repo is pushed to a shared remote, and a hostname is often a person's name.
+`macos-workstation.md` is named for the role instead, and `inventory.py --host <label>` keeps the DNS
+name out of the table it generates.
+
+Nothing depends on the filename matching the hostname. `link_config.py` takes `--machine <id>`, and
+without it falls back to the only file for the platform.
+
+## Adding a machine
+
+1. Clone the repo. Note where — the path is per-machine and belongs in the new file, nowhere else.
+2. Run `python workstation/scripts/inventory.py --host <id>` (`python3` on macOS, which has no
+   `python`) and paste the table into the *CLI toolchain* section. Do not hand-write that table; the
+   point of the script is that the count is measured.
+3. Record the shell, the path, and anything that behaves unexpectedly. Blockers are the highest-value
+   content here — a tool that is absent costs one install, a tool that fails *silently* costs a
+   session.
+4. Add a row to the table above.
+5. Follow the matching [`../claude/setup/`](../claude/setup/) file to put the config in place.
+
+A new **platform** additionally needs one `setup/<platform>.md` and a third row in each
+`install.md` platform table. Write those when a machine exists — twelve guessed `apt` package names
+would be twelve unverified claims, which is worse than an absent row.
+
+## How the agent reads this
+
+Nothing here is loaded automatically. [`../claude/CLAUDE.md`](../claude/CLAUDE.md) closes by
+instructing the agent to read `~/.claude/machine.md`, which is a path that is **identical on every
+machine while its content differs** — that indirection is what lets the shared file point at
+per-machine truth without naming a platform.
+
+Installing that file is a user step and is deliberately not done yet: see *Not yet installed* in each
+machine file. Until it is, an agent working in this repo should read the relevant file here directly.

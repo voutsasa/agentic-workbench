@@ -1,0 +1,33 @@
+# Python-generated files
+**/__pycache__/
+**/.mypy_cache/
+**/.ruff_cache/
+*.py[oc]
+build/
+dist/
+wheels/
+*.egg-info
+
+# Virtual environments
+.venv
+
+# Secrets — never commit
+.env
+.env.*
+!.env.example
+
+# OS specific
+**/.DS_Store
+
+# Untracted sources
+**/docs/web
+
+# Ingested tool pages under the CLI guidance tree — authored install.md and
+# quick_start.md alongside them stay tracked
+**/workstation/cli/*/reference.md
+
+# Same rule for the MCP guidance tree — the authored setup.md stays tracked
+**/workstation/mcp/*/reference.md
+
+# Temp files
+**/.clearance*

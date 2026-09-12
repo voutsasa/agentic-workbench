@@ -1,0 +1,16 @@
+# Line endings
+#
+# `core.autocrlf=true` on the Windows workstation. Without the rules below, a
+# checkout there rewrites LF to CRLF, and two files break as a result:
+#
+#   - `pre-push` gets a CRLF after `#!/usr/bin/env bash`, and git refuses the
+#     hook with "bad interpreter". This is the fix referred to in
+#     `workstation/claude/setup/windows.md`.
+#   - Python scripts show every line as modified when the same file is edited
+#     on another machine, which buries real diffs.
+#
+# Scoped deliberately to the files that break. A blanket `* text=auto eol=lf`
+# would also rewrite the markdown corpus, which nothing here needs.
+
+pre-push  text eol=lf
+*.py      text eol=lf
