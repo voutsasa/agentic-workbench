@@ -11,7 +11,7 @@ Strips a web page down to its article content — no nav bars, cookie banners, s
 ## The ingestion invocation
 
 ```
-defuddle parse <url> --md --frontmatter -o "docs/web/<topic name>.md"
+defuddle parse <url> --md --frontmatter -o "docs/landing-zone/<topic name>.md"
 ```
 
 `--md` converts to markdown, `--frontmatter` prepends YAML with title, author, source and domain — which is what the ingested pages in this repo carry at the top.

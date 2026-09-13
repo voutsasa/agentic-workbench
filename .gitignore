@@ -20,7 +20,7 @@ wheels/
 **/.DS_Store
 
 # Untracted sources
-**/docs/web
+**/docs/landing-zone
 
 # Ingested tool pages under the CLI guidance tree — authored install.md and
 # quick_start.md alongside them stay tracked

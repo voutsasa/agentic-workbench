@@ -10,7 +10,7 @@ Gathers agentic-engineering source material used to build constitutions, skills,
 | `SOURCE_CATALOGUE.md` | One-sentence (≤20 words) capability summary per source, mirroring `SOURCES.md`'s structure and entries exactly. Whenever `SOURCES.md` changes, `SOURCE_CATALOGUE.md` needs a matching update. |
 | `README.md` | The repo's landing page: what the workbench is, plus the role of every file in it. Carries no source entries — those live in `SOURCE_CATALOGUE.md`. |
 | `INGESTION_GUIDE.md` | The routing/process guide for pulling a source's content into local storage (GitHub repo vs. PDF vs. plain doc site vs. JS-hydrated doc site, and which tool handles each). |
-| `docs/web/` | Ingested external sources — flat, machine-written, **not hand-edited** and **not in git** (see below). |
+| `docs/landing-zone/` | Ingested external sources — flat, machine-written, **not hand-edited** and **not in git** (see below). |
 | `docs/guidance/` | Short, agent-facing notes to apply mid-task, plus the assets their commands depend on. Hand-authored, tracked in git. Every note declares its provenance; `docs/guidance/README.md` sets the bar and is the file to read before adding one. |
 | `workstation/README.md` | Map of the `workstation/` tree — what each subfolder is for and where to start in it. |
 | `workstation/cli/README.md` | Index of the workstation **CLI tools** only: what each per-tool file is for, a `command → product → folder` map, and the version-currency rule. Its MCP counterpart is `workstation/mcp/README.md`. |
@@ -39,15 +39,15 @@ Two cross-cutting groups sit outside the layer model deliberately — *agent wor
 
 ## The corpus is not in git
 
-`.gitignore` excludes `docs/web/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md`. The repo tracks the register, the guides, the authored notes in `docs/guidance/`, the authored `install.md`/`quick_start.md` pairs, and the authored `setup.md` files — **not** the ingested third-party content, which is rebuildable from `SOURCES.md`.
+`.gitignore` excludes `docs/landing-zone/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md`. The repo tracks the register, the guides, the authored notes in `docs/guidance/`, the authored `install.md`/`quick_start.md` pairs, and the authored `setup.md` files — **not** the ingested third-party content, which is rebuildable from `SOURCES.md`.
 
 On a fresh clone the corpus is therefore empty and every entry will look un-ingested. That is expected, not a fault. Rebuilding it is a deliberate, potentially long operation: only do a full ingestion run when explicitly asked. Otherwise assume a populated local corpus and ingest only the delta for entries whose files are genuinely missing.
 
 ## Ingestion invariant
 
-Every `[bracket link]` entry in `SOURCES.md` should have a corresponding file at `docs/web/<bracket text>.{md,pdf}`, writing a `: ` in the title — the colon *and* the space after it — as ` - ` in the filename. If a file is missing or an entry was just added, that source hasn't been ingested yet — run it through `INGESTION_GUIDE.md`'s routing logic (only the missing delta, not a full re-run).
+Every `[bracket link]` entry in `SOURCES.md` should have a corresponding file at `docs/landing-zone/<bracket text>.{md,pdf}`, writing a `: ` in the title — the colon *and* the space after it — as ` - ` in the filename. If a file is missing or an entry was just added, that source hasn't been ingested yet — run it through `INGESTION_GUIDE.md`'s routing logic (only the missing delta, not a full re-run).
 
-**One destination exception, two trees.** Entries under *Cross-cutting aspects → 2. Workstation tooling* land beside their authored guidance instead of in `docs/web/` — under `#### CLI tools` at `workstation/cli/<bracket text>/reference.md`, and under `#### MCP servers` at `workstation/mcp/<bracket text>/reference.md`. The invariant is otherwise unchanged: still one bracket link to one ingested file, still named from the bracket text.
+**One destination exception, two trees.** Entries under *Cross-cutting aspects → 2. Workstation tooling* land beside their authored guidance instead of in `docs/landing-zone/` — under `#### CLI tools` at `workstation/cli/<bracket text>/reference.md`, and under `#### MCP servers` at `workstation/mcp/<bracket text>/reference.md`. The invariant is otherwise unchanged: still one bracket link to one ingested file, still named from the bracket text.
 
 One exclusion: italic *see also* cross-references are not entries. Every real entry carries exactly one bracket link with an `http(s)` target, so the check stays one-to-one.
 

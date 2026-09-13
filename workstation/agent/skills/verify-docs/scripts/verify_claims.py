@@ -915,7 +915,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--report-from", type=Path, metavar="FILE",
                         help="render the report from a saved --json run; verifies nothing")
     parser.add_argument("--quiet", action="store_true", help="print only the counts line")
-    parser.add_argument("--include-sources", action="store_true", help="include docs/web/")
+    parser.add_argument("--include-sources", action="store_true", help="include docs/landing-zone/")
     args = parser.parse_args(argv)
 
     repo = args.repo.resolve()
@@ -936,7 +936,7 @@ def main(argv: list[str] | None = None) -> int:
         return EXIT_REFUTED if failed else EXIT_OK
 
     try:
-        excludes = () if args.include_sources else ("docs/web/",)
+        excludes = () if args.include_sources else ("docs/landing-zone/",)
         files = args.files or tracked_markdown(repo, excludes)
         if not files:
             print("verify_claims: no markdown in scope — refusing to report a pass.", file=sys.stderr)

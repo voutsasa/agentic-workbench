@@ -14,11 +14,11 @@ How to pull each source in `SOURCES.md` into this workbench as clean, reviewable
 Is it a github.com/<owner>/<repo> URL?
   └── YES → fetch the raw README only. Do NOT clone.
              curl -s https://raw.githubusercontent.com/<owner>/<repo>/<branch>/README.md
-             save → docs/web/<topic name>.md
+             save → docs/landing-zone/<topic name>.md
 
 Is it a direct file (.pdf)?
   └── YES → download the file itself, don't scrape a rendered viewer.
-             curl -s -o "docs/web/<topic name>.pdf" <url>
+             curl -s -o "docs/landing-zone/<topic name>.pdf" <url>
 
 Is it a Docusaurus site (its theme class names show up in the raw HTML —
 theme-doc-markdown, docMainContainer_ — confirmed on playwright.dev,
@@ -33,7 +33,7 @@ dbml.dbdiagram.io, d2lang.com, drawio.com)?
              curl -sL -A "Mozilla/5.0" <url> -o <tmp>/page.html
              python extract_docusaurus_article.py <tmp>/page.html \
                div.theme-doc-markdown | pandoc -f html -t gfm \
-               -o docs/web/<topic name>.md
+               -o docs/landing-zone/<topic name>.md
              extract_docusaurus_article.py (repo root, stdlib-only) pulls
              one HTML node by `tag.class` or `tag#id` and strips the
              tags pandoc's gfm writer can't map cleanly — div, header,
@@ -46,7 +46,7 @@ dbml.dbdiagram.io, d2lang.com, drawio.com)?
 Is it a plain server-rendered doc/blog (Sphinx, ReadTheDocs, MkDocs,
 VitePress, mdBook, static HTML, classic blogs)?
   └── YES → WebFetch directly.
-             save → docs/web/<topic name>.md
+             save → docs/landing-zone/<topic name>.md
              Caveat, verified on Docusaurus (2026-09-04): WebFetch's own
              description says it processes content through "a small,
              fast model", which can paraphrase rather than scrape even
@@ -61,13 +61,13 @@ agentskills.io did)?
   └── YES → render with Playwright (headless — no browser extension
              involved) then extract with defuddle, convert with
              pandoc if needed.
-             save → docs/web/<topic name>.md
+             save → docs/landing-zone/<topic name>.md
 ```
 
 ## 2. Where things land
 
 ```
-docs/web/<topic name>.{md,pdf}
+docs/landing-zone/<topic name>.{md,pdf}
 ```
 
 One flat directory — no per-section subfolders, and no folders per architecture layer. Layer grouping lives in `SOURCES.md` only, because a source can feed more than one layer and physical folders would force a false single home.
@@ -79,7 +79,7 @@ One flat directory — no per-section subfolders, and no folders per architectur
 #### MCP servers  → workstation/mcp/<topic name>/reference.md
 ```
 
-`<topic name>` is the exact link text between the `[ ]` in `SOURCES.md` (e.g. `[Pydantic AI](...)` → `docs/web/Pydantic AI.md`). GitHub sources use the link text too, not the repo name, so the file matches whatever `SOURCES.md` calls it.
+`<topic name>` is the exact link text between the `[ ]` in `SOURCES.md` (e.g. `[Pydantic AI](...)` → `docs/landing-zone/Pydantic AI.md`). GitHub sources use the link text too, not the repo name, so the file matches whatever `SOURCES.md` calls it.
 
 **Filename sanitization:** a `: ` in the title — the colon together with the space that follows it — is written as ` - ` in the filename, so the result has single spaces around the dash and not a doubled one — `[Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl]` → `Understanding Spec-Driven-Development - Kiro, spec-kit, and Tessl.md`. This is the only permitted deviation from exact link text.
 
@@ -102,7 +102,7 @@ Any file that fails this check gets re-run through the JS-hydrated path (render 
 Conversions from PDF or `.docx` (docling, pandoc) often inline images as base64 data URIs, which bloats the file and makes it unreadable. Run `clean_md_images.py` to extract them:
 
 ```
-python clean_md_images.py "docs/web/<topic name>.md"
+python clean_md_images.py "docs/landing-zone/<topic name>.md"
 ```
 
 It writes `<topic name>-no-base64.md` alongside the original and drops the PNGs into a sibling `<topic name>/` folder. Replace the original with the cleaned file once you've checked it.
@@ -222,4 +222,4 @@ An unpinned `npx -y` launcher resolves latest on every run, so even an observed 
 
 ## Scope
 
-This guide covers every `[bracket link]` entry in `SOURCES.md`. All of them are external — each carries an `http(s)` URL — so nothing in the register is out of scope here. The only thing that varies is the destination: workstation tooling entries land in the two `workstation/` trees per §2 and §6, everything else in `docs/web/`.
+This guide covers every `[bracket link]` entry in `SOURCES.md`. All of them are external — each carries an `http(s)` URL — so nothing in the register is out of scope here. The only thing that varies is the destination: workstation tooling entries land in the two `workstation/` trees per §2 and §6, everything else in `docs/landing-zone/`.

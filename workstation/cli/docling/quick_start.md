@@ -11,7 +11,7 @@ PDF and Office documents into structured markdown, with real layout understandin
 ## Convert
 
 ```
-docling convert input.pdf --to md --output docs/web/
+docling convert input.pdf --to md --output docs/landing-zone/
 ```
 
 Accepts a local path or a URL. Output goes to a *directory*, not a filename; docling names the file after the input.
@@ -61,7 +61,7 @@ no LibreOffice there is nothing to emit in any mode.
 Docling inlines figures as base64 data URIs, which bloats the file and makes it unreadable. Run the repo's cleaner:
 
 ```
-python clean_md_images.py "docs/web/<topic name>.md"
+python clean_md_images.py "docs/landing-zone/<topic name>.md"
 ```
 
 It writes `<topic name>-no-base64.md` plus a sibling folder of PNGs. Check it, then replace the original. `--image-export-mode` can avoid the problem at source, but the cleaner is the established route here.

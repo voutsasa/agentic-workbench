@@ -13,7 +13,7 @@ INGESTION_GUIDE.md        	how a source becomes a local file.
 CLAUDE.md                 	instructions for agents working in this repo.   
 
 docs/                     	the corpus — what the workbench reads.   
-  web/                    	ingested external sources     — not in git.   
+  landing-zone/           	ingested external sources     — not in git.   
   guidance/               	distilled agent-facing notes  — in git.   
 
 workstation/              	this machine's setup — serves the repo, never a deliverable.   
@@ -22,7 +22,7 @@ workstation/              	this machine's setup — serves the repo, never a del
   cli/<tool>/             	per-tool CLI guidance         — authored files in git.   
   mcp/README.md           	the MCP server index.   
   mcp/<server>/           	per-server MCP guidance       — authored files in git.   
-  agent/                 	Claude Code config, symlinked into ~/.claude/.   
+  agent/                  	agent config, symlinked into ~/.claude/.   
 
 clean_md_images.py        	strips base64 images out of converted markdown.   
 pyproject.toml            	Python project metadata.   
@@ -91,6 +91,6 @@ Because these are links into a git repo, check `git status` here before overwrit
 
 ## What is tracked in git
 
-The register, the guides, the authored guidance notes in `docs/guidance/`, the authored CLI and MCP guidance, and the agent config. **Not** the ingested third-party content — `docs/web/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md` are all excluded.
+The register, the guides, the authored guidance notes in `docs/guidance/`, the authored CLI and MCP guidance, and the agent config. **Not** the ingested third-party content — `docs/landing-zone/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md` are all excluded.
 
 On a fresh clone the corpus is therefore empty and every register entry will look un-ingested. That is expected. Rebuilding it is a deliberate, potentially long operation — see [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md).

@@ -1,6 +1,6 @@
 # Guidance — what belongs here
 
-Short, agent-facing notes written to be **loaded mid-task and acted on**. Where `docs/web/` holds material to read, this folder holds conclusions to apply.
+Short, agent-facing notes written to be **loaded mid-task and acted on**. Where `docs/landing-zone/` holds material to read, this folder holds conclusions to apply.
 
 Everything here is hand-authored and tracked in git.
 
@@ -14,7 +14,7 @@ A note earns a place here when all three hold:
 
 ## Declare provenance
 
-State it in the opening lines. Three kinds, in descending order of trust:
+State it in the opening lines. Two kinds, in descending order of trust:
 
 | Kind | Evidence required | Example |
 |---|---|---|
@@ -25,7 +25,7 @@ State it in the opening lines. Three kinds, in descending order of trust:
 
 ## What does not belong
 
-- **Source material.** Ingested third-party content goes to `docs/web/`, addressed by the register.
+- **Source material.** Ingested third-party content goes to `docs/landing-zone/`, addressed by the register.
 - **Machine description.** How a tool is installed or behaves here goes to `workstation/cli/<tool>/`, or `workstation/mcp/<server>/` for an MCP server. Guidance may *cite* those files, as the PDF note does, but a note that only describes this workstation is misfiled.
 - **Per-project artefacts.** Constitutions and skills for a specific project are the workbench's *output*, produced elsewhere from this material.
 

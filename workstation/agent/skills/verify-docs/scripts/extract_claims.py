@@ -11,7 +11,7 @@ Usage:
     python extract_claims.py --repo . --files README.md --summary
 
 Corpus defaults to `git ls-files '*.md'`, which excludes untracked and ignored
-material (e.g. ingested third-party pages). `docs/web/` is dropped as well
+material (e.g. ingested third-party pages). `docs/landing-zone/` is dropped as well
 because it holds external source documents, not claims about this repo.
 """
 
@@ -37,7 +37,7 @@ VERSION = "version"
 URL = "url"
 GIT = "git"
 
-DEFAULT_EXCLUDES = ("docs/web/",)
+DEFAULT_EXCLUDES = ("docs/landing-zone/",)
 
 FENCE_RE = re.compile(r"^\s*(?:```|~~~)\s*([\w+-]*)")
 # Only these fences hold shell. A python/json/text block is not a command list.
@@ -395,7 +395,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--include-sources",
         action="store_true",
-        help="include docs/web/, normally excluded as external material",
+        help="include docs/landing-zone/, normally excluded as external material",
     )
     args = parser.parse_args(argv)
 

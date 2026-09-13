@@ -49,7 +49,7 @@ def _cfg(**overrides) -> dict:
                 ],
             },
         },
-        "scope": {"exclude_globs": ["docs/web/**"]},
+        "scope": {"exclude_globs": ["docs/landing-zone/**"]},
     }
     base.update(overrides)
     return base
@@ -468,7 +468,7 @@ class TestRunChecks(unittest.TestCase):
 
 class TestGlobMatching(unittest.TestCase):
     def test_double_star_spans_directories(self):
-        self.assertTrue(repo_check._matches("docs/web/a/b.md", "docs/web/**"))
+        self.assertTrue(repo_check._matches("docs/landing-zone/a/b.md", "docs/landing-zone/**"))
 
     def test_single_star_does_not_span_separator(self):
         # Fictional folder for the same reason as TestSchemaFor's: _matches only
@@ -480,13 +480,13 @@ class TestGlobMatching(unittest.TestCase):
                                              "workstation/cli/*/reference.md"))
 
     def test_unrelated_path_is_kept(self):
-        self.assertFalse(repo_check._matches("README.md", "docs/web/**"))
+        self.assertFalse(repo_check._matches("README.md", "docs/landing-zone/**"))
 
 
 class TestCollectFiles(unittest.TestCase):
     def test_excluded_paths_are_dropped(self):
         def fake_git(cmd, **kwargs):
-            out = "README.md\0docs/web/x.md\0CLAUDE.md\0"
+            out = "README.md\0docs/landing-zone/x.md\0CLAUDE.md\0"
             return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
         self.assertEqual(repo_check.collect_files(Path("/repo"), _cfg(), runner=fake_git),
                          ["CLAUDE.md", "README.md"])

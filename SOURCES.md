@@ -8,7 +8,7 @@ verified: never
 
 Curated register of the source material this workbench draws on to produce constitutions, skills, and other artefacts for projects adopting Spec-Driven Development.
 
-This file is the **source of truth** for what belongs in the project. Add or remove a source here first; `SOURCE_CATALOGUE.md` (one-line summaries) and `docs/web/` (ingested content) follow from it.
+This file is the **source of truth** for what belongs in the project. Add or remove a source here first; `SOURCE_CATALOGUE.md` (one-line summaries) and `docs/landing-zone/` (ingested content) follow from it.
 
 ## How this register is organised
 
@@ -28,9 +28,9 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 
 ### Conventions
 
-- **First-party sources only.** A source's URL must be the canonical home of the thing itself — the project's own repo or docs site, the author's own publication. Never a mirror, rehost, scraped copy, fork, or third-party summary. Where a name has a plausible impostor (a stalled fork, a same-named package by a different author), match the URL's owner against the project before adding the entry. This matters more than it looks: `docs/web/` is not in git and is refetched from these URLs, so a bad entry is a standing fault rather than a one-off. Install channels carry their own checks in [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md) §6a.
+- **First-party sources only.** A source's URL must be the canonical home of the thing itself — the project's own repo or docs site, the author's own publication. Never a mirror, rehost, scraped copy, fork, or third-party summary. Where a name has a plausible impostor (a stalled fork, a same-named package by a different author), match the URL's owner against the project before adding the entry. This matters more than it looks: `docs/landing-zone/` is not in git and is refetched from these URLs, so a bad entry is a standing fault rather than a one-off. Install channels carry their own checks in [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md) §6a.
 - **One canonical entry per source.** A source appears as a `[bracket link]` exactly once. Where it also informs another layer, that layer carries an italic *see also* cross-reference instead of a second link — this keeps the ingestion invariant one-to-one.
-- **Ingestion invariant.** Every `[bracket link]` entry resolves to `docs/web/<bracket text>.{md,pdf}`, with `:` in a title written as ` - ` in the filename. Workstation tooling entries are the one exception, and they resolve into two trees by subsection — `#### CLI tools` to `workstation/cli/<bracket text>/reference.md` alongside that tool's authored `install.md` and `quick_start.md`, and `#### MCP servers` to `workstation/mcp/<bracket text>/reference.md` alongside that server's authored `setup.md`.
+- **Ingestion invariant.** Every `[bracket link]` entry resolves to `docs/landing-zone/<bracket text>.{md,pdf}`, with `:` in a title written as ` - ` in the filename. Workstation tooling entries are the one exception, and they resolve into two trees by subsection — `#### CLI tools` to `workstation/cli/<bracket text>/reference.md` alongside that tool's authored `install.md` and `quick_start.md`, and `#### MCP servers` to `workstation/mcp/<bracket text>/reference.md` alongside that server's authored `setup.md`.
 - **Every entry is external.** A source's link target is always an `http(s)` URL, so every entry is subject to the invariant above and to [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md)'s routing. The register carries no internal documents.
 - **Gaps** are listed per layer as unsourced placeholders — the collection backlog.
 
