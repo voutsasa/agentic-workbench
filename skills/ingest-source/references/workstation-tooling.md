@@ -1,7 +1,7 @@
 # Workstation tooling entries
 
 Applies **only** to entries under *Cross-cutting aspects → 2. Workstation tooling* in `SOURCES.md`.
-Every other entry stops at the skill's §5.
+Every other entry stops at the skill's §3.
 
 These entries are tools someone has to set up and then run, so a capability summary alone does not make
 the register reproducible on a fresh machine. That detail goes in the tool's own folder, never in
@@ -31,7 +31,7 @@ Create `workstation/cli/<tool>/` and write three files:
 |---|---|---|
 | `install.md` | authored | how to get it onto a machine |
 | `quick_start.md` | authored | how to run it correctly the first time |
-| `reference.md` | ingested, per the skill's §1 routing | the tool's own docs page |
+| `reference.md` | ingested, via `fetch-to-markdown` | the tool's own docs page |
 
 Then add a row to the tools table in `workstation/cli/README.md`, **in the same position the tool
 occupies in `SOURCES.md`**, keyed by *the command you type* rather than the package name:
@@ -147,7 +147,7 @@ Create `workstation/mcp/<server>/` and write **two** files:
 | File | Authored? | Contents |
 |---|---|---|
 | `setup.md` | authored | how to register it and what it exposes |
-| `reference.md` | ingested, per the skill's §1 routing | the server's own docs page |
+| `reference.md` | ingested, via `fetch-to-markdown` | the server's own docs page |
 
 Then add a row to the servers table in `workstation/mcp/README.md`, in the same position the server
 occupies in `SOURCES.md`:

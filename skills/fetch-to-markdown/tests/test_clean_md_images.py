@@ -1,6 +1,6 @@
 """Unit tests for clean_md_images.py — stdlib only, no network, no model calls.
 
-    python3 -m unittest discover -s skills/ingest-source/tests
+    python3 -m unittest discover -s skills/fetch-to-markdown/tests
 """
 
 from __future__ import annotations

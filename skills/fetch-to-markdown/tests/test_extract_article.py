@@ -1,6 +1,6 @@
 """Unit tests for extract_article.py — stdlib only, no network, no model calls.
 
-    python3 -m unittest discover -s skills/ingest-source/tests
+    python3 -m unittest discover -s skills/fetch-to-markdown/tests
 
 The assertions are written against the ingestion guide's quality check: after a
 Docusaurus extraction, `grep -c "<div\\|<header\\|<span\\|<svg\\|<style"` on the

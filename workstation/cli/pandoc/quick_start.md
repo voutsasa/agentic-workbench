@@ -45,6 +45,6 @@ Two consequences worth knowing before you rely on this:
 
 ## Note
 
-`--extract-media` covers the same problem as [`clean_md_images.py`](../../../skills/ingest-source/scripts/clean_md_images.py) but only for pandoc's own conversions. Docling output still needs the script.
+`--extract-media` covers the same problem as [`clean_md_images.py`](../../../skills/fetch-to-markdown/scripts/clean_md_images.py) but only for pandoc's own conversions. Docling output still needs the script.
 
 Docs: [Getting started](https://pandoc.org/getting-started.html) · full page ingest: [reference.md](reference.md)

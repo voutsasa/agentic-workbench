@@ -1,5 +1,5 @@
 ---
-role: Pointer to the ingest-source skill, which holds the routing and process guide
+role: Pointer to the ingest-source and fetch-to-markdown skills, which hold the process and the routing
 updated: 2026-09-13
 verified: never
 ---
@@ -8,8 +8,9 @@ verified: never
 
 **The procedure moved into a skill.** It is now
 [`skills/ingest-source/SKILL.md`](skills/ingest-source/SKILL.md), with the workstation-tooling branch
-in [`skills/ingest-source/references/workstation-tooling.md`](skills/ingest-source/references/workstation-tooling.md)
-and the two scripts it drives in [`skills/ingest-source/scripts/`](skills/ingest-source/scripts/).
+in [`skills/ingest-source/references/workstation-tooling.md`](skills/ingest-source/references/workstation-tooling.md).
+The fetching and converting it delegates to — and the two scripts that do it — are in
+[`skills/fetch-to-markdown/`](skills/fetch-to-markdown/).
 
 Read the skill, not this file. Nothing was dropped in the move.
 

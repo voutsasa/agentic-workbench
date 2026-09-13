@@ -1,6 +1,6 @@
 ---
 name: ingest-source
-description: Pull a source registered in SOURCES.md into this workbench as clean local markdown — classify the page, route it to the right tool (raw README, curl, extractor plus pandoc, or Playwright plus defuddle), quality-check the result, and update SOURCE_CATALOGUE.md. Use when asked to ingest, fetch, re-ingest or convert a registered source, when a bracket-link entry has no file in docs/landing-zone/, or when adding a CLI tool or MCP server to workstation/. Not for general web research — this writes the corpus.
+description: Pull a source registered in SOURCES.md into this workbench — resolve where the entry lands and what it is named, fetch and convert it with the fetch-to-markdown skill, then record it in SOURCE_CATALOGUE.md. Use when asked to ingest, re-ingest or convert a registered source, when a bracket-link entry has no file in docs/landing-zone/, or when adding a CLI tool or MCP server to workstation/. Not for general web research — this writes the corpus.
 ---
 
 # Ingest a source
@@ -12,46 +12,12 @@ register is the source of truth and the corpus mirrors it.
 > un-ingested and it is not. Check for the destination file first; a full re-run is a deliberate,
 > expensive operation that happens only when the user asks for it in those words.
 
-## 1. Classify the source, then route it
+This skill owns the register: where an entry lands, what the file is called, and what gets written
+back. **The fetching and converting belong to [`fetch-to-markdown`](../fetch-to-markdown/SKILL.md)** —
+classify the page, route it, quality-check the result, strip base64 images. Resolve the destination
+below first, then invoke that skill with the URL and the resolved path.
 
-| The source is | Route | Command |
-|---|---|---|
-| `github.com/<owner>/<repo>` | **Raw README only. Never clone.** | `curl -s https://raw.githubusercontent.com/<owner>/<repo>/<branch>/README.md` |
-| A direct `.pdf` | Fetch the file itself, never scrape a rendered viewer | `curl -sL -o "docs/landing-zone/<topic name>.pdf" <url>` |
-| Docusaurus | curl → extract the article node → pandoc | see below |
-| A plain server-rendered doc site (Sphinx, ReadTheDocs, MkDocs, VitePress, mdBook, static HTML, classic blogs) | `WebFetch`, then spot-check | see the caveat below |
-| A JS-hydrated platform (Mintlify, Fern, Rspress — anything that returned raw JSX under WebFetch) | Playwright → defuddle → pandoc | headless; no browser extension |
-
-**Telling Docusaurus apart:** its theme class names are in the raw HTML — `theme-doc-markdown`,
-`docMainContainer_`. Confirmed on playwright.dev, dbml.dbdiagram.io, d2lang.com, drawio.com.
-
-### The Docusaurus route
-
-```sh
-curl -sL -A "Mozilla/5.0" <url> -o <tmp>/page.html
-python3 skills/ingest-source/scripts/extract_article.py <tmp>/page.html div.theme-doc-markdown \
-  | pandoc -f html -t gfm -o "docs/landing-zone/<topic name>.md"
-```
-
-`extract_article.py` pulls one HTML node by `tag.class` or `tag#id` and strips what pandoc's gfm
-writer cannot map cleanly — `div`, `header`, `span`, inline `<svg>`, base64 icon `<img>`s, `<style>`,
-bookmark `<a name>`s. The source's own text passes through untouched.
-
-**The selector is an argument, so this is not Docusaurus-only.** A hand-rolled layout reuses it with a
-different one: plantuml.com's article sits in `<main id="D7">`, so `main#D7` finds it there.
-
-### Do not use WebFetch on Docusaurus
-
-Verified 2026-09-04: WebFetch paraphrases the source through its own small model **even under an
-explicit "verbatim, do not summarize" instruction** — the real text *"is an end-to-end test
-framework"* came back as *"serves as an end-to-end testing framework"*. That fails §3 outright.
-
-The same risk applies to the plain-doc-site route, because WebFetch's own description says it
-processes content through "a small, fast model". It has **not** been checked on
-Sphinx/ReadTheDocs/MkDocs/mdBook, so treat it as a per-source caveat rather than a ban: spot-check one
-paragraph against the raw HTML before trusting the output.
-
-## 2. Where it lands
+## 1. Where it lands
 
 ```
 docs/landing-zone/<topic name>.{md,pdf}
@@ -86,43 +52,16 @@ sits there:
 Italic *see also* cross-references are not entries. Every real entry carries exactly one bracket link
 with an `http(s)` target, which is what keeps the register-to-corpus mapping one-to-one.
 
-## 3. Quality-check before calling it ingested
+## 2. Fetch and convert
 
-A conversion that exits 0 is not evidence. Run these:
+Hand the entry's URL and the path resolved above to
+[`fetch-to-markdown`](../fetch-to-markdown/SKILL.md). It classifies the source, picks the route, runs
+the quality checks and cleans embedded images. Do not re-derive any of that here.
 
-| Check | How |
-|---|---|
-| Headings and lists survived structurally, not flattened into one paragraph | read the first screen |
-| Tables are still tables, not run-on text — the usual docling/pandoc failure on complex layouts | read one |
-| No leftover markup noise: nav bars, cookie banners, JSX source, "Edit this page" | `grep -c "<div\|<header\|<span\|<svg\|<style" out.md` → **must be 0** |
-| PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries |
-| **A `.docx` with diagrams: count the figures** | `grep -c "data:image/[a-z]*;base64" out.md` against the source's figure count |
+Its checks are pass/fail, and a failure it flags is **not** ingested: re-run or raise it with the user
+rather than recording a degraded conversion.
 
-The `.docx` case is the one that passes every other check while being wrong: **docling drops every
-DrawingML figure at exit 0 when LibreOffice is unreachable**, so headings and tables come through
-perfectly and the images are simply gone. The opt-in is in
-[`workstation/cli/docling/quick_start.md`](../../workstation/cli/docling/quick_start.md#figures-in-a-docx-need-libreoffice-or-they-vanish-silently).
-
-A file that fails any check gets re-run through the JS-hydrated path — render with Playwright, extract
-with defuddle — even if it was first attempted as a plain fetch. If both fail, flag it for the user
-rather than committing a degraded conversion.
-
-## 4. Post-process embedded images
-
-Conversions from PDF or `.docx` inline figures as base64 data URIs, which bloats the file past the
-point any diff or reviewer can work with it:
-
-```sh
-python3 skills/ingest-source/scripts/clean_md_images.py "docs/landing-zone/<topic name>.md"
-```
-
-It writes `<topic name>-no-base64.md` beside the original and the PNGs into a sibling `<topic name>/`
-folder. **It never overwrites the original** — check the cleaned file, then replace.
-
-pandoc's `--extract-media` covers the same problem for pandoc's own conversions only; docling output
-still needs the script.
-
-## 5. Record it
+## 3. Record it
 
 Add the source's **one-line, ≤20-word capability summary** to `SOURCE_CATALOGUE.md`, in the same
 section and the same position it occupies in `SOURCES.md`. The two files must stay entry-for-entry
@@ -133,13 +72,3 @@ identical.
 For a workstation tooling entry, continue into
 [`references/workstation-tooling.md`](references/workstation-tooling.md). Every other entry stops
 here — setup instructions are meaningless for a book, a blog post, or a framework's docs.
-
-## Scripts
-
-Both are stdlib-only and run under bare `python3` before any venv exists. Tests:
-`python3 -m unittest discover -s skills/ingest-source/tests`.
-
-| Script | Does |
-|---|---|
-| [`scripts/extract_article.py`](scripts/extract_article.py) | One HTML node out of its page chrome, by `tag.class` or `tag#id` |
-| [`scripts/clean_md_images.py`](scripts/clean_md_images.py) | base64 data URIs out to sibling PNGs |

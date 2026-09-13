@@ -11,7 +11,8 @@ Gathers agentic-engineering source material used to build constitutions, skills,
 | `README.md` | The repo's landing page: what the workbench is, plus the role of every file in it. Carries no source entries — those live in `SOURCE_CATALOGUE.md`. |
 | `INGESTION_GUIDE.md` | A pointer only. The routing/process guide moved into the `ingest-source` skill; this file records that and says why. |
 | `skills/<skill>/` | **This repo's own skills** — procedures that name `SOURCES.md`, `docs/landing-zone/` or `workstation/`, so they are wrong anywhere else. The counterpart to `workstation/agent/skills/`, which is global. `skills/README.md` carries the line between the two and the per-clone symlink that makes these load, since Claude Code discovers `.claude/skills/` and not this folder. |
-| `skills/ingest-source/` | Pulls one `SOURCES.md` entry into the corpus: classify the page, route it, convert, quality-check, record. `SKILL.md` is the routing guide, `references/workstation-tooling.md` the branch for CLI tools and MCP servers, `scripts/` the two stdlib-only converters, `tests/` their `unittest` suite. |
+| `skills/ingest-source/` | Pulls one `SOURCES.md` entry into the corpus: resolve where it lands and what it is named, delegate the conversion to `fetch-to-markdown`, record it in `SOURCE_CATALOGUE.md`. `references/workstation-tooling.md` is the branch for CLI tools and MCP servers. Register mechanics only — no routing, no conversion. |
+| `skills/fetch-to-markdown/` | One URL and one caller-given destination path to clean markdown: classify the page, route it (raw README, curl, extractor plus pandoc, docling, Playwright plus defuddle), quality-check, strip base64 images. `scripts/` holds the two stdlib-only converters, `tests/` their `unittest` suite. Names no register and no directory, so it is a promotion candidate for `workstation/agent/skills/`. |
 | `docs/landing-zone/` | Ingested external sources — flat, machine-written, **not hand-edited** and **not in git** (see below). |
 | `docs/guidance/` | Short, agent-facing notes to apply mid-task, plus the assets their commands depend on. Hand-authored, tracked in git. Every note declares its provenance; `docs/guidance/README.md` sets the bar and is the file to read before adding one. |
 | `workstation/README.md` | Map of the `workstation/` tree — what each subfolder is for and where to start in it. |
@@ -46,7 +47,7 @@ On a fresh clone the corpus is therefore empty and every entry will look un-inge
 
 ## Ingestion invariant
 
-Every `[bracket link]` entry in `SOURCES.md` should have a corresponding file at `docs/landing-zone/<bracket text>.{md,pdf}`, writing a `: ` in the title — the colon *and* the space after it — as ` - ` in the filename. If a file is missing or an entry was just added, that source hasn't been ingested yet — run it through the `ingest-source` skill's routing logic (only the missing delta, not a full re-run).
+Every `[bracket link]` entry in `SOURCES.md` should have a corresponding file at `docs/landing-zone/<bracket text>.{md,pdf}`, writing a `: ` in the title — the colon *and* the space after it — as ` - ` in the filename. If a file is missing or an entry was just added, that source hasn't been ingested yet — run it through the `ingest-source` skill (only the missing delta, not a full re-run).
 
 **One destination exception, two trees.** Entries under *Cross-cutting aspects → 2. Workstation tooling* land beside their authored guidance instead of in `docs/landing-zone/` — under `#### CLI tools` at `workstation/cli/<bracket text>/reference.md`, and under `#### MCP servers` at `workstation/mcp/<bracket text>/reference.md`. The invariant is otherwise unchanged: still one bracket link to one ingested file, still named from the bracket text.
 
