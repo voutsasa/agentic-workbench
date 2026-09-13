@@ -1,0 +1,39 @@
+/* Print stylesheet for PDF deliverables — see pdf-deliverables.md
+ *
+ *   pandoc input.md -s --template=docs/guidance/minimal.html -o body.html
+ *   weasyprint -s docs/guidance/print.css body.html output.pdf
+ *
+ * Starting point, not a house style. Copy it next to the deliverable and
+ * change the type and margins to suit; the page-breaking rules at the
+ * bottom are the parts worth keeping unchanged.
+ */
+
+@page {
+  size: A4;
+  margin: 25mm 20mm;
+  @top-center   { content: string(doctitle); font-size: 9pt; color: #555; }
+  @bottom-right { content: counter(page) " / " counter(pages); font-size: 9pt; color: #555; }
+}
+
+/* string-set feeds the running header; the only way to get live text
+ * into a margin box. first-of-type stops a blank leading page. */
+h1 { string-set: doctitle content(); break-before: page; font-size: 18pt; }
+h1:first-of-type { break-before: avoid; }
+
+body { font-family: "Source Serif 4", Georgia, serif; font-size: 10.5pt; line-height: 1.45; }
+h2 { font-size: 14pt; }
+h3 { font-size: 11.5pt; }
+
+table { border-collapse: collapse; width: 100%; font-size: 9.5pt; }
+th, td { border: 0.5pt solid #999; padding: 4pt 6pt; text-align: left; vertical-align: top; }
+th { background: #f0f0f0; }
+
+code, pre { font-family: "Source Code Pro", monospace; font-size: 9pt; }
+pre { background: #f5f5f5; padding: 6pt; }
+
+blockquote { margin-left: 0; padding-left: 8pt; border-left: 2pt solid #ccc; color: #444; }
+
+/* Page-breaking. These are the rules that stop a PDF looking broken. */
+thead { display: table-header-group; }   /* repeat header rows across pages */
+tr, img, pre { break-inside: avoid; }    /* never split a row or code block */
+h2, h3 { break-after: avoid; }           /* no heading stranded at page foot */

@@ -60,7 +60,7 @@ broke is worse than no gate, so the hook refuses the push on both.
 ### Scope
 
 Only tracked markdown, via `git ls-files -z`, minus `scope.exclude_globs`. The ingested
-corpus under `docs/sources/web/` and the `reference.md` files are machine-written and
+corpus under `docs/web/` and the `reference.md` files are machine-written and
 gitignored by design — not this repo's prose to hold to a house style.
 
 ## What is deliberately not here

@@ -11,6 +11,7 @@ Gathers agentic-engineering source material used to build constitutions, skills,
 | `README.md` | The repo's landing page: what the workbench is, plus the role of every file in it. Carries no source entries — those live in `SOURCE_CATALOGUE.md`. |
 | `INGESTION_GUIDE.md` | The routing/process guide for pulling a source's content into local storage (GitHub repo vs. PDF vs. plain doc site vs. JS-hydrated doc site, and which tool handles each). |
 | `docs/web/` | Ingested external sources — flat, machine-written, **not hand-edited** and **not in git** (see below). |
+| `docs/guidance/` | Short, agent-facing notes to apply mid-task, plus the assets their commands depend on. Hand-authored, tracked in git. Every note declares its provenance; `docs/guidance/README.md` sets the bar and is the file to read before adding one. |
 | `workstation/README.md` | Map of the `workstation/` tree — what each subfolder is for and where to start in it. |
 | `workstation/cli/README.md` | Index of the workstation **CLI tools** only: what each per-tool file is for, a `command → product → folder` map, and the version-currency rule. Its MCP counterpart is `workstation/mcp/README.md`. |
 | `workstation/cli/<tool>/` | Per-tool guidance for the workstation CLI tools. `install.md` and `quick_start.md` are hand-authored, short, and tracked; `reference.md` is that tool's ingested page — machine-written and **not in git**. Read `quick_start.md` before invoking a tool you haven't used this session. |
@@ -38,7 +39,7 @@ Two cross-cutting groups sit outside the layer model deliberately — *agent wor
 
 ## The corpus is not in git
 
-`.gitignore` excludes `docs/web/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md`. The repo tracks the register, the guides, the authored `install.md`/`quick_start.md` pairs, and the authored `setup.md` files — **not** the ingested third-party content, which is rebuildable from `SOURCES.md`.
+`.gitignore` excludes `docs/web/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md`. The repo tracks the register, the guides, the authored notes in `docs/guidance/`, the authored `install.md`/`quick_start.md` pairs, and the authored `setup.md` files — **not** the ingested third-party content, which is rebuildable from `SOURCES.md`.
 
 On a fresh clone the corpus is therefore empty and every entry will look un-ingested. That is expected, not a fault. Rebuilding it is a deliberate, potentially long operation: only do a full ingestion run when explicitly asked. Otherwise assume a populated local corpus and ingest only the delta for entries whose files are genuinely missing.
 

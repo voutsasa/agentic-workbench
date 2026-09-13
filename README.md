@@ -14,6 +14,7 @@ CLAUDE.md                 	instructions for agents working in this repo.
 
 docs/                     	the corpus — what the workbench reads.   
   web/                    	ingested external sources     — not in git.   
+  guidance/               	distilled agent-facing notes  — in git.   
 
 workstation/              	this machine's setup — serves the repo, never a deliverable.   
   README.md               	what each subfolder below is for.   
@@ -90,6 +91,6 @@ Because these are links into a git repo, check `git status` here before overwrit
 
 ## What is tracked in git
 
-The register, the guides, the authored CLI and MCP guidance, and the Claude Code config. **Not** the ingested third-party content — `docs/web/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md` are all excluded.
+The register, the guides, the authored guidance notes in `docs/guidance/`, the authored CLI and MCP guidance, and the agent config. **Not** the ingested third-party content — `docs/web/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md` are all excluded.
 
 On a fresh clone the corpus is therefore empty and every register entry will look un-ingested. That is expected. Rebuilding it is a deliberate, potentially long operation — see [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md).

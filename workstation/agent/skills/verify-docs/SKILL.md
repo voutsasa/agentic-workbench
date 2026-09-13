@@ -61,7 +61,7 @@ Run these in order. Phase 2 is a hard stop.
 python3 <skill>/scripts/extract_claims.py --repo <repo-root> --out claims.jsonl --summary
 ```
 
-The corpus is `git ls-files '*.md'` minus `docs/sources/` — tracked, authored
+The corpus is `git ls-files '*.md'` minus `docs/web/` — tracked, authored
 documents only. Ingested third-party pages describe someone else's tool and are
 not this repo's claims to defend. Override with `--files` for a narrow run or
 `--include-sources` when the user asks for everything.

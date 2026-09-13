@@ -164,8 +164,7 @@ fields = [
 # excluded from git, so it is not ours to hold to a house style.
 include_globs = ["**/*.md"]
 exclude_globs = [
-  "docs/sources/web/**",
-  "docs/sources/ema/**",
+  "docs/web/**",
   "workstation/cli/*/reference.md",
   "workstation/mcp/*/reference.md",
 ]
