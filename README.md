@@ -9,12 +9,16 @@ Start with [`SOURCE_CATALOGUE.md`](SOURCE_CATALOGUE.md) — it lists every sourc
 ``` txt
 SOURCES.md                	the register — source of truth.   
 SOURCE_CATALOGUE.md       	one-line capability summary per source.   
-INGESTION_GUIDE.md        	how a source becomes a local file.  
+INGESTION_GUIDE.md        	a pointer — the process moved into skills/ingest-source/.  
 CLAUDE.md                 	instructions for agents working in this repo.   
 
 docs/                     	the corpus — what the workbench reads.   
   landing-zone/           	ingested external sources     — not in git.   
   guidance/               	distilled agent-facing notes  — in git.   
+
+skills/                   	this repo's own skills — what the workbench does.   
+  README.md               	the repo-local vs. global line, and how to load these.   
+  ingest-source/          	turns one register entry into a corpus file.   
 
 workstation/              	this machine's setup — serves the repo, never a deliverable.   
   README.md               	what each subfolder below is for.   
@@ -24,11 +28,10 @@ workstation/              	this machine's setup — serves the repo, never a del
   mcp/<server>/           	per-server MCP guidance       — authored files in git.   
   agent/                  	agent config, symlinked into ~/.claude/.   
 
-clean_md_images.py        	strips base64 images out of converted markdown.   
 pyproject.toml            	Python project metadata.   
 ```
 
-The top-level split is **`docs/` is what the workbench reads, `workstation/` is what it runs on.** Nothing under `workstation/` should ever reach a generated artefact — it describes the machines this runs on, not an architecture.
+The top-level split is **`docs/` is what the workbench reads, `workstation/` is what it runs on, `skills/` is what it does.** Nothing under `workstation/` should ever reach a generated artefact — it describes the machines this runs on, not an architecture.
 
 ## The register and its process
 
@@ -36,7 +39,8 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 |---|---|
 | [`SOURCES.md`](SOURCES.md) | **Source of truth.** The register of every source, grouped by the architecture layer it feeds, with the register conventions and per-layer gaps still to collect. Edit this first when adding or removing a source. |
 | [`SOURCE_CATALOGUE.md`](SOURCE_CATALOGUE.md) | **Capability index.** One line per source saying what it gives you, mirroring the register's structure and entries exactly. Changes to the register need a matching change here. |
-| [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md) | **Process.** How to route a source into local storage — GitHub repo, PDF, plain doc site, or JS-hydrated site — how to quality-check the result, and how workstation tooling additionally gets its install route or registration recorded. |
+| [`skills/ingest-source/`](skills/ingest-source/) | **Process.** How to route a source into local storage — GitHub repo, PDF, plain doc site, or JS-hydrated site — how to quality-check the result, and how workstation tooling additionally gets its install route or registration recorded. A skill rather than a guide, so it is discovered by what you are doing rather than by knowing its filename. |
+| [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md) | A pointer to the above, kept so existing references still resolve. Carries no procedure. |
 | [`workstation/cli/README.md`](workstation/cli/README.md) | **CLI tool index.** What each per-tool file is for, a `command → product → folder` map, and the version-currency rule. |
 | [`workstation/mcp/README.md`](workstation/mcp/README.md) | **MCP server index.** The third-party servers configured into this machine, and the file contract they follow. |
 | [`workstation/machines/README.md`](workstation/machines/README.md) | **Machine index.** One file per machine this workbench runs on, and the test for whether a fact is policy, a route, or machine state. |
@@ -83,7 +87,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 
 | Path | Role |
 |---|---|
-| [`clean_md_images.py`](clean_md_images.py) | Extracts base64-embedded images out of a converted markdown file into sibling PNGs. Standard library only — the post-processing step for docling and pandoc output. |
+| [`skills/README.md`](skills/README.md) | Index of this repo's own skills, the line dividing them from the global ones in `workstation/agent/skills/`, and the per-clone symlink that makes them load — Claude Code discovers `.claude/skills/`, not `skills/`. |
 | `pyproject.toml` | Project metadata. No dependencies: the workbench runs on the workstation CLI toolchain plus the standard library. |
 | `.python-version` | Pins the interpreter for `uv` — currently 3.14. |
 | `.verify-claims-allow` | Path claims the documentation gate is to leave alone, one glob per line with a reason above each. Repo-local on purpose: the pre-push hook is shared by every repo that links it, so exemptions must not travel with it. |
@@ -93,4 +97,4 @@ Because these are links into a git repo, check `git status` here before overwrit
 
 The register, the guides, the authored guidance notes in `docs/guidance/`, the authored CLI and MCP guidance, and the agent config. **Not** the ingested third-party content — `docs/landing-zone/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md` are all excluded.
 
-On a fresh clone the corpus is therefore empty and every register entry will look un-ingested. That is expected. Rebuilding it is a deliberate, potentially long operation — see [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md).
+On a fresh clone the corpus is therefore empty and every register entry will look un-ingested. That is expected. Rebuilding it is a deliberate, potentially long operation — see [`skills/ingest-source/`](skills/ingest-source/).

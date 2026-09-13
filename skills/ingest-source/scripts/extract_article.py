@@ -6,11 +6,16 @@ WebFetch paraphrases through a model instead of returning the source text
 directly from raw markup and lets `pandoc` do the HTML-to-markdown
 conversion — no model in the loop, no site chrome in the output.
 
-Usage: python extract_docusaurus_article.py <html-file> <tag.class|tag#id> > article.html
+Usage: python extract_article.py <html-file> <tag.class|tag#id> > article.html
 
   tag.class  e.g. div.theme-doc-markdown — Docusaurus sites (playwright.dev,
              dbml.dbdiagram.io, d2lang.com, drawio.com all use this)
-  tag#id     e.g. div#D7 — plantuml.com's hand-rolled layout
+  tag#id     e.g. main#D7 — plantuml.com's hand-rolled layout
+
+Not Docusaurus-specific despite where it started: the selector is an argument,
+so any server-rendered page whose article sits in one identifiable node works.
+
+Standard library only: this runs on a fresh clone before any venv exists.
 """
 
 from __future__ import annotations
