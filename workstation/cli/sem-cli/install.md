@@ -17,18 +17,19 @@ Binary: `sem`. Product: Sem (Ataraxy Labs).
 
 Verify with `sem --version`; it prints `sem 0.x.y`.
 
-**Windows, 24 August 2026: `sem 0.13.0`, and it came from winget, not scoop.** The binary resolves to
-`…\WinGet\Packages\AtaraxyLabs.sem_…\sem.exe`, so the route in force is the alternative noted below.
-That install is nine minor versions behind this page's `version_observed` and ten behind brew stable —
-a stale local install, clearable with `winget upgrade AtaraxyLabs.sem`. Not upgraded: per
-[`../README.md`](../README.md#version-currency--raise-it-dont-fix-it) that is the user's call.
+**A machine may have it from winget rather than scoop**, in which case the binary resolves to
+`…\WinGet\Packages\AtaraxyLabs.sem_…\sem.exe` and the route in force is the alternative noted below;
+`winget upgrade AtaraxyLabs.sem` is then the upgrade command. Which route a given machine actually
+used, and whether it is behind, is install status — it belongs in that machine's file under
+[`../../machines/`](../../machines/), and acting on it is the user's call per
+[`../README.md`](../README.md#version-currency--raise-it-dont-fix-it).
 
 ## Traps
 
 - **The macOS formula is `sem-cli`, not `sem`.** `brew install sem` installs `schema-evolution-manager`, an unrelated Postgres migration tool. This is the single most likely way to end up with the wrong binary.
 - **Scoop's `main/sem` *is* correct** — its manifest points at `ataraxy-labs.github.io/sem`, matching brew's `sem-cli` at the same version. The name collision is macOS-only.
 - `winget install AtaraxyLabs.sem` is the vendor-documented Windows alternative if you would rather not add scoop.
-- **The pinned version is what is installed here, not what brew ships.** `version_observed` is 0.22.1; brew's stable was 0.23.1 on 24 August 2026, so a fresh install lands ahead of this page. Re-run `sem --version` rather than trusting the number.
+- **Do not trust a version number written on this page.** A fresh install can land ahead of anything recorded here, and a recorded gap becomes misinformation the moment the channel catches up. Run `sem --version` and read the answer.
 
 Confirm you got the right tool: `sem --help` should describe *semantic version control*, not schema migration.
 

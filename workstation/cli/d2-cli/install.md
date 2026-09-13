@@ -16,8 +16,9 @@ Binary: `d2`. Product: D2 (Terrastruct). Self-contained Go binary — no runtime
 
 Verify with `d2 --version`; it prints `v0.x.y-HEAD`. **The `-HEAD` suffix is not a development build.** The binary appends it to its own version string while Homebrew reports the same release without it, so the two disagree on spelling rather than on version — do not chase the difference.
 
-**Windows, 24 August 2026: `v0.7.1`** — a stale scoop install, one minor version behind this page and
-behind brew stable. `scoop update d2` clears it; not run, as version currency is the user's call.
+A local install can lag its channel; `scoop update d2` clears it. Whether a given machine is behind is
+install status, so it belongs in that machine's file under [`../../machines/`](../../machines/), not
+here — and acting on it is the user's call either way.
 
 PNG output needs `librsvg` as well — `brew install librsvg` — because d2's own raster path is broken. See [quick_start.md](quick_start.md).
 

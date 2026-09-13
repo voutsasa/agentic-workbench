@@ -20,7 +20,7 @@ Verify with `plantuml -version`; the first line is `PlantUML version 1.YYYY.N`. 
 
 ## Workstation configuration
 
-**Java and Graphviz installed alongside — required, not optional.** PlantUML is a JAR and needs a **Java runtime** plus **Graphviz**; the package pulls in neither. This workstation carries OpenJDK 17.0.20 and Graphviz 15.1.0, verified 1 August 2026.
+**Java and Graphviz installed alongside — required, not optional.** PlantUML is a JAR and needs a **Java runtime** plus **Graphviz**; the package pulls in neither. Which versions a given machine carries is install status and belongs in that machine's file under [`../../machines/`](../../machines/).
 
 Without Graphviz, every diagram type that needs layout — component, class, state — fails, while sequence diagrams may still render. That partial success makes the failure look intermittent rather than like a missing dependency.
 
@@ -61,7 +61,7 @@ GRAPHVIZ_DOT="/opt/homebrew/opt/graphviz/bin/dot" exec "/opt/homebrew/opt/openjd
   -Djava.awt.headless=true -jar .../plantuml.jar "$@"
 ```
 
-It pins the JDK to Homebrew's own (26.0.2, not whatever `java` resolves to — here a jenv shim on 17), points Graphviz at an absolute `dot` rather than trusting `PATH`, and forces headless mode. `PLANTUML_JAR=/opt/homebrew/opt/plantuml/libexec/plantuml.jar` gives up all three and re-introduces the `PATH` dependency for both `java` and `dot`. It does render on this workstation, but only because both happen to resolve; that is the fragility, not a reason to use it.
+It pins the JDK to Homebrew's own rather than whatever `java` resolves to — which on a machine running a version manager is often a shim for a different release — points Graphviz at an absolute `dot` rather than trusting `PATH`, and forces headless mode. `PLANTUML_JAR=/opt/homebrew/opt/plantuml/libexec/plantuml.jar` gives up all three and re-introduces the `PATH` dependency for both `java` and `dot`. It does render on this workstation, but only because both happen to resolve; that is the fragility, not a reason to use it.
 
 Use `/opt/homebrew/opt/plantuml/...` if you ever do need the jar path — the `Cellar/plantuml/1.2026.6/...` path inside the wrapper is version-pinned and breaks on upgrade.
 

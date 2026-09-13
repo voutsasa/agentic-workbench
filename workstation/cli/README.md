@@ -31,10 +31,17 @@ Install routes — formula names, buckets, and npm/pipx channels — **are not d
 **An `install.md` answers *how do I get this tool*. It never answers *is it here*.**
 
 That second question is per-machine, and this repo runs on more than one machine, so a single-valued
-field cannot answer it honestly. `install.md` therefore carries **no version number and no install
+field cannot answer it honestly. `install.md` therefore carries **no current version and no install
 status** — not in frontmatter, not in prose. What it does carry is the *shape* of a successful
 verification, which is the same everywhere: `pandoc --version` starts with `pandoc 3.x.y` on every box
 that has it.
+
+**One exception, and it is narrow: a version that is evidence for a trap.** "npm 11.4.2 shadowed brew
+11.16.0 for months" and "PyPI `d2` 0.8.1 is a different project from npm `d2` 31.10.2" are statements
+about something that happened, not claims about what is installed now, so they cannot go stale — and
+the numbers are the evidence, not decoration. The test: *would this sentence become wrong when the tool
+releases tomorrow?* If yes it is current state and belongs in [`../machines/`](../machines/); if no it
+can stay.
 
 Per-machine truth lives in [`../machines/`](../machines/) and is **measured, not written**:
 

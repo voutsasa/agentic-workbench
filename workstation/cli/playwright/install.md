@@ -32,6 +32,6 @@ playwright install firefox webkit
 
 - **`playwright install` is not optional.** The pip package ships no browsers. Skip that second step and every run fails at launch. It is a separate download of several hundred MB.
 - **`pipx` gives you the CLI, not an importable module.** To `import playwright` inside a project, add it there instead — `uv add playwright`. The two are independent installs.
-- **Take the Python channel, not npm.** Playwright is published to both, npm 1.62.1 against PyPI 1.61.0. This workbench scripts it from Python, so the binding you write against matters more than the newer version number; the minor lag is an accepted cost.
+- **Take the Python channel, not npm.** Playwright is published to both, and npm has generally been a minor version ahead. This workbench scripts it from Python, so the binding you write against matters more than the newer version number; a minor lag is an accepted cost, whatever the two channels read today.
 
 Docs: [Python installation](https://playwright.dev/python/docs/intro) · full page ingest: [reference.md](reference.md)

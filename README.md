@@ -57,7 +57,7 @@ What the workbench runs on. This tree describes **the machines it runs on**, not
 
 **The split is by lifetime, not by platform.** Policy never expires, a route expires slowly, machine
 state expires constantly — so they live in three different files rather than one. This is why
-`install.md` carries no version number and `CLAUDE.md` names no platform.
+`install.md` carries no current version and `CLAUDE.md` names no platform.
 [`workstation/machines/README.md`](workstation/machines/README.md) has the test for which file a given
 fact belongs in.
 

@@ -14,7 +14,7 @@ Binary: `docling`. Product: Docling. Python tool, installed the same way on both
 | macOS | `pipx install docling` |
 | Windows | `pipx install docling` |
 
-Verify with `docling --version`. It prints a block, one line per component, and **the version numbers deliberately differ** — do not read a mismatch as a fault:
+Verify with `docling --version`. It prints a block, one line per component, and **the version numbers deliberately differ** — do not read a mismatch as a fault. A sample, recorded on Windows when this page was written, kept for its shape rather than its numbers:
 
 ```
 Docling version: 2.122.0
