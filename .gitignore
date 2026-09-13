@@ -31,3 +31,8 @@ wheels/
 
 # Temp files
 **/.clearance*
+
+# Per-clone skill links. Claude Code and Copilot both discover .claude/skills/,
+# but the links there are symlinks on macOS and junctions on Windows, so the
+# link itself cannot be tracked. skills/README.md carries the command.
+.claude/

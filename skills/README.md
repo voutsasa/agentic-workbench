@@ -20,7 +20,9 @@ half of `ingest-source`, and takes its destination path from the caller.
 ## Loading them
 
 **Claude Code discovers `.claude/skills/`, not this folder.** These are versioned here and linked
-across, so the skill loads while the source of truth stays in the tracked tree:
+across, so the skill loads while the source of truth stays in the tracked tree — this repo authors
+skills as a deliverable, which is the reason for the second tree. A repo that merely *uses* a skill
+should write it straight into `.claude/skills/` and skip the link.
 
 ```sh
 mkdir -p .claude/skills
@@ -30,8 +32,10 @@ ln -s ../../skills/ingest-source .claude/skills/ingest-source
 `fetch-to-markdown` needs no line here — it is global, and `link_config.py --apply` puts it in
 `~/.claude/skills/` where every repo sees it.
 
-Per-clone, like the pre-push hook, and never tracked — `.claude/` is not in git. A fresh clone has to
-re-run it.
+Per-clone, like the pre-push hook, and never tracked — `.claude/` is gitignored, added on
+2026-09-13 when it turned out it never had been and the link was simply absent. Tracking the link
+itself is not the alternative: it is a symlink on macOS and a junction on Windows, so a fresh clone
+has to re-run the command above.
 
 ## Conventions
 
