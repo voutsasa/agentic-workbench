@@ -9,9 +9,18 @@
 # Only add a path that is *meant* not to exist here. A path that should exist and
 # does not is a defect to fix, not to exempt.
 
-# Files python-quality writes into a TARGET project, tabulated in its SKILL.md
-# against the templates that generate them. They are not this repo's files.
-.github/**
+# Paths that exist in a TARGET project, never here. Named individually rather
+# than as `.github/**`: this repo owns .github/workflows/verify-docs.yml, and a
+# blanket glob exempted that from checking too.
+#
+# python-quality writes this into a target project from its own template,
+# tabulated in that skill's SKILL.md.
+.github/workflows/check.yml
+#
+# Copilot's project-scope instruction and skill locations, documented in
+# agent/setup/README.md as what Copilot reads in whichever repo you point it at.
+.github/copilot-instructions.md
+.github/skills/**
 
 # The pre-push hook is installed per clone and is never tracked, so it cannot
 # exist on a fresh checkout of any machine. Both references to it are true as

@@ -63,8 +63,10 @@ def extract_base64_images(md_file_path):
     # Replace all matches in-memory
     new_content = re.sub(pattern, replacer, content)
 
-    # Write the streamlined markdown to a new file, alongside the source file
-    output_md_path = os.path.join(output_folder, f"{document_name}.md")
+    # Write the streamlined markdown to a NEW file alongside the source, never over
+    # it. INGESTION_GUIDE.md §4 tells the reader to check the result before replacing
+    # the original, which is only possible if the original survives this run.
+    output_md_path = os.path.join(output_folder, f"{document_name}-no-base64.md")
     with open(output_md_path, "w", encoding="utf-8") as f:
         f.write(new_content)
 

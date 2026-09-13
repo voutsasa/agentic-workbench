@@ -49,9 +49,11 @@ jobs:
       # tier is weak — docling, pandoc and the rest are not installed, so their
       # claims can only come back UNVERIFIABLE. What the runner does have is a
       # network, which is exactly the tier a push gate refuses to depend on. So
-      # the 179 URL and 26 registry claims get checked here, weekly, where nobody
+      # the URL and package-registry claims get checked here, weekly, where nobody
       # is waiting on them. Never fails the job: this workflow reports drift and
-      # opens a pull request, it does not gate.
+      # opens a pull request, it does not gate. No count is quoted on purpose —
+      # the corpus grows every commit, and a pinned figure here was wrong within
+      # a week of being written.
       - name: Verify claims deterministically
         continue-on-error: true
         run: |
