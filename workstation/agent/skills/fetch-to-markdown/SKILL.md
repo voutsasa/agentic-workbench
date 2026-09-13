@@ -20,18 +20,19 @@ makes them itself. If the request did not name a destination path, ask for one b
 | `github.com/<owner>/<repo>` | **Raw README only. Never clone.** | `curl -s https://raw.githubusercontent.com/<owner>/<repo>/<branch>/README.md` |
 | A direct `.pdf` | Fetch the file itself, never scrape a rendered viewer | `curl -sL -o "<dest>.pdf" <url>` |
 | A local or fetched PDF / Office document | `docling` — real layout understanding, ahead of pandoc | `docling convert <input> --to md --output <dir>` |
-| Docusaurus | curl → extract the article node → pandoc | see below |
-| A plain server-rendered doc site (Sphinx, ReadTheDocs, MkDocs, VitePress, mdBook, static HTML, classic blogs) | `WebFetch`, then spot-check | see the caveat below |
-| A JS-hydrated platform (Mintlify, Fern, Rspress — anything that returned raw JSX under WebFetch) | Playwright → defuddle → pandoc | headless; no browser extension |
+| **Any server-rendered HTML** — Docusaurus, Sphinx, ReadTheDocs, MkDocs, VitePress, mdBook, Jekyll, a classic blog, hand-rolled | curl → extract the article node → pandoc | see below |
+| A JS-hydrated platform (Mintlify, Fern, Rspress — anything whose raw HTML holds no article text) | Playwright → defuddle → pandoc | headless; no browser extension |
 
-**Telling Docusaurus apart:** its theme class names are in the raw HTML — `theme-doc-markdown`,
-`docMainContainer_`. Confirmed on playwright.dev, dbml.dbdiagram.io, d2lang.com, drawio.com.
+**One route covers every server-rendered page**, because the extractor's selector is an argument.
+Splitting it by generator only invited the question *which of these is Docusaurus* when the answer
+never changed the command. Confirm the text is in the raw HTML — `curl -s <url> | grep -c "<some
+sentence from the page>"` — and if it is, this route works whatever built the page.
 
-### The Docusaurus route
+### The server-rendered route
 
 ```sh
 curl -sL -A "Mozilla/5.0" <url> -o <tmp>/page.html
-python3 <skill>/scripts/extract_article.py <tmp>/page.html div.theme-doc-markdown <url> \
+python3 <skill>/scripts/extract_article.py <tmp>/page.html <tag.class|tag#id> <url> \
   | pandoc -f html -t gfm -o "<dest>.md"
 ```
 
@@ -43,19 +44,33 @@ the markdown is well-formed, so no markup check below can see it.
 writer cannot map cleanly — `div`, `header`, `span`, inline `<svg>`, base64 icon `<img>`s, `<style>`,
 bookmark `<a name>`s. The source's own text passes through untouched.
 
-**The selector is an argument, so this is not Docusaurus-only.** A hand-rolled layout reuses it with a
-different one: plantuml.com's article sits in `<main id="D7">`, so `main#D7` finds it there.
+#### Finding the selector
 
-### Do not use WebFetch on Docusaurus
+The only judgement call in this route. List the candidate containers and pick the one wrapping the
+article:
+
+```sh
+grep -oE "<(main|article|div|section)[^>]{0,120}" <tmp>/page.html \
+  | grep -iE "class=|id=" | sort | uniq -c | sort -rn | head -20
+```
+
+A generator's own class name is a shortcut when the page has one — Docusaurus puts
+`theme-doc-markdown` and `docMainContainer_` in the raw HTML (playwright.dev, dbml.dbdiagram.io,
+d2lang.com, drawio.com). Where it does not, the grep above is the answer: plantuml.com's article sits
+in `<main id="D7">` → `main#D7`; rdi.berkeley.edu's Jekyll syllabus in `<section class="main-content">`
+→ `section.main-content`.
+
+**Pick the narrowest node that still holds everything you want.** Too wide drags in nav and footer,
+which §2's noise check catches; too narrow silently drops content, which it does not — so confirm the
+last section of the page survived.
+
+### Do not use WebFetch for this
 
 Verified 2026-09-04: WebFetch paraphrases the source through its own small model **even under an
 explicit "verbatim, do not summarize" instruction** — the real text *"is an end-to-end test
-framework"* came back as *"serves as an end-to-end testing framework"*. That fails §2 outright.
-
-The same risk applies to the plain-doc-site route, because WebFetch's own description says it
-processes content through "a small, fast model". It has **not** been checked on
-Sphinx/ReadTheDocs/MkDocs/mdBook, so treat it as a per-source caveat rather than a ban: spot-check one
-paragraph against the raw HTML before trusting the output.
+framework"* came back as *"serves as an end-to-end testing framework"*. That fails §2 outright, and
+its own description says it processes content through "a small, fast model", so this is a property of
+the tool and not of any one site. The extractor route puts no model in the loop at all.
 
 ## 2. Quality-check before calling it converted
 
