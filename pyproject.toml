@@ -11,3 +11,16 @@ dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.7",
 ]
+
+# No `target-version` here: ruff infers it from `requires-python` above, and
+# holding one fact in two places is how the two diverge.
+[tool.ruff.lint]
+# ruff 0.16.7's default set is broad — 415 rules — so the baseline is whatever
+# the pinned ruff version ships, not a list restated here. `extend-select` adds
+# what that default deliberately leaves out.
+#
+# E402, module-import-not-at-top-of-file: several scripts here extend sys.path
+# before importing the module under test. Ruff exempts that specific pattern, so
+# enabling E402 flags nothing today; it is on to catch the ordinary case — an
+# import placed after real code — in anything added later.
+extend-select = ["E402"]

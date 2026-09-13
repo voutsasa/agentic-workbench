@@ -63,8 +63,10 @@ Both are declared in `pyproject.toml` under `[dependency-groups] dev`, not `[pro
 route was `uvx pytest`, which keeps them out of the lock file.
 
 `.venv/bin/ruff check .` reports **All checks passed** as of 2026-09-13. The first run against this
-tree found 17 errors and they were fixed the same day; there is no ruff configuration, so this is
-ruff 0.16.7's own rule set — 415 rules, which notably does **not** include `E402`.
+tree found 17 errors and they were fixed the same day. The baseline is ruff 0.16.7's own default set —
+415 rules, wide enough to include `SIM`, `RUF`, `UP` and `I` — plus `E402`, added by
+`[tool.ruff.lint]` in `pyproject.toml`. Nothing else is configured, so **the effective rule set moves
+with the installed ruff version**; a newer ruff may find errors this one does not.
 
 The `workstation/scripts/` and skill scripts are stdlib-only by design and are the deliberate
 exception: they run under bare `python3` before any venv exists. See
