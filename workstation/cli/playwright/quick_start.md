@@ -10,7 +10,7 @@ Drives a real browser. In this workbench its job is one thing: rendering JS-hydr
 
 ## The ingestion route
 
-Render the page, then hand it to defuddle — see [`INGESTION_GUIDE.md`](../../../INGESTION_GUIDE.md) §1.
+Render the page, then hand it to defuddle — see [`fetch-to-markdown`](../../agent/skills/fetch-to-markdown/SKILL.md) §1.
 
 ```python
 from playwright.sync_api import sync_playwright

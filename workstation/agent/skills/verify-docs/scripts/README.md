@@ -168,8 +168,8 @@ not is a defect to fix.
 `--online` reports two, both in documentation warning *against* a command:
 
 ```
-INGESTION_GUIDE.md:153            brew install sem   ->  Homebrew has no package sem
-workstation/cli/sem-cli/install.md:23 brew install sem   ->  Homebrew has no package sem
+skills/ingest-source/references/workstation-tooling.md:124 brew install sem   ->  Homebrew has no package sem
+workstation/cli/sem-cli/install.md:29                     brew install sem   ->  Homebrew has no package sem
 ```
 
 The evidence is correct — `sem` is not a core formula, `sem-cli` is — and so is

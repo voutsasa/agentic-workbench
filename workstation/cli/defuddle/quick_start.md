@@ -39,6 +39,6 @@ The only subcommand is `parse`; the source argument is a file path, a URL, or `-
 ## Traps
 
 - **A 403 is usually the User-Agent.** Set `-u` before concluding the site is unfetchable.
-- **Defuddle alone cannot see hydrated content.** If the page is a JS app, `defuddle parse <url>` extracts the empty shell. Render with Playwright first — see [`INGESTION_GUIDE.md`](../../../INGESTION_GUIDE.md) §1.
+- **Defuddle alone cannot see hydrated content.** If the page is a JS app, `defuddle parse <url>` extracts the empty shell. Render with Playwright first — see [`fetch-to-markdown`](../../agent/skills/fetch-to-markdown/SKILL.md) §1.
 
 Docs: [README](https://github.com/kepano/defuddle) · full page ingest: [reference.md](reference.md)

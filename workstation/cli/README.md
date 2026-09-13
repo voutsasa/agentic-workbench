@@ -24,7 +24,7 @@ file in [`../machines/`](../machines/). Do that when a machine of that platform 
 twelve guessed `apt` package names would be twelve unverified claims, and the *Do not cross ecosystems
 by name* trap at the bottom of this page is exactly how guessing goes wrong.
 
-Install routes — formula names, buckets, and npm/pipx channels — **are not dated here**, because they go stale one tool at a time: each `install.md` carries its own `verified` date in frontmatter, and that is the one to trust. [`INGESTION_GUIDE.md`](../../INGESTION_GUIDE.md) §6a defines how an install route is resolved and verified; these files are the result of applying it.
+Install routes — formula names, buckets, and npm/pipx channels — **are not dated here**, because they go stale one tool at a time: each `install.md` carries its own `verified` date in frontmatter, and that is the one to trust. [`skills/ingest-source/references/workstation-tooling.md`](../../skills/ingest-source/references/workstation-tooling.md) §A defines how an install route is resolved and verified; these files are the result of applying it.
 
 ## Route here, state in `machines/`
 

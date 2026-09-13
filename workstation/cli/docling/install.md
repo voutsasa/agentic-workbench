@@ -53,7 +53,7 @@ identical at the prompt and have different owners. A worked example, with the si
 settles it, is in
 [`../../machines/windows-ema-pf5n4xe7.md`](../../machines/windows-ema-pf5n4xe7.md#whoami-and-hostname-are-blocked-in-gits-usrbin-and-it-does-not-matter). Ask the user to have `docling.exe` and `docling-tools.exe` allow-listed. Do not
 substitute another route: docling is the primary PDF/Office → markdown route in
-[`INGESTION_GUIDE.md`](../../../INGESTION_GUIDE.md), `pandoc` does not cover scanned PDFs, and
+[`fetch-to-markdown`](../../agent/skills/fetch-to-markdown/SKILL.md), `pandoc` does not cover scanned PDFs, and
 `pymupdf` in a project venv is a library rather than a drop-in for the CLI.
 
 Which machines this is currently happening on is recorded in [`../../machines/`](../../machines/), not

@@ -14,7 +14,7 @@ What this workbench **runs on**, as opposed to what it reads. `docs/` is the cor
 | [`machines/`](machines/) | One file per machine this workbench runs on: paths, shell, which tools actually run, what is broken. The only place machine-specific facts belong. | [`machines/README.md`](machines/README.md) — the index, and the test for which file a fact belongs in. |
 | [`scripts/`](scripts/) | Scripts that maintain this tree — the inventory probe that generates a machine's tool table, and the link checker for `~/.claude`. | [`scripts/README.md`](scripts/README.md) |
 
-`cli/` and `mcp/` are two halves of one register section — *Cross-cutting aspects → 2. Workstation tooling* in [`SOURCES.md`](../SOURCES.md). They are split because the file contract differs, not because the purpose does. [`INGESTION_GUIDE.md`](../INGESTION_GUIDE.md) §6 covers both: §6a for CLI tools, §6b for MCP servers.
+`cli/` and `mcp/` are two halves of one register section — *Cross-cutting aspects → 2. Workstation tooling* in [`SOURCES.md`](../SOURCES.md). They are split because the file contract differs, not because the purpose does. [`skills/ingest-source/references/workstation-tooling.md`](../skills/ingest-source/references/workstation-tooling.md) covers both: §A for CLI tools, §B for MCP servers.
 
 ## Three rules that apply across the tree
 
