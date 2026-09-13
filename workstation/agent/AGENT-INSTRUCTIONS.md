@@ -1,4 +1,4 @@
-# Global Claude Code preferences
+# Agentic workbench principles and setup
 
 ## Key principles
 
