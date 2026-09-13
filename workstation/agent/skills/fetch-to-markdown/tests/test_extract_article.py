@@ -215,5 +215,63 @@ class StrippingTests(unittest.TestCase):
         self.assertNotIn("Edit this page", out)
 
 
+class AbsolutiseTests(unittest.TestCase):
+    """The third argument resolves relative targets against the page's own URL.
+
+    Added after the Berkeley LLM-agents syllabus converted cleanly — 0 markup
+    noise, every table intact — while five slide links still read `./assets/…`
+    and pointed at nothing outside the site. No markup check can see that: the
+    markdown is well-formed, the target is simply wrong.
+    """
+
+    BASE = "https://rdi.berkeley.edu/llm-agents/f24"
+
+    def absolutise(self, html: str) -> str:
+        return extract_article.absolutise(html, self.BASE)
+
+    def test_dot_slash_relative_href(self) -> None:
+        out = self.absolutise('<a href="./assets/intro.pdf">Intro</a>')
+        self.assertIn('href="https://rdi.berkeley.edu/llm-agents/assets/intro.pdf"', out)
+
+    def test_bare_relative_src(self) -> None:
+        out = self.absolutise('<img src="assets/dawn.jpg" height="200" />')
+        self.assertIn('src="https://rdi.berkeley.edu/llm-agents/assets/dawn.jpg"', out)
+
+    def test_root_relative_href(self) -> None:
+        out = self.absolutise('<a href="/llm-agents-mooc/">MOOC</a>')
+        self.assertIn('href="https://rdi.berkeley.edu/llm-agents-mooc/"', out)
+
+    def test_absolute_url_is_untouched(self) -> None:
+        html = '<a href="https://arxiv.org/abs/2402.10200">CoT</a>'
+        self.assertEqual(html, self.absolutise(html))
+
+    def test_fragment_is_untouched(self) -> None:
+        """An intra-document link must stay intra-document."""
+        html = '<a href="#syllabus">Syllabus</a>'
+        self.assertEqual(html, self.absolutise(html))
+
+    def test_non_http_schemes_are_untouched(self) -> None:
+        for html in (
+            '<a href="mailto:staff@example.edu">Mail</a>',
+            '<a href="javascript:void(0)">Menu</a>',
+            '<img src="data:image/png;base64,AAAA" />',
+        ):
+            with self.subTest(html=html):
+                self.assertEqual(html, self.absolutise(html))
+
+    def test_single_quoted_attribute_keeps_its_quoting(self) -> None:
+        out = self.absolutise("<a href='./a.pdf'>A</a>")
+        self.assertIn("href='https://rdi.berkeley.edu/llm-agents/a.pdf'", out)
+
+    def test_empty_target_is_untouched(self) -> None:
+        html = '<a href="">Nothing</a>'
+        self.assertEqual(html, self.absolutise(html))
+
+    def test_no_base_url_leaves_the_document_alone(self) -> None:
+        """The argument is optional, and omitting it must change nothing."""
+        html = '<a href="./assets/intro.pdf">Intro</a>'
+        self.assertEqual(html, extract_article.absolutise(html, ""))
+
+
 if __name__ == "__main__":
     unittest.main()

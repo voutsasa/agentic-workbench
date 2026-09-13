@@ -6,7 +6,7 @@ WebFetch paraphrases through a model instead of returning the source text
 directly from raw markup and lets `pandoc` do the HTML-to-markdown
 conversion — no model in the loop, no site chrome in the output.
 
-Usage: python extract_article.py <html-file> <tag.class|tag#id> > article.html
+Usage: python extract_article.py <html-file> <tag.class|tag#id> [base-url] > article.html
 
   tag.class  e.g. div.theme-doc-markdown — Docusaurus sites (playwright.dev,
              dbml.dbdiagram.io, d2lang.com, drawio.com all use this)
@@ -14,6 +14,12 @@ Usage: python extract_article.py <html-file> <tag.class|tag#id> > article.html
 
 Not Docusaurus-specific despite where it started: the selector is an argument,
 so any server-rendered page whose article sits in one identifiable node works.
+
+Pass the page's own URL as the optional third argument to rewrite relative
+href/src targets against it. Without it a link like `./assets/slides.pdf`
+survives the conversion intact and is dead the moment the file leaves the site,
+which no markup check catches — the markdown is well-formed, it just points at
+nothing.
 
 Standard library only: this runs on a fresh clone before any venv exists.
 """
@@ -24,6 +30,7 @@ import re
 import sys
 from html.parser import HTMLParser
 from pathlib import Path
+from urllib.parse import urljoin
 
 # Docusaurus wraps every heading in a hash-link anchor (just a permalink icon)
 # and every tab/code-block in layout <div>s. None of it is content — pandoc's
@@ -57,6 +64,36 @@ STYLE_TAG = re.compile(r"<style\b.*?</style>", re.DOTALL)
 # thing, tags and content together.
 BACKTOP_ICON = re.compile(r'<img\b[^>]*class="backtop"[^>]*/?>')
 EDIT_DROPDOWN = re.compile(r'<div class="dropdown">.*?</div>\s*</div>', re.DOTALL)
+
+
+#: Attributes whose value is a single URL. `srcset` is deliberately absent: it
+#: holds a comma-separated list with descriptors, so it needs its own parser and
+#: no page ingested so far has one inside the article node.
+URL_ATTRS = ("href", "src", "poster")
+_URL_ATTR_RE = re.compile(
+    r'\b(' + "|".join(URL_ATTRS) + r')=(["\'])(?P<url>[^"\']*)\2',
+    re.IGNORECASE,
+)
+
+
+def absolutise(html: str, base_url: str) -> str:
+    """Resolve relative href/src targets against the page's own URL.
+
+    ``urljoin`` leaves an absolute URL alone and resolves a relative one, so it
+    needs no branch of ours. Two targets are skipped because joining them would
+    corrupt them: a fragment-only link (``#section``) is intra-document, and a
+    non-http scheme (``mailto:``, ``data:``, ``javascript:``) is not a path.
+    """
+    def replace(match: re.Match[str]) -> str:
+        url = match.group("url")
+        if not url or url.startswith("#") or url.startswith("data:"):
+            return match.group(0)
+        if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", url) and not url.startswith(("http:", "https:")):
+            return match.group(0)
+        quote = match.group(2)
+        return f"{match.group(1)}={quote}{urljoin(base_url, url)}{quote}"
+
+    return _URL_ATTR_RE.sub(replace, html)
 
 
 def parse_selector(selector: str) -> tuple[str, str, str]:
@@ -116,10 +153,11 @@ class ArticleExtractor(HTMLParser):
 
 
 def main() -> int:
-    if len(sys.argv) != 3:
+    if len(sys.argv) not in (3, 4):
         print(__doc__, file=sys.stderr)
         return 2
     html_path, selector = sys.argv[1], sys.argv[2]
+    base_url = sys.argv[3] if len(sys.argv) == 4 else ""
     tag, attr, value = parse_selector(selector)
     html = Path(html_path).read_text(encoding="utf-8")
     parser = ArticleExtractor(tag, attr, value)
@@ -137,6 +175,8 @@ def main() -> int:
     article = ICON_IMG.sub("", article)
     article = SVG_TAG.sub("", article)
     article = DIV_TAG.sub("", article)
+    if base_url:
+        article = absolutise(article, base_url)
     sys.stdout.buffer.write(article.encode("utf-8"))
     return 0
 

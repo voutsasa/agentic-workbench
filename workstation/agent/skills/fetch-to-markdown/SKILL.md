@@ -31,9 +31,13 @@ makes them itself. If the request did not name a destination path, ask for one b
 
 ```sh
 curl -sL -A "Mozilla/5.0" <url> -o <tmp>/page.html
-python3 <skill>/scripts/extract_article.py <tmp>/page.html div.theme-doc-markdown \
+python3 <skill>/scripts/extract_article.py <tmp>/page.html div.theme-doc-markdown <url> \
   | pandoc -f html -t gfm -o "<dest>.md"
 ```
+
+**Always pass the page's own URL as the third argument.** It resolves relative `href`/`src` targets
+against it. Skip it and a link like `./assets/<file>.pdf` converts perfectly and points at nothing —
+the markdown is well-formed, so no markup check below can see it.
 
 `extract_article.py` pulls one HTML node by `tag.class` or `tag#id` and strips what pandoc's gfm
 writer cannot map cleanly — `div`, `header`, `span`, inline `<svg>`, base64 icon `<img>`s, `<style>`,
@@ -61,7 +65,8 @@ A conversion that exits 0 is not evidence. Run these:
 |---|---|
 | Headings and lists survived structurally, not flattened into one paragraph | read the first screen |
 | Tables are still tables, not run-on text — the usual docling/pandoc failure on complex layouts | read one |
-| No leftover markup noise: nav bars, cookie banners, JSX source, "Edit this page" | `grep -c "<div\|<header\|<span\|<svg\|<style" <dest>.md` → **must be 0** |
+| No leftover markup noise: nav bars, cookie banners, JSX source, "Edit this page" | `grep -c "<div\|<header\|<span\|<svg\|<style\|<table\|<img" <dest>.md` → **must be 0** |
+| Every link resolves off-site | `grep -oE "\]\(\.{0,2}/?[^):]+\)" <dest>.md` → **must be empty**; a relative target means the URL argument was omitted |
 | PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries |
 | **A `.docx` with diagrams: count the figures** | `grep -c "data:image/[a-z]*;base64" <dest>.md` against the source's figure count |
 
@@ -72,7 +77,21 @@ LibreOffice's `program` directory on `PATH` for that one conversion — each fig
 headless round-trip, roughly 100× the conversion time — and do not set `DOCLING_LIBREOFFICE_CMD`,
 which docling names in the warning but never reads.
 
-A file that fails any check gets re-run through the JS-hydrated path — render with Playwright, extract
+**`<table` is the one with a different remedy.** pandoc's gfm writer cannot put block content — a
+list, two paragraphs, several `<br>`-separated links — inside a pipe-table cell, so it emits the whole
+table as raw HTML instead. Re-running the JS-hydrated path will not help, because the input was never
+the problem. Convert to pandoc's own markdown, which has multiline tables:
+
+```sh
+pandoc -f html -t markdown -o "<dest>.md" <tmp>/article.html
+```
+
+Measured on rdi.berkeley.edu/llm-agents/f24, a Jekyll syllabus: `-t gfm` gave 377 lines with one raw
+`<table>` block; `-t markdown` gave 221 lines, `<table` count 0, all 21 arxiv links and all 13 lecture
+rows intact. The cost is that a multiline table is not GFM — it reads as aligned plain text in a viewer
+that renders only GFM, rather than as a table.
+
+Any other failure gets re-run through the JS-hydrated path — render with Playwright, extract
 with defuddle — even if it was first attempted as a plain fetch. If both fail, flag it for the user
 rather than keeping a degraded conversion.
 
