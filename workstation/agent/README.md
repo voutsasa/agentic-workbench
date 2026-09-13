@@ -26,6 +26,7 @@ of the tree is arranged around, and it has three consequences:
 | `skills/python-quality/` | `~/.claude/skills/python-quality` | linked |
 | `skills/verify-docs/` | `~/.claude/skills/verify-docs` | linked |
 | `skills/fix-findings/` | `~/.claude/skills/fix-findings` | linked |
+| `skills/pdf-deliverable/` | `~/.claude/skills/pdf-deliverable` | linked |
 | `../machines/<platform>-<host>.md` | `~/.claude/machine.md` | linked |
 | `hooks/powershell-tool-prompt.ps1` | `~/.claude/hooks/powershell-tool-prompt.ps1` | **reference copy — copied by hand, never linked** |
 
@@ -165,8 +166,8 @@ One command reports every path in the *Contents* table and writes nothing. Run i
 python workstation/scripts/link_config.py
 ```
 
-It exits non-zero unless all six are live, distinguishes a *detached* copy from a *diverged* one, and
-never touches `settings.json`. Add `--apply` to repair:
+It exits non-zero unless every link in the *Contents* table is live, distinguishes a *detached* copy
+from a *diverged* one, and never touches `settings.json`. Add `--apply` to repair:
 
 ```
 python workstation/scripts/link_config.py --apply
@@ -179,8 +180,8 @@ side carries nothing unique, then use `--force`.
 **On Windows this is routine, not exceptional.** `CLAUDE.md` and `machine.md` are hardlinks there, and a
 hardlink is severed both by `git checkout` and by any atomic-saving editor — Zed, VS Code, and Claude
 Code's own `Edit` tool included. So **re-run `--apply` after editing either file, and after any merge,
-branch switch or pull that touches them.** Which side you edited makes no difference. The four skill
-junctions are immune, as are all six symlinks on macOS. Details in
+branch switch or pull that touches them.** Which side you edited makes no difference. The skill
+junctions are immune, as is every symlink on macOS. Details in
 [`setup/windows.md`](setup/windows.md#windows-traps).
 
 ### One surface ignores these links entirely
@@ -189,7 +190,7 @@ junctions are immune, as are all six symlinks on macOS. Details in
 link**, and skip a symlinked `~/.claude/rules/` directory or rule file pointing outside the working
 directory. Claude Code's memory documentation states this directly. Every link this repo creates is one
 of those, so in that surface the global instructions silently do not load — `link_config.py` still
-reports 6 of 6, because the links *are* healthy; it is the reader that declines them.
+reports every link healthy, because they *are*; it is the reader that declines them.
 
 Nothing here detects it. The check is `/context` inside a Cowork session: if `CLAUDE.md` is missing
 under **Memory files**, this is why. The documented way round it is an `@` import from a real file

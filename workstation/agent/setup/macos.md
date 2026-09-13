@@ -5,7 +5,7 @@ Puts this repo's [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) and [`..
 
 **`settings.json` is not in that list, and must not be.** See *Settings: merge, do not link* below.
 
-**Route: symlinks.** `ln -s` needs no elevation on macOS, so all six links are the same kind and the
+**Route: symlinks.** `ln -s` needs no elevation on macOS, so every link is the same kind and the
 Windows junction/hardlink workaround — and its severed-link failure mode — does not apply here. macOS
 has its own: a symlink whose target has been *renamed* still exists but resolves to nothing. See
 *Verify*.
@@ -105,7 +105,7 @@ Do not assume it worked — `ln -sfn` is quiet on success and on several kinds o
 python3 "$(git rev-parse --show-toplevel)/workstation/scripts/link_config.py"
 ```
 
-That checks all six links, writes nothing, and exits non-zero unless every one is live. `--apply`
+That checks every link, writes nothing, and exits non-zero unless every one is live. `--apply`
 repairs what is missing; a destination whose content has diverged from the repo is reported and skipped
 rather than overwritten. It never touches `settings.json`.
 

@@ -117,7 +117,7 @@ one tool routinely mentions another. Two rules keep attributions honest:
   none is `dbml`, and `plantuml-cli`'s install page mentions `scoop` often enough
   that PlantUML's version gets attributed to the installer.
 - **An inferred subject may be confirmed, never refuted.** A flag named in prose
-  rather than in an invocation has no certain owner. `docs/guidance/pdf-deliverables.md`
+  rather than in an invocation has no certain owner. The `pdf-deliverable` skill
   compares pandoc with WeasyPrint, so WeasyPrint's `--pdf-variant` is attributed
   to pandoc — whose help has never listed it. That is `UNVERIFIABLE`. A flag that
   appears in a real command line on the line is refutable.

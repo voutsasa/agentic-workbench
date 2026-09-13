@@ -19,9 +19,20 @@ State it in the opening lines. Two kinds, in descending order of trust:
 | Kind | Evidence required | Example |
 |---|---|---|
 | **Corpus-derived** | Cite the `SOURCES.md` entry it distils. The register is the source of truth; guidance is a shortcut through it. | *(none yet)* |
-| **Workstation-verified** | State what was run and when. Claims about tool behaviour are worthless undated — a broken route gets fixed upstream and the note becomes a lie. | [`pdf-deliverables.md`](pdf-deliverables.md) |
+| **Workstation-verified** | State what was run and when. Claims about tool behaviour are worthless undated — a broken route gets fixed upstream and the note becomes a lie. | *(none — see* Why this folder is empty *below)* |
 
 **Corpus-derived is the kind this workbench exists to produce.** That the folder currently holds none is worth noticing rather than smoothing over: it means the distillation half of the workbench has not started, and the register's per-layer gaps are the backlog for starting it.
+
+## Why this folder is empty
+
+It held one note, `pdf-deliverables.md`, and that note is now the global `pdf-deliverable` skill at [`../../workstation/agent/skills/pdf-deliverable/`](../../workstation/agent/skills/pdf-deliverable/).
+
+Two reasons, and the second is the one that generalises:
+
+- **It was workstation-verified, not corpus-derived** — a description of how two CLI tools behave. The *What does not belong* rule below already said machine and tool description is misfiled here.
+- **A note is only read by an agent that already knows its filename.** A skill's `description` is the discovery mechanism: it fires on "make me a PDF" with nobody having to remember the file exists. Any note in this folder whose trigger is a *task* rather than a *question* is a skill wearing the wrong hat.
+
+So the bar has a fourth clause in practice: **a note that tells you what to do when you are already doing something is a skill.** What stays here is what you consult while deciding — conclusions distilled from the register, addressed by the layer they inform.
 
 ## What does not belong
 
@@ -34,12 +45,10 @@ State it in the opening lines. Two kinds, in descending order of trust:
 - Renders in Zed's plain preview: **no inline HTML, no CSS assets, no render scripts.**
 - Tables over prose for anything enumerable — an agent scanning for one row should not read paragraphs.
 - Lead with the decision, then the reasoning. A note read under time pressure should be actionable from its first table.
-- Assets a note's commands depend on live beside it — `print.css` and `minimal.html` belong to `pdf-deliverables.md`. Reference them by repo-root path so the commands run as written.
+- Assets a note's commands depend on live beside it, referenced by repo-root path so the commands run as written. A note whose assets have to be reachable from *outside* this repo is a sign it belongs in a skill instead, where they ship with it.
 
 ## Contents
 
 | File | Kind | What it gives you |
 |---|---|---|
-| [`pdf-deliverables.md`](pdf-deliverables.md) | workstation-verified | The two adopted PDF routes and how to choose between them. |
-| [`print.css`](print.css) | asset | Print stylesheet for the WeasyPrint route. |
-| [`minimal.html`](minimal.html) | asset | Pandoc template emitting body HTML without pandoc's own CSS. |
+| *(none yet)* | — | — |

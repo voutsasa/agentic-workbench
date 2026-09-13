@@ -17,7 +17,7 @@ register is the source of truth and the corpus mirrors it.
 | The source is | Route | Command |
 |---|---|---|
 | `github.com/<owner>/<repo>` | **Raw README only. Never clone.** | `curl -s https://raw.githubusercontent.com/<owner>/<repo>/<branch>/README.md` |
-| A direct `.pdf` | Download the file, not a rendered viewer | `curl -sL -o "docs/landing-zone/<topic name>.pdf" <url>` |
+| A direct `.pdf` | Fetch the file itself, never scrape a rendered viewer | `curl -sL -o "docs/landing-zone/<topic name>.pdf" <url>` |
 | Docusaurus | curl → extract the article node → pandoc | see below |
 | A plain server-rendered doc site (Sphinx, ReadTheDocs, MkDocs, VitePress, mdBook, static HTML, classic blogs) | `WebFetch`, then spot-check | see the caveat below |
 | A JS-hydrated platform (Mintlify, Fern, Rspress — anything that returned raw JSX under WebFetch) | Playwright → defuddle → pandoc | headless; no browser extension |

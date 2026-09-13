@@ -58,7 +58,7 @@ Claude subscription, no provider configuration.
 2. **Link the config** — follow [`macos.md` § *Link it*](macos.md#link-it), which carries the
    commands.
 
-   What it puts in place: six symlinks — four skills, `AGENT-INSTRUCTIONS.md` → `~/.claude/CLAUDE.md`,
+   What it puts in place: one symlink per skill, plus `AGENT-INSTRUCTIONS.md` → `~/.claude/CLAUDE.md`
    and the machine note → `~/.claude/machine.md`. `settings.json` is not among them, by design.
 
 3. **Settings — merge by hand, never link.** (**user**) `settings.json` is excluded from the plan by
@@ -73,7 +73,8 @@ Claude subscription, no provider configuration.
 
 ### Verify
 
-Re-run the link report from [`macos.md`](macos.md#verify) and expect **6 of 6 linked**.
+Re-run the link report from [`macos.md`](macos.md#verify) and expect **all links reported live**
+(`N of N linked`, where N is however many `link_config.py`'s `SKILLS` tuple implies).
 
 Then in a session, `/context` and check the list under **Memory files**. If `CLAUDE.md` is absent
 there, Claude cannot see it, however healthy the symlink looks.

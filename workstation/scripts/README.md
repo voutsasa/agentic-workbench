@@ -70,8 +70,10 @@ python workstation/scripts/link_config.py --machine macos-workstation  # pick th
 python workstation/scripts/link_config.py --json                # machine-readable
 ```
 
-Checks six links: the four skills, `CLAUDE.md`, and the machine note at `~/.claude/machine.md`. Exits
-non-zero unless all six are live, so it works as a check as well as a fixer.
+Checks every link the agent config needs: each skill named in the script's `SKILLS` tuple,
+`CLAUDE.md`, and the machine note at `~/.claude/machine.md`. Exits non-zero unless all of them are
+live, so it works as a check as well as a fixer. Adding a skill means adding it to `SKILLS` and
+nothing else — the count is derived, never written down.
 
 **The machine note is resolved, not derived**, so a machine file need not be named after a hostname:
 `--machine <id>` wins; failing that `<platform>-<hostname>.md` if it exists; failing that the only

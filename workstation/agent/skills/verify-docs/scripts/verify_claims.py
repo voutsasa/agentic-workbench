@@ -566,7 +566,7 @@ class Verifier:
         tokens = command_on_line(source_line(self.repo_root, claim.file, claim.line), flag)
         # No invocation on the line means the subject came from the extractor's
         # guess at what the *document* is about — the most frequent command head.
-        # That guess crosses tools: pdf-deliverables.md compares pandoc and
+        # That guess crosses tools: the pdf-deliverable skill compares pandoc and
         # WeasyPrint, so WeasyPrint's `--pdf-variant` is attributed to pandoc,
         # whose help has never listed it. A guessed subject may be confirmed but
         # must never be refuted.

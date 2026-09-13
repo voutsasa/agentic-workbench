@@ -171,7 +171,7 @@ One command checks every link and writes nothing:
 python (Join-Path $Root "workstation\scripts\link_config.py")
 ```
 
-It exits non-zero unless all six are live, distinguishes a *detached* copy from a *diverged* one, and
+It exits non-zero unless every one is live, distinguishes a *detached* copy from a *diverged* one, and
 leaves `settings.json` alone. Add `--apply` to repair; a diverged `CLAUDE.md` is reported and skipped
 rather than overwritten, because that is reconciliation work.
 
@@ -192,11 +192,11 @@ Content is the real test, since a link can be live and still point at the wrong 
 (Get-FileHash "$HOME\.claude\CLAUDE.md").Hash -eq (Get-FileHash "$Repo\AGENT-INSTRUCTIONS.md").Hash
 ```
 
-Then start a session and confirm the four skills are offered.
+Then start a session and confirm every skill is offered.
 
 ### `ls` shows only half of this, and that is not a fault
 
-Unlike the macOS route, where all six are symlinks and every one prints `->`, the two link kinds here
+Unlike the macOS route, where every link is a symlink and prints `->`, the two link kinds here
 look completely different to `ls`:
 
 ```

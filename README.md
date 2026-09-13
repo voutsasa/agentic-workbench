@@ -79,7 +79,7 @@ Edits to `~/.claude/CLAUDE.md` or the `review` skill land here, because those pa
 | `workstation/agent/setup/<platform>.md` | Per-platform setup for a new machine. macOS uses symlinks; Windows uses junctions and hardlinks, because symlinks there need admin. |
 | `workstation/agent/AGENT-INSTRUCTIONS.md` | Global instructions applying to every project — linked to `~/.claude/CLAUDE.md`. Policy only, no platform, no paths. |
 | `workstation/agent/settings.json` | Reference copy of the shared Claude Code settings — **merged into `~/.claude/settings.json` by hand, never linked.** Carries no `env` block on purpose. |
-| `workstation/agent/skills/<skill>/` | The skills promoted to global scope — `review`, `python-quality`, `verify-docs` and `fix-findings`, each linked to `~/.claude/skills/<skill>`. `SKILL.md` is a skill's definition; `scripts/` and `tests/` hold its repeatable actions. |
+| `workstation/agent/skills/<skill>/` | The skills promoted to global scope — `review`, `python-quality`, `verify-docs`, `fix-findings` and `pdf-deliverable`, each linked to `~/.claude/skills/<skill>`. A skill earns promotion here by working in a repo that is not this one; until then it stays in [`skills/`](skills/). `SKILL.md` is a skill's definition; `scripts/` and `tests/` hold its repeatable actions. |
 
 Because these are links into a git repo, check `git status` here before overwriting or regenerating any of them — and if this directory is ever moved or renamed, **repoint the links**, or every session silently loses its global instructions. On Windows `CLAUDE.md` and `machine.md` are hardlinks and any atomic-saving editor severs them silently; [`workstation/agent/setup/windows.md`](workstation/agent/setup/windows.md) carries the detection command.
 
