@@ -47,7 +47,9 @@ def extract_base64_images(md_file_path):
             img_data = base64.b64decode(base64_str)
             with open(filepath, "wb") as img_file:
                 img_file.write(img_data)
-        except Exception as e:
+        # binascii.Error (a ValueError) for malformed base64, OSError if the
+        # sibling folder is unwritable. Anything else is a real bug worth raising.
+        except (ValueError, OSError) as e:
             print(f"Error decoding image {img_counter}: {e}")
             return match.group(0)  # Keep original text if fail
 

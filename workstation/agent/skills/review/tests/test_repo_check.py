@@ -10,11 +10,12 @@ import sys
 import tempfile
 import unittest
 from pathlib import Path
+from typing import ClassVar
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
 # E402: sys.path has to be extended before this import, so it cannot move to the top.
-import repo_check  # noqa: E402
+import repo_check
 
 
 def _cfg(**overrides) -> dict:
@@ -88,7 +89,7 @@ class TestProseLines(unittest.TestCase):
         self.assertEqual([n for n, _ in repo_check.prose_lines(text)], [1, 5])
 
     def test_inline_code_is_blanked_not_removed(self):
-        (lineno, line), = repo_check.prose_lines("run `download all` now")
+        (_lineno, line), = repo_check.prose_lines("run `download all` now")
         self.assertNotIn("download", line)
         self.assertEqual(len(line), len("run `download all` now"))
 
@@ -364,7 +365,7 @@ class TestSchemaFor(unittest.TestCase):
 
 
 class TestValidateFields(unittest.TestCase):
-    SCHEMA = {"name": "t", "fields": [
+    SCHEMA: ClassVar[dict] = {"name": "t", "fields": [
         {"name": "tool", "equals_directory": True},
         {"name": "verified", "format": "date", "sentinels": ["never"]},
         {"name": "status", "allowed_values": ["installed", "route-recorded"]},
@@ -446,9 +447,9 @@ class TestCheckMetadataHeader(unittest.TestCase):
     def test_enabled_without_schemas_raises(self):
         cfg = self._cfg_on()
         cfg["checks"]["metadata_header"]["schemas"] = []
-        with TempRepo({"a.md": "x\n"}) as repo:
-            with self.assertRaises(repo_check.CheckError):
-                repo_check.check_metadata_header(repo.root, ["a.md"], cfg)
+        with (TempRepo({"a.md": "x\n"}) as repo,
+              self.assertRaises(repo_check.CheckError)):
+            repo_check.check_metadata_header(repo.root, ["a.md"], cfg)
 
 
 class TestRunChecks(unittest.TestCase):

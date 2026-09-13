@@ -235,9 +235,9 @@ def render_markdown(results: list[ToolResult], facts: dict[str, str],
     """
     usable = sum(1 for r in results if r.status == INSTALLED)
     lines = [
-        f"Probed on `{host or facts['node']}` "
-        f"({facts['system']} {facts['version']}, Python {facts['python']}) "
-        f"by `workstation/scripts/inventory.py`.",
+        (f"Probed on `{host or facts['node']}` "
+         f"({facts['system']} {facts['version']}, Python {facts['python']}) "
+         f"by `workstation/scripts/inventory.py`."),
         "",
         f"**{usable} of {len(results)} usable.**",
         "",

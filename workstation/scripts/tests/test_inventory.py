@@ -15,8 +15,8 @@ from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import inventory  # noqa: E402
-from inventory import (  # noqa: E402
+import inventory
+from inventory import (
     ABSENT,
     BLOCKED,
     ERROR,
@@ -273,7 +273,8 @@ class RenderMarkdownTests(unittest.TestCase):
 
     def test_escapes_pipes_so_the_table_survives(self):
         results = [roll_up(Tool("a", "A", ["a"]), [Probe("a", ERROR, detail="use a | b")])]
-        row = [line for line in self.render(results).splitlines() if line.startswith("| `a`")][0]
+        row = next(line for line in self.render(results).splitlines()
+                   if line.startswith("| `a`"))
         self.assertIn(r"use a \| b", row)
         # 5 columns => 6 border pipes, plus the one escaped inside a cell.
         self.assertEqual(row.count("|"), 7)

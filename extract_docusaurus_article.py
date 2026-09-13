@@ -18,6 +18,7 @@ from __future__ import annotations
 import re
 import sys
 from html.parser import HTMLParser
+from pathlib import Path
 
 # Docusaurus wraps every heading in a hash-link anchor (just a permalink icon)
 # and every tab/code-block in layout <div>s. None of it is content — pandoc's
@@ -115,7 +116,7 @@ def main() -> int:
         return 2
     html_path, selector = sys.argv[1], sys.argv[2]
     tag, attr, value = parse_selector(selector)
-    html = open(html_path, encoding="utf-8").read()
+    html = Path(html_path).read_text(encoding="utf-8")
     parser = ArticleExtractor(tag, attr, value)
     parser.feed(html)
     article = "".join(parser.chunks).strip()

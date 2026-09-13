@@ -251,8 +251,11 @@ def check_bare_paths(repo_root: Path, files: list[str], config: dict) -> list[di
     allow_globs = settings.get("allow_globs", [])
     # Stops at whitespace and at the delimiters that end a path in prose: a
     # closing backtick, bracket, brace, paren, quote or comma.
-    pattern = re.compile(
-        r"""(?:%s)[^\s`)\]}>,;"']*""" % "|".join(re.escape(p) for p in prefixes))
+    # Built by concatenation rather than a format string: the tail carries a bare
+    # `}` and quotes, which an f-string would need escaped and a .format() would
+    # misread as a field.
+    alternatives = "|".join(re.escape(p) for p in prefixes)
+    pattern = re.compile(r"(?:" + alternatives + r""")[^\s`)\]}>,;"']*""")
 
     violations = []
     for rel in files:

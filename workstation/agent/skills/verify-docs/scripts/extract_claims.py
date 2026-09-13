@@ -183,9 +183,8 @@ def looks_like_command(line: str, head: str) -> bool:
         return False
     if "=" in line.split(" ")[0] or " = " in line:   # `page = browser.new_page()`
         return False
-    if "  " in line.strip():               # column-aligned tree or table
-        return False
-    return True
+    # Two spaces mid-line means a column-aligned tree or table, not a command.
+    return "  " not in line.strip()
 
 
 def subject_binary(text: str, path: str) -> str | None:

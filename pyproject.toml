@@ -4,7 +4,10 @@ version = "0.1.0"
 description = "Workbench for building constitutions, skills, and artefacts for Spec-Driven Development projects"
 readme = "README.md"
 requires-python = ">=3.14"
-dependencies = [
+dependencies = []
+
+[dependency-groups]
+dev = [
     "pytest>=9.1.1",
     "ruff>=0.16.7",
 ]

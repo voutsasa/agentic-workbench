@@ -19,7 +19,7 @@ from tempfile import TemporaryDirectory
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-import link_config as lc  # noqa: E402
+import link_config as lc
 
 
 def build_repo(root: Path) -> Path:

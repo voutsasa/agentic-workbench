@@ -52,18 +52,19 @@ Inside an activated `.venv` both names work.
 | What | State | Detail |
 |---|---|---|
 | `.python-version` | present | `3.14` |
-| `pyproject.toml` | present | `requires-python = ">=3.14"`, `dependencies = ["pytest>=9.1.1", "ruff>=0.16.7"]` |
+| `pyproject.toml` | present | `requires-python = ">=3.14"`, `dependencies = []`, tooling in `[dependency-groups] dev` |
 | `.venv` | **present** | 3.14.6 |
 | `uv` | 0.12.9 | `/opt/homebrew/bin/uv` |
 | `pytest`, `ruff` in the venv | **present** | `pytest 9.1.1`, `ruff 0.16.7`, measured 2026-09-13 |
 
-Both are declared in `pyproject.toml` under `[project] dependencies`, so `uv sync` reproduces them.
+Both are declared in `pyproject.toml` under `[dependency-groups] dev`, not `[project] dependencies`, so
+`uv sync` reproduces them without anything installing this project pulling them in.
 **The `python-quality` skill's gates can now run here**; before 2026-09-13 they could not, and the
 route was `uvx pytest`, which keeps them out of the lock file.
 
-`.venv/bin/ruff check .` currently reports **17 errors** across the skill and workstation scripts, 5 of
-them auto-fixable. That is a first measurement, not a regression — no lint gate had ever been run
-against this tree.
+`.venv/bin/ruff check .` reports **All checks passed** as of 2026-09-13. The first run against this
+tree found 17 errors and they were fixed the same day; there is no ruff configuration, so this is
+ruff 0.16.7's own rule set — 415 rules, which notably does **not** include `E402`.
 
 The `workstation/scripts/` and skill scripts are stdlib-only by design and are the deliberate
 exception: they run under bare `python3` before any venv exists. See

@@ -129,7 +129,7 @@ def run(command: list[str], cwd: Path) -> tuple[int, str]:
 
     # S603: the argument list is built from literals and paths this module controls,
     # never from a shell string, and no shell is involved.
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)  # noqa: S603
+    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
     return result.returncode, result.stdout + result.stderr
 
 
