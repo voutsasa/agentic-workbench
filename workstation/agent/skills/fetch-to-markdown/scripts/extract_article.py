@@ -86,7 +86,7 @@ def absolutise(html: str, base_url: str) -> str:
     """
     def replace(match: re.Match[str]) -> str:
         url = match.group("url")
-        if not url or url.startswith("#") or url.startswith("data:"):
+        if not url or url.startswith(("#", "data:")):
             return match.group(0)
         if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", url) and not url.startswith(("http:", "https:")):
             return match.group(0)

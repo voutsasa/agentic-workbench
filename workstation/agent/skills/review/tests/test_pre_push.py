@@ -106,6 +106,7 @@ class GuardTests(unittest.TestCase):
             capture_output=True,
             text=True,
             timeout=TIMEOUT_S,
+            check=False,
         )
         self.assertEqual(proc.returncode, 0)
         self.assertIn("SKIP_REPO_CHECK=1", proc.stderr)
