@@ -213,6 +213,12 @@ class TestCollect(TempTree):
         self.assertEqual(machine["machine_note"], "workstation/machines/macos-box.md")
         self.assertFalse(machine["machine_note_exists"])
 
+    def test_counts_this_repos_own_skills_for_the_project_links(self) -> None:
+        (self.repo / "skills" / "mine").mkdir(parents=True)
+        (self.repo / "skills" / "mine" / "SKILL.md").write_text("# mine\n", encoding="utf-8")
+        links = self.facts({})["project"]["links"]
+        self.assertEqual((links["linked"], links["total"]), (0, 1))
+
     def test_writes_nothing(self) -> None:
         before = sorted(p for p in self.base.rglob("*"))
         self.facts({"claude": "/bin/claude", "copilot": "/bin/copilot"})
@@ -245,7 +251,7 @@ class TestMain(TempTree):
             code = detect.main(["--repo", str(self.repo), "--home", str(self.home), "--json"])
         self.assertEqual(code, 0)
         payload = json.loads(buf.getvalue())
-        self.assertEqual(set(payload), {"machine", "assistants", "claude", "copilot", "vscode"})
+        self.assertEqual(set(payload), {"machine", "assistants", "claude", "copilot", "project", "vscode"})
         self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
 
 

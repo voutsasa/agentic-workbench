@@ -27,26 +27,23 @@ Nothing below writes `~/.claude/settings.json`. If you are adapting these comman
 
 ## Link it
 
-Run from your clone. Nothing below hard-codes a path — the repo root comes from git, so this works
-wherever you cloned it.
+Run from your clone. `link_config.py` takes the repo root from its own location and the skill list from
+its `SKILLS` tuple, so nothing below hard-codes a path or a skill name. The hand-written `ln -sfn` loop
+this replaced still named four skills after the tuple had grown to six.
 
 ```sh
 cd /path/to/your/agentic-workbench
-REPO="$(git rev-parse --show-toplevel)/workstation/agent"
-
-mkdir -p ~/.claude/skills
-ln -sfn "$REPO/AGENT-INSTRUCTIONS.md" ~/.claude/CLAUDE.md
-
-for skill in review python-quality verify-docs fix-findings; do
-  ln -sfn "$REPO/skills/$skill" ~/.claude/skills/"$skill"
-done
+python3 workstation/scripts/link_config.py --apply
 ```
 
-`-n` matters: without it, re-running turns the second link into `~/.claude/skills/review/review`
-instead of replacing it.
+It creates one symlink per global skill in `~/.claude/skills/`, `AGENT-INSTRUCTIONS.md` →
+`~/.claude/CLAUDE.md`, and the machine note → `~/.claude/machine.md` (see *The machine note*).
+Re-running is safe: a live link is left alone, a stale one is replaced, and a destination holding content
+the repo lacks is reported and skipped. Add `--agent copilot` to link the same skills into
+`~/.copilot/skills`, and `--project` for this repo's own skills.
 
-`settings.json` is absent from that block on purpose. Adding an `ln -sfn` line for it would replace the
-live file, since a symlink is not a merge.
+`settings.json` is not among them, and cannot be: the script refuses to plan a link for it, since a
+symlink is not a merge.
 
 ## Settings: merge, do not link
 
@@ -99,7 +96,7 @@ one, use an absolute path to the script instead.
 
 ## Verify
 
-Do not assume it worked — `ln -sfn` is quiet on success and on several kinds of near-miss.
+Do not assume it worked — re-run the report, which writes nothing.
 
 ```sh
 python3 "$(git rev-parse --show-toplevel)/workstation/scripts/link_config.py"

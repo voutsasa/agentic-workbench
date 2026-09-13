@@ -48,17 +48,19 @@ One round, with only the questions that apply. Use a structured question tool wh
 | Should Claude Code use AWS Bedrock or your own subscription? | Claude Code selected | Bedrock · Own subscription. Quote detect's current provider in the question, so a switch reads as one. |
 | Should this workbench's instructions and skills be global? | always | Yes — link into `~/.claude` and `~/.copilot` · No — this repo only |
 
-"No" still leaves this repo working for both: Copilot reads `.claude/skills/` at project scope.
+"No" still leaves this repo working for both, through the project links in step 3.
 
 ## 3. Describe the changes
 
 Build the list from evidence, not from this file.
 
-**Links** — only when the answer to *global* is yes. Run the report, read-only, with one `--agent` per
-selected assistant that links: Claude Code → `claude`, Copilot CLI → `copilot`. VS Code has no links.
+**Links.** Run the report, read-only. Pass `--project` always: it links this repo's own skills into
+`.claude/skills/`, which Claude Code and Copilot both read at project scope, and a fresh clone has none
+because `.claude/` is gitignored. When the answer to *global* is yes, add one `--agent` per selected
+assistant that links: Claude Code → `claude`, Copilot CLI → `copilot`. VS Code has no links.
 
 ```sh
-python3 workstation/scripts/link_config.py --agent claude --agent copilot --json
+python3 workstation/scripts/link_config.py --project --agent claude --agent copilot --json
 ```
 
 | Status | The row says |
@@ -78,7 +80,7 @@ the setup README, so the check below settles it.
 | Answer | User steps | Route |
 |---|---|---|
 | Claude, own subscription | `claude`, sign in, `/status`. If detect found provider variables, name them — the user removes them from the `env` block. | setup README §1 |
-| Claude, Bedrock | AWS model access and IAM; `aws sso login --profile <profile>`; `/setup-bedrock`, typed in full; pin `ANTHROPIC_DEFAULT_OPUS_MODEL`, `_SONNET_`, `_HAIKU_`. §2 is written in PowerShell; on macOS `export AWS_PROFILE=<profile>`. | setup README §2 |
+| Claude, Bedrock | AWS model access and IAM; `export AWS_PROFILE=<profile>`, then `aws sso login`; `/setup-bedrock`, typed in full; pin `ANTHROPIC_DEFAULT_OPUS_MODEL`, `_SONNET_`, `_HAIKU_`. §2 is written in PowerShell, where the first is `$env:AWS_PROFILE = "<profile>"`. | setup README §2 |
 | Claude, global | add the keys detect lists as differing from `workstation/agent/settings.json` | `macos.md` / `windows.md` § *Settings* |
 | Copilot CLI | `copilot login` if not signed in | setup README §3 |
 | VS Code, global | set `"chat.useClaudeMdFile": true` in the user settings file detect named | setup README §3 |
@@ -92,9 +94,9 @@ user steps stay theirs either way.
 
 **Apply**
 
-1. `git status --short workstation/agent`. If it is dirty, say so before linking — linking makes
+1. `git status -s workstation/agent`. If it is dirty, say so before linking — linking makes
    those edits live.
-2. `python3 workstation/scripts/link_config.py --apply` with the same `--agent` flags as step 3.
+2. `python3 workstation/scripts/link_config.py --apply` with the same flags as step 3.
 3. Re-run it without `--apply` and quote the `N of N linked` line. Anything short of that is
    reported, never retried with `--force`.
 4. Give the user steps from step 3, in order, as commands.
@@ -105,14 +107,13 @@ user steps stay theirs either way.
 
 ```sh
 cd <repo>
-git status --short workstation/agent
-python3 workstation/scripts/link_config.py --apply --agent claude --agent copilot
-python3 workstation/scripts/link_config.py --agent claude --agent copilot
+git status -s workstation/agent
+python3 workstation/scripts/link_config.py --apply --project --agent claude --agent copilot
+python3 workstation/scripts/link_config.py --project --agent claude --agent copilot
 ```
 
-On Windows it is `python`, not `python3`, in PowerShell. Hand over `link_config.py` rather than the
-raw `ln -s` / `New-Item` blocks in `macos.md` and `windows.md`: those name four skills, and the
-`SKILLS` tuple is the list that is kept current.
+On Windows it is `python`, not `python3`, in PowerShell. Hand over `link_config.py`, never hand-written
+`ln -s` / `New-Item` lines: it derives both skill lists, so neither can go stale.
 
 ## Verify
 

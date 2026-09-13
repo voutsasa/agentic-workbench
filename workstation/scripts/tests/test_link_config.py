@@ -436,6 +436,57 @@ class TestCopilotPlan(TempTree):
             self.copilot(("cursor",))
 
 
+class TestProjectPlan(TempTree):
+    def setUp(self) -> None:
+        super().setUp()
+        for name in ("beta", "alpha"):
+            (self.repo / "skills" / name).mkdir(parents=True)
+            (self.repo / "skills" / name / "SKILL.md").write_text(f"# {name}\n", encoding="utf-8")
+        (self.repo / "skills" / "not-a-skill").mkdir()
+        (self.repo / "skills" / "README.md").write_text("index\n", encoding="utf-8")
+
+    def project(self) -> list[lc.Link]:
+        return lc.plan(self.repo, self.home, agents=(), project=True)
+
+    def test_repo_skills_are_the_folders_holding_a_skill_md(self) -> None:
+        self.assertEqual(lc.repo_skills(self.repo), ("alpha", "beta"))
+
+    def test_no_skills_folder_means_no_skills(self) -> None:
+        self.assertEqual(lc.repo_skills(self.base / "elsewhere"), ())
+
+    def test_links_each_repo_skill_into_the_repos_own_dot_claude(self) -> None:
+        links = self.project()
+        self.assertEqual([link.label for link in links],
+                         ["project/skills/alpha", "project/skills/beta"])
+        for link in links:
+            self.assertEqual(link.dest.parent, self.repo / ".claude" / "skills")
+            self.assertTrue(link.is_dir)
+
+    def test_project_alone_reaches_ok_and_leaves_home_alone(self) -> None:
+        report = lc.apply(lc.inspect_all(self.project()))
+        self.assertTrue(report.ok, lc.render(report))
+        self.assertFalse((self.home / ".claude" / "skills").exists())
+        self.assertTrue((self.repo / ".claude" / "skills" / "alpha" / "SKILL.md").exists())
+
+    @unittest.skipIf(os.name == "nt", "creating a symlink on Windows needs elevation")
+    def test_a_hand_made_relative_link_counts_as_linked(self) -> None:
+        """skills/README.md used to give `ln -s ../../skills/<name>`; those must not be redone."""
+        link = self.project()[0]
+        link.dest.parent.mkdir(parents=True)
+        os.symlink("../../skills/alpha", link.dest)
+        self.assertEqual(lc.inspect(link).status, lc.LINKED)
+
+    def test_main_with_project_alone_links_only_the_repo_skills(self) -> None:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = lc.main(["--repo", str(self.repo), "--home", str(self.home),
+                            "--project", "--apply", "--json"])
+        payload = json.loads(buf.getvalue())
+        self.assertEqual(code, 0)
+        self.assertEqual((payload["agents"], payload["project"]), ([], True))
+        self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
+
+
 class TestCopilotHome(unittest.TestCase):
     def test_copilot_home_wins_for_the_real_home(self) -> None:
         self.assertEqual(

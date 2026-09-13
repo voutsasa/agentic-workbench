@@ -26,10 +26,13 @@ skills as a deliverable, which is the reason for the second tree. A repo that me
 should write it straight into `.claude/skills/` and skip the link.
 
 ```sh
-mkdir -p .claude/skills
-ln -s ../../skills/ingest-source .claude/skills/ingest-source
-ln -s ../../skills/setup-agents .claude/skills/setup-agents
+python3 workstation/scripts/link_config.py --project --apply
 ```
+
+It links every `skills/<name>/SKILL.md` here into `.claude/skills/<name>` — a symlink on macOS, a
+junction on Windows, where the command is `python` — so adding a skill needs no new line in this file.
+Without `--apply` it reports and writes nothing. The `setup-agents` skill includes these links in
+every run, and a link made by hand with `ln -s ../../skills/<name>` already reads as `linked`.
 
 `fetch-to-markdown` needs no line here — it is global, and `link_config.py --apply` puts it in
 `~/.claude/skills/` where every repo sees it.

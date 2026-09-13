@@ -33,24 +33,24 @@ Nothing below writes `~/.claude/settings.json`. If you are adapting these comman
 
 ## Link it
 
-Run from your clone. The repo root comes from git, so no path below is hard-coded.
+Run from your clone. `link_config.py` takes the repo root from its own location and the skill list from
+its `SKILLS` tuple, so nothing below hard-codes a path or a skill name. The hand-written `New-Item` loop
+this replaced still named four skills after the tuple had grown to six.
 
 ```powershell
 Set-Location C:\path\to\your\sdd-workbench
 $Root = (git rev-parse --show-toplevel)
-$Repo = Join-Path $Root "workstation\agent"
-
-New-Item -ItemType Directory -Force -Path "$HOME\.claude\skills" | Out-Null
-
-New-Item -ItemType HardLink -Force -Path "$HOME\.claude\CLAUDE.md" -Target "$Repo\AGENT-INSTRUCTIONS.md"
-
-foreach ($s in "review","python-quality","verify-docs","fix-findings") {
-  New-Item -ItemType Junction -Force -Path "$HOME\.claude\skills\$s" -Target "$Repo\skills\$s"
-}
+python (Join-Path $Root "workstation\scripts\link_config.py") --apply
 ```
 
-`settings.json` is absent from that block on purpose. Adding a `New-Item -Force` line for it would
-overwrite the live file, `-Force` being a replace and not a merge.
+It uses the two link types that need no elevation: a junction per global skill in
+`$HOME\.claude\skills`, and hardlinks for `$HOME\.claude\CLAUDE.md` and `$HOME\.claude\machine.md`.
+A diverged `CLAUDE.md` is reported and skipped rather than overwritten — reconcile it first, per the
+section above. Add `--agent copilot` to link the same skills into `~/.copilot/skills`, and `--project`
+for this repo's own skills.
+
+`settings.json` is not among them, and cannot be: the script refuses to plan a link for it, since a
+link is a replace and not a merge.
 
 ## Settings: merge, do not link
 
@@ -138,8 +138,8 @@ Because it is a copy, **re-run it after pulling a change to the hook.** Nothing 
   git replaces a tracked file rather than writing through it, so the new content lands on a new inode
   and `~/.claude/CLAUDE.md` keeps pointing at the old one. Nothing warns you, and the stale copy still
   looks like a valid config file. **Any `git pull`, branch switch or `git stash` that touches
-  `CLAUDE.md` or a machine note detaches it.** Re-run the two hardlink commands afterwards, or just run
-  `python workstation\scripts\link_config.py --apply` from the repo root, which is idempotent and
+  `CLAUDE.md` or a machine note detaches it.** Re-run
+  `python workstation\scripts\link_config.py --apply` afterwards from the repo root, which is idempotent and
   reports what it repaired. Junctions are immune — they resolve a path, not an inode — so the skill directories
   never need this.
 - **A hardlink is severed by any writer that saves atomically — and which side you edit makes no

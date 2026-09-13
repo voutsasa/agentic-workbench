@@ -181,11 +181,11 @@ def jsonc_flag(path: Path | None, key: str) -> bool | None:
     return None
 
 
-def link_summary(repo: Path, home: Path, agent: str, copilot_root: Path,
-                 platform: str | None, hostname: str | None) -> dict:
+def link_summary(repo: Path, home: Path, agents: tuple[str, ...], copilot_root: Path,
+                 platform: str | None, hostname: str | None, project: bool = False) -> dict:
     report = link_config.inspect_all(link_config.plan(
         repo, home, platform=platform, hostname=hostname,
-        agents=(agent,), copilot_root=copilot_root))
+        agents=agents, copilot_root=copilot_root, project=project))
     linked = sum(1 for s in report.states if s.status == link_config.LINKED)
     return {"linked": linked, "total": len(report.states), "status": report.status}
 
@@ -213,11 +213,14 @@ def collect(repo: Path, home: Path, environ: Mapping[str, str] | None = None,
         "claude": {
             **claude_provider(home, env),
             "settings_drift": settings_drift(home, repo),
-            "links": link_summary(repo, home, "claude", copilot_root, plat, hostname),
+            "links": link_summary(repo, home, ("claude",), copilot_root, plat, hostname),
         },
         "copilot": {
             "home": str(copilot_root),
-            "links": link_summary(repo, home, "copilot", copilot_root, plat, hostname),
+            "links": link_summary(repo, home, ("copilot",), copilot_root, plat, hostname),
+        },
+        "project": {
+            "links": link_summary(repo, home, (), copilot_root, plat, hostname, project=True),
         },
         "vscode": {
             "user_settings": str(vscode_settings) if vscode_settings else None,
@@ -237,6 +240,7 @@ def _flag(value: bool | None) -> str:
 
 def render(facts: dict, home: Path) -> str:
     m, c, cp, vs = facts["machine"], facts["claude"], facts["copilot"], facts["vscode"]
+    pr = facts["project"]
     note = f"`{m['machine_note']}` ({'present' if m['machine_note_exists'] else '**absent**'})"
     out = [
         "## Machine", "",
@@ -274,6 +278,8 @@ def render(facts: dict, home: Path) -> str:
         f"| Claude settings keys differing from `workstation/agent/settings.json` | {drift_text} |",
         (f"| Copilot global skill links (`{_tilde(cp['home'], home)}/skills`) | "
          f"{cp['links']['linked']} of {cp['links']['total']} linked |"),
+        (f"| This repo's skills (`.claude/skills`, project scope) | "
+         f"{pr['links']['linked']} of {pr['links']['total']} linked |"),
         f"| VS Code `chat.useClaudeMdFile` | {vs_text} |",
     ]
     return "\n".join(out)

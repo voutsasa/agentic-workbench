@@ -7,6 +7,9 @@ Standard library only, so it runs on a fresh clone before anything is installed.
 note into ``~/.claude``. ``--agent copilot`` links the same skills into
 ``~/.copilot/skills`` and nothing else: Copilot reaches the instructions through
 VS Code's ``chat.useClaudeMdFile``, which is a settings edit and not a link.
+``--project`` links this repo's own ``skills/<name>/`` into ``<repo>/.claude/skills``,
+where both agents load them at project scope; ``.claude/`` is gitignored, so every
+clone needs it once.
 
 Two things make this more than a wrapper around ``ln -s``:
 
@@ -162,10 +165,18 @@ def copilot_home(home: Path, environ: dict[str, str] | None = None,
     return home / ".copilot"
 
 
+def repo_skills(repo_root: Path) -> tuple[str, ...]:
+    """This repo's own skills: every ``skills/<name>/SKILL.md``. Derived, never listed."""
+    root = repo_root / "skills"
+    if not root.is_dir():
+        return ()
+    return tuple(sorted(p.parent.name for p in root.glob("*/SKILL.md")))
+
+
 def plan(repo_root: Path, home: Path, platform: str | None = None,
          hostname: str | None = None, machine: str | None = None,
          agents: tuple[str, ...] = ("claude",),
-         copilot_root: Path | None = None) -> list[Link]:
+         copilot_root: Path | None = None, project: bool = False) -> list[Link]:
     """The links this repo expects, in the order they should be applied.
 
     Skills come first: they are directories, so on Windows they are junctions,
@@ -189,6 +200,12 @@ def plan(repo_root: Path, home: Path, platform: str | None = None,
             Link(f"copilot/skills/{skill}", agent / "skills" / skill,
                  root / "skills" / skill, is_dir=True)
             for skill in SKILLS
+        ]
+    if project:
+        links += [
+            Link(f"project/skills/{name}", repo_root / "skills" / name,
+                 repo_root / ".claude" / "skills" / name, is_dir=True)
+            for name in repo_skills(repo_root)
         ]
     if "claude" in agents:
         # Source and destination names differ on purpose: the repo calls this file
@@ -342,6 +359,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--copilot-home", type=Path, metavar="DIR",
                         help="Copilot config root (default: $COPILOT_HOME when --home "
                              "is your home, else <home>/.copilot)")
+    parser.add_argument("--project", action="store_true",
+                        help="link this repo's own skills/<name> into <repo>/.claude/skills, "
+                             "where Claude Code and Copilot read them at project scope")
     parser.add_argument("--machine", metavar="ID",
                         help="machines/<ID>.md to link as ~/.claude/machine.md "
                              "(default: <platform>-<hostname>.md, else the only "
@@ -357,16 +377,20 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    agents = tuple(dict.fromkeys(args.agents or ["claude"]))
+    # No target named at all means Claude, as it always has; `--project` on its
+    # own is a complete request and links the repo's skills only.
+    agents = tuple(dict.fromkeys(args.agents or ([] if args.project else ["claude"])))
     copilot_root = args.copilot_home or copilot_home(args.home)
     report = inspect_all(plan(args.repo, args.home, machine=args.machine,
-                              agents=agents, copilot_root=copilot_root))
+                              agents=agents, copilot_root=copilot_root,
+                              project=args.project))
     if args.apply:
         report = apply(report, force=args.force)
 
     if args.json:
         print(json.dumps({
             "agents": list(agents),
+            "project": args.project,
             "ok": report.ok,
             "status": report.status,
             "links": [
