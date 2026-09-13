@@ -149,6 +149,25 @@ was broken by hand; the agent must not write this file.
 Its five keys — `enabledPlugins`, `fastMode`, `model`, `permissions`, `tui` — are **identical** to
 [`../agent/settings.json`](../agent/settings.json). There is nothing outstanding to merge.
 
+### Copilot CLI
+
+**The global skills are linked and Copilot loads them.** `python3 workstation/scripts/link_config.py
+--agent copilot`, 2026-09-13, reports **6 of 6 linked** into `~/.copilot/skills`, all symlinks into this
+repo. `/skills` inside a `copilot` session then listed them — run by the user, not by the agent, so it is
+their observation recorded here rather than a quoted output.
+
+| What | State | How known |
+|---|---|---|
+| Version | 1.0.63 | `copilot --version` |
+| Binary | `/opt/homebrew/bin/copilot` → Caskroom `copilot-cli/1.0.24` | `readlink -f` |
+| This repo's skills at project scope | 2 of 2 linked in `.claude/skills` | `link_config.py --project` |
+| VS Code `chat.useClaudeMdFile` | not set | `skills/setup-agents/scripts/detect.py` |
+
+**The cask directory and the running version disagree** — the resolved path names 1.0.24 while the
+binary reports 1.0.63. `autoUpdate` defaults to `true` (`copilot help config`), which fits an update
+installed outside the cask, but where it lands was not checked. Read the version from
+`copilot --version`, never from the path.
+
 ## Known blockers
 
 ### Full Disk Access is unrecorded

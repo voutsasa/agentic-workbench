@@ -71,9 +71,8 @@ python3 workstation/scripts/link_config.py --project --agent claude --agent copi
 | `diverged`, `occupied` | **skipped** — `dest` holds content the repo lacks. Give `diff <dest> <source>` or `ls <dest>`; reconciling is the user's |
 | `no_source` | blocked until the machine note exists (step 1) |
 
-State two consequences with the list. Once linked, an edit to `~/.claude/CLAUDE.md` or a linked skill
-writes into this repo. And whether the Copilot CLI loads `~/.copilot/skills/` is **unresolved** in
-the setup README, so the check below settles it.
+State the consequence with the list: once linked, an edit to `~/.claude/CLAUDE.md` or a linked skill
+writes into this repo.
 
 **User steps** — theirs whichever mode they pick in step 4:
 
@@ -120,5 +119,5 @@ On Windows it is `python`, not `python3`, in PowerShell. Hand over `link_config.
 | Assistant | Check, in a session |
 |---|---|
 | Claude Code | `/context` lists `CLAUDE.md` under Memory files; `/status` shows the chosen provider |
-| Copilot CLI | `/skills` lists the linked skills — this is the check that settles the open question |
+| Copilot CLI | `/skills` lists the linked skills |
 | VS Code | Chat's loaded context lists the instruction file |

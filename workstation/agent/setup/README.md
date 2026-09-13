@@ -295,7 +295,7 @@ The routes above mix observed fact with vendor documentation. Which is which:
 | Windows link route, junctions and hardlinks | documented in [`windows.md`](windows.md), last measured on the Windows machine — see [`../../machines/README.md`](../../machines/README.md) |
 | Bedrock steps, IAM actions, model pinning, region order | **vendor documentation**, not executed in this repo |
 | Copilot CLI paths **on Windows** | **not measured** — the CLI states `$HOME/.copilot` and was verified on macOS only |
-| Whether the standalone CLI reads `~/.copilot/skills/` outside a plugin | **unresolved** — the path appears in the VS Code build; `copilot --help` does not mention skills |
+| The standalone CLI reads `~/.copilot/skills/` outside a plugin | **observed** on the macOS workstation, Copilot CLI 1.0.63, 2026-09-13 — `/skills` in a session listed the skills `link_config.py --agent copilot` had linked there; see [`../../machines/macos-workstation.md`](../../machines/macos-workstation.md#copilot-cli) |
 | Where `copilot plugin install` puts a plugin | **unresolved** — not stated in the vendor page the CLI links, and no plugin is installed here |
 
 Anything marked *not measured* or *unresolved* should be settled on the machine in question and
