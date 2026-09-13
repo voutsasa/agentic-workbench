@@ -109,6 +109,30 @@ now works — but until then the README's plugin commands describe an install no
 the directory it landed in is found and recorded in the setup README's table — or when the plugin
 commands are removed from the README as a route this workbench does not use.
 
+### 8. `README.md` names five global skills, and no check notices
+
+Opened 2026-09-13. `README.md:86` lists `review`, `python-quality`, `verify-docs`, `fix-findings` and
+`pdf-deliverable`; `link_config.py`'s `SKILLS` tuple holds six, adding `fetch-to-markdown`. It is the
+same drift that left `macos.md` and `windows.md` linking four skills, and the pre-push claims check
+passed over it — a skill list in prose is not a claim it parses. So what is unproven is not the fix
+but that the list stays right after the next promotion.
+
+**Closes when:** the line points at the `SKILLS` tuple instead of enumerating it, as `CLAUDE.md`'s
+`workstation/agent/` row already does, and `grep -n 'pdf-deliverable' README.md` returns nothing. Scoped
+to `README.md` on purpose: repo-wide, the grep would also match this item.
+
+### 9. The running Copilot CLI is not the one its path names
+
+Opened 2026-09-13, on the macOS workstation. `readlink -f /opt/homebrew/bin/copilot` resolves to
+`/opt/homebrew/Caskroom/copilot-cli/1.0.24/copilot`, while `copilot --version` reports 1.0.63.
+`autoUpdate` defaults to `true` (`copilot help config`), which fits an update installed outside the
+cask, but where 1.0.63 actually lives was never found. Until it is, a `brew upgrade` and the CLI's
+own updater may be managing two copies, and `inventory.py`-style path checks read the wrong one.
+
+**Closes when:** the executable path of the running 1.0.63 is found and quoted in
+`workstation/machines/macos-workstation.md` (its *Copilot CLI* section), together with which of the
+two updaters owns it. The agent records; any upgrade or cleanup is the user's to run.
+
 ## Closed
 
 Nothing yet. An item moves here with the evidence that closed it, or is deleted outright; a list of
