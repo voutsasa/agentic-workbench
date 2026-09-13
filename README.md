@@ -10,6 +10,7 @@ Start with [`SOURCE_CATALOGUE.md`](SOURCE_CATALOGUE.md) — it lists every sourc
 SOURCES.md                	the register — source of truth.   
 SOURCE_CATALOGUE.md       	one-line capability summary per source.   
 INGESTION_GUIDE.md        	a pointer — the process moved into skills/ingest-source/.  
+TODO.md                   	open work carried between sessions.   
 CLAUDE.md                 	instructions for agents working in this repo.   
 
 docs/                     	the corpus — what the workbench reads.   
@@ -42,6 +43,7 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 | [`skills/ingest-source/`](skills/ingest-source/) | **Process.** Where a register entry lands, what its file is called, what gets written back to the catalogue, and how workstation tooling additionally gets its install route or registration recorded. A skill rather than a guide, so it is discovered by what you are doing rather than by knowing its filename. |
 | [`workstation/agent/skills/fetch-to-markdown/`](workstation/agent/skills/fetch-to-markdown/) | **Conversion.** How to route a document into clean markdown — GitHub repo, PDF, plain doc site, or JS-hydrated site — and how to quality-check the result. Register-free and **global**: linked into `~/.claude/skills/`, so it works on any document in any repo. |
 | [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md) | A pointer to the above, kept so existing references still resolve. Carries no procedure. |
+| [`TODO.md`](TODO.md) | **Open work.** What is unproven rather than unwritten, each item with the evidence that would close it. |
 | [`workstation/cli/README.md`](workstation/cli/README.md) | **CLI tool index.** What each per-tool file is for, a `command → product → folder` map, and the version-currency rule. |
 | [`workstation/mcp/README.md`](workstation/mcp/README.md) | **MCP server index.** The third-party servers configured into this machine, and the file contract they follow. |
 | [`workstation/machines/README.md`](workstation/machines/README.md) | **Machine index.** One file per machine this workbench runs on, and the test for whether a fact is policy, a route, or machine state. |
