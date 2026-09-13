@@ -16,6 +16,7 @@ half of `ingest-source`, and takes its destination path from the caller.
 | Skill | What it does |
 |---|---|
 | [`ingest-source/`](ingest-source/) | Pull one `SOURCES.md` entry into the corpus: resolve the destination, delegate the conversion to the global `fetch-to-markdown`, record |
+| [`setup-agents/`](setup-agents/) | Detect the machine and its AI assistants, ask what to set up, describe the changes, then apply the links or hand over the commands |
 
 ## Loading them
 
@@ -27,6 +28,7 @@ should write it straight into `.claude/skills/` and skip the link.
 ```sh
 mkdir -p .claude/skills
 ln -s ../../skills/ingest-source .claude/skills/ingest-source
+ln -s ../../skills/setup-agents .claude/skills/setup-agents
 ```
 
 `fetch-to-markdown` needs no line here — it is global, and `link_config.py --apply` puts it in

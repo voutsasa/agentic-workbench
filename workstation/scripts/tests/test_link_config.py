@@ -16,6 +16,7 @@ import sys
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -361,6 +362,94 @@ class TestMain(TempTree):
         self.assertEqual(len(payload["links"]), len(lc.SKILLS) + 2)
         self.assertFalse(payload["ok"])
         self.assertNotIn("settings.json", [l["dest"] for l in payload["links"]])
+        self.assertEqual(payload["agents"], ["claude"])
+
+    def test_json_names_every_requested_agent_once(self) -> None:
+        self.machine_file()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            lc.main(["--repo", str(self.repo), "--home", str(self.home), "--json",
+                     "--agent", "claude", "--agent", "copilot", "--agent", "copilot"])
+        payload = json.loads(buf.getvalue())
+        self.assertEqual(payload["agents"], ["claude", "copilot"])
+        self.assertEqual(len(payload["links"]), 2 * len(lc.SKILLS) + 2)
+
+    def test_copilot_agent_writes_only_under_dot_copilot(self) -> None:
+        code = lc.main(["--repo", str(self.repo), "--home", str(self.home),
+                        "--agent", "copilot", "--apply"])
+        self.assertEqual(code, 0)
+        self.assertTrue((self.home / ".copilot" / "skills" / "review" / "SKILL.md").exists())
+        self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
+        self.assertFalse((self.home / ".claude" / "skills").exists())
+
+    def test_an_inherited_copilot_home_cannot_redirect_a_scratch_home(self) -> None:
+        elsewhere = self.base / "elsewhere"
+        with mock.patch.dict(os.environ, {"COPILOT_HOME": str(elsewhere)}):
+            lc.main(["--repo", str(self.repo), "--home", str(self.home),
+                     "--agent", "copilot", "--apply"])
+        self.assertFalse(elsewhere.exists())
+        self.assertTrue((self.home / ".copilot" / "skills" / "review").exists())
+
+    def test_copilot_home_flag_wins(self) -> None:
+        chosen = self.base / "chosen"
+        lc.main(["--repo", str(self.repo), "--home", str(self.home),
+                 "--agent", "copilot", "--copilot-home", str(chosen), "--apply"])
+        self.assertTrue((chosen / "skills" / "review" / "SKILL.md").exists())
+        self.assertFalse((self.home / ".copilot").exists())
+
+
+class TestCopilotPlan(TempTree):
+    def copilot(self, agents: tuple[str, ...] = ("copilot",)) -> list[lc.Link]:
+        return lc.plan(self.repo, self.home, platform="win32", hostname="box",
+                       agents=agents, copilot_root=self.home / ".copilot")
+
+    def test_links_the_skills_and_nothing_else(self) -> None:
+        self.assertEqual([link.label for link in self.copilot()],
+                         [f"copilot/skills/{s}" for s in lc.SKILLS])
+
+    def test_every_destination_is_under_the_copilot_root(self) -> None:
+        for link in self.copilot():
+            self.assertEqual(link.dest.parent, self.home / ".copilot" / "skills")
+
+    def test_default_root_is_dot_copilot_under_home(self) -> None:
+        links = lc.plan(self.repo, self.home, agents=("copilot",))
+        self.assertEqual(links[0].dest.parent, self.home / ".copilot" / "skills")
+
+    def test_shares_its_sources_with_claude(self) -> None:
+        both = self.copilot(("claude", "copilot"))
+        claude = {l.dest.name: l.source for l in both if l.label.startswith("skills/")}
+        copilot = {l.dest.name: l.source for l in both if l.label.startswith("copilot/")}
+        self.assertEqual(claude, copilot)
+
+    def test_both_agents_keep_every_directory_ahead_of_the_files(self) -> None:
+        links = self.copilot(("claude", "copilot"))
+        dirs = 2 * len(lc.SKILLS)
+        self.assertTrue(all(link.is_dir for link in links[:dirs]))
+        self.assertEqual([link.label for link in links[dirs:]], ["CLAUDE.md", "machine.md"])
+
+    def test_needs_no_machine_note(self) -> None:
+        report = lc.apply(lc.inspect_all(self.copilot()))
+        self.assertTrue(report.ok, lc.render(report))
+
+    def test_an_unknown_agent_raises(self) -> None:
+        with self.assertRaises(ValueError):
+            self.copilot(("cursor",))
+
+
+class TestCopilotHome(unittest.TestCase):
+    def test_copilot_home_wins_for_the_real_home(self) -> None:
+        self.assertEqual(
+            lc.copilot_home(Path("/h"), {"COPILOT_HOME": "/c"}, default_home=Path("/h")),
+            Path("/c"))
+
+    def test_copilot_home_is_ignored_for_any_other_home(self) -> None:
+        self.assertEqual(
+            lc.copilot_home(Path("/scratch"), {"COPILOT_HOME": "/c"}, default_home=Path("/h")),
+            Path("/scratch/.copilot"))
+
+    def test_unset_falls_back_to_dot_copilot(self) -> None:
+        self.assertEqual(lc.copilot_home(Path("/h"), {}, default_home=Path("/h")),
+                         Path("/h/.copilot"))
 
 
 class TestMachineFile(TempTree):

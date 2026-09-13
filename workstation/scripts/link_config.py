@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
-"""Report or repair the links that put this repo's Claude Code config in ``~/.claude``.
+"""Report or repair the links that put this repo's agent config in ``~/.claude`` and ``~/.copilot``.
 
 Standard library only, so it runs on a fresh clone before anything is installed.
+
+``--agent claude`` (the default) links the skills, ``CLAUDE.md`` and the machine
+note into ``~/.claude``. ``--agent copilot`` links the same skills into
+``~/.copilot/skills`` and nothing else: Copilot reaches the instructions through
+VS Code's ``chat.useClaudeMdFile``, which is a settings edit and not a link.
 
 Two things make this more than a wrapper around ``ln -s``:
 
@@ -58,10 +63,14 @@ NEVER_LINK = frozenset({"settings.json"})
 SKILLS = ("review", "python-quality", "verify-docs", "fix-findings", "pdf-deliverable",
           "fetch-to-markdown")
 
+#: Agents whose home this script can link into. Claude is the default so every
+#: invocation written before ``--agent`` existed keeps its meaning.
+AGENTS = ("claude", "copilot")
+
 
 @dataclass(frozen=True)
 class Link:
-    """One artefact to be reachable at a fixed path under ``~/.claude``."""
+    """One artefact to be reachable at a fixed path under an agent's home."""
 
     label: str
     source: Path
@@ -138,29 +147,59 @@ def machine_file(repo_root: Path, platform: str | None = None,
     return conventional
 
 
+def copilot_home(home: Path, environ: dict[str, str] | None = None,
+                 default_home: Path | None = None) -> Path:
+    """Where Copilot keeps its user config: ``$COPILOT_HOME``, else ``<home>/.copilot``.
+
+    ``COPILOT_HOME`` is honoured only when ``home`` is the real home directory.
+    A caller that passes ``--home`` is pointing at a scratch tree, and an
+    inherited environment variable must not redirect its writes elsewhere.
+    """
+    env = os.environ if environ is None else environ
+    real_home = Path.home() if default_home is None else default_home
+    if env.get("COPILOT_HOME") and home == real_home:
+        return Path(env["COPILOT_HOME"])
+    return home / ".copilot"
+
+
 def plan(repo_root: Path, home: Path, platform: str | None = None,
-         hostname: str | None = None, machine: str | None = None) -> list[Link]:
+         hostname: str | None = None, machine: str | None = None,
+         agents: tuple[str, ...] = ("claude",),
+         copilot_root: Path | None = None) -> list[Link]:
     """The links this repo expects, in the order they should be applied.
 
     Skills come first: they are directories, so on Windows they are junctions,
     which no git operation can detach. Getting them in place is never blocked by
     the file-level reconciliation that ``CLAUDE.md`` may need.
     """
+    unknown = sorted(set(agents) - set(AGENTS))
+    if unknown:
+        raise ValueError(f"unknown agent(s): {', '.join(unknown)}")
     agent = repo_root / "workstation" / "agent"
-    links = [
-        Link(f"skills/{skill}", agent / "skills" / skill,
-             home / ".claude" / "skills" / skill, is_dir=True)
-        for skill in SKILLS
-    ]
-    # Source and destination names differ on purpose: the repo calls this file
-    # AGENT-INSTRUCTIONS.md because more than one agent reads it, but Claude Code
-    # only ever loads ``~/.claude/CLAUDE.md``, so the destination name is fixed.
-    # Every label here names the destination artefact, not the source.
-    links.append(Link("CLAUDE.md", agent / "AGENT-INSTRUCTIONS.md",
-                      home / ".claude" / "CLAUDE.md", is_dir=False))
-    links.append(Link("machine.md",
-                      machine_file(repo_root, platform, hostname, machine),
-                      home / ".claude" / "machine.md", is_dir=False))
+    links: list[Link] = []
+    if "claude" in agents:
+        links += [
+            Link(f"skills/{skill}", agent / "skills" / skill,
+                 home / ".claude" / "skills" / skill, is_dir=True)
+            for skill in SKILLS
+        ]
+    if "copilot" in agents:
+        root = copilot_root if copilot_root is not None else home / ".copilot"
+        links += [
+            Link(f"copilot/skills/{skill}", agent / "skills" / skill,
+                 root / "skills" / skill, is_dir=True)
+            for skill in SKILLS
+        ]
+    if "claude" in agents:
+        # Source and destination names differ on purpose: the repo calls this file
+        # AGENT-INSTRUCTIONS.md because more than one agent reads it, but Claude Code
+        # only ever loads ``~/.claude/CLAUDE.md``, so the destination name is fixed.
+        # Every label here names the destination artefact, not the source.
+        links.append(Link("CLAUDE.md", agent / "AGENT-INSTRUCTIONS.md",
+                          home / ".claude" / "CLAUDE.md", is_dir=False))
+        links.append(Link("machine.md",
+                          machine_file(repo_root, platform, hostname, machine),
+                          home / ".claude" / "machine.md", is_dir=False))
     for link in links:
         if link.dest.name in NEVER_LINK:
             raise AssertionError(
@@ -196,7 +235,7 @@ def inspect(link: Link) -> LinkState:
         if link.dest.is_symlink():
             return LinkState(link, DETACHED,
                              f"dangling symlink → {os.readlink(link.dest)}")
-        return LinkState(link, MISSING, "not present in ~/.claude")
+        return LinkState(link, MISSING, f"not present in {link.dest.parent}")
     if same_target(link.source, link.dest):
         return LinkState(link, LINKED, "")
     if link.is_dir:
@@ -298,6 +337,11 @@ def main(argv: list[str] | None = None) -> int:
                         help="repo root (default: inferred from this file)")
     parser.add_argument("--home", type=Path, default=Path.home(),
                         help="home directory holding .claude (default: your home)")
+    parser.add_argument("--agent", action="append", choices=AGENTS, dest="agents",
+                        help="agent to link for; repeat for several (default: claude)")
+    parser.add_argument("--copilot-home", type=Path, metavar="DIR",
+                        help="Copilot config root (default: $COPILOT_HOME when --home "
+                             "is your home, else <home>/.copilot)")
     parser.add_argument("--machine", metavar="ID",
                         help="machines/<ID>.md to link as ~/.claude/machine.md "
                              "(default: <platform>-<hostname>.md, else the only "
@@ -313,12 +357,16 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    report = inspect_all(plan(args.repo, args.home, machine=args.machine))
+    agents = tuple(dict.fromkeys(args.agents or ["claude"]))
+    copilot_root = args.copilot_home or copilot_home(args.home)
+    report = inspect_all(plan(args.repo, args.home, machine=args.machine,
+                              agents=agents, copilot_root=copilot_root))
     if args.apply:
         report = apply(report, force=args.force)
 
     if args.json:
         print(json.dumps({
+            "agents": list(agents),
             "ok": report.ok,
             "status": report.status,
             "links": [

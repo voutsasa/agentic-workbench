@@ -203,7 +203,12 @@ Same `SKILL.md` format as Claude, different parent directory:
 .claude/skills/<name>/SKILL.md         per project — read as-is
 ```
 
-A project already carrying `.claude/skills/` needs nothing further.
+A project already carrying `.claude/skills/` needs nothing further. For the personal location, link
+the global skills rather than copying them:
+
+```sh
+python3 workstation/scripts/link_config.py --agent copilot --apply
+```
 
 ### The CLI
 

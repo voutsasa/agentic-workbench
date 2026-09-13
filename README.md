@@ -20,6 +20,7 @@ docs/                     	the corpus — what the workbench reads.
 skills/                   	this repo's own skills — what the workbench does.   
   README.md               	the repo-local vs. global line, and how to load these.   
   ingest-source/          	turns one register entry into a corpus file.   
+  setup-agents/           	detects the machine's AI assistants and links the config for them.   
 
 workstation/              	this machine's setup — serves the repo, never a deliverable.   
   README.md               	what each subfolder below is for.   
@@ -59,7 +60,7 @@ What the workbench runs on. This tree describes **the machines it runs on**, not
 | [`workstation/cli/`](workstation/cli/README.md) | The CLI toolchain. One folder per tool: authored `install.md` and `quick_start.md`, plus an ingested `reference.md`. Read `quick_start.md` before invoking a tool you haven't used this session. |
 | [`workstation/mcp/`](workstation/mcp/README.md) | Third-party MCP servers. One folder per server: authored `setup.md` plus an ingested `reference.md`. |
 | [`workstation/machines/`](workstation/machines/README.md) | One file per machine: paths, shell, which tools actually run, what is broken. **The only place a machine-specific fact belongs.** |
-| [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `link_config.py` reports or repairs the `~/.claude` links. Both are read-only unless told otherwise. |
+| [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `link_config.py` reports or repairs the `~/.claude` links, and with `--agent copilot` the `~/.copilot/skills` links. Both are read-only unless told otherwise. |
 | `workstation/agent/` | Claude Code configuration, **linked into `~/.claude/`** so it is versioned rather than scattered across a home directory. See below. |
 
 **The split is by lifetime, not by platform.** Policy never expires, a route expires slowly, machine
