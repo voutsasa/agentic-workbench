@@ -54,10 +54,12 @@ overwrite the live file, `-Force` being a replace and not a merge.
 
 ## Settings: merge, do not link
 
-`~/.claude/settings.json` **must keep its `env` block** — `CLAUDE_CODE_USE_BEDROCK`, `AWS_REGION`,
-`AWS_PROFILE` and the Bedrock-prefixed model IDs. Running under Bedrock is a compliance requirement
-here, so that file is edited in place and never replaced. The repo copy holds only the shared,
-non-sensitive keys, and the two are expected to differ permanently.
+`~/.claude/settings.json` is **edited in place and never replaced**, because Claude Code writes to it
+itself and a link or a copy would drop whatever it had written. On a machine that is provider-bound it
+also carries an `env` block — `CLAUDE_CODE_USE_BEDROCK`, `AWS_REGION`, `AWS_PROFILE` and the
+provider-prefixed model IDs — which this repo does not hold; whether this machine is one of those is in
+its file under [`../../machines/`](../../machines/), not here. The repo copy holds only the shared,
+non-sensitive keys.
 
 List the keys the live file is missing, then add them by hand:
 

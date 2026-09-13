@@ -35,7 +35,7 @@ other machine?*
 
 **`agent/` is live configuration.** Editing `~/.claude/CLAUDE.md` or any of the `review`, `python-quality`, `verify-docs` and `fix-findings` skills writes into this directory through the link. Check `git status` before overwriting any of them, and if this directory is ever moved or renamed, **repoint the links** — otherwise every session silently loses its global instructions. On Windows the files are hardlinks, which any atomic-saving editor severs without warning; [`agent/setup/windows.md`](agent/setup/windows.md) has the detection command.
 
-**`agent/settings.json` is the exception: merged by hand, never linked.** `~/.claude/settings.json` must keep its Bedrock `env` block for compliance, and this repo deliberately does not carry it, so the two files differ permanently and no route here overwrites the live one. [`agent/README.md`](agent/README.md#settings-are-merged-never-linked) has the procedure.
+**`agent/settings.json` is the exception: merged by hand, never linked.** Claude Code writes to `~/.claude/settings.json` itself, and on a provider-bound machine it also carries an `env` block this repo deliberately does not hold, so no route here overwrites the live one. Which machines are provider-bound belongs in [`machines/`](machines/), not in this tree. [`agent/README.md`](agent/README.md#settings-are-merged-never-linked) has the procedure.
 
 ## What is tracked
 

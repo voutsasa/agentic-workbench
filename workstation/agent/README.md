@@ -9,10 +9,11 @@ of the tree is arranged around, and it has three consequences:
 - Anything about the *state* of a machine — paths, shell quirks, which tools run, what is broken —
   belongs in [`../machines/`](../machines/), not in `CLAUDE.md`. See
   [`../machines/README.md`](../machines/README.md) for the test.
-- **`settings.json` here is a reference, not a link target.** The live `~/.claude/settings.json` must
-  keep its Bedrock `env` block, so it is the one file in this directory that is merged key-by-key
-  rather than linked — see *Settings are merged, never linked* below.
-- Anything else machine-local, and not compliance-bound, belongs in `~/.claude/settings.local.json`,
+- **`settings.json` here is a reference, not a link target.** Claude Code writes to the live
+  `~/.claude/settings.json` itself, and on a provider-bound machine that file also holds an `env`
+  block, so it is the one file in this directory that is merged key-by-key rather than linked — see
+  *Settings are merged, never linked* below.
+- Anything else machine-local, and not provider-bound, belongs in `~/.claude/settings.local.json`,
   which is untracked by design.
 
 ## Contents
@@ -40,18 +41,29 @@ it stays in the live `~/.claude/settings.json` only. See "There is a PowerShell 
 
 ## Settings are merged, never linked
 
-`~/.claude/settings.json` **must keep its Bedrock `env` block** — `CLAUDE_CODE_USE_BEDROCK`,
-`AWS_REGION`, `AWS_PROFILE` and the Bedrock-prefixed model IDs. Routing this account's traffic through
-Bedrock is a **compliance requirement, not a preference**, which sets three rules:
+`~/.claude/settings.json` is never linked, on any machine. Two reasons, and only the first holds
+everywhere:
+
+- **Claude Code writes to that file itself.** A `/config` toggle, a model switch or the Bedrock setup
+  wizard all land in it. Link it into this repo and those writes become commits; check out a branch and
+  the machine's live settings change under it. That is machine-independent and is the standing reason.
+- **On a provider-bound machine it also carries an `env` block** — `CLAUDE_CODE_USE_BEDROCK`,
+  `AWS_REGION`, `AWS_PROFILE` and the provider-prefixed model IDs — which this repo deliberately does
+  not hold, because this directory is shared unmodified and the block is sensitive.
+
+**Whether a given machine is provider-bound is machine state and lives in
+[`../machines/`](../machines/), never here.** `machines/windows-ema-pf5n4xe7.md` records one that is;
+`machines/macos-workstation.md` records one that is not. Do not read a requirement off this file.
+
+Three rules follow:
 
 - **Never link, copy over, or regenerate `~/.claude/settings.json`.** Every route in [`setup/`](setup/)
   omits it deliberately. `ln -sfn` and `New-Item -Force` both replace the target rather than merging
-  it, so either one silently drops the `env` block and the session falls back to another provider.
-- **The `env` block does not move to `settings.local.json`.** It stays in `settings.json`, which is its
-  authoritative home.
-- **It is deliberately absent from this repo**, because this directory is shared unmodified and the
-  block is sensitive. The two files are therefore *expected* to differ for ever — that difference is
-  the design, not drift.
+  it, so either one silently drops whatever the live file held.
+- **An `env` block does not move to `settings.local.json`.** Where one exists it stays in
+  `settings.json`, which is its authoritative home.
+- **The two files are allowed to differ**, and on a provider-bound machine they always will. A
+  difference here is design, not drift.
 
 ### The merge procedure
 
@@ -208,9 +220,11 @@ rather than a link, which is also the route Windows users are pointed at when sy
 From the 2026-07-30 usage report, when `WORKING_PRACTICES.md` was folded into `CLAUDE.md`.
 
 - **`settings.json` is merged, not linked — 2026-08-25.** Both `setup/` routes originally linked it,
-  which would have overwritten a live Bedrock `env` block that Claude Code is required to run under
-  for compliance. The first fix proposed moving that block to `settings.local.json`; it was rejected,
-  because the requirement is that the block sit in `settings.json` itself. So this is the one file in
+  which would have overwritten the live Bedrock `env` block that the Windows machine is required to
+  run under. The first fix proposed moving that block to `settings.local.json`; it was rejected,
+  because the requirement is that the block sit in `settings.json` itself. (The rule outlived its
+  original reason: Claude Code writes to that file on every machine, so it holds where no provider
+  constraint applies.) So this is the one file in
   a directory built on linking that cannot be linked, and the two copies differ permanently by design.
   It follows the same rule as the rest of the split — the sensitive, machine-held part and the shared
   part have different lifetimes, so they cannot share a file — but the mechanism is a hand merge

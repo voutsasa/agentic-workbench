@@ -41,9 +41,11 @@ Stop and ask before:
 
 Small obvious fixes need no gate.
 
-**Never write `~/.claude/settings.json` — not even to add a key.** It holds the provider configuration I
-am required to run under for compliance, and every route that touches it merges by hand. Tell me which
-keys differ from the repo's reference copy and I will add them.
+**Never write `~/.claude/settings.json` — not even to add a key.** Claude Code writes to that file
+itself, so any overwrite drops keys I did not put there, and on a provider-bound machine it carries the
+configuration I am required to run under. Every route that touches it merges by hand. Tell me which
+keys differ from the repo's reference copy and I will add them. Whether this machine is provider-bound
+is in the machine note, not here.
 
 ## Coding
 

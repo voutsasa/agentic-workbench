@@ -67,7 +67,7 @@ Edits to `~/.claude/CLAUDE.md` or the `review` skill land here, because those pa
 
 **Everything here is shared by every machine, unmodified.** Anything machine-specific goes in `workstation/machines/`; anything machine-*local* and not compliance-bound goes in `~/.claude/settings.local.json`, which is untracked by design.
 
-**`settings.json` is the one file that is merged rather than linked.** The live `~/.claude/settings.json` must keep its Bedrock `env` block, which this repo deliberately does not carry, so the two differ permanently and nothing may overwrite the live copy. [`workstation/agent/README.md`](workstation/agent/README.md#settings-are-merged-never-linked) has the procedure.
+**`settings.json` is the one file that is merged rather than linked.** Claude Code writes to the live `~/.claude/settings.json` itself, and on a provider-bound machine it also carries an `env` block this repo deliberately does not hold — so nothing here may overwrite the live copy. Which machines are provider-bound is recorded in `workstation/machines/`. [`workstation/agent/README.md`](workstation/agent/README.md#settings-are-merged-never-linked) has the procedure.
 
 | Path | Role |
 |---|---|
