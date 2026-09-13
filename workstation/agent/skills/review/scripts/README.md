@@ -131,6 +131,25 @@ into it would silently exempt paths elsewhere; the hook prints the exemptions in
 force before it runs. See
 [`../../verify-docs/scripts/README.md`](../../verify-docs/scripts/README.md).
 
+### Running it by hand
+
+```bash
+.git/hooks/pre-push        # repo_check only, and it says so
+```
+
+git passes the hook two arguments and the ref list on stdin; a hand run supplies neither.
+Check 2 has nothing to scope itself to, so the hook runs check 1, prints **`verify_claims.py
+did NOT run`**, and exits 0 — `repo_check: all enabled checks passed` alone is not evidence
+of a full pass. For check 2 by hand:
+
+```bash
+python3 ../../verify-docs/scripts/verify_claims.py --repo .
+```
+
+Before that guard existed the same command hung indefinitely: the ref loop is a bare `while
+read`, and stdin in an agent session is an open pipe that never carries data. `tests/test_pre_push.py`
+holds a pipe open exactly that way, so the hang fails the suite rather than returning.
+
 Bypasses, narrowest first:
 
 ```bash

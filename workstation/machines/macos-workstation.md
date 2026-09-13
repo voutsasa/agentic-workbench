@@ -109,23 +109,24 @@ recreate it:
 ln -s ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
 ```
 
-**Running the hook by hand needs `</dev/null`, and then only half of it runs.** Git feeds the hook its
-ref list on stdin; line 108 is a bare `while read`, so invoked with no redirect it blocks forever with
-no output — measured here on 2026-09-13, the process sat at 0:00.00 CPU in state `S` until killed.
+**Run by hand it does check 1 only, and says so** — measured 2026-09-13:
 
 ```sh
-.git/hooks/pre-push </dev/null       # repo_check only
+.git/hooks/pre-push
 ```
 
-That runs check 1, `repo_check.py`, which takes the whole repo and no stdin. Check 2,
-`verify_claims.py`, is scoped to the files in the ref list, so an empty stdin yields zero files and
-the script's `[ "${#files[@]}" -eq 0 ] && exit 0` skips it — **exit 0 with the claim verifier never
-invoked.** `repo_check: all enabled checks passed` is printed either way and is not evidence that it
-ran. For the second check, run the verifier directly:
+prints `repo_check: all enabled checks passed`, then `verify_claims.py did NOT run`, then exits 0.
+Check 2 is scoped to the refs git feeds on stdin, which a hand run has none of. Run it directly:
 
 ```sh
 python3 workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 ```
+
+Until 2026-09-13 that same hand run **hung** rather than returning, which cost this session two
+minutes: the process sat at 0:00.00 CPU in state `S` until killed. The cause was general rather than
+local to this machine and the fix lives with the hook, so it is recorded in
+[`../agent/skills/review/scripts/README.md`](../agent/skills/review/scripts/README.md) — what stays
+here is that this machine has the fixed hook.
 
 ### Settings, and what this machine runs against
 
