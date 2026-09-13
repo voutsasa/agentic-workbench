@@ -55,16 +55,11 @@ Claude subscription, no provider configuration.
    Paste the table it prints into `workstation/machines/macos-<id>.md` and add a row to
    [`../../machines/README.md`](../../machines/README.md).
 
-2. **Link the config** — follow [`macos.md`](macos.md), or run the script it documents:
+2. **Link the config** — follow [`macos.md` § *Link it*](macos.md#link-it), which carries the
+   commands.
 
-   ```sh
-   python3 workstation/scripts/link_config.py          # report first
-   python3 workstation/scripts/link_config.py --apply  # then create
-   ```
-
-   Six symlinks: four skills, `AGENT-INSTRUCTIONS.md` → `~/.claude/CLAUDE.md`, and the machine note →
-   `~/.claude/machine.md`. Add `--force` only when a destination already exists and you mean to
-   replace it.
+   What it puts in place: six symlinks — four skills, `AGENT-INSTRUCTIONS.md` → `~/.claude/CLAUDE.md`,
+   and the machine note → `~/.claude/machine.md`. `settings.json` is not among them, by design.
 
 3. **Settings — merge by hand, never link.** (**user**) `settings.json` is excluded from the plan by
    design; `link_config.py` raises rather than emit it. Merge the keys you want from
@@ -73,17 +68,12 @@ Claude subscription, no provider configuration.
 4. **Sign in.** (**user**) Run `claude` and log in with the Claude account. A subscription needs no
    `env` block and no provider variables — that is the whole of the provider configuration here.
 
-5. **Install the push gate** in each repo that should run it: (**user**)
-
-   ```sh
-   ln -s ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
-   ```
+5. **Install the push gate** in each repo that should run it (**user**) — the command is in
+   [`macos.md` § *The pre-push gate*](macos.md#the-pre-push-gate).
 
 ### Verify
 
-```sh
-python3 workstation/scripts/link_config.py     # expect: 6 of 6 linked
-```
+Re-run the link report from [`macos.md`](macos.md#verify) and expect **6 of 6 linked**.
 
 Then in a session, `/context` and check the list under **Memory files**. If `CLAUDE.md` is absent
 there, Claude cannot see it, however healthy the symlink looks.

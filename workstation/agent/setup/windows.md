@@ -137,8 +137,8 @@ Because it is a copy, **re-run it after pulling a change to the hook.** Nothing 
   and `~/.claude/CLAUDE.md` keeps pointing at the old one. Nothing warns you, and the stale copy still
   looks like a valid config file. **Any `git pull`, branch switch or `git stash` that touches
   `CLAUDE.md` or a machine note detaches it.** Re-run the two hardlink commands afterwards, or just run
-  `python ..\..\scripts\link_config.py --apply` from the repo root, which is idempotent and reports
-  what it repaired. Junctions are immune — they resolve a path, not an inode — so the skill directories
+  `python workstation\scripts\link_config.py --apply` from the repo root, which is idempotent and
+  reports what it repaired. Junctions are immune — they resolve a path, not an inode — so the skill directories
   never need this.
 - **A hardlink is severed by any writer that saves atomically — and which side you edit makes no
   difference.** Zed, VS Code and Claude Code's own `Edit` tool all write a temp file and rename it over
@@ -146,10 +146,11 @@ Because it is a copy, **re-run it after pulling a change to the hook.** Nothing 
   *new* inode and stops tracking the other. Editing through the repo path does not protect you; that is
   how `machine.md` was severed on `EMA-PF5N4XE7` on 2026-08-26, minutes after being linked.
 
-  So **do not try to avoid this by choosing where to edit — re-link after editing instead:**
+  So **do not try to avoid this by choosing where to edit — re-link after editing instead**, from the
+  repo root:
 
   ```powershell
-  python ..\..\scripts\link_config.py --apply
+  python workstation\scripts\link_config.py --apply
   ```
 
   Junctions are immune, so the skill directories never need it. `settings.json` is exempt because it is

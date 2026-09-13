@@ -108,8 +108,13 @@ merge is complete, because step 2 compares only the keys the repo copy has — a
 printed `in sync` while `env.ANTHROPIC_MODEL` was still a superseded model ID. So run both:
 
 ```powershell
-python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());e=d.get('env',{});print('model        :',d.get('model'));print('ANTHROPIC_MODEL:',e.get('ANTHROPIC_MODEL'));print('SMALL_FAST   :',e.get('ANTHROPIC_SMALL_FAST_MODEL'))"
+python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());e=d.get('env',{});print('model        :',d.get('model'));print('ANTHROPIC_MODEL:',e.get('ANTHROPIC_MODEL'));print('HAIKU        :',e.get('ANTHROPIC_DEFAULT_HAIKU_MODEL'),'| legacy SMALL_FAST:',e.get('ANTHROPIC_SMALL_FAST_MODEL'))"
 ```
+
+`ANTHROPIC_SMALL_FAST_MODEL` is **deprecated** — `ANTHROPIC_DEFAULT_HAIKU_MODEL` replaces it. The probe
+prints both so a settings file still carrying the old key is visible rather than silently ignored; a
+machine showing a value under `legacy SMALL_FAST` has a key to migrate. See
+[`setup/README.md`](setup/README.md#2-claude-on-bedrock-windows).
 
 Read the two IDs and confirm they name the models you intend — nothing can check that for you, since
 there is no reference value in the repo to compare against. The merge is done when step 2 prints
@@ -165,6 +170,18 @@ Code's own `Edit` tool included. So **re-run `--apply` after editing either file
 branch switch or pull that touches them.** Which side you edited makes no difference. The four skill
 junctions are immune, as are all six symlinks on macOS. Details in
 [`setup/windows.md`](setup/windows.md#windows-traps).
+
+### One surface ignores these links entirely
+
+**Cowork sessions on the desktop skip a `~/.claude/CLAUDE.md` that is itself a symlink or a hard
+link**, and skip a symlinked `~/.claude/rules/` directory or rule file pointing outside the working
+directory. Claude Code's memory documentation states this directly. Every link this repo creates is one
+of those, so in that surface the global instructions silently do not load — `link_config.py` still
+reports 6 of 6, because the links *are* healthy; it is the reader that declines them.
+
+Nothing here detects it. The check is `/context` inside a Cowork session: if `CLAUDE.md` is missing
+under **Memory files**, this is why. The documented way round it is an `@` import from a real file
+rather than a link, which is also the route Windows users are pointed at when symlinks need admin.
 
 ## Deliberately not tracked
 
