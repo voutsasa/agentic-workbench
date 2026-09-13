@@ -9,15 +9,17 @@ dependencies = []
 [dependency-groups]
 dev = [
     "pytest>=9.1.1",
-    "ruff>=0.16.7",
+    "ruff",
 ]
 
 # No `target-version` here: ruff infers it from `requires-python` above, and
-# holding one fact in two places is how the two diverge.
+# holding one fact in two places is how the two diverge. No version floor on
+# ruff either — `uv.lock` records what is actually resolved, so a number here
+# would be a second copy of that fact, stale the day ruff releases.
 [tool.ruff.lint]
-# ruff 0.16.7's default set is broad — 415 rules — so the baseline is whatever
-# the pinned ruff version ships, not a list restated here. `extend-select` adds
-# what that default deliberately leaves out.
+# The baseline is whatever the installed ruff's default set contains, which is
+# already wide. `extend-select` adds only what that default leaves out, so this
+# list stays short and does not need maintaining against each release.
 #
 # E402, module-import-not-at-top-of-file: several scripts here extend sys.path
 # before importing the module under test. Ruff exempts that specific pattern, so

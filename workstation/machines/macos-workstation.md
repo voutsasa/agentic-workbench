@@ -55,7 +55,7 @@ Inside an activated `.venv` both names work.
 | `pyproject.toml` | present | `requires-python = ">=3.14"`, `dependencies = []`, tooling in `[dependency-groups] dev` |
 | `.venv` | **present** | 3.14.6 |
 | `uv` | 0.12.9 | `/opt/homebrew/bin/uv` |
-| `pytest`, `ruff` in the venv | **present** | `pytest 9.1.1`, `ruff 0.16.7`, measured 2026-09-13 |
+| `pytest`, `ruff` in the venv | **present** | since 2026-09-13; `.venv/bin/pytest --version`, `.venv/bin/ruff --version` |
 
 Both are declared in `pyproject.toml` under `[dependency-groups] dev`, not `[project] dependencies`, so
 `uv sync` reproduces them without anything installing this project pulling them in.
@@ -63,10 +63,11 @@ Both are declared in `pyproject.toml` under `[dependency-groups] dev`, not `[pro
 route was `uvx pytest`, which keeps them out of the lock file.
 
 `.venv/bin/ruff check .` reports **All checks passed** as of 2026-09-13. The first run against this
-tree found 17 errors and they were fixed the same day. The baseline is ruff 0.16.7's own default set —
-415 rules, wide enough to include `SIM`, `RUF`, `UP` and `I` — plus `E402`, added by
+tree found 17 errors and they were fixed the same day. The baseline is the installed ruff's own default
+set — already wide enough to include `SIM`, `RUF`, `UP` and `I` — plus `E402`, added by
 `[tool.ruff.lint]` in `pyproject.toml`. Nothing else is configured, so **the effective rule set moves
-with the installed ruff version**; a newer ruff may find errors this one does not.
+with the installed ruff version**; a newer ruff may find errors this one does not. `uv.lock` records
+which version that is; this file does not repeat it.
 
 The `workstation/scripts/` and skill scripts are stdlib-only by design and are the deliberate
 exception: they run under bare `python3` before any venv exists. See
