@@ -26,6 +26,12 @@ back to the only file for the platform, so nothing depends on the two matching.
 | Package manager | `brew`, prefix `/opt/homebrew` | `command -v uv` → `/opt/homebrew/bin/uv` |
 | Project interpreter | `.venv/bin/python`, 3.14.6 | `.venv/bin/python -V` |
 | `uv` | 0.12.9 (Homebrew) | `uv --version` |
+| Git remote | **`emaea`**, not `origin` | `git remote -v` → `https://euemadev@dev.azure.com/euemadev/EA/_git/agentic-workbench` |
+
+**The remote is not called `origin`.** `main` tracks `emaea/main` (`git rev-parse --abbrev-ref
+main@{upstream}`, 2026-09-13), so anything written against `origin/…` fails here with *ambiguous
+argument*, not with a clear message about a missing remote — it cost a few minutes during the pre-push
+work on 2026-09-13. Use `@{upstream}` or the configured name, never a hardcoded `origin`.
 
 ## Shell
 
