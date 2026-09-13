@@ -1,4 +1,4 @@
-# Claude Code config
+# Agent config
 
 Hand-authored Claude Code config, versioned here and linked into `~/.claude/` so it is not scattered
 through a home directory.

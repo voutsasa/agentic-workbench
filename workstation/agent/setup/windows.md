@@ -1,4 +1,4 @@
-# Claude Code config — setup on Windows
+# Agent config — setup on Windows
 
 Puts this repo's [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) and [`../skills/`](../skills/) in place at
 `~/.claude/`, so the config is versioned instead of scattered through a home directory.
