@@ -101,12 +101,30 @@ The consequence worth knowing: **`workstation/agent/` in this repo is now the li
 an edit to `~/.claude/CLAUDE.md` or any of the linked skills writes here and shows up in `git status`.
 
 The pre-push documentation gate **is** installed here, measured 2026-09-13: `.git/hooks/pre-push` is a
-symlink to `../../workstation/agent/skills/review/scripts/pre-push`, and running it directly reported
-`repo_check: all enabled checks passed` at exit 0. It is per-clone and never tracked, so a fresh clone
-has to recreate it:
+symlink to `../../workstation/agent/skills/review/scripts/pre-push`, and `repo_check` reported
+`all enabled checks passed` at exit 0. It is per-clone and never tracked, so a fresh clone has to
+recreate it:
 
 ```sh
 ln -s ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
+```
+
+**Running the hook by hand needs `</dev/null`, and then only half of it runs.** Git feeds the hook its
+ref list on stdin; line 108 is a bare `while read`, so invoked with no redirect it blocks forever with
+no output — measured here on 2026-09-13, the process sat at 0:00.00 CPU in state `S` until killed.
+
+```sh
+.git/hooks/pre-push </dev/null       # repo_check only
+```
+
+That runs check 1, `repo_check.py`, which takes the whole repo and no stdin. Check 2,
+`verify_claims.py`, is scoped to the files in the ref list, so an empty stdin yields zero files and
+the script's `[ "${#files[@]}" -eq 0 ] && exit 0` skips it — **exit 0 with the claim verifier never
+invoked.** `repo_check: all enabled checks passed` is printed either way and is not evidence that it
+ran. For the second check, run the verifier directly:
+
+```sh
+python3 workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 ```
 
 ### Settings, and what this machine runs against
