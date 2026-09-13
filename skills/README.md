@@ -4,19 +4,18 @@ Skills whose procedure is **specific to this workbench**: they name `SOURCES.md`
 or the `workstation/` tree, so they would be wrong in any other repo.
 
 That is the line against [`../workstation/agent/skills/`](../workstation/agent/skills/), which holds
-the **global** skills — `review`, `python-quality`, `verify-docs`, `fix-findings` — linked into
-`~/.claude/skills/` and shared unmodified by every machine. A skill earns promotion there by working in
-a repo that is not this one; until it has, it stays here.
+the **global** skills, linked into `~/.claude/skills/` by
+[`../workstation/scripts/link_config.py`](../workstation/scripts/link_config.py) and shared unmodified
+by every machine — its `SKILLS` tuple is the authoritative list. A skill earns promotion there by
+being register-free: a caller supplies whatever this repo would have decided. Until it is, it stays
+here.
+
+`fetch-to-markdown` was promoted out of this folder on 2026-09-13 — it was the routing and conversion
+half of `ingest-source`, and takes its destination path from the caller.
 
 | Skill | What it does |
 |---|---|
-| [`ingest-source/`](ingest-source/) | Pull one `SOURCES.md` entry into the corpus: resolve the destination, delegate the conversion, record |
-| [`fetch-to-markdown/`](fetch-to-markdown/) | One URL and one destination path to clean markdown: classify, route, convert, quality-check |
-
-**`fetch-to-markdown` is a promotion candidate, not a repo-local skill.** It names no register, no
-corpus directory and no `workstation/` path — the caller supplies the destination — so it is here only
-until it has been used from a repo that is not this one. `ingest-source` is what keeps the
-workbench-specific half: where an entry lands, what its file is called, and what gets written back.
+| [`ingest-source/`](ingest-source/) | Pull one `SOURCES.md` entry into the corpus: resolve the destination, delegate the conversion to the global `fetch-to-markdown`, record |
 
 ## Loading them
 
@@ -26,12 +25,10 @@ across, so the skill loads while the source of truth stays in the tracked tree:
 ```sh
 mkdir -p .claude/skills
 ln -s ../../skills/ingest-source .claude/skills/ingest-source
-ln -s ../../skills/fetch-to-markdown .claude/skills/fetch-to-markdown
 ```
 
-**Both, or neither works as intended.** `ingest-source` delegates its conversion to
-`fetch-to-markdown`; with only the first linked, the delegation resolves to a file the agent has to be
-told to read rather than a skill it discovers.
+`fetch-to-markdown` needs no line here — it is global, and `link_config.py --apply` puts it in
+`~/.claude/skills/` where every repo sees it.
 
 Per-clone, like the pre-push hook, and never tracked — `.claude/` is not in git. A fresh clone has to
 re-run it.

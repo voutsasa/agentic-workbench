@@ -13,7 +13,7 @@ register is the source of truth and the corpus mirrors it.
 > expensive operation that happens only when the user asks for it in those words.
 
 This skill owns the register: where an entry lands, what the file is called, and what gets written
-back. **The fetching and converting belong to [`fetch-to-markdown`](../fetch-to-markdown/SKILL.md)** —
+back. **The fetching and converting belong to the global `fetch-to-markdown` skill** —
 classify the page, route it, quality-check the result, strip base64 images. Resolve the destination
 below first, then invoke that skill with the URL and the resolved path.
 
@@ -55,7 +55,7 @@ with an `http(s)` target, which is what keeps the register-to-corpus mapping one
 ## 2. Fetch and convert
 
 Hand the entry's URL and the path resolved above to
-[`fetch-to-markdown`](../fetch-to-markdown/SKILL.md). It classifies the source, picks the route, runs
+the global `fetch-to-markdown` skill. It classifies the source, picks the route, runs
 the quality checks and cleans embedded images. Do not re-derive any of that here.
 
 Its checks are pass/fail, and a failure it flags is **not** ingested: re-run or raise it with the user

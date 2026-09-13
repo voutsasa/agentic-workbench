@@ -55,7 +55,8 @@ REPAIRABLE = (MISSING, DETACHED)
 #: is authoritative and is merged by hand; see workstation/agent/README.md.
 NEVER_LINK = frozenset({"settings.json"})
 
-SKILLS = ("review", "python-quality", "verify-docs", "fix-findings", "pdf-deliverable")
+SKILLS = ("review", "python-quality", "verify-docs", "fix-findings", "pdf-deliverable",
+          "fetch-to-markdown")
 
 
 @dataclass(frozen=True)

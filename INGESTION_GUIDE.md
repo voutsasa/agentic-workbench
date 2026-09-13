@@ -10,7 +10,8 @@ verified: never
 [`skills/ingest-source/SKILL.md`](skills/ingest-source/SKILL.md), with the workstation-tooling branch
 in [`skills/ingest-source/references/workstation-tooling.md`](skills/ingest-source/references/workstation-tooling.md).
 The fetching and converting it delegates to — and the two scripts that do it — are in
-[`skills/fetch-to-markdown/`](skills/fetch-to-markdown/).
+[`workstation/agent/skills/fetch-to-markdown/`](workstation/agent/skills/fetch-to-markdown/),
+which is global rather than repo-local.
 
 Read the skill, not this file. Nothing was dropped in the move.
 

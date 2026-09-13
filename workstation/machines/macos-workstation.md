@@ -75,8 +75,7 @@ exception: they run under bare `python3` before any venv exists. See
 
 ## Claude Code config
 
-`python3 workstation/scripts/link_config.py --apply --force`, 2026-09-12. Do not edit this table by
-hand.
+`python3 workstation/scripts/link_config.py --apply`, 2026-09-13. Do not edit this table by hand.
 
 | Artefact | Kind | Status |
 |---|---|---|
@@ -84,16 +83,22 @@ hand.
 | `skills/python-quality` | symlink | linked |
 | `skills/verify-docs` | symlink | linked |
 | `skills/fix-findings` | symlink | linked |
+| `skills/pdf-deliverable` | symlink | linked |
+| `skills/fetch-to-markdown` | symlink | linked |
 | `CLAUDE.md` | symlink | linked |
 | `machine.md` | symlink | linked |
 
-**6 of 6 linked, and all six now resolve into this repo.** Until 2026-09-12 they resolved into
-`sdd-workbench`, the sibling this repo was split from: `CLAUDE.md` and the four skills were linked
-there and `machine.md` was absent. `--force` was needed because a destination pointing at the sibling
-reads as `occupied`, not `detached`. The rollback is the same command run from `sdd-workbench`.
+**8 of 8 linked, and all eight resolve into this repo.** Until 2026-09-12 they resolved into
+`sdd-workbench`, the sibling this repo was split from: `CLAUDE.md` and the four skills of the day were
+linked there and `machine.md` was absent. `--apply --force` was needed for that move, because a
+destination pointing at the sibling reads as `occupied`, not `detached`. The rollback is the same
+command run from `sdd-workbench`.
+
+`pdf-deliverable` and `fetch-to-markdown` joined later — the table is only as current as the run
+quoted above it, so re-run `link_config.py` (read-only, no flag) rather than trusting the row count.
 
 The consequence worth knowing: **`workstation/agent/` in this repo is now the live global config**, so
-an edit to `~/.claude/CLAUDE.md` or any of the four skills writes here and shows up in `git status`.
+an edit to `~/.claude/CLAUDE.md` or any of the linked skills writes here and shows up in `git status`.
 
 The pre-push documentation gate **is** installed here, measured 2026-09-13: `.git/hooks/pre-push` is a
 symlink to `../../workstation/agent/skills/review/scripts/pre-push`, and running it directly reported

@@ -19,7 +19,6 @@ docs/                     	the corpus — what the workbench reads.
 skills/                   	this repo's own skills — what the workbench does.   
   README.md               	the repo-local vs. global line, and how to load these.   
   ingest-source/          	turns one register entry into a corpus file.   
-  fetch-to-markdown/      	fetches and converts one document to markdown.   
 
 workstation/              	this machine's setup — serves the repo, never a deliverable.   
   README.md               	what each subfolder below is for.   
@@ -27,7 +26,7 @@ workstation/              	this machine's setup — serves the repo, never a del
   cli/<tool>/             	per-tool CLI guidance         — authored files in git.   
   mcp/README.md           	the MCP server index.   
   mcp/<server>/           	per-server MCP guidance       — authored files in git.   
-  agent/                  	agent config, symlinked into ~/.claude/.   
+  agent/                  	agent config + global skills, symlinked into ~/.claude/.   
 
 pyproject.toml            	Python project metadata.   
 ```
@@ -41,7 +40,7 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 | [`SOURCES.md`](SOURCES.md) | **Source of truth.** The register of every source, grouped by the architecture layer it feeds, with the register conventions and per-layer gaps still to collect. Edit this first when adding or removing a source. |
 | [`SOURCE_CATALOGUE.md`](SOURCE_CATALOGUE.md) | **Capability index.** One line per source saying what it gives you, mirroring the register's structure and entries exactly. Changes to the register need a matching change here. |
 | [`skills/ingest-source/`](skills/ingest-source/) | **Process.** Where a register entry lands, what its file is called, what gets written back to the catalogue, and how workstation tooling additionally gets its install route or registration recorded. A skill rather than a guide, so it is discovered by what you are doing rather than by knowing its filename. |
-| [`skills/fetch-to-markdown/`](skills/fetch-to-markdown/) | **Conversion.** How to route a document into clean markdown — GitHub repo, PDF, plain doc site, or JS-hydrated site — and how to quality-check the result. Register-free, so it works on any document in any repo. |
+| [`workstation/agent/skills/fetch-to-markdown/`](workstation/agent/skills/fetch-to-markdown/) | **Conversion.** How to route a document into clean markdown — GitHub repo, PDF, plain doc site, or JS-hydrated site — and how to quality-check the result. Register-free and **global**: linked into `~/.claude/skills/`, so it works on any document in any repo. |
 | [`INGESTION_GUIDE.md`](INGESTION_GUIDE.md) | A pointer to the above, kept so existing references still resolve. Carries no procedure. |
 | [`workstation/cli/README.md`](workstation/cli/README.md) | **CLI tool index.** What each per-tool file is for, a `command → product → folder` map, and the version-currency rule. |
 | [`workstation/mcp/README.md`](workstation/mcp/README.md) | **MCP server index.** The third-party servers configured into this machine, and the file contract they follow. |
