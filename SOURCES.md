@@ -185,7 +185,7 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 
 Tools and MCP servers used to ingest and process sources into this repo. Inputs to the workbench itself, never to a downstream artefact.
 
-An entry here means a route has been resolved and written down, **not** that the tool is live on any given machine — the user installs and registers, the agent records. See [`CLAUDE.md`](CLAUDE.md#the-user-installs-the-agent-records).
+An entry here means a route has been resolved and written down, **not** that the tool is live on any given machine — the user installs and registers, the agent records. See [`AGENTS.md`](AGENTS.md#the-user-installs-the-agent-records).
 
 #### CLI tools
 

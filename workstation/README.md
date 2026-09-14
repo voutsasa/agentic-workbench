@@ -18,7 +18,7 @@ What this workbench **runs on**, as opposed to what it reads. `docs/` is the cor
 
 ## Three rules that apply across the tree
 
-**The user installs; these files record** — see [`CLAUDE.md`](../CLAUDE.md#the-user-installs-the-agent-records). A recorded route means the route is *known*, not that the tool is live here.
+**The user installs; these files record** — see [`AGENTS.md`](../AGENTS.md#the-user-installs-the-agent-records). A recorded route means the route is *known*, not that the tool is live here.
 
 **Split by lifetime, not by platform.** Three kinds of fact live in this tree and they expire at
 different rates, so they live in different files:

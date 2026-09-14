@@ -26,7 +26,7 @@ skill format is identical — only the parent directory differs.
 | | Claude Code | GitHub Copilot |
 |---|---|---|
 | **User instructions** | `~/.claude/CLAUDE.md` | the same file, once `chat.useClaudeMdFile` is on; natively `AGENTS.md` |
-| **Project instructions** | `CLAUDE.md` or `.claude/CLAUDE.md`, at the project root | `.github/copilot-instructions.md`, `AGENTS.md` |
+| **Project instructions** | `CLAUDE.md` or `.claude/CLAUDE.md`, at the project root | `.github/copilot-instructions.md`, `AGENTS.md`; the CLI and cloud agent also `CLAUDE.md` and `GEMINI.md`, the CLI `.claude/CLAUDE.md` too. VS Code Chat reads `CLAUDE.md` only once `chat.useClaudeMdFile` is on |
 | **Skills** | `~/.claude/skills/<name>/SKILL.md` | `~/.copilot/skills/<name>/SKILL.md`; per project `.github/skills/`, `.agents/skills/`, `.claude/skills/` |
 | **Settings** | `~/.claude/settings.json` | VS Code `settings.json`; CLI `~/.copilot/settings.json` |
 

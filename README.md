@@ -41,7 +41,9 @@ Repo skills serve this workbench; global skills work in any repo. The authoritat
 SOURCES.md                	the register — source of truth.   
 SOURCE_CATALOGUE.md       	one-line capability summary per source.   
 TODO.md                   	open work carried between sessions.   
-CLAUDE.md                 	instructions for agents working in this repo.   
+AGENTS.md                 	instructions for agents working in this repo.   
+CLAUDE.md                 	imports AGENTS.md for Claude Code.   
+.agents/rules/            	imports AGENTS.md for Antigravity.   
 
 docs/                     	the corpus — what the workbench reads.   
   landing-zone/           	ingested external sources     — not in git.   
@@ -77,7 +79,7 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 | [`workstation/cli/README.md`](workstation/cli/README.md) | **CLI tool index.** What each per-tool file is for, a `command → product → folder` map, and the version-currency rule. |
 | [`workstation/mcp/README.md`](workstation/mcp/README.md) | **MCP server index.** The third-party servers configured into this machine, and the file contract they follow. |
 | [`workstation/machines/README.md`](workstation/machines/README.md) | **Machine index.** One file per machine this workbench runs on, and the test for whether a fact is policy, a route, or machine state. |
-| [`CLAUDE.md`](CLAUDE.md) | **Agent instructions for this repo** — file roles, the layer model, the ingestion invariant, and the rule that GitHub sources are fetched as raw READMEs rather than cloned. Read by Claude Code automatically. |
+| [`AGENTS.md`](AGENTS.md) | **Agent instructions for this repo** — file roles, the layer model, the ingestion invariant, and the rule that GitHub sources are fetched as raw READMEs rather than cloned. Read directly by GitHub Copilot; Claude Code reaches it through [`CLAUDE.md`](CLAUDE.md) and Antigravity through [`.agents/rules/workbench.md`](.agents/rules/workbench.md), each a one-line `@AGENTS.md` import. |
 ## The workstation — `workstation/`
 
 What the workbench runs on. This tree describes **the machines it runs on**, not an architecture, so nothing in it should reach a generated artefact.

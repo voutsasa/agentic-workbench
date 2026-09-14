@@ -21,6 +21,9 @@
 # agent/setup/README.md as what Copilot reads in whichever repo you point it at.
 .github/copilot-instructions.md
 .github/skills/**
+# Named narrowly: this repo now owns .agents/rules/workbench.md (Antigravity's
+# route to AGENTS.md), and `.agents/**` would exempt that from checking too.
+.agents/skills/**
 
 # The pre-push hook is installed per clone and is never tracked, so it cannot
 # exist on a fresh checkout of any machine. Both references to it are true as

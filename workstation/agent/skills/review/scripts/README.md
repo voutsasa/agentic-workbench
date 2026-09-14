@@ -99,7 +99,7 @@ settled:
   there is no exemption list to keep in sync.
 - **The `workbench` → `workstation` rule is deleted**, not merely off. In this repo those
   are two different things, not a preferred and a disfavoured spelling: "SDD Workbench" is
-  the product name, and `CLAUDE.md` defines the split — *`docs/` is what the workbench
+  the product name, and `AGENTS.md` defines the split — *`docs/` is what the workbench
   reads; `workstation/` is what it runs on.* Enforced as written it flagged 54 correct
   uses, and no narrower phrasing was worth keeping.
 

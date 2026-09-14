@@ -190,7 +190,7 @@ def check_links(repo_root: Path, files: list[str], config: dict) -> list[dict]:
     """A link's target must resolve — except the ingested reference.md pages.
 
     Those are gitignored by design (see scope.exclude_globs) and absent on any
-    machine that hasn't ingested that source yet, which CLAUDE.md calls expected,
+    machine that hasn't ingested that source yet, which AGENTS.md calls expected,
     not a fault. allow_globs here is the same escape valve check_bare_paths
     already has for the identical file, just reached through [text](target)
     instead of a bare path in prose.

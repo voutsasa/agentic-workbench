@@ -6,6 +6,9 @@ Enables engineers to set up their workstation and work in an agent-enabled envir
 
 | Path | Role |
 |---|---|
+| `AGENTS.md` | **This file** — the repo's agent instructions, and the only copy. Read directly by GitHub Copilot; every other assistant reaches it through a one-line import, never a second copy. |
+| `CLAUDE.md` | One line, `@AGENTS.md`. Claude Code reads `CLAUDE.md` and not `AGENTS.md`, so this is its route in. Add nothing else here. |
+| `.agents/rules/workbench.md` | One line, `@AGENTS.md` — Google Antigravity's route in, as a workspace rule. Its activation (**Always On**) is set in Antigravity's UI. |
 | `SOURCES.md` | The source register created by the user. **Source of truth** for what belongs in the project. Sources are grouped by the architecture layer each feeds. Edit this first when adding or removing a source. This document should not be used as a reference to any other document. Where required refer to `SOURCE_CATALOGUE.md` |
 | `SOURCE_CATALOGUE.md` | One-sentence (≤20 words) capability summary per source, mirroring `SOURCES.md`'s structure and entries exactly. Whenever `SOURCES.md` changes, `SOURCE_CATALOGUE.md` needs a matching update. |
 | `README.md` | The repo's landing page: what the workbench is, plus the role of every file in it. Carries no source entries — those live in `SOURCE_CATALOGUE.md`. |

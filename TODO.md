@@ -143,6 +143,22 @@ Microsoft Learn on 2026-09-14; none has run yet:
 project, both reports were produced, and either a pull request was opened or the run logged *No
 documentation drift found* — with the run URL recorded here before the item is deleted.
 
+### 10. No assistant has been shown to load `AGENTS.md` exactly once
+
+Opened 2026-09-14, when `CLAUDE.md` became `AGENTS.md` plus one-line `@AGENTS.md` imports. The routes
+are from vendor documentation fetched that day; none has been observed in a session.
+
+| Assistant | Route | Unproven |
+|---|---|---|
+| Claude Code | `CLAUDE.md` → `@AGENTS.md` | that the import expands — Anthropic's memory page documents this exact pattern |
+| Copilot CLI | reads `AGENTS.md` **and** `CLAUDE.md` | whether the import makes a second copy; its docs dedupe "identical" instruction files, and the raw `CLAUDE.md` is not identical |
+| Antigravity | `.agents/rules/workbench.md` → `@AGENTS.md` | that the rule is set to **Always On** and applies, and whether Antigravity also reads `AGENTS.md` natively — its rules page does not mention it |
+
+**Closes when:** a fresh session of each shows the instructions loaded once — `/context` in Claude
+Code, the loaded-instructions view in `copilot` and Antigravity — with the observation recorded in
+the machine note. If Copilot loads two copies, the fallback is `ln -s AGENTS.md CLAUDE.md` on macOS,
+which makes the files identical; Windows keeps the import.
+
 ## Closed
 
 Nothing yet. An item moves here with the evidence that closed it, or is deleted outright; a list of

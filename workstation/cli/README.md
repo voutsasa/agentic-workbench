@@ -16,7 +16,7 @@ Each tool has a folder here at `<tool>/` holding three files with distinct jobs.
 
 `install.md` and `quick_start.md` are hand-authored and deliberately short, so either can be read in full without crowding a session's context. `reference.md` is machine-written, never hand-edited, and gitignored like the rest of the corpus — it is rebuildable from the URL in the register.
 
-**The user installs; these files record** — see [`CLAUDE.md`](../../CLAUDE.md#the-user-installs-the-agent-records). An entry means the route is known, not that the command runs here.
+**The user installs; these files record** — see [`AGENTS.md`](../../AGENTS.md#the-user-installs-the-agent-records). An entry means the route is known, not that the command runs here.
 
 Each `install.md` carries a `| Platform | Command |` table, currently macOS and Windows. **Adding a
 platform means adding a row to each of the twelve** — plus one `../agent/setup/<platform>.md` and one

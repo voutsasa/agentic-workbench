@@ -19,7 +19,7 @@ Where to find guidance for the MCP servers listed under *Cross-cutting aspects �
 |---|---|---|---|---|
 | `drawio-mcp` | draw.io MCP tool server | stdio | pending user | [`drawio-mcp/`](drawio-mcp/) |
 
-**The user registers; this folder records** — see [`CLAUDE.md`](../../CLAUDE.md#the-user-installs-the-agent-records). The *Registered* column tracks the gap: a row can be fully documented and still not live on this machine.
+**The user registers; this folder records** — see [`AGENTS.md`](../../AGENTS.md#the-user-installs-the-agent-records). The *Registered* column tracks the gap: a row can be fully documented and still not live on this machine.
 
 ## Config lives outside this repo
 
