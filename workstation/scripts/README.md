@@ -16,7 +16,9 @@ else in this repo follows the venv rule.
 | [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude`, and its skills in `~/.copilot/skills` |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
-`../agent/skills/*/tests/`. Run them from the repo root:
+`../agent/skills/*/tests/`. One tests no script here: `test_readme_skills.py` fails when the skill
+table in the root `README.md` stops matching `link_config.py`'s `SKILLS` tuple and the `skills/`
+folders. Run them from the repo root:
 
 ```
 python -m unittest discover -s workstation/scripts/tests -t workstation/scripts/tests

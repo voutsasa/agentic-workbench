@@ -1,35 +1,34 @@
 # Agentic Workbench
 
-Gathers agentic-engineering source material used to build constitutions, skills, and other artefacts for projects adopting Spec-Driven Development.
+Enables engineers to set up their workstation and work in an agent-enabled environment: AI coding assistants configured consistently, on a toolchain that is known to work.
 
-Start with [`SOURCE_CATALOGUE.md`](SOURCE_CATALOGUE.md) — it lists every source with a one-line summary of what it gives you, grouped by architecture layer.
+Start with the [`setup-agents`](skills/setup-agents/SKILL.md) skill — it finds the AI assistants on your machine and sets them up with the shared instructions and skills.
 
 ## Executive summary
 
-### Key technical capabilities
+The first two capabilities deliver the agent-enabled workstation; the last two keep it trustworthy.
 
-| Capability | What it provides | Where |
-|---|---|---|
-| **Layered source register** | Every source grouped by the architecture layer it feeds — business domain, solution, data, technical, implementation — with a one-line capability summary each. | [`SOURCES.md`](SOURCES.md), [`SOURCE_CATALOGUE.md`](SOURCE_CATALOGUE.md) |
-| **Rebuildable ingestion pipeline** | One register entry becomes one clean markdown file, routed to the right CLI tool (curl, pandoc, docling, Playwright + defuddle) and quality-checked. The corpus is gitignored and rebuilt from the register. | [`skills/ingest-source/`](skills/ingest-source/) |
-| **Workstation toolchain guidance** | Per-tool install routes and run-time traps for the CLI tools and MCP servers, plus per-machine state measured by `inventory.py` rather than written by hand. | [`workstation/`](workstation/README.md) |
-| **Agent configuration as code** | Global agent instructions and skills versioned here and linked into `~/.claude/` and `~/.copilot/skills/` by `link_config.py`; `settings.json` is merged by hand, never overwritten. | [`workstation/agent/`](workstation/agent/README.md) |
-| **Documentation gates** | A pre-push hook runs `repo_check.py` for internal consistency and `verify_claims.py`, which executes each documented path, flag and version claim against the real machine. | [`workstation/agent/skills/review/scripts/`](workstation/agent/skills/review/scripts/README.md) |
+| Capability | Role | What it gives engineers | Where |
+|---|---|---|---|
+| **Agent configuration** | Core | Every engineer's AI assistants follow the same instructions and skills, maintained in one place and applied to a machine in a guided step. | [`workstation/agent/`](workstation/agent/README.md) |
+| **Workstation toolchain support for agents** | Core | The tools agents rely on come with proven install routes and known pitfalls, and each machine's real state is measured rather than assumed. | [`workstation/`](workstation/README.md) |
+| **Rebuildable ingestion pipeline** | Integrity | The reference material behind that guidance is fetched from official sources on demand, so it can be refreshed instead of quietly ageing. | [`skills/ingest-source/`](skills/ingest-source/) |
+| **Documentation validation gate** | Integrity | Before a change is shared, documented paths, commands and versions are checked against a real machine, so drift is caught before anyone relies on it. | [`workstation/agent/skills/verify-docs/`](workstation/agent/skills/verify-docs/SKILL.md) |
 
 ### Skills
 
-Repo-local skills name this workbench's register and folders; global skills work in any repo. The authoritative lists are [`skills/README.md`](skills/README.md) and the `SKILLS` tuple in [`link_config.py`](workstation/scripts/link_config.py).
+Repo skills serve this workbench; global skills work in any repo. The authoritative lists are [`skills/README.md`](skills/README.md) and the `SKILLS` tuple in [`link_config.py`](workstation/scripts/link_config.py), and `workstation/scripts/tests/test_readme_skills.py` fails when this table stops matching them.
 
 | Skill | Scope | What it does |
 |---|---|---|
-| [`ingest-source`](skills/ingest-source/SKILL.md) | repo | Pulls one registered source into the corpus: resolves its destination and filename, delegates conversion, then records it in the catalogue. |
-| [`setup-agents`](skills/setup-agents/SKILL.md) | repo | Detects the machine's AI assistants, asks which to configure and Claude's provider, links workbench instructions and skills or supplies commands. |
+| [`setup-agents`](skills/setup-agents/SKILL.md) | repo | Sets up an engineer's AI coding assistants, confirming each choice, then applying shared instructions and skills or handing over commands. |
+| [`ingest-source`](skills/ingest-source/SKILL.md) | repo | Adds a registered source to the knowledge base, filed under a predictable name and recorded in the catalogue for traceability. |
 | [`fetch-to-markdown`](workstation/agent/skills/fetch-to-markdown/SKILL.md) | global | Converts web pages, PDFs or Office documents to clean markdown, routing each to the right tool and quality-checking the result. |
+| [`verify-docs`](workstation/agent/skills/verify-docs/SKILL.md) | global | Audits documentation for stale claims by running a command that proves or refutes each, reporting them in an evidence table. |
 | [`review`](workstation/agent/skills/review/SKILL.md) | global | Produces structured, read-only findings reports on documents or code, including regulatory texts and specs; applies fixes only when explicitly asked. |
 | [`fix-findings`](workstation/agent/skills/fix-findings/SKILL.md) | global | Applies the most recent review's findings by following the review skill's Apply mode, escalating judgement calls instead of guessing them. |
-| [`verify-docs`](workstation/agent/skills/verify-docs/SKILL.md) | global | Audits documentation for stale claims by running a command that proves or refutes each, reporting them in an evidence table. |
-| [`python-quality`](workstation/agent/skills/python-quality/SKILL.md) | global | Sets up Python quality gates: ruff, pyright, pytest coverage, radon, dependency audit and docs, with thresholds derived from existing code. |
-| [`pdf-deliverable`](workstation/agent/skills/pdf-deliverable/SKILL.md) | global | Produces PDFs from markdown or HTML without LaTeX: pandoc via typst for working notes, WeasyPrint for a specified page format. |
+| [`python-quality`](workstation/agent/skills/python-quality/SKILL.md) | global | Sets up code-quality checks for Python projects: linting, type checking, test coverage, complexity and dependency audits, calibrated to existing code. |
+| [`pdf-deliverable`](workstation/agent/skills/pdf-deliverable/SKILL.md) | global | Turns markdown or HTML into PDFs, from working notes to formal documents meeting a required page layout or archival standard. |
 
 ## Layout
 
