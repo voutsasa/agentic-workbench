@@ -170,9 +170,10 @@ their observation recorded here rather than a quoted output.
 | VS Code `chat.useClaudeMdFile` | not set | `skills/setup-agents/scripts/detect.py` |
 
 **The cask directory and the running version disagree** — the resolved path still names 1.0.24 on
-2026-09-14 while the binary reports 1.0.83, up from 1.0.63 a day earlier with no upgrade run by hand.
-`autoUpdate` defaults to `true` (`copilot help config`), which fits an update installed outside the
-cask, but where it lands was not checked. Read the version from `copilot --version`, never from the
+2026-09-14 while the binary reports 1.0.83, up from 1.0.63 a day earlier. Homebrew did not do it:
+`brew info --cask --json=v2 copilot-cli` reports `"installed": "1.0.24"` and `"auto_updates": true`.
+`autoUpdate` defaults to `true` (`copilot help config`), so the CLI updates itself outside the cask,
+but where it lands was not checked. Read the version from `copilot --version`, never from the
 path.
 
 #### Instruction loading — `AGENTS.md` is loaded twice

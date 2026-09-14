@@ -114,12 +114,15 @@ commands are removed from the README as a route this workbench does not use.
 ### 8. The running Copilot CLI is not the one its path names
 
 Opened 2026-09-13, on the macOS workstation. `readlink -f /opt/homebrew/bin/copilot` resolves to
-`/opt/homebrew/Caskroom/copilot-cli/1.0.24/copilot`, while `copilot --version` reports 1.0.63.
-`autoUpdate` defaults to `true` (`copilot help config`), which fits an update installed outside the
-cask, but where 1.0.63 actually lives was never found. Until it is, a `brew upgrade` and the CLI's
-own updater may be managing two copies, and `inventory.py`-style path checks read the wrong one.
+`/opt/homebrew/Caskroom/copilot-cli/1.0.24/copilot`, while `copilot --version` reported 1.0.63 that
+day and **1.0.83 on 2026-09-14**, with the path unchanged. Homebrew did not do it: `brew info --cask
+--json=v2 copilot-cli` still reports `"installed": "1.0.24"`, and marks the cask `"auto_updates": true`.
+So the CLI updates itself, outside the cask — `autoUpdate` defaults to `true` (`copilot help config`) —
+but where the running version actually lives was never found. Until it is, a `brew upgrade` and the
+CLI's own updater may be managing two copies, and `inventory.py`-style path checks read the wrong one.
 
-**Closes when:** the executable path of the running 1.0.63 is found and quoted in
+**Closes when:** the executable path of the running version — read from `copilot --version` at the
+time, since it moves on its own — is found and quoted in
 `workstation/machines/macos-workstation.md` (its *Copilot CLI* section), together with which of the
 two updaters owns it. The agent records; any upgrade or cleanup is the user's to run.
 
