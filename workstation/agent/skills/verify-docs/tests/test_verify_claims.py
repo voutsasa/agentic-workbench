@@ -20,6 +20,7 @@ import tempfile
 import unittest
 from pathlib import Path
 from typing import ClassVar
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 
@@ -488,8 +489,9 @@ class TestPathVerdicts(unittest.TestCase):
             self.assertEqual(UNVERIFIABLE, verifier.verify_path(claim("path", ".github/workflows/check.yml"))[2])
 
     def test_a_symlink_counts_as_existing_even_when_dangling(self):
-        with TempRepo({"doc.md": "x\n"}) as root:
-            (root / "link.md").symlink_to(root / "missing-target.md")
+        with (TempRepo({"doc.md": "x\n"}) as root,
+              mock.patch.object(Path, "exists", return_value=False),
+              mock.patch.object(Path, "is_symlink", return_value=True)):
             self.assertEqual(VERIFIED, Verifier(root).verify_path(claim("path", "link.md"))[2])
 
 

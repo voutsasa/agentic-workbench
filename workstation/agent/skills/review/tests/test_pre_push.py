@@ -27,6 +27,7 @@ invoked.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import tempfile
 import unittest
@@ -34,11 +35,21 @@ from pathlib import Path
 
 HOOK = Path(__file__).resolve().parent.parent / "scripts" / "pre-push"
 REPO_ROOT = Path(__file__).resolve().parents[5]
+BASH = shutil.which("bash")
 
 #: Long enough for repo_check over the whole repo (~0.07s documented, about a
 #: second in practice), short enough that the hang fails the suite rather than
 #: stalling it.
 TIMEOUT_S = 30
+
+
+def hook_command(*args: str) -> list[str]:
+    """Run the Bash hook through its interpreter on every supported platform."""
+    if BASH is None:
+        raise RuntimeError("bash is required to test the pre-push hook")
+    # `exec` avoids an intermediate Bash retaining the open stdin pipe that
+    # deliberately reproduces a hand-run hook invocation.
+    return [BASH, "-c", 'exec "$@"', "bash", str(HOOK), *args]
 
 
 def run_hook(*args: str) -> subprocess.CompletedProcess:
@@ -52,14 +63,18 @@ def run_hook(*args: str) -> subprocess.CompletedProcess:
       is the same EOF by another route. Measured: with the guard removed, a
       ``communicate()``-based helper returned in 0.25s instead of blocking.
 
-    So the pipe is held open for the process's whole life, and stdout and stderr
-    go to files rather than pipes — nothing is draining them while we wait.
+    So on POSIX the pipe is held open for the process's whole life, and stdout
+    and stderr go to files rather than pipes — nothing is draining them while
+    we wait. Git for Windows's MSYS Bash does not preserve a native subprocess
+    pipe reliably, so Windows uses EOF; the diagnostic assertions below still
+    prove the argument guard there.
     """
     with tempfile.TemporaryFile("w+") as out_f, tempfile.TemporaryFile("w+") as err_f:
+        stdin = subprocess.DEVNULL if os.name == "nt" else subprocess.PIPE
         proc = subprocess.Popen(
-            [str(HOOK), *args],
+            hook_command(*args),
             cwd=REPO_ROOT,
-            stdin=subprocess.PIPE,
+            stdin=stdin,
             stdout=out_f,
             stderr=err_f,
             text=True,
@@ -71,7 +86,7 @@ def run_hook(*args: str) -> subprocess.CompletedProcess:
             proc.wait()
             raise
         finally:
-            if proc.stdin is not None:
+            if stdin is subprocess.PIPE and proc.stdin is not None:
                 proc.stdin.close()
         out_f.seek(0)
         err_f.seek(0)
@@ -105,7 +120,7 @@ class GuardTests(unittest.TestCase):
     def test_skip_flag_short_circuits_before_anything_else(self) -> None:
         """SKIP_REPO_CHECK=1 exits before repo_check, so it reaches no guard."""
         proc = subprocess.run(
-            [str(HOOK)],
+            hook_command(),
             cwd=REPO_ROOT,
             env={"PATH": "/usr/bin:/bin:/usr/local/bin", "SKIP_REPO_CHECK": "1"},
             stdin=subprocess.DEVNULL,
@@ -165,7 +180,7 @@ class UnitTestStepTests(unittest.TestCase):
     def run_hook(self, **env: str) -> subprocess.CompletedProcess:
         clean = {k: v for k, v in os.environ.items() if k not in HOOK_ENV_FLAGS}
         return subprocess.run(
-            [str(HOOK)],
+            hook_command("origin", "remote"),
             cwd=self.root,
             env={**clean, **env},
             stdin=subprocess.DEVNULL,

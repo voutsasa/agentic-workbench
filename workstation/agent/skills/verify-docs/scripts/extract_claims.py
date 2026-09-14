@@ -316,7 +316,9 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
             target = target.split("#", 1)[0]
             if not target or target.startswith(("http", "mailto:", "//")):
                 continue
-            resolved = target if target.startswith("/") else os.path.normpath(doc_dir / target)
+            resolved = target if target.startswith("/") else Path(
+                os.path.normpath(doc_dir / target)
+            ).as_posix()
             add(line_no, PATH, target, "filesystem", f"test -e {resolved}")
 
         for snippet in INLINE_CODE_RE.findall(raw):

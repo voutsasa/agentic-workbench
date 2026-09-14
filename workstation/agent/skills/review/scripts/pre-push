@@ -52,7 +52,9 @@ if [ ! -f "$CHECKER" ]; then
   exit 0
 fi
 
-python3 "$CHECKER" --repo-root "$REPO_ROOT"
+# The checker cannot need Git's ref list; reserve that stdin for the loop below.
+# This also prevents a checker subprocess from blocking on or consuming the list.
+python3 "$CHECKER" --repo-root "$REPO_ROOT" < /dev/null
 status=$?
 
 case "$status" in
@@ -66,6 +68,22 @@ case "$status" in
      echo "          assuming a pass. Bypass with SKIP_REPO_CHECK=1 git push" >&2
      exit "$status" ;;
 esac
+
+# git calls this hook with two arguments, the destination remote's name and its
+# location (githooks(5)); a hand run passes none. That is the reliable test for
+# "git is not driving me", and `[ -t 0 ]` is not: stdin may be a pipe or
+# /dev/null in an agent session and still carry no ref list.
+#
+# The guard belongs before the unit-test step as well as the ref-list loop. A
+# hand-run hook must not recursively start this test suite before explaining
+# that only the documentation check ran.
+if [ "$#" -lt 2 ]; then
+  echo "" >&2
+  echo "pre-push: no ref list on stdin — not invoked by git." >&2
+  echo "          repo_check.py ran above. verify_claims.py did NOT run." >&2
+  echo "          For the claim check: python3 $VERIFIER --repo $REPO_ROOT" >&2
+  exit 0
+fi
 
 # --- unit tests, in the directories the pushed repo names -----------------------
 
@@ -160,23 +178,6 @@ fi
 if [ "${#allow_globs[@]}" -gt 0 ]; then
   echo "pre-push: ${#allow_globs[@]} path exemption(s) from .verify-claims-allow:" >&2
   printf '          %s\n' "${allow_globs[@]}" >&2
-fi
-
-# git calls this hook with two arguments, the destination remote's name and its
-# location (githooks(5)); a hand run passes none. That is the reliable test for
-# "git is not driving me", and `[ -t 0 ]` is not: stdin may be a pipe or
-# /dev/null in an agent session and still carry no ref list.
-#
-# It matters twice. The loop below is a bare `while read`, so with no ref list
-# on stdin it blocks forever with no output. And exiting quietly instead would
-# be worse: repo_check has already printed "all enabled checks passed", so a
-# silent exit 0 reads as a full pass with verify_claims.py never invoked.
-if [ "$#" -lt 2 ]; then
-  echo "" >&2
-  echo "pre-push: no ref list on stdin — not invoked by git." >&2
-  echo "          repo_check.py ran above. verify_claims.py did NOT run." >&2
-  echo "          For the claim check: python3 $VERIFIER --repo $REPO_ROOT" >&2
-  exit 0
 fi
 
 # git feeds the hook "<local ref> <local sha> <remote ref> <remote sha>" per ref.

@@ -206,7 +206,11 @@ def collect(repo: Path, home: Path, environ: Mapping[str, str] | None = None,
             "hostname": link_config.short_hostname(hostname),
             "shell": env.get("SHELL") or env.get("COMSPEC") or "",
             "repo": str(repo),
-            "machine_note": str(note.relative_to(repo)) if note.is_relative_to(repo) else str(note),
+            "machine_note": (
+                note.relative_to(repo).as_posix()
+                if note.is_relative_to(repo)
+                else str(note)
+            ),
             "machine_note_exists": note.exists(),
         },
         "assistants": [asdict(probe(spec, which, run)) for spec in ASSISTANTS],
