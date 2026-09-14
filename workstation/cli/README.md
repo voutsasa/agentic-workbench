@@ -60,18 +60,16 @@ the rule on which file a given fact belongs in.
 
 Report it as three facts, because they are three different situations:
 
-Report it as three facts, because they are three different situations:
-
 | What you found | What it means |
 |---|---|
 | Installed version < packaged version | A stale local install. `brew upgrade <formula>`, `scoop update <pkg>`, `winget upgrade <id>` or `npm install -g <pkg>@latest` clears it, depending on the route in `install.md`. |
 | Packaged version < project's latest release | The formula or npm package lags upstream. Nothing local will fix it. |
 | Installed version = latest everywhere | Current; record the date you checked. |
 
-Only the first is a version *hold*, and a hold is a legitimate choice — record one under *Workstation
-configuration* in the tool's `install.md`, since choosing to sit on a version is a route decision. The
-second is a packaging property worth noting inline. Blurring the two produces misinformation, which is
-why they are separated here.
+Only the first is a version *hold*, and a hold is a legitimate choice — record it, with the reason, in
+the relevant machine file because choosing to sit on a version is machine state. The second is a
+packaging property worth noting inline. Blurring the two produces misinformation, which is why they are
+separated here.
 
 **A stale install is recorded, not fixed.** It is machine state, so it goes in that machine's file in
 [`../machines/`](../machines/) with the upgrade command beside it, and waits for the user.

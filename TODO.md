@@ -95,9 +95,9 @@ to off is observed; that turning it on makes Chat load this repo's instructions 
 not.
 
 **Closes when:** the user adds `"chat.useClaudeMdFile": true` to
-`~/Library/Application Support/Code/User/settings.json`, a Chat session lists the instruction file in
-its loaded context, `detect.py` reports `true`, and the machine note records it. The agent does not
-make the edit — settings files are the user's.
+`%APPDATA%\Code\User\settings.json`, a Chat session lists the instruction file in its loaded context,
+`detect.py` reports `true`, and the machine note records it. The agent does not make the edit —
+settings files are the user's.
 
 ### 7. Where `copilot plugin install` puts a plugin is unknown
 
