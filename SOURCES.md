@@ -4,7 +4,7 @@ updated: 2026-09-14
 verified: never
 ---
 
-# SDD Workbench — Source Register
+# Agentic Workbench — Source Register
 
 Curated register of the source material this workbench draws on to produce constitutions, skills, and other artefacts for projects adopting Spec-Driven Development.
 
