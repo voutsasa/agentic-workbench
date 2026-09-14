@@ -21,7 +21,7 @@ makes them itself. If the request did not name a destination path, ask for one b
 | A direct `.pdf` | Fetch the file itself, never scrape a rendered viewer | `curl -sL -o "<dest>.pdf" <url>` |
 | A local or fetched PDF / Office document | `docling` — real layout understanding, ahead of pandoc | `docling convert <input> --to md --output <dir>` |
 | **Any server-rendered HTML** — Docusaurus, Sphinx, ReadTheDocs, MkDocs, VitePress, mdBook, Jekyll, a classic blog, hand-rolled | curl → extract the article node → pandoc | see below |
-| A JS-hydrated platform (Mintlify, Fern, Rspress — anything whose raw HTML holds no article text) | Playwright → defuddle → pandoc | headless; no browser extension |
+| A JS-hydrated platform (Mintlify, Fern, Rspress — anything whose raw HTML holds no article text; agentskills.io is one, returning raw component/JSX source under WebFetch) | Playwright → defuddle → pandoc | headless; no browser extension |
 
 **One route covers every server-rendered page**, because the extractor's selector is an argument.
 Splitting it by generator only invited the question *which of these is Docusaurus* when the answer
@@ -84,6 +84,10 @@ A conversion that exits 0 is not evidence. Run these:
 | Every link resolves off-site | `grep -oE "\]\(\.{0,2}/?[^):]+\)" <dest>.md` → **must be empty**; a relative target means the URL argument was omitted |
 | PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries |
 | **A `.docx` with diagrams: count the figures** | `grep -c "data:image/[a-z]*;base64" <dest>.md` against the source's figure count |
+
+**Any hit from the markup grep is a tag pandoc's gfm writer could not map and fell back to raw HTML
+for** — the same failure mode as the base64-icon and hash-link cases `extract_article.py` exists to
+strip.
 
 The `.docx` case is the one that passes every other check while being wrong: **docling drops every
 DrawingML figure at exit 0 when `soffice` does not resolve on `PATH`**, so headings and tables come

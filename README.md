@@ -15,7 +15,6 @@ CLAUDE.md                 	instructions for agents working in this repo.
 docs/                     	the corpus — what the workbench reads.   
   landing-zone/           	ingested external sources     — not in git.   
   guidance/               	distilled agent-facing notes  — in git.   
-    INGESTION.md          	a pointer — the process moved into skills/ingest-source/.  
 
 skills/                   	this repo's own skills — what the workbench does.   
   README.md               	the repo-local vs. global line, and how to load these.   
@@ -43,7 +42,6 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 | [`SOURCE_CATALOGUE.md`](SOURCE_CATALOGUE.md) | **Capability index.** One line per source saying what it gives you, mirroring the register's structure and entries exactly. Changes to the register need a matching change here. |
 | [`skills/ingest-source/`](skills/ingest-source/) | **Process.** Where a register entry lands, what its file is called, what gets written back to the catalogue, and how workstation tooling additionally gets its install route or registration recorded. A skill rather than a guide, so it is discovered by what you are doing rather than by knowing its filename. |
 | [`workstation/agent/skills/fetch-to-markdown/`](workstation/agent/skills/fetch-to-markdown/) | **Conversion.** How to route a document into clean markdown — GitHub repo, PDF, plain doc site, or JS-hydrated site — and how to quality-check the result. Register-free and **global**: linked into `~/.claude/skills/`, so it works on any document in any repo. |
-| [`docs/guidance/INGESTION.md`](docs/guidance/INGESTION.md) | A pointer to the above, saying why the process is a skill. Carries no procedure — link to the skills, not to it. |
 | [`TODO.md`](TODO.md) | **Open work.** What is unproven rather than unwritten, each item with the evidence that would close it. |
 | [`workstation/cli/README.md`](workstation/cli/README.md) | **CLI tool index.** What each per-tool file is for, a `command → product → folder` map, and the version-currency rule. |
 | [`workstation/mcp/README.md`](workstation/mcp/README.md) | **MCP server index.** The third-party servers configured into this machine, and the file contract they follow. |

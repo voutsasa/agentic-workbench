@@ -157,7 +157,7 @@ fields = [
 
 [[checks.metadata_header.schemas]]
 name = "key-document"
-paths = ["DEVELOPMENT-PLAN.md", "docs/guidance/INGESTION.md", "SOURCES.md", "SOURCE_CATALOGUE.md", "TODO.md"]
+paths = ["DEVELOPMENT-PLAN.md", "SOURCES.md", "SOURCE_CATALOGUE.md", "TODO.md"]
 # No `title` — it would restate the `# Heading` each of these already carries,
 # and two places holding one string is how they diverge.
 fields = [
