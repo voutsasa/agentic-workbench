@@ -4,8 +4,8 @@ platform: Windows 11
 os_version: 10.0.26200
 shell: PowerShell 7.6.5
 python: 3.14.7
-repo: C:\Users\voutsas\Work\Development\sdd-workbench
-verified: 2026-08-26
+repo: C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench
+verified: 2026-09-14
 ---
 
 # Windows 11 — `EMA-PF5N4XE7`
@@ -18,7 +18,7 @@ is the one that was measured.
 
 | What | Where |
 |---|---|
-| This repo | `C:\Users\voutsas\Work\Development\sdd-workbench` |
+| This repo | `C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench` |
 | Home | `C:\Users\voutsas` |
 | `pwsh` | `C:\Users\voutsas\scoop\apps\pwsh\current\pwsh.exe` |
 | Package manager | `scoop` |
@@ -191,30 +191,21 @@ Until this is added, the script's `PreToolUse` branch is dead code on this machi
 If `~/.claude` is ever rebuilt, the script has to be recreated; whether it moves into the tracked tree is
 an open call.
 
-## Python scaffolding — one piece missing
+## Python scaffolding
 
-Measured 2026-08-26 in this repo. [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) requires every Python
+Measured 2026-09-14 in this repo. [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) requires every Python
 invocation to run through the project's venv, so this table is the gate on any `python` command here:
 
 | Piece | State | Note |
 |---|---|---|
 | `.python-version` | present, tracked | `3.14` — so there is nothing to ask about |
 | `pyproject.toml` | present, tracked | `requires-python = ">=3.14"`, `dependencies = []` |
-| `.venv` | **absent** | the one thing outstanding |
+| `.venv` | **present** | use `.venv\Scripts\python.exe` |
 | `uv` | 0.11.25 | `…\scoop\apps\python314\current\Scripts\uv.exe` |
 | Global interpreter | 3.14.7 | `…\scoop\apps\python314\current\python.exe` — **not to be used** |
 
-**One command closes it, and it is the user's to run:**
-
-```powershell
-uv venv
-```
-
-The version is already pinned, so `uv` needs no argument. Until then every `python` call in this repo is
-running on the global interpreter, which is the case the rule exists to stop — including
-`workstation/scripts/inventory.py` and `link_config.py`. Those two are deliberately stdlib-only so they
-work on a fresh clone, which is why nothing has broken yet; it is not a reason to keep using the global
-interpreter. After `uv venv`, call `.venv\Scripts\python.exe`.
+The version is pinned and the environment is ready. Run project Python commands through
+`.venv\Scripts\python.exe`; do not use the global interpreter.
 
 ## Git
 
@@ -342,20 +333,20 @@ for that reason.
 ## CLI toolchain
 
 Probed on `EMA-PF5N4XE7` (Windows 10.0.26200, Python 3.14.7) by
-[`../scripts/inventory.py`](../scripts/inventory.py) on 26 August 2026.
+[`../scripts/inventory.py`](../scripts/inventory.py) on 14 September 2026.
 
 **9 of 12 usable.**
 
 | Command | Product | Status | Version | Detail |
 |---|---|---|---|---|
-| `d2` | D2 (Terrastruct) | installed | 0.7.1 | — |
+| `d2` | D2 (Terrastruct) | installed | 0.9.0 | — |
 | `dbml2sql`, `sql2dbml`, `db2dbml` | DBML CLI | installed | 9.0.0 | — |
 | `defuddle` | Defuddle | absent | — | not on PATH |
 | `docling` | Docling | installed | 2.122.0 | — |
-| `magick` | ImageMagick | installed | 7.1.2-30 | — |
+| `magick` | ImageMagick | installed | 7.1.2-31 | — |
 | `mmdc` | Mermaid CLI | installed | 11.16.0 | — |
-| `pandoc` | Pandoc | installed | 3.10.2 | — |
-| `plantuml` | PlantUML | installed | 1.2026.7 | — |
+| `pandoc` | Pandoc | installed | 3.11 | — |
+| `plantuml` | PlantUML | installed | 1.2026.8 | — |
 | `playwright` | Playwright | installed | 1.61.0 | — |
 | `sem` | Sem (Ataraxy Labs) | installed | 0.13.0 | — |
 | `tesseract` | Tesseract OCR | absent | — | not on PATH |
@@ -441,7 +432,7 @@ gives `C:\WINDOWS\system32\whoami.exe`. The blocked copies are reachable only fr
 for the reason in *`PATH` differs between the agent and the user* above. Use `$env:USERNAME` and
 `$env:COMPUTERNAME`, or call System32 by absolute path.
 
-### Three installs are behind their recorded version
+### Two installs are behind their recorded version
 
 Found by the probe above, and left alone deliberately —
 [the version-currency rule](../cli/README.md#version-currency--raise-it-dont-fix-it) says raise it,
@@ -451,7 +442,6 @@ don't fix it, because an upgrade can change output format part-way through a pie
 |---|---|---|---|
 | `sem` | 0.13.0 | 0.22.1 (2026-08-24) | see [`../cli/sem-cli/install.md`](../cli/sem-cli/install.md) |
 | `dbml2sql` | 9.0.0 | 10.1.1 (2026-08-20) | `npm install -g @dbml/cli@latest` |
-| `d2` | 0.7.1 | 0.8.1-HEAD (2026-08-20) | `scoop update d2` |
 
 These are the user's call. Nothing here is a hold, so nothing is recorded as one.
 
