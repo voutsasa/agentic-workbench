@@ -143,21 +143,43 @@ Microsoft Learn on 2026-09-14; none has run yet:
 project, both reports were produced, and either a pull request was opened or the run logged *No
 documentation drift found* — with the run URL recorded here before the item is deleted.
 
-### 10. No assistant has been shown to load `AGENTS.md` exactly once
+### 10. `AGENTS.md` has not been seen loading in Claude Code or Antigravity
 
-Opened 2026-09-14, when `CLAUDE.md` became `AGENTS.md` plus one-line `@AGENTS.md` imports. The routes
-are from vendor documentation fetched that day; none has been observed in a session.
+Opened 2026-09-14, when `CLAUDE.md` became `AGENTS.md` plus one-line `@AGENTS.md` imports.
 
-| Assistant | Route | Unproven |
+| Assistant | Route | State |
 |---|---|---|
-| Claude Code | `CLAUDE.md` → `@AGENTS.md` | that the import expands — Anthropic's memory page documents this exact pattern |
-| Copilot CLI | reads `AGENTS.md` **and** `CLAUDE.md` | whether the import makes a second copy; its docs dedupe "identical" instruction files, and the raw `CLAUDE.md` is not identical |
-| Antigravity | `.agents/rules/workbench.md` → `@AGENTS.md` | that the rule is set to **Always On** and applies, and whether Antigravity also reads `AGENTS.md` natively — its rules page does not mention it |
+| Claude Code | `CLAUDE.md` → `@AGENTS.md` | **unproven in this repo.** The mechanism is observed: in a scratch folder, Claude Code 2.1.270 quoted a marker that existed only in the imported `AGENTS.md` |
+| Copilot CLI | reads `AGENTS.md` **and** `CLAUDE.md` | **measured: loads it twice, accepted.** See below |
+| Antigravity | `.agents/rules/workbench.md` → `@AGENTS.md` | **unproven.** Whether the rule is set to **Always On** and applies, and whether Antigravity also reads `AGENTS.md` natively — its rules page does not mention it |
 
-**Closes when:** a fresh session of each shows the instructions loaded once — `/context` in Claude
-Code, the loaded-instructions view in `copilot` and Antigravity — with the observation recorded in
-the machine note. If Copilot loads two copies, the fallback is `ln -s AGENTS.md CLAUDE.md` on macOS,
-which makes the files identical; Windows keeps the import.
+**Copilot's double load is accepted, not open.** Copilot CLI 1.0.83 on the macOS workstation,
+`/context` as the first command of a fresh session, System Prompt line:
+
+| Run | Setup | System Prompt |
+|---|---|---|
+| A | `copilot --no-custom-instructions` | 9.3k |
+| B | `AGENTS.md` + `CLAUDE.md` importing it | 16.2k |
+| C | `AGENTS.md` only (`CLAUDE.md` moved aside) | 12.8k |
+
+One copy is C − A = 3.5k; B − A = 6.9k is two. Copilot's docs dedupe "identical" instruction files, and
+a one-line import is not identical. The duplicate is identical text, so it cannot conflict, and costs
+3.5k of a 1M context. Every route that would remove it was checked and is worse:
+
+| Route | Why not |
+|---|---|
+| `ln -s AGENTS.md CLAUDE.md` | the Windows clone has `core.symlinks=false` (`workstation/machines/windows-ema-pf5n4xe7.md`), so it checks out as a text file |
+| Import from `.claude/rules/agents.md` | the rule loads but its `@AGENTS.md` does not expand — scratch test, Claude Code 2.1.270 — and `.gitignore` excludes `.claude/` |
+| Import from a committed `CLAUDE.local.md` | it expands, but Anthropic documents the file as personal and gitignored, so it would collide with anyone's own notes |
+| A Claude Code setting naming `AGENTS.md` | none exists; the memory page says "Claude Code reads `CLAUDE.md`, not `AGENTS.md`" |
+| `SessionStart` hook printing `AGENTS.md` | hook output is capped at 10,000 characters and `AGENTS.md` is 12,264 |
+| `--append-system-prompt-file AGENTS.md` | a per-launch flag, so every launch has to remember it |
+
+Revisit only if Copilot starts deduplicating imports or Claude Code gains a setting for the file name.
+
+**Closes when:** `/context` in a fresh Claude Code session in this repo lists `AGENTS.md` under Memory
+files, and Antigravity, with the rule set to **Always On**, shows the rule applied to a session —
+each observation recorded in the machine note.
 
 ## Closed
 
