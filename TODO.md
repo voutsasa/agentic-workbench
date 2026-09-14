@@ -1,17 +1,19 @@
 ---
-role: Open work carried between sessions — what is unproven, not what is unwritten
+role: Open work carried between sessions — committed new work and unproven existing gaps
 updated: 2026-09-14
 verified: never
 ---
 
 # TODO
 
-Work that is known-outstanding rather than merely imagined. Each item says what would close it, so a
-cold session can act without reconstructing the reasoning.
+Work that is known-outstanding rather than merely imagined. The list holds two kinds of item: **new
+work** that has been committed to but not yet built, and **existing gaps** — something already written
+that no run has proven. Each item says what would close it, so a cold session can act without
+reconstructing the reasoning.
 
-**An item earns a place here only if it is unproven, not if it is unwritten.** An idea nobody has
-committed to belongs in a conversation; a gap that a run would close belongs here. Delete an item when
-its evidence exists — a passing command, a converted file — and not when it merely feels handled.
+**An item earns a place here if it is committed new work or an unproven gap.** An idea nobody has
+committed to belongs in a conversation. Delete an item when its evidence exists — a passing command, a
+converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
@@ -124,14 +126,18 @@ two updaters owns it. The agent records; any upgrade or cleanup is the user's to
 ### 9. No Azure DevOps pipeline exists beside the GitHub one
 
 Opened 2026-09-14. The only pipeline is `.github/workflows/verify-docs.yml`, and it only runs on
-GitHub. Several of its steps have no ADO equivalent as written:
+GitHub — while this clone's only remote, `emaea`, is an Azure DevOps repo, so the audit never runs for
+it. Several of its steps have no ADO equivalent as written. The counterparts below were checked against
+Microsoft Learn on 2026-09-14; none has run yet:
 
 | GitHub-specific | ADO counterpart to prove |
 |---|---|
-| `actions/checkout`, `setup-python`, `setup-node` pinned by SHA | `checkout: self` with `fetchDepth: 0`, `UsePythonVersion@0`, `UseNode@1` |
-| `secrets.ANTHROPIC_API_KEY` | a secret pipeline variable or variable group |
-| `gh pr create` with `GITHUB_TOKEN` | `az repos pr create` with `System.AccessToken`, whose build identity needs *Contribute* and *Create branch* |
-| `github-actions[bot]` commit identity | the project build service identity |
+| `actions/checkout` with `fetch-depth: 0` | `checkout: self` with `fetchDepth: 0` (fetches all history) and `persistCredentials: true`, so the later `git push` authenticates |
+| `setup-python` reading `python-version-file: .python-version` | `UsePythonVersion@0` — it has no version-file input and `versionSpec` is required, so a script step must read `.python-version` first |
+| `setup-node` | `UseNode@1` with `version: '22'` |
+| `secrets.ANTHROPIC_API_KEY` | a secret pipeline variable or variable group — secrets are not decrypted into the environment, so each step must map it under `env:` |
+| `gh pr create` with `GITHUB_TOKEN` | `az repos pr create` (the `azure-devops` CLI extension), authenticated by `AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)` |
+| workflow `permissions: contents/pull-requests: write` | on the repo, `<project> Build Service (<org>)` needs *Contribute*, *Create branch* and *Contribute to pull requests* — or `Project Collection Build Service (<org>)` if the job authorization scope is collection |
 
 **Closes when:** an `azure-pipelines/verify-docs.yml` (or agreed path) has run once on an ADO
 project, both reports were produced, and either a pull request was opened or the run logged *No
