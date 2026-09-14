@@ -129,6 +129,13 @@ class TestInspect(TempTree):
         state = lc.inspect(next(l for l in self.plan() if l.label == "CLAUDE.md"))
         self.assertEqual(state.status, lc.MISSING)
 
+    def test_dangling_junction_is_detached_not_missing(self) -> None:
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        with mock.patch.object(os.path, "isjunction", return_value=True, create=True):
+            state = lc.inspect(link)
+        self.assertEqual(state.status, lc.DETACHED)
+        self.assertEqual(state.detail, "dangling junction")
+
     def test_no_source_when_the_machine_file_does_not_exist(self) -> None:
         state = lc.inspect(next(l for l in self.plan() if l.label == "machine.md"))
         self.assertEqual(state.status, lc.NO_SOURCE)
@@ -280,6 +287,13 @@ class TestClearDest(TempTree):
     def test_clearing_an_absent_destination_is_a_no_op(self) -> None:
         link = next(l for l in self.plan() if l.label == "CLAUDE.md")
         lc.clear_dest(lc.LinkState(link, lc.MISSING))  # must not raise
+
+    def test_clearing_a_dangling_junction_removes_the_junction(self) -> None:
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        with (mock.patch.object(os.path, "isjunction", return_value=True, create=True),
+              mock.patch("link_config.os.rmdir") as remove):
+            lc.clear_dest(lc.LinkState(link, lc.DETACHED))
+        remove.assert_called_once_with(link.dest)
 
 
 class TestReport(TempTree):

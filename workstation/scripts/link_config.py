@@ -240,6 +240,12 @@ def same_target(source: Path, dest: Path) -> bool:
         return False
 
 
+def is_junction(path: Path) -> bool:
+    """Whether ``path`` is a Windows directory junction, including a dangling one."""
+    checker = getattr(os.path, "isjunction", None)
+    return bool(checker and checker(path))
+
+
 def inspect(link: Link) -> LinkState:
     """Classify one link without writing anything."""
     if not link.source.exists():
@@ -252,6 +258,8 @@ def inspect(link: Link) -> LinkState:
         if link.dest.is_symlink():
             return LinkState(link, DETACHED,
                              f"dangling symlink → {os.readlink(link.dest)}")
+        if is_junction(link.dest):
+            return LinkState(link, DETACHED, "dangling junction")
         return LinkState(link, MISSING, f"not present in {link.dest.parent}")
     if same_target(link.source, link.dest):
         return LinkState(link, LINKED, "")
@@ -301,6 +309,9 @@ def clear_dest(state: LinkState) -> None:
     ``os.rmdir`` on a junction removes the junction and leaves its target alone.
     """
     dest = state.link.dest
+    if is_junction(dest):
+        os.rmdir(dest)
+        return
     if not dest.exists() and not dest.is_symlink():
         return
     if dest.is_dir() and not dest.is_symlink():
