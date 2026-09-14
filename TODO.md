@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — what is unproven, not what is unwritten
-updated: 2026-09-13
+updated: 2026-09-14
 verified: never
 ---
 
@@ -120,6 +120,22 @@ own updater may be managing two copies, and `inventory.py`-style path checks rea
 **Closes when:** the executable path of the running 1.0.63 is found and quoted in
 `workstation/machines/macos-workstation.md` (its *Copilot CLI* section), together with which of the
 two updaters owns it. The agent records; any upgrade or cleanup is the user's to run.
+
+### 9. No Azure DevOps pipeline exists beside the GitHub one
+
+Opened 2026-09-14. The only pipeline is `.github/workflows/verify-docs.yml`, and it only runs on
+GitHub. Several of its steps have no ADO equivalent as written:
+
+| GitHub-specific | ADO counterpart to prove |
+|---|---|
+| `actions/checkout`, `setup-python`, `setup-node` pinned by SHA | `checkout: self` with `fetchDepth: 0`, `UsePythonVersion@0`, `UseNode@1` |
+| `secrets.ANTHROPIC_API_KEY` | a secret pipeline variable or variable group |
+| `gh pr create` with `GITHUB_TOKEN` | `az repos pr create` with `System.AccessToken`, whose build identity needs *Contribute* and *Create branch* |
+| `github-actions[bot]` commit identity | the project build service identity |
+
+**Closes when:** an `azure-pipelines/verify-docs.yml` (or agreed path) has run once on an ADO
+project, both reports were produced, and either a pull request was opened or the run logged *No
+documentation drift found* — with the run URL recorded here before the item is deleted.
 
 ## Closed
 
