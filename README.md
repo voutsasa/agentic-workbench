@@ -2,6 +2,11 @@
 
 Enables engineers to set up their workstation and work in an agent-enabled environment: AI coding assistants configured consistently, on a toolchain that is known to work.
 
+**Before you start**, the workstation needs two things this repo does not install:
+
+- **Required — an AI coding assistant, installed and signed in.** The skills here are instructions an assistant carries out, so without one they do nothing. Claude Code and GitHub Copilot CLI both load them. `setup-agents` configures an assistant you already have; it does not install one.
+- **Recommended — a package manager for the toolchain.** The install routes in [`workstation/cli/`](workstation/cli/README.md) assume Homebrew on macOS and Scoop on Windows, with `pipx` or `npm` for tools published to Python or Node registries. winget is noted where a tool offers it. A package manager keeps every tool installable and upgradable with one command, instead of by hand.
+
 Start with the [`setup-agents`](skills/setup-agents/SKILL.md) skill — it finds the AI assistants on your machine and sets them up with the shared instructions and skills.
 
 ## Executive summary
