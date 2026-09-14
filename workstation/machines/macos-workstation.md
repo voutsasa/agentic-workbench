@@ -106,6 +106,12 @@ quoted above it, so re-run `link_config.py` (read-only, no flag) rather than tru
 The consequence worth knowing: **`workstation/agent/` in this repo is now the live global config**, so
 an edit to `~/.claude/CLAUDE.md` or any of the linked skills writes here and shows up in `git status`.
 
+**The repo's own instructions reach Claude Code through an import — pending in this repo.** Since
+2026-09-14 the root `CLAUDE.md` holds only `@AGENTS.md`. On Claude Code 2.1.270 the mechanism is
+observed in a scratch folder: `claude -p` quoted a marker that existed only in the imported file, while
+the same import placed in `.claude/rules/` did not expand. `/context` in a fresh session in this repo
+has not been run; `TODO.md` item 10 closes on it.
+
 The pre-push documentation gate **is** installed here, measured 2026-09-13: `.git/hooks/pre-push` is a
 symlink to `../../workstation/agent/skills/review/scripts/pre-push`, and `repo_check` reported
 `all enabled checks passed` at exit 0. It is per-clone and never tracked, so a fresh clone has to
@@ -158,15 +164,36 @@ their observation recorded here rather than a quoted output.
 
 | What | State | How known |
 |---|---|---|
-| Version | 1.0.63 | `copilot --version` |
+| Version | 1.0.83, measured 2026-09-14 (1.0.63 the day before) | `copilot --version` |
 | Binary | `/opt/homebrew/bin/copilot` → Caskroom `copilot-cli/1.0.24` | `readlink -f` |
 | This repo's skills at project scope | 2 of 2 linked in `.claude/skills` | `link_config.py --project` |
 | VS Code `chat.useClaudeMdFile` | not set | `skills/setup-agents/scripts/detect.py` |
 
-**The cask directory and the running version disagree** — the resolved path names 1.0.24 while the
-binary reports 1.0.63. `autoUpdate` defaults to `true` (`copilot help config`), which fits an update
-installed outside the cask, but where it lands was not checked. Read the version from
-`copilot --version`, never from the path.
+**The cask directory and the running version disagree** — the resolved path still names 1.0.24 on
+2026-09-14 while the binary reports 1.0.83, up from 1.0.63 a day earlier with no upgrade run by hand.
+`autoUpdate` defaults to `true` (`copilot help config`), which fits an update installed outside the
+cask, but where it lands was not checked. Read the version from `copilot --version`, never from the
+path.
+
+#### Instruction loading — `AGENTS.md` is loaded twice
+
+Measured 2026-09-14 on Copilot CLI 1.0.83, after `CLAUDE.md` became `AGENTS.md` plus a one-line
+`CLAUDE.md` holding `@AGENTS.md`. Run by the user: `/context` as the first command of a fresh session
+in the repo root, System Prompt line quoted as displayed.
+
+| Run | Setup | System Prompt |
+|---|---|---|
+| A | `copilot --no-custom-instructions` | 9.3k |
+| B | `AGENTS.md` + `CLAUDE.md` importing it | 16.2k |
+| C | `AGENTS.md` only, `CLAUDE.md` moved aside | 12.8k |
+
+One copy is C − A = 3.5k; B − A = 6.9k is two. System Tools (10.0k) and MCP Tools (667) were identical
+in all three runs. `~/.copilot/copilot-instructions.md` does not exist and
+`COPILOT_CUSTOM_INSTRUCTIONS_DIRS` is unset, so nothing user-level is in the difference. The duplicate
+is accepted, and the routes that would remove it are weighed in `TODO.md` item 10.
+
+Run C leaves `CLAUDE.md` renamed until it is moved back. On 2026-09-14 it was not, and the pre-push
+gate refused with `repo_check: ERROR — cannot read …/CLAUDE.md`, which is how it was found.
 
 ## Known blockers
 
