@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 #
-# Pre-push documentation gate. Two checks, both deterministic, neither calling a
-# model and neither touching the network:
+# Pre-push gate. Three checks, all deterministic, none calling a model and none
+# touching the network:
 #
 #   1. repo_check.py    — is the prose internally consistent? Whole repo, ~0.07s.
-#   2. verify_claims.py — is each claim still true? Only the markdown being
+#   2. unit tests       — the directories the repo names in .pre-push-tests.
+#                         No file, no tests.
+#   3. verify_claims.py — is each claim still true? Only the markdown being
 #                         pushed, ~0.3s for a typical change.
 #
 # Install (from the repo root):
@@ -13,7 +15,7 @@
 # The symlink keeps the hook versioned — .git/hooks is not tracked, so a copied
 # hook silently rots and never reaches a fresh clone.
 #
-# Why the second check is scoped to changed files: verifying every claim in the
+# Why the third check is scoped to changed files: verifying every claim in the
 # repo runs 644 of them and takes ~18s, because it executes `--help` for every
 # documented tool. Scoped to what is actually being pushed it is under a second,
 # and a claim you did not touch is one you did not break. Run the full sweep on
@@ -25,8 +27,9 @@
 #
 # Escape hatches, in order of preference:
 #   edit .verify-claims-allow      — exempt a path that is meant not to exist
-#   SKIP_VERIFY_CLAIMS=1 git push  — skip the claim verifier, keep repo_check
-#   SKIP_REPO_CHECK=1 git push     — skip both checks in this hook
+#   SKIP_VERIFY_CLAIMS=1 git push  — skip the claim verifier, keep the rest
+#   SKIP_PRE_PUSH_TESTS=1 git push — skip the unit tests, keep the rest
+#   SKIP_REPO_CHECK=1 git push     — skip every check in this hook
 #   git push --no-verify           — skip every hook in the repository
 #
 # Reach for the narrowest one that unblocks you. A claim that is REFUTED because
@@ -63,6 +66,65 @@ case "$status" in
      echo "          assuming a pass. Bypass with SKIP_REPO_CHECK=1 git push" >&2
      exit "$status" ;;
 esac
+
+# --- unit tests, in the directories the pushed repo names -----------------------
+
+# Which suites run comes from .pre-push-tests in the repo being pushed, never from
+# this file, for the same reason as .verify-claims-allow below: one copy of this
+# hook serves every repo that links it. Absent the file, no tests run.
+#
+# PRE_PUSH_IN_TESTS is set for the suites started here. A suite that invokes this
+# hook itself — review's test_pre_push.py does — then skips this step instead of
+# starting the suites again from inside them.
+TESTS_FILE="$REPO_ROOT/.pre-push-tests"
+if [ "${SKIP_PRE_PUSH_TESTS:-0}" = "1" ]; then
+  echo "pre-push: SKIP_PRE_PUSH_TESTS=1 — skipping unit tests." >&2
+elif [ -f "$TESTS_FILE" ] && [ -z "${PRE_PUSH_IN_TESTS:-}" ]; then
+  # The repo's own venv when it has one, so the suites run on the interpreter the
+  # project pins; bare python3 otherwise, like the checks in this hook.
+  PYTHON=python3
+  for candidate in "$REPO_ROOT/.venv/bin/python" "$REPO_ROOT/.venv/Scripts/python.exe"; do
+    if [ -x "$candidate" ]; then
+      PYTHON="$candidate"
+      break
+    fi
+  done
+
+  while IFS= read -r dir || [ -n "$dir" ]; do
+    dir="${dir%%#*}"                                    # drop trailing comments
+    dir="${dir#"${dir%%[![:space:]]*}"}"                # trim leading space
+    dir="${dir%"${dir##*[![:space:]]}"}"                # trim trailing space
+    [ -z "$dir" ] && continue
+
+    if [ ! -d "$REPO_ROOT/$dir" ]; then
+      echo "pre-push: '$dir', named in .pre-push-tests, is not a directory." >&2
+      echo "          Refusing rather than skipping a suite. Fix the file, or bypass with" >&2
+      echo "          SKIP_PRE_PUSH_TESTS=1 git push" >&2
+      exit 2
+    fi
+
+    echo "pre-push: unit tests in $dir" >&2
+    # -b holds a test's own output back unless it fails: a suite printing from a
+    # temporary tree would otherwise read as this machine's state. stdin is
+    # /dev/null so nothing a test reads can consume this loop's file or git's
+    # ref list.
+    PRE_PUSH_IN_TESTS=1 "$PYTHON" -m unittest discover -q -b \
+      -s "$REPO_ROOT/$dir" -t "$REPO_ROOT/$dir" < /dev/null
+    status=$?
+
+    case "$status" in
+      0) ;;
+      5) echo "" >&2
+         echo "pre-push: no tests found in $dir. Refusing rather than assuming a pass." >&2
+         echo "          Bypass with SKIP_PRE_PUSH_TESTS=1 git push" >&2
+         exit "$status" ;;
+      *) echo "" >&2
+         echo "pre-push: push refused — tests in $dir failed. Fix them, or bypass with" >&2
+         echo "          SKIP_PRE_PUSH_TESTS=1 git push" >&2
+         exit "$status" ;;
+    esac
+  done < "$TESTS_FILE"
+fi
 
 # --- claim verification, scoped to the markdown in this push -------------------
 

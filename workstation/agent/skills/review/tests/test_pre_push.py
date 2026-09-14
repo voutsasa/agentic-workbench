@@ -1,10 +1,15 @@
-"""Unit tests for the pre-push hook's invocation guard — stdlib only, no network.
+"""Unit tests for the pre-push hook itself — stdlib only, no network.
 
     python3 -m unittest discover -s tests
 
-Only the guard is covered here. What the hook does once git *is* driving it is
-covered by test_repo_check.py and by the verifier's own suite; this file exists
-for the one failure mode neither of those can see.
+Two things are covered here: the invocation guard, and the unit-test step driven
+by ``.pre-push-tests``. What the checkers do once invoked is covered by
+test_repo_check.py and by the verifier's own suite; this file exists for the
+behaviour that lives only in the shell script.
+
+The unit-test step runs against a throwaway git repo holding a stub checker, so
+each case controls exactly which directories are named and whether their tests
+pass — the real repo's suites would make every outcome depend on its state.
 
 git calls pre-push with two arguments and feeds the ref list on stdin. Run by
 hand it gets neither, and the ref loop is a bare ``while read``: with stdin an
@@ -21,6 +26,7 @@ invoked.
 
 from __future__ import annotations
 
+import os
 import subprocess
 import tempfile
 import unittest
@@ -111,6 +117,114 @@ class GuardTests(unittest.TestCase):
         self.assertEqual(proc.returncode, 0)
         self.assertIn("SKIP_REPO_CHECK=1", proc.stderr)
         self.assertNotIn("no ref list on stdin", proc.stderr)
+
+
+PASSING_SUITE = """import unittest
+
+
+class Sample(unittest.TestCase):
+    def test_passes(self):
+        pass
+"""
+
+FAILING_SUITE = """import unittest
+
+
+class Sample(unittest.TestCase):
+    def test_fails(self):
+        self.fail("deliberate failure")
+"""
+
+#: Variables that change what the hook does; stripped so the developer's own
+#: shell, or an outer hook run, cannot decide a test's outcome.
+HOOK_ENV_FLAGS = ("SKIP_REPO_CHECK", "SKIP_VERIFY_CLAIMS", "SKIP_PRE_PUSH_TESTS", "PRE_PUSH_IN_TESTS")
+
+
+class UnitTestStepTests(unittest.TestCase):
+    """The step that runs the directories named in ``.pre-push-tests``."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        # A stub that passes, so the hook reaches the unit-test step. There is
+        # no verifier, so the hook exits straight after that step.
+        checker = self.root / "workstation/agent/skills/review/scripts/repo_check.py"
+        checker.parent.mkdir(parents=True)
+        checker.write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
+
+    def write_suite(self, name: str, body: str) -> None:
+        suite = self.root / name
+        suite.mkdir()
+        (suite / "test_sample.py").write_text(body, encoding="utf-8")
+
+    def name_dirs(self, text: str) -> None:
+        (self.root / ".pre-push-tests").write_text(text, encoding="utf-8")
+
+    def run_hook(self, **env: str) -> subprocess.CompletedProcess:
+        clean = {k: v for k, v in os.environ.items() if k not in HOOK_ENV_FLAGS}
+        return subprocess.run(
+            [str(HOOK)],
+            cwd=self.root,
+            env={**clean, **env},
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            text=True,
+            timeout=TIMEOUT_S,
+            check=False,
+        )
+
+    def test_no_file_runs_no_tests(self) -> None:
+        self.write_suite("suite", FAILING_SUITE)
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("unit tests in", result.stderr)
+
+    def test_passing_suite_lets_the_push_continue(self) -> None:
+        self.write_suite("suite", PASSING_SUITE)
+        self.name_dirs("# a comment line\n\n  suite  # trailing comment\n")
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("unit tests in suite", result.stderr)
+
+    def test_failing_suite_refuses_the_push(self) -> None:
+        self.write_suite("suite", FAILING_SUITE)
+        self.name_dirs("suite\n")
+        result = self.run_hook()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("tests in suite failed", result.stderr)
+        self.assertIn("SKIP_PRE_PUSH_TESTS=1", result.stderr)
+
+    def test_every_named_directory_runs(self) -> None:
+        """A passing first suite must not hide a failing second one."""
+        self.write_suite("first", PASSING_SUITE)
+        self.write_suite("second", FAILING_SUITE)
+        self.name_dirs("first\nsecond\n")
+        result = self.run_hook()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("tests in second failed", result.stderr)
+
+    def test_missing_directory_refuses_rather_than_skipping(self) -> None:
+        self.name_dirs("nowhere\n")
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 2)
+        self.assertIn("is not a directory", result.stderr)
+
+    def test_skip_flag_skips_only_the_tests(self) -> None:
+        self.write_suite("suite", FAILING_SUITE)
+        self.name_dirs("suite\n")
+        result = self.run_hook(SKIP_PRE_PUSH_TESTS="1")
+        self.assertEqual(result.returncode, 0)
+        self.assertIn("SKIP_PRE_PUSH_TESTS=1", result.stderr)
+        self.assertNotIn("unit tests in", result.stderr)
+
+    def test_hook_started_from_a_suite_does_not_rerun_the_suites(self) -> None:
+        self.write_suite("suite", FAILING_SUITE)
+        self.name_dirs("suite\n")
+        result = self.run_hook(PRE_PUSH_IN_TESTS="1")
+        self.assertEqual(result.returncode, 0)
+        self.assertNotIn("unit tests in", result.stderr)
 
 
 if __name__ == "__main__":

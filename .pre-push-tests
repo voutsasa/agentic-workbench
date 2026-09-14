@@ -1,0 +1,12 @@
+# Unit-test directories the pre-push hook runs, one per line, each with
+# `python -m unittest discover -s <dir> -t <dir>` on the repo's .venv interpreter.
+#
+# This file is repo-local and tracked on purpose, for the same reason as
+# .verify-claims-allow: the hook lives in the globally symlinked skills tree and
+# serves every repo that links it, so a directory named in the hook would be
+# looked for in unrelated repos. No file means no tests run.
+
+# The workstation scripts' own tests, and test_readme_skills.py, which fails when
+# README.md's skill table stops matching link_config.py's SKILLS tuple and the
+# skills/ folders.
+workstation/scripts/tests

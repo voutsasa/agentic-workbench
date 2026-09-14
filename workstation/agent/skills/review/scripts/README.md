@@ -7,7 +7,7 @@ nothing to install, and **no model is called from here**.
 |---|---|
 | `repo_check.py` | Deterministic documentation gate. Exits non-zero on any violation. |
 | `checks.toml` | The rules it enforces — glossary terms, header schema, scope. Tune this, not the script. |
-| `pre-push` | Git hook wrapper around `repo_check.py` **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/`. |
+| `pre-push` | Git hook wrapper around `repo_check.py`, the repo's own unit tests, **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/`. |
 | `../tests/test_repo_check.py` | `python3 -m unittest discover -s tests` from the skill root. 92 tests, no network. |
 
 ## repo_check.py
@@ -116,29 +116,37 @@ ln -sf ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-pus
 A symlink rather than a copy, because `.git/hooks` is not tracked — a copied hook rots
 silently and never reaches a fresh clone.
 
-The hook runs two checks in order, and stops at the first refusal:
+The hook runs three checks in order, and stops at the first refusal:
 
 1. `repo_check.py` over the whole repo, unconditionally. At 0.065s there is nothing to
    optimise around.
-2. `verify_claims.py` over **only the markdown in this push**, worked out from the refs
+2. **The repo's own unit tests**, one `python -m unittest discover` per directory named in
+   `.pre-push-tests`, on the repo's `.venv` interpreter when it has one and `python3`
+   otherwise. No file, no tests. A named directory that does not exist, or holds no tests,
+   refuses the push rather than passing it.
+3. `verify_claims.py` over **only the markdown in this push**, worked out from the refs
    git feeds the hook on stdin. Scoped that way it is under a second; the whole repo
    would be ~18s, because it executes `--help` for every documented tool. A claim you did
    not touch is a claim you did not break.
 
-Path exemptions come from `.verify-claims-allow` in the repo being pushed, never
-from the hook. The hook is shared by every repo that links it, so a glob written
-into it would silently exempt paths elsewhere; the hook prints the exemptions in
-force before it runs. See
+Path exemptions and test directories both come from the repo being pushed —
+`.verify-claims-allow` and `.pre-push-tests` — never from the hook. The hook is shared
+by every repo that links it, so a glob or directory written into it would apply to
+unrelated repos; the hook prints the exemptions in force before it runs. See
 [`../../verify-docs/scripts/README.md`](../../verify-docs/scripts/README.md).
+
+A suite that itself invokes the hook — `tests/test_pre_push.py` does — would run the
+suites again from inside them. The hook sets `PRE_PUSH_IN_TESTS=1` for the tests it
+starts and skips step 2 when it finds that set.
 
 ### Running it by hand
 
 ```bash
-.git/hooks/pre-push        # repo_check only, and it says so
+.git/hooks/pre-push        # repo_check and unit tests only, and it says so
 ```
 
 git passes the hook two arguments and the ref list on stdin; a hand run supplies neither.
-Check 2 has nothing to scope itself to, so the hook runs check 1, prints **`verify_claims.py
+Check 3 has nothing to scope itself to, so the hook runs checks 1 and 2, prints **`verify_claims.py
 did NOT run`**, and exits 0 — `repo_check: all enabled checks passed` alone is not evidence
 of a full pass. For check 2 by hand:
 
@@ -153,8 +161,9 @@ holds a pipe open exactly that way, so the hang fails the suite rather than retu
 Bypasses, narrowest first:
 
 ```bash
-SKIP_VERIFY_CLAIMS=1 git push   # skip claim verification, keep repo_check
-SKIP_REPO_CHECK=1 git push      # skip both checks in this hook
+SKIP_VERIFY_CLAIMS=1 git push   # skip claim verification, keep the rest
+SKIP_PRE_PUSH_TESTS=1 git push  # skip the unit tests, keep the rest
+SKIP_REPO_CHECK=1 git push      # skip every check in this hook
 git push --no-verify            # skip every hook in the repository
 ```
 

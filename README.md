@@ -17,7 +17,7 @@ The first two capabilities deliver the agent-enabled workstation; the last two k
 
 ### Skills
 
-Repo skills serve this workbench; global skills work in any repo. The authoritative lists are [`skills/README.md`](skills/README.md) and the `SKILLS` tuple in [`link_config.py`](workstation/scripts/link_config.py), and `workstation/scripts/tests/test_readme_skills.py` fails when this table stops matching them.
+Repo skills serve this workbench; global skills work in any repo. The authoritative lists are [`skills/README.md`](skills/README.md) and the `SKILLS` tuple in [`link_config.py`](workstation/scripts/link_config.py), and `workstation/scripts/tests/test_readme_skills.py`, run by the pre-push hook, refuses a push when this table stops matching them.
 
 | Skill | Scope | What it does |
 |---|---|---|
@@ -119,6 +119,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 | `pyproject.toml` | Project metadata. No dependencies: the workbench runs on the workstation CLI toolchain plus the standard library. |
 | `.python-version` | Pins the interpreter for `uv` — currently 3.14. |
 | `.verify-claims-allow` | Path claims the documentation gate is to leave alone, one glob per line with a reason above each. Repo-local on purpose: the pre-push hook is shared by every repo that links it, so exemptions must not travel with it. |
+| `.pre-push-tests` | Unit-test directories the pre-push hook runs before a push, one per line. Repo-local for the same reason. |
 | `.gitignore` | Excludes the ingested corpus, `.venv/`, `.DS_Store`, and Python build artefacts. |
 
 ## What is tracked in git

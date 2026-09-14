@@ -18,7 +18,8 @@ else in this repo follows the venv rule.
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
 `../agent/skills/*/tests/`. One tests no script here: `test_readme_skills.py` fails when the skill
 table in the root `README.md` stops matching `link_config.py`'s `SKILLS` tuple and the `skills/`
-folders. Run them from the repo root:
+folders. The pre-push hook runs this folder on every push, because the root `.pre-push-tests`
+names it. Run them by hand from the repo root:
 
 ```
 python -m unittest discover -s workstation/scripts/tests -t workstation/scripts/tests
