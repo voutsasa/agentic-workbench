@@ -1,6 +1,6 @@
 # Agentic-workbench
 
-Gathers agentic-engineering source material used to build constitutions, skills, and other artefacts for projects adopting Spec-Driven Development.
+Enables engineers to set up their workstation and work in an agent-enabled environment: AI coding assistants configured consistently, on a toolchain that is known to work.
 
 ## File roles
 
