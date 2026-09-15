@@ -32,7 +32,7 @@ stale), and why a machine's tool table is measured by `../scripts/inventory.py` 
 | [`macos-workstation.md`](macos-workstation.md) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 4 September 2026 |
 
 The filename is `<platform>-<id>.md`, lowercased. The id is usually the hostname —
-`python workstation/scripts/inventory.py --json` prints that form under `suggested_id` — but it does
+`workstation/scripts/inventory.py --json` prints that form under `suggested_id` — but it does
 not have to be: this repo is pushed to a shared remote, and a hostname is often a person's name.
 `macos-workstation.md` is named for the role instead, and `inventory.py --host <label>` keeps the DNS
 name out of the table it generates.
@@ -43,8 +43,9 @@ without it falls back to the only file for the platform.
 ## Adding a machine
 
 1. Clone the repo. Note where — the path is per-machine and belongs in the new file, nowhere else.
-2. Run `python workstation/scripts/inventory.py --host <id>` (`python3` on macOS, which has no
-   `python`) and paste the table into the *CLI toolchain* section. Do not hand-write that table; the
+2. Run `<python> workstation/scripts/inventory.py --host <id>` — `<python>` being the repo's `.venv`
+   interpreter when it exists, otherwise the bootstrap one: `python3` on macOS, `python` on Windows
+   ([`../scripts/README.md`](../scripts/README.md)). Paste the table into the *CLI toolchain* section. Do not hand-write that table; the
    point of the script is that the count is measured.
 3. Record the shell, the path, and anything that behaves unexpectedly. Blockers are the highest-value
    content here — a tool that is absent costs one install, a tool that fails *silently* costs a

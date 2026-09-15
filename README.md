@@ -61,6 +61,11 @@ workstation/              	this machine's setup — serves the repo, never a del
   mcp/README.md           	the MCP server index.   
   mcp/<server>/           	per-server MCP guidance       — authored files in git.   
   agent/                  	agent config + global skills, symlinked into ~/.claude/.   
+  machines/               	one file per machine — measured state, not policy.   
+  scripts/                	the inventory probe and the ~/.claude link checker.   
+
+scripts/                  	headless verify-docs runner.   
+.github/workflows/        	weekly documentation audit — dormant on Azure DevOps.   
 
 pyproject.toml            	Python project metadata.   
 ```
