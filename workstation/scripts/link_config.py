@@ -105,7 +105,7 @@ class Report:
 
 
 def platform_token(platform: str | None = None) -> str:
-    """The token used in ``machines/<platform>-<host>.md`` filenames."""
+    """The token used in ``machines/<platform>-<id>.md`` filenames."""
     plat = platform or sys.platform
     if plat.startswith("win"):
         return "windows"
