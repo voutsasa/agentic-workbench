@@ -17,15 +17,17 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 2. `fetch-to-markdown` has one route proven of five
+### 2. `fetch-to-markdown` has two routes proven of five
 
 Opened 2026-09-13. Server-rendered HTML is proven against rdi.berkeley.edu/llm-agents/f24 — that run
-is what found the `<table>` and relative-link defects the skill now guards against.
+is what found the `<table>` and relative-link defects the skill now guards against. The raw README
+route was proven on 2026-09-15 by angular-eslint, whose relative links had to be resolved against
+`blob/main/` before the link check passed.
 
 | Route | State |
 |---|---|
 | Server-rendered HTML → extractor → pandoc | **proven** |
-| `github.com/<owner>/<repo>` → raw README | unproven |
+| `github.com/<owner>/<repo>` → raw README | **proven** — angular-eslint, 2026-09-15 |
 | Direct `.pdf` → curl | unproven |
 | PDF / Office → docling | unproven, and the `.docx` figure trap is the one that passes every check while being wrong |
 | JS-hydrated → Playwright → defuddle | unproven |
