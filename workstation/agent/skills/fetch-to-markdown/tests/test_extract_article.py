@@ -31,6 +31,7 @@ def extract(html: str, selector: str) -> str:
         extract_article.STYLE_TAG,
         extract_article.BACKTOP_ICON,
         extract_article.EDIT_DROPDOWN,
+        extract_article.NAV_CHROME,
         extract_article.ICON_IMG,
         extract_article.SVG_TAG,
         extract_article.DIV_TAG,
@@ -185,6 +186,41 @@ class StrippingTests(unittest.TestCase):
         self.assertIn("Sequence diagrams", out)
         self.assertNotIn("backtop", out)
         self.assertNotIn("Edit in", out)
+
+    def test_strips_antora_breadcrumbs_and_pagination_with_their_content(self):
+        """docs.spring.io keeps both inside article.doc, the narrowest node. The
+        trail's empty copy-url <li> otherwise reaches the markdown as a raw
+        <div id>, and its links repeat the section path as if they were content."""
+        html = (
+            '<article class="doc">'
+            '<div class="breadcrumbs-container">'
+            '<nav class="breadcrumbs" aria-label="breadcrumbs"><ul>'
+            '<li id="copy-url" title="Copy versioned URL"></li>'
+            '<li><a href="index.html">Spring Boot</a></li>'
+            '<li><a href="index.html">Overview</a></li>'
+            "</ul></nav></div>"
+            "<h1>Spring Boot</h1><p>Real text.</p>"
+            '<nav class="pagination">'
+            '<span class="next"><a href="documentation.html">Documentation</a></span>'
+            "</nav>"
+            "</article>"
+        )
+        out = extract(html, "article.doc")
+        self.assertIn("<h1>Spring Boot</h1>", out)
+        self.assertIn("Real text.", out)
+        for chrome in ("copy-url", "breadcrumbs", "Overview", "pagination", "Documentation"):
+            self.assertNotIn(chrome, out)
+
+    def test_keeps_a_nav_the_article_uses_for_its_own_content(self):
+        """Only the breadcrumbs and pagination classes are chrome; a table of
+        contents inside the article is the page's own text."""
+        html = (
+            '<article class="doc"><nav class="toc">'
+            '<a href="#install">Install</a></nav><p>Body.</p></article>'
+        )
+        out = extract(html, "article.doc")
+        self.assertIn("Install", out)
+        self.assertIn("Body.", out)
 
     def test_a_clean_docusaurus_page_passes_the_guides_grep(self):
         """The end-to-end assertion: zero hits for the guide's own check."""

@@ -64,6 +64,16 @@ STYLE_TAG = re.compile(r"<style\b.*?</style>", re.DOTALL)
 # thing, tags and content together.
 BACKTOP_ICON = re.compile(r'<img\b[^>]*class="backtop"[^>]*/?>')
 EDIT_DROPDOWN = re.compile(r'<div class="dropdown">.*?</div>\s*</div>', re.DOTALL)
+# Antora (docs.spring.io) puts its breadcrumb trail and its prev/next pagination
+# *inside* article.doc, which is still the narrowest node holding the page. Both
+# are site navigation, and the trail's empty `<li id="copy-url">` comes out of
+# pandoc as a raw `<div id>` that fails the guide's markup check. Dropped whole,
+# tags and content, like EDIT_DROPDOWN — and matched by class, so a <nav> the
+# article uses for its own content is left alone.
+NAV_CHROME = re.compile(
+    r'<nav\b[^>]*\bclass="[^"]*\b(?:breadcrumbs|pagination)\b[^"]*"[^>]*>.*?</nav>',
+    re.DOTALL,
+)
 
 
 #: Attributes whose value is a single URL. `srcset` is deliberately absent: it
@@ -172,6 +182,7 @@ def main() -> int:
     article = STYLE_TAG.sub("", article)
     article = BACKTOP_ICON.sub("", article)
     article = EDIT_DROPDOWN.sub("", article)
+    article = NAV_CHROME.sub("", article)
     article = ICON_IMG.sub("", article)
     article = SVG_TAG.sub("", article)
     article = DIV_TAG.sub("", article)
