@@ -31,6 +31,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import platform
 import re
 import shutil
 import ssl
@@ -186,6 +187,23 @@ def root_is_known(repo_root: Path, doc: str, token: str) -> bool:
     if not head or head in (".", ".."):
         return True
     return (repo_root / head).exists() or (repo_root / Path(doc).parent / head).exists()
+
+
+def recorded_machine_platform(repo_root: Path, doc: str) -> str | None:
+    """Return the host OS recorded by a machine-state document."""
+    if not doc.startswith("workstation/machines/"):
+        return None
+    fields = parse_frontmatter(
+        (repo_root / doc).read_text(encoding="utf-8", errors="replace")
+    )
+    value = fields.get("platform", "").lower()
+    if value.startswith("macos"):
+        return "Darwin"
+    if value.startswith("windows"):
+        return "Windows"
+    if value.startswith("linux"):
+        return "Linux"
+    return None
 
 
 def parse_frontmatter(text: str) -> dict[str, str]:
@@ -512,9 +530,29 @@ class Verifier:
         candidates = candidate_paths(self.repo_root, claim.file, token)
         if not candidates:
             return ("filesystem", "empty target", UNVERIFIABLE)
+        candidate_names = [
+            str(candidate.relative_to(self.repo_root)).replace(os.sep, "/")
+            for _base, candidate in candidates
+            if candidate.is_relative_to(self.repo_root)
+        ]
+        if any(
+            fnmatch(candidate_name, pattern)
+            for candidate_name in candidate_names
+            for pattern in self.allow_globs
+        ):
+            return ("filesystem", "exempt by --allow", UNVERIFIABLE)
         for base, candidate in candidates:
             if candidate.exists() or candidate.is_symlink():
                 return ("filesystem", f"exists, resolved from the {base}", VERIFIED)
+        documented_os = recorded_machine_platform(self.repo_root, claim.file)
+        if documented_os and documented_os != platform.system():
+            return (
+                "filesystem",
+                f"recorded for {documented_os}; verifier runs on {platform.system()}",
+                UNVERIFIABLE,
+            )
+        if token.startswith("/") and platform.system() == "Windows":
+            return ("filesystem", "POSIX path cannot be verified on Windows", UNVERIFIABLE)
         # Outside the repo the filesystem describes this machine, not the docs.
         # `~/.claude/settings.local.json` is documented as deliberately absent.
         if token.startswith("~"):

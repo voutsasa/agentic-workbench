@@ -9,6 +9,13 @@
 # Only add a path that is *meant* not to exist here. A path that should exist and
 # does not is a defect to fix, not to exempt.
 
+# Ingested sources are intentionally untracked and absent on a fresh clone.
+# They are rebuilt from SOURCES.md only when requested.
+docs/landing-zone/
+docs/landing-zone/**
+workstation/cli/*/reference.md
+workstation/mcp/*/reference.md
+
 # Paths that exist in a TARGET project, never here. Named individually rather
 # than as `.github/**`: this repo owns .github/workflows/verify-docs.yml, and a
 # blanket glob exempted that from checking too.

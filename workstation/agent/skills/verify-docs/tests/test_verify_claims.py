@@ -467,6 +467,37 @@ class TestPathVerdicts(unittest.TestCase):
             self.assertEqual(UNVERIFIABLE, verdict)
             self.assertIn("machine state", evidence)
 
+    def test_a_path_for_a_foreign_machine_is_not_a_doc_defect(self):
+        page = "---\nplatform: macOS 26\n---\n"
+        with TempRepo({"workstation/machines/macos-host.md": page}) as root:
+            with mock.patch("verify_claims.platform.system", return_value="Windows"):
+                _name, evidence, verdict = Verifier(root).verify_path(
+                    claim(
+                        "path",
+                        "/opt/homebrew/bin/tool",
+                        file="workstation/machines/macos-host.md",
+                    )
+                )
+            self.assertEqual(UNVERIFIABLE, verdict)
+            self.assertIn("recorded for Darwin", evidence)
+
+    def test_a_path_for_the_recorded_machine_remains_checkable(self):
+        page = "---\nplatform: macOS 26\n---\n"
+        with (
+            TempRepo({"workstation/machines/macos-host.md": page}) as root,
+            mock.patch("verify_claims.platform.system", return_value="Darwin"),
+        ):
+            self.assertEqual(
+                REFUTED,
+                Verifier(root).verify_path(
+                    claim(
+                        "path",
+                        "/opt/homebrew/bin/tool",
+                        file="workstation/machines/macos-host.md",
+                    )
+                )[2],
+            )
+
     def test_a_relative_path_in_a_shell_block_has_no_knowable_cwd(self):
         page = "Install it:\n\n```sh\nln -sf ../../scripts/pre-push .git/hooks/pre-push\n```\n"
         with TempRepo({"a/b/README.md": page}) as root:
@@ -487,6 +518,29 @@ class TestPathVerdicts(unittest.TestCase):
         with TempRepo({"doc.md": "writes .github/workflows/check.yml\n"}) as root:
             verifier = Verifier(root, allow_globs=(".github/**",))
             self.assertEqual(UNVERIFIABLE, verifier.verify_path(claim("path", ".github/workflows/check.yml"))[2])
+
+    def test_an_allow_glob_matches_a_path_resolved_beside_the_document(self):
+        with TempRepo({"workstation/cli/x/install.md": "x\n"}) as root:
+            verifier = Verifier(root, allow_globs=("workstation/cli/*/reference.md",))
+            self.assertEqual(
+                UNVERIFIABLE,
+                verifier.verify_path(
+                    claim(
+                        "path",
+                        "reference.md",
+                        file="workstation/cli/x/install.md",
+                    )
+                )[2],
+            )
+
+    def test_a_posix_path_is_not_refuted_on_windows(self):
+        with TempRepo({"doc.md": "x\n"}) as root:
+            with mock.patch("verify_claims.platform.system", return_value="Windows"):
+                _name, evidence, verdict = Verifier(root).verify_path(
+                    claim("path", "/dev/null")
+                )
+            self.assertEqual(UNVERIFIABLE, verdict)
+            self.assertIn("POSIX path", evidence)
 
     def test_a_symlink_counts_as_existing_even_when_dangling(self):
         with (TempRepo({"doc.md": "x\n"}) as root,
