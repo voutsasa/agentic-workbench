@@ -541,9 +541,13 @@ class Verifier:
             for pattern in self.allow_globs
         ):
             return ("filesystem", "exempt by --allow", UNVERIFIABLE)
-        for base, candidate in candidates:
-            if candidate.exists() or candidate.is_symlink():
-                return ("filesystem", f"exists, resolved from the {base}", VERIFIED)
+        # A POSIX path on Windows skips the existence check, so the verdict does not
+        # depend on the host: `/dev/null` exists on a POSIX box, never on Windows.
+        posix_on_windows = token.startswith("/") and platform.system() == "Windows"
+        if not posix_on_windows:
+            for base, candidate in candidates:
+                if candidate.exists() or candidate.is_symlink():
+                    return ("filesystem", f"exists, resolved from the {base}", VERIFIED)
         documented_os = recorded_machine_platform(self.repo_root, claim.file)
         if documented_os and documented_os != platform.system():
             return (
@@ -551,7 +555,7 @@ class Verifier:
                 f"recorded for {documented_os}; verifier runs on {platform.system()}",
                 UNVERIFIABLE,
             )
-        if token.startswith("/") and platform.system() == "Windows":
+        if posix_on_windows:
             return ("filesystem", "POSIX path cannot be verified on Windows", UNVERIFIABLE)
         # Outside the repo the filesystem describes this machine, not the docs.
         # `~/.claude/settings.local.json` is documented as deliberately absent.
