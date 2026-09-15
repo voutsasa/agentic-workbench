@@ -32,17 +32,26 @@ sentence from the page>"` — and if it is, this route works whatever built the 
 
 ```sh
 curl -sL -A "Mozilla/5.0" <url> -o <tmp>/page.html
-python3 <skill>/scripts/extract_article.py <tmp>/page.html <tag.class|tag#id> <url> \
+python3 <skill>/scripts/extract_article.py <tmp>/page.html <tag.class|tag#id|tag[attr=value]> <url> \
   | pandoc -f html -t gfm -o "<dest>.md"
+python3 <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
 ```
 
 **Always pass the page's own URL as the third argument.** It resolves relative `href`/`src` targets
 against it. Skip it and a link like `./assets/<file>.pdf` converts perfectly and points at nothing —
 the markdown is well-formed, so no markup check below can see it.
 
-`extract_article.py` pulls one HTML node by `tag.class` or `tag#id` and strips what pandoc's gfm
-writer cannot map cleanly — `div`, `header`, `span`, inline `<svg>`, base64 icon `<img>`s, `<style>`,
-bookmark `<a name>`s. The source's own text passes through untouched.
+`extract_article.py` pulls one HTML node by `tag.class`, `tag#id` or `tag[attr=value]` and strips what
+pandoc's gfm writer cannot map cleanly — `div`, `header`, `span`, `section`, inline `<svg>`, icon
+`<img>`s, `<style>`, empty bookmark anchors — and the chrome that sites put *inside* the article node:
+Antora's breadcrumbs and pagination, an "On this page" aside. The source's own text passes through
+untouched.
+
+`add_frontmatter.py` then prepends the corpus frontmatter block — `title`, `site`, `source`, `domain`,
+`language`, `description`, `word_count` — that defuddle writes itself with `--frontmatter` on the
+other routes, so provenance reads the same whichever route produced the file. It reads the page's own
+`<title>`, `<html lang>` and meta tags, omits a field the page lacks, and leaves a file that already
+starts with `---` untouched, so re-running it changes nothing.
 
 #### Finding the selector
 
@@ -136,10 +145,11 @@ record and where. Do not edit a register, index or catalogue from inside this sk
 
 ## Scripts
 
-Both are stdlib-only and run under bare `python3` before any venv exists. Tests:
+All three are stdlib-only and run under bare `python3` before any venv exists. Tests:
 `python3 -m unittest discover -s <skill>/tests`.
 
 | Script | Does |
 |---|---|
-| [`scripts/extract_article.py`](scripts/extract_article.py) | One HTML node out of its page chrome, by `tag.class` or `tag#id` |
+| [`scripts/extract_article.py`](scripts/extract_article.py) | One HTML node out of its page chrome, by `tag.class`, `tag#id` or `tag[attr=value]` |
+| [`scripts/add_frontmatter.py`](scripts/add_frontmatter.py) | The corpus frontmatter block onto a converted file — defuddle's metadata where it is installed, the page's own `<title>` and meta tags where it is not |
 | [`scripts/clean_md_images.py`](scripts/clean_md_images.py) | base64 data URIs out to sibling PNGs |
