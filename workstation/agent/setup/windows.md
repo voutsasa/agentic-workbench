@@ -38,7 +38,7 @@ its `SKILLS` tuple, so nothing below hard-codes a path or a skill name. The hand
 this replaced still named four skills after the tuple had grown to six.
 
 ```powershell
-Set-Location C:\path\to\your\sdd-workbench
+Set-Location C:\path\to\your\agentic-workbench
 $Root = (git rev-parse --show-toplevel)
 python (Join-Path $Root "workstation\scripts\link_config.py") --apply
 ```
