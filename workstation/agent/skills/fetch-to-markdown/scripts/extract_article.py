@@ -6,11 +6,13 @@ WebFetch paraphrases through a model instead of returning the source text
 directly from raw markup and lets `pandoc` do the HTML-to-markdown
 conversion — no model in the loop, no site chrome in the output.
 
-Usage: python extract_article.py <html-file> <tag.class|tag#id> [base-url] > article.html
+Usage: python extract_article.py <html-file> <tag.class|tag#id|tag[attr=value]> [base-url] > article.html
 
-  tag.class  e.g. div.theme-doc-markdown — Docusaurus sites (playwright.dev,
-             dbml.dbdiagram.io, d2lang.com, drawio.com all use this)
-  tag#id     e.g. main#D7 — plantuml.com's hand-rolled layout
+  tag.class        e.g. div.theme-doc-markdown — Docusaurus sites (playwright.dev,
+                   dbml.dbdiagram.io, d2lang.com, drawio.com all use this)
+  tag#id           e.g. main#D7 — plantuml.com's hand-rolled layout
+  tag[attr=value]  e.g. main[role=main] — typescriptlang.org/docs, whose article
+                   node carries neither a class nor an id
 
 Not Docusaurus-specific despite where it started: the selector is an argument,
 so any server-rendered page whose article sits in one identifiable node works.
@@ -39,20 +41,27 @@ from urllib.parse import urljoin
 # quality check rules out. Stripping tags, not content: the div's children —
 # a heading, a code block, a list — pass through untouched.
 HASH_LINK = re.compile(r'<a\b[^>]*class=["\']?hash-link["\']?[^>]*>.*?</a>', re.DOTALL)
-DIV_TAG = re.compile(r"</?(?:div|header|span)\b[^>]*>")
+# <section> joins the list for Doxia (maven.apache.org, checkstyle.org) and
+# Sphinx, which wrap every section in `<section id>`: pandoc's HTML reader maps
+# it to a Div, and the gfm writer falls back to a raw `<div class="section">`.
+DIV_TAG = re.compile(r"</?(?:div|header|span|section)\b[^>]*>")
 # Copy-button and admonition icons are inlined as base64 SVGs — a few hundred
 # bytes of noise per icon, never content. A real content image (a screenshot)
 # has a normal file src and is left alone.
 ICON_IMG = re.compile(r'<img\b[^>]*src=["\']?data:image[^"\'>]*["\']?[^>]*/?>')
+# The same noise with a file src: checkstyle.org decorates each feature card
+# with `<img class="cs-card-logo">`. Matched on a `logo` or `icon` class word, so
+# a screenshot or diagram, which carries neither, is left alone.
+DECORATIVE_IMG = re.compile(r'<img\b[^>]*\bclass=["\'][^"\']*\b(?:logo|icon)\b[^"\']*["\'][^>]*/?>')
 # Admonition/copy-button icons are inline <svg> markup, not <img> — pandoc's
 # HTML reader can't map them either, and re-encodes each one as a base64
 # data-URI image in the gfm output otherwise.
 SVG_TAG = re.compile(r"<svg\b.*?</svg>", re.DOTALL)
-# Old-style `<a name="..."></a>` scroll-anchor bookmarks, empty by construction.
-# Pandoc's HTML reader turns each into a Span-with-id, which its gfm writer
-# then has to fall back to raw HTML for — same shape of problem as the <svg>
-# and <header> cases above, just one more tag pandoc can't map cleanly.
-ANCHOR_BOOKMARK = re.compile(r'<a\b[^>]*\bname=["\']?[^"\'\s>]*["\']?[^>]*>\s*</a>')
+# Empty scroll-anchor bookmarks, by `name` (old-style) or by `id` (Doxia's
+# `<a id="Section_Title"></a>` before every heading). Pandoc's HTML reader turns
+# each into a Span-with-id, which its gfm writer then has to fall back to raw
+# HTML for. Empty by construction, so a real link with an id is never matched.
+ANCHOR_BOOKMARK = re.compile(r'<a\b[^>]*\b(?:name|id)=["\']?[^"\'\s>]*["\']?[^>]*>\s*</a>')
 # Inline CSS is never content, and pandoc's HTML reader passes an unrecognised
 # <style> block through verbatim rather than dropping it.
 STYLE_TAG = re.compile(r"<style\b.*?</style>", re.DOTALL)
@@ -74,14 +83,21 @@ NAV_CHROME = re.compile(
     r'<nav\b[^>]*\bclass="[^"]*\b(?:breadcrumbs|pagination)\b[^"]*"[^>]*>.*?</nav>',
     re.DOTALL,
 )
+# angular.dev renders its per-page table of contents as a class-less <aside>
+# inside the article node: "On this page", the heading links, "Back to the top".
+# Pandoc maps <aside> to a Div and emits it raw. Matched on that heading rather
+# than on every <aside>, because an aside can also be a note that is content.
+TOC_ASIDE = re.compile(r"<aside\b[^>]*>(?:(?!</aside>).)*?\bOn this page\b.*?</aside>", re.DOTALL)
 
 
 #: Attributes whose value is a single URL. `srcset` is deliberately absent: it
 #: holds a comma-separated list with descriptors, so it needs its own parser and
 #: no page ingested so far has one inside the article node.
 URL_ATTRS = ("href", "src", "poster")
+# Quoted, or bare: minified Docusaurus output (typescript-eslint.io, prettier.io)
+# drops the quotes, `href=/getting-started/`, which a quoted-only pattern misses.
 _URL_ATTR_RE = re.compile(
-    r'\b(' + "|".join(URL_ATTRS) + r')=(["\'])(?P<url>[^"\']*)\2',
+    r'\b(' + "|".join(URL_ATTRS) + r')=(?:(["\'])(?P<url>[^"\']*)\2|(?P<bare>[^\s"\'=<>`]+))',
     re.IGNORECASE,
 )
 
@@ -89,32 +105,44 @@ _URL_ATTR_RE = re.compile(
 def absolutise(html: str, base_url: str) -> str:
     """Resolve relative href/src targets against the page's own URL.
 
-    ``urljoin`` leaves an absolute URL alone and resolves a relative one, so it
-    needs no branch of ours. Two targets are skipped because joining them would
-    corrupt them: a fragment-only link (``#section``) is intra-document, and a
-    non-http scheme (``mailto:``, ``data:``, ``javascript:``) is not a path.
+    ``urljoin`` leaves an absolute URL alone and resolves a relative one, and an
+    unchanged target is returned exactly as written, so it needs no branch of
+    ours. Two targets are skipped because joining them would corrupt them: a
+    fragment-only link (``#section``) is intra-document, and a non-http scheme
+    (``mailto:``, ``data:``, ``javascript:``) is not a path. A resolved bare
+    value is written back quoted.
     """
     def replace(match: re.Match[str]) -> str:
-        url = match.group("url")
+        url = match.group("url") if match.group("url") is not None else match.group("bare")
         if not url or url.startswith(("#", "data:")):
             return match.group(0)
         if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", url) and not url.startswith(("http:", "https:")):
             return match.group(0)
-        quote = match.group(2)
-        return f"{match.group(1)}={quote}{urljoin(base_url, url)}{quote}"
+        joined = urljoin(base_url, url)
+        if joined == url:
+            return match.group(0)
+        quote = match.group(2) or '"'
+        return f"{match.group(1)}={quote}{joined}{quote}"
 
     return _URL_ATTR_RE.sub(replace, html)
 
 
 def parse_selector(selector: str) -> tuple[str, str, str]:
-    """'div.theme-doc-markdown' -> ('div', 'class', 'theme-doc-markdown')."""
+    """'div.theme-doc-markdown' -> ('div', 'class', 'theme-doc-markdown').
+
+    'main[role=main]' -> ('main', 'role', 'main'). The attribute form is checked
+    first, because its value may itself contain a '.' or a '#'.
+    """
+    attribute = re.fullmatch(r"(\w+)\[([\w-]+)=[\"']?([^\"'\]]+)[\"']?\]", selector)
+    if attribute:
+        return attribute.group(1), attribute.group(2), attribute.group(3)
     if "." in selector:
         tag, _, value = selector.partition(".")
         return tag, "class", value
     if "#" in selector:
         tag, _, value = selector.partition("#")
         return tag, "id", value
-    raise ValueError(f"selector must be tag.class or tag#id, got {selector!r}")
+    raise ValueError(f"selector must be tag.class, tag#id or tag[attr=value], got {selector!r}")
 
 
 class ArticleExtractor(HTMLParser):
@@ -183,7 +211,9 @@ def main() -> int:
     article = BACKTOP_ICON.sub("", article)
     article = EDIT_DROPDOWN.sub("", article)
     article = NAV_CHROME.sub("", article)
+    article = TOC_ASIDE.sub("", article)
     article = ICON_IMG.sub("", article)
+    article = DECORATIVE_IMG.sub("", article)
     article = SVG_TAG.sub("", article)
     article = DIV_TAG.sub("", article)
     if base_url:

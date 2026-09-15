@@ -32,7 +32,9 @@ def extract(html: str, selector: str) -> str:
         extract_article.BACKTOP_ICON,
         extract_article.EDIT_DROPDOWN,
         extract_article.NAV_CHROME,
+        extract_article.TOC_ASIDE,
         extract_article.ICON_IMG,
+        extract_article.DECORATIVE_IMG,
         extract_article.SVG_TAG,
         extract_article.DIV_TAG,
     ):
@@ -50,6 +52,17 @@ class ParseSelectorTests(unittest.TestCase):
     def test_id_selector(self):
         self.assertEqual(
             extract_article.parse_selector("main#D7"), ("main", "id", "D7")
+        )
+
+    def test_attribute_selector(self):
+        self.assertEqual(
+            extract_article.parse_selector("main[role=main]"), ("main", "role", "main")
+        )
+
+    def test_attribute_selector_accepts_quotes_and_dotted_values(self):
+        self.assertEqual(
+            extract_article.parse_selector('div[data-page="docs.index"]'),
+            ("div", "data-page", "docs.index"),
         )
 
     def test_bare_tag_is_rejected(self):
@@ -105,6 +118,20 @@ class NodeSelectionTests(unittest.TestCase):
         self.assertIn("<h2>PlantUML</h2>", out)
         self.assertNotIn("chrome", out)
 
+    def test_attribute_selector_finds_a_node_with_no_class_or_id(self):
+        """typescriptlang.org/docs keeps its article in a bare <main role="main">,
+        with the site settings and the footer outside it."""
+        html = (
+            '<body><section id="customize">Site Colours</section>'
+            '<main role="main"><h2>Handbook</h2><p>Everyday Types</p></main>'
+            "<footer>Terms of Use</footer></body>"
+        )
+        out = extract(html, "main[role=main]")
+        self.assertIn("<h2>Handbook</h2>", out)
+        self.assertIn("Everyday Types", out)
+        self.assertNotIn("Site Colours", out)
+        self.assertNotIn("Terms of Use", out)
+
     def test_missing_node_yields_nothing(self):
         self.assertEqual(extract("<p>no article here</p>", "div.absent"), "")
 
@@ -141,6 +168,19 @@ class StrippingTests(unittest.TestCase):
         for tag in ("<div", "<span", "<header"):
             self.assertNotIn(tag, out)
 
+    def test_unwraps_section_tags_but_keeps_their_children(self):
+        """Doxia and Sphinx wrap each section in <section id>, which pandoc would
+        emit as a raw <div class="section">."""
+        html = (
+            '<main id="bodyColumn"><section id="Getting_Started">'
+            "<h2>Getting started</h2><p>Body.</p></section></main>"
+        )
+        out = extract(html, "main#bodyColumn")
+        self.assertIn("<h2>Getting started</h2>", out)
+        self.assertIn("Body.", out)
+        self.assertNotIn("<section", out)
+        self.assertNotIn("</section>", out)
+
     def test_strips_inline_svg_icons(self):
         html = '<div class="a"><p>Note<svg viewBox="0 0 24 24"><path d="M0"/></svg></p></div>'
         out = extract(html, "div.a")
@@ -158,6 +198,20 @@ class StrippingTests(unittest.TestCase):
         self.assertNotIn("data:image", out)
         self.assertIn("/img/screenshot.png", out)
 
+    def test_strips_logo_and_icon_class_images_but_keeps_content_images(self):
+        """checkstyle.org decorates each feature card with <img class="cs-card-logo">."""
+        html = (
+            '<div class="a">'
+            '<img src="images/logo-maven.svg" class="cs-card-logo" />'
+            '<img src="images/arrow.svg" class="nav-icon">'
+            '<img src="images/report.png" class="screenshot" alt="report">'
+            "</div>"
+        )
+        out = extract(html, "div.a")
+        self.assertNotIn("logo-maven.svg", out)
+        self.assertNotIn("arrow.svg", out)
+        self.assertIn("images/report.png", out)
+
     def test_strips_style_blocks(self):
         html = '<div class="a"><style>.x{color:red}</style><p>Body.</p></div>'
         out = extract(html, "div.a")
@@ -170,6 +224,16 @@ class StrippingTests(unittest.TestCase):
         out = extract(html, "div.a")
         self.assertNotIn('name="section-3"', out)
         self.assertIn("Body.", out)
+
+    def test_strips_empty_id_anchors_but_keeps_real_links_with_an_id(self):
+        """Doxia puts <a id="Section_Title"></a> before every heading."""
+        html = (
+            '<div class="a"><a id="Getting_Started"></a><h2>Getting started</h2>'
+            '<a id="docs-link" href="/docs/">Read the docs</a></div>'
+        )
+        out = extract(html, "div.a")
+        self.assertNotIn('id="Getting_Started"', out)
+        self.assertIn('<a id="docs-link" href="/docs/">Read the docs</a>', out)
 
     def test_strips_plantuml_backtop_and_edit_dropdown_with_their_content(self):
         """Unlike the layout tags, the dropdown's own text is chrome too — three
@@ -221,6 +285,25 @@ class StrippingTests(unittest.TestCase):
         out = extract(html, "article.doc")
         self.assertIn("Install", out)
         self.assertIn("Body.", out)
+
+    def test_strips_an_on_this_page_aside_but_keeps_a_note_aside(self):
+        """angular.dev's per-page TOC is a class-less <aside> inside the article;
+        an aside holding a note is content and stays."""
+        html = (
+            '<main class="docs-viewer"><h1>Testing</h1>'
+            "<aside _ngcontent-ng-c1><h2>On this page</h2>"
+            '<ul><li><a href="#setup">Setup</a></li></ul>'
+            '<a href="#top">Back to the top</a></aside>'
+            "<p>Body.</p>"
+            '<aside class="note"><p>Vitest is the default runner.</p></aside>'
+            "</main>"
+        )
+        out = extract(html, "main.docs-viewer")
+        self.assertIn("<h1>Testing</h1>", out)
+        self.assertIn("Body.", out)
+        self.assertNotIn("On this page", out)
+        self.assertNotIn("Back to the top", out)
+        self.assertIn("Vitest is the default runner.", out)
 
     def test_a_clean_docusaurus_page_passes_the_guides_grep(self):
         """The end-to-end assertion: zero hits for the guide's own check."""
@@ -277,14 +360,26 @@ class AbsolutiseTests(unittest.TestCase):
         out = self.absolutise('<a href="/llm-agents-mooc/">MOOC</a>')
         self.assertIn('href="https://rdi.berkeley.edu/llm-agents-mooc/"', out)
 
+    def test_unquoted_root_relative_href_is_resolved_and_quoted(self) -> None:
+        """Minified Docusaurus output (typescript-eslint.io, prettier.io) drops
+        attribute quotes, which a quoted-only pattern never matched."""
+        out = self.absolutise("<a href=/getting-started/typed-linting>Typed Linting</a>")
+        self.assertIn('href="https://rdi.berkeley.edu/getting-started/typed-linting"', out)
+        self.assertIn(">Typed Linting</a>", out)
+
+    def test_unquoted_absolute_url_is_untouched(self) -> None:
+        html = "<a href=https://eslint.org target=_blank>ESLint</a>"
+        self.assertEqual(html, self.absolutise(html))
+
     def test_absolute_url_is_untouched(self) -> None:
         html = '<a href="https://arxiv.org/abs/2402.10200">CoT</a>'
         self.assertEqual(html, self.absolutise(html))
 
     def test_fragment_is_untouched(self) -> None:
         """An intra-document link must stay intra-document."""
-        html = '<a href="#syllabus">Syllabus</a>'
-        self.assertEqual(html, self.absolutise(html))
+        for html in ('<a href="#syllabus">Syllabus</a>', "<a href=#syllabus>Syllabus</a>"):
+            with self.subTest(html=html):
+                self.assertEqual(html, self.absolutise(html))
 
     def test_non_http_schemes_are_untouched(self) -> None:
         for html in (
