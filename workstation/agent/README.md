@@ -9,10 +9,8 @@ of the tree is arranged around, and it has three consequences:
 - Anything about the *state* of a machine — paths, shell quirks, which tools run, what is broken —
   belongs in [`../machines/`](../machines/), not in `CLAUDE.md`. See
   [`../machines/README.md`](../machines/README.md) for the test.
-- **`settings.json` here is a reference, not a link target.** Claude Code writes to the live
-  `~/.claude/settings.json` itself, and on a provider-bound machine that file also holds an `env`
-  block, so it is the one file in this directory that is merged key-by-key rather than linked — see
-  *Settings are merged, never linked* below.
+- **`settings.json` here is a reference, not a link target** — the one file in this directory merged
+  key-by-key rather than linked. See *Settings are merged, never linked* below.
 - Anything else machine-local, and not provider-bound, belongs in `~/.claude/settings.local.json`,
   which is untracked by design.
 
