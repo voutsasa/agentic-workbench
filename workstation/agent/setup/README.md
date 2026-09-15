@@ -229,7 +229,8 @@ Authentication is a GitHub token, resolved `COPILOT_GITHUB_TOKEN`, then `GH_TOKE
 has no configuration of its own. A legacy `gh-copilot` extension may still be installed and its
 `~/.config/gh-copilot/config.yml` is then dead weight; `gh extension list` shows whether it is there.
 
-Skills, agents, hooks and MCP servers reach the CLI as **plugins**:
+The CLI also loads standalone skills from `~/.copilot/skills/`, as shown above. **Plugins** are the
+packaging route for distributable skills, agents, hooks, and MCP servers:
 
 ```sh
 copilot plugin list

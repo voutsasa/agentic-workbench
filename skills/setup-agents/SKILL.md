@@ -13,8 +13,9 @@ provider steps, are in [`workstation/agent/setup/README.md`](../../workstation/a
 The linker is [`workstation/scripts/link_config.py`](../../workstation/scripts/link_config.py). Where
 this file and those disagree, they win — fix this file.
 
-Both scripts are stdlib-only and run without a venv — `python3` on macOS, `python` on Windows. That is
-the exception recorded in [`workstation/scripts/README.md`](../../workstation/scripts/README.md).
+Both scripts are stdlib-only. Use the repository's `.venv` interpreter when it exists; otherwise use
+the bootstrap interpreter — `python3` on macOS, `python` on Windows. That fallback is recorded in
+[`workstation/scripts/README.md`](../../workstation/scripts/README.md).
 
 ## Never, whatever the user answers
 

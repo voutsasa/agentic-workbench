@@ -58,5 +58,6 @@ instructing the agent to read `~/.claude/machine.md`, which is a path that is **
 machine while its content differs** — that indirection is what lets the shared file point at
 per-machine truth without naming a platform.
 
-Installing that file is a user step and is deliberately not done yet: see *Not yet installed* in each
-machine file. Until it is, an agent working in this repo should read the relevant file here directly.
+Before the machine note is linked, an agent working in this repo should read the relevant file here
+directly. Its state is recorded in each machine file's *Claude Code config* or *Not yet installed*
+section; link it through the matching setup route when it is absent.

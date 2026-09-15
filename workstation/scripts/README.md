@@ -1,14 +1,13 @@
 # Workstation scripts
 
-Scripts that maintain the `workstation/` tree itself. Standard library only, no venv, no install step —
-they have to run on a fresh clone of any machine, which is the one situation where nothing is set up yet.
+Scripts that maintain the `workstation/` tree itself. Standard library only, with no install step —
+they can run on a fresh clone of any machine, where nothing is set up yet.
 
-**These two scripts are the deliberate exception to [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md)'s
-"every Python invocation goes through the project's venv".** They exist to be run *before* there is a
-venv, import nothing outside the standard library, and touch no project code. Every command below is
-written `python`, which is what the interpreter is called on Windows and inside an activated venv;
-**on macOS outside a venv it is `python3`** — plain `python` is not on `PATH` there at all. Anything
-else in this repo follows the venv rule.
+**Use the repository's `.venv` interpreter when it is available.** These scripts import nothing outside
+the standard library and can instead use the bootstrap interpreter before a venv exists: `python3` on
+macOS, `python` on Windows. Every command below is written `python`, which is what the interpreter is
+called on Windows and inside an activated venv; **on macOS outside a venv it is `python3`** — plain
+`python` is not on `PATH` there at all. Anything else in this repo follows the venv rule.
 
 | Script | Job |
 |---|---|
