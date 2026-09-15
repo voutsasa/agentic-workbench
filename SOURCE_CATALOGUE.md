@@ -1,6 +1,6 @@
 ---
 role: One-sentence capability summary per source, mirroring SOURCES.md
-updated: 2026-08-05
+updated: 2026-09-15
 verified: never
 ---
 
@@ -46,7 +46,9 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 
 ## 4. Technical architecture
 
-### Backend and API
+### Experimental stack
+
+#### Backend and API
 
 * [FastAPI](https://fastapi.tiangolo.com/tutorial/) — High-performance Python web framework for building APIs with automatic docs and validation.
 * [Pydantic](https://pydantic.dev/docs/validation/latest/get-started/) — Data validation and settings management using Python type annotations.
@@ -54,12 +56,88 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [yaml](https://pyyaml.org/wiki/PyYAMLDocumentation) — PyYAML library for parsing and emitting YAML in Python.
 * [pymupdf](https://github.com/pymupdf/pymupdf) — Python library for fast PDF parsing, rendering, and text/image extraction.
 
-### Frontend
+#### Frontend
 
 * [vue](https://vuejs.org/guide/quick-start.html) — Progressive JavaScript framework for building reactive user interfaces.
 * [vite](https://vite.dev/guide/) — Fast frontend build tool and dev server with instant hot module replacement.
 * [tailwindcss](https://tailwindcss.com/docs/installation/using-vite) — Utility-first CSS framework for building custom designs directly in markup.
 * [streamlit](https://docs.streamlit.io/) — Turns Python scripts into interactive web apps and data dashboards with minimal code.
+
+#### Testing
+
+* [PyTest](https://docs.pytest.org/en/stable/) — Feature-rich Python testing framework with fixtures and plugin ecosystem.
+
+#### Quality gates
+
+##### Python
+
+* [uv](https://docs.astral.sh/uv/getting-started/) — Fast, all-in-one Python package and project manager replacing pip and virtualenv.
+* [ruff](https://docs.astral.sh/ruff/) — Extremely fast Python linter and code formatter.
+* [bandit](https://bandit.readthedocs.io/en/latest/) — Static analysis tool for finding common security issues in Python code.
+* [radon](https://radon.readthedocs.io/en/latest/) — Computes Python code metrics like cyclomatic complexity and maintainability index.
+
+##### JavaScript/TypeScript
+
+* [oxlint](https://oxc.rs/docs/guide/usage/linter) — Rust-based, extremely fast linter for JavaScript and TypeScript.
+* [oxfmt](https://oxc.rs/docs/guide/usage/formatter) — Rust-based, extremely fast code formatter for JavaScript and TypeScript.
+* [retire.js](https://retirejs.github.io/retire.js/) — Scans JavaScript dependencies for known security vulnerabilities.
+* [plato](https://github.com/es-analysis/plato) — Generates visual JavaScript source code complexity and quality reports.
+
+##### Cross-platform
+
+* [opengrep](https://github.com/opengrep/opengrep) — Ultra-fast semantic grep for finding vulnerability patterns across 30+ languages.
+
+---
+
+### Production stack
+
+#### Back end
+
+* [Java](https://dev.java/learn/) — Oracle's official Java learning portal, from setting up the JDK to writing and running first applications.
+* [Spring Boot](https://docs.spring.io/spring-boot/index.html) — Creates stand-alone, production-grade Spring-based Java applications with opinionated defaults and minimal configuration.
+
+#### Front end
+
+* [Angular](https://angular.dev/overview) — Google's web development framework for building modern apps, documented with overviews and in-browser tutorials.
+* [TypeScript](https://www.typescriptlang.org/docs/) — Microsoft's official TypeScript documentation: introductions by background, everyday guides, and how it models JavaScript modules.
+
+#### Build tools
+
+* [Maven](https://maven.apache.org/guides/getting-started/index.html) — Apache Maven's getting-started cookbook: set up, compile, test, package JARs, manage dependencies, and deploy Java projects.
+
+#### Testing
+
+##### Java / Spring Boot
+
+* [JUnit](https://docs.junit.org/current/user-guide/) — The JUnit User Guide: reference documentation for writing tests, extensions, and test engines in Java.
+* [AssertJ](https://assertj.github.io/doc/) — Fluent testing assertions for Java and the JVM, bundled in Spring Boot's test starter.
+* [Mockito](https://site.mockito.org/) — Mocking framework for Java unit tests, bundled in Spring Boot's test starter.
+* [Spring Boot Testing](https://docs.spring.io/spring-boot/reference/testing/index.html) — Spring Boot's utilities and annotations for testing applications, from test-scope dependencies to integration test support.
+* [Testcontainers](https://java.testcontainers.org/) — Java library giving JUnit tests lightweight, throwaway instances of common databases, Selenium browsers, and more.
+
+##### Angular / TypeScript
+
+* [Angular Testing](https://angular.dev/guide/testing) — Angular's official testing guide, covering the Vitest-based default setup for new Angular CLI projects.
+* [Vitest](https://vitest.dev/guide/) — Next-generation testing framework powered by Vite; the default unit-test runner for new Angular projects.
+
+*See also:* playwright for end-to-end browser testing (Cross-cutting aspects → 2. Workstation tooling).
+
+#### Quality gates
+
+##### Java / Spring Boot
+
+* [Checkstyle](https://checkstyle.org/) — Checks Java source against configurable rules for naming, imports, formatting, Javadoc, and class design.
+* [SpotBugs](https://spotbugs.readthedocs.io/en/latest/introduction.html) — Finds likely errors in Java programs by detecting known bug patterns.
+* [JaCoCo](https://www.jacoco.org/jacoco/trunk/doc/) — Java code coverage library with coverage counters and ready-to-use tools for measuring test coverage.
+* [OWASP Dependency-Check](https://owasp.org/projects/dependency-check) — Software composition analysis tool checking project dependencies for known, publicly disclosed vulnerabilities.
+
+##### Angular / TypeScript
+
+* [angular-eslint](https://github.com/angular-eslint/angular-eslint) — Monorepo of tooling that enables ESLint to lint Angular projects.
+* [typescript-eslint](https://typescript-eslint.io/getting-started/) — Enables ESLint to lint TypeScript, including rules that use type information.
+* [Prettier](https://prettier.io/docs/) — Opinionated code formatter supporting TypeScript, Angular, HTML, CSS, JSON, and more.
+
+*See also:* opengrep and retire.js (Experimental stack → Quality gates).
 
 ### LLM and agent runtime
 
@@ -74,30 +152,6 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 ### Method
 
 * [Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html) — Martin Fowler compares three spec-driven development tools and their approaches.
-
-### Testing
-
-* [PyTest](https://docs.pytest.org/en/stable/) — Feature-rich Python testing framework with fixtures and plugin ecosystem.
-
-*See also:* DeepEval for LLM-path evaluation (§4).
-
-### Quality gates — Python
-
-* [uv](https://docs.astral.sh/uv/getting-started/) — Fast, all-in-one Python package and project manager replacing pip and virtualenv.
-* [ruff](https://docs.astral.sh/ruff/) — Extremely fast Python linter and code formatter.
-* [bandit](https://bandit.readthedocs.io/en/latest/) — Static analysis tool for finding common security issues in Python code.
-* [radon](https://radon.readthedocs.io/en/latest/) — Computes Python code metrics like cyclomatic complexity and maintainability index.
-
-### Quality gates — JavaScript/TypeScript
-
-* [oxlint](https://oxc.rs/docs/guide/usage/linter) — Rust-based, extremely fast linter for JavaScript and TypeScript.
-* [oxfmt](https://oxc.rs/docs/guide/usage/formatter) — Rust-based, extremely fast code formatter for JavaScript and TypeScript.
-* [retire.js](https://retirejs.github.io/retire.js/) — Scans JavaScript dependencies for known security vulnerabilities.
-* [plato](https://github.com/es-analysis/plato) — Generates visual JavaScript source code complexity and quality reports.
-
-### Quality gates — cross-platform
-
-* [opengrep](https://github.com/opengrep/opengrep) — Ultra-fast semantic grep for finding vulnerability patterns across 30+ languages.
 
 ---
 

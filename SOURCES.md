@@ -1,6 +1,6 @@
 ---
 role: Source register — source of truth for what belongs in the project
-updated: 2026-09-14
+updated: 2026-09-15
 verified: never
 ---
 
@@ -88,7 +88,9 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 
 ## 4. Technical architecture
 
-### Backend and API
+### Experimental stack
+
+#### Backend and API
 
 * [FastAPI](https://fastapi.tiangolo.com/tutorial/)
 * [Pydantic](https://pydantic.dev/docs/validation/latest/get-started/)
@@ -96,12 +98,87 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 * [yaml](https://pyyaml.org/wiki/PyYAMLDocumentation)
 * [pymupdf](https://github.com/pymupdf/pymupdf)
 
-### Frontend
+#### Frontend
 
 * [vue](https://vuejs.org/guide/quick-start.html)
 * [vite](https://vite.dev/guide/)
 * [tailwindcss](https://tailwindcss.com/docs/installation/using-vite)
 * [streamlit](https://docs.streamlit.io/)
+
+#### Testing
+
+* [PyTest](https://docs.pytest.org/en/stable/)
+#### Quality gates
+
+##### Python
+
+* [uv](https://docs.astral.sh/uv/getting-started/)
+* [ruff](https://docs.astral.sh/ruff/)
+* [bandit](https://bandit.readthedocs.io/en/latest/)
+* [radon](https://radon.readthedocs.io/en/latest/)
+
+##### JavaScript/TypeScript
+
+* [oxlint](https://oxc.rs/docs/guide/usage/linter)
+* [oxfmt](https://oxc.rs/docs/guide/usage/formatter)
+* [retire.js](https://retirejs.github.io/retire.js/)
+* [plato](https://github.com/es-analysis/plato)
+
+##### Cross-platform
+
+* [opengrep](https://github.com/opengrep/opengrep)
+
+---
+
+### Production stack
+
+#### Back end
+
+* [Java](https://dev.java/learn/)
+* [Spring Boot](https://docs.spring.io/spring-boot/index.html)
+
+#### Front end
+
+* [Angular](https://angular.dev/overview)
+* [TypeScript](https://www.typescriptlang.org/docs/)
+
+#### Build tools
+
+* [Maven](https://maven.apache.org/guides/getting-started/index.html)
+
+#### Testing
+
+##### Java / Spring Boot
+
+* [JUnit](https://docs.junit.org/current/user-guide/)
+* [AssertJ](https://assertj.github.io/doc/)
+* [Mockito](https://site.mockito.org/)
+* [Spring Boot Testing](https://docs.spring.io/spring-boot/reference/testing/index.html)
+* [Testcontainers](https://java.testcontainers.org/)
+
+##### Angular / TypeScript
+
+* [Angular Testing](https://angular.dev/guide/testing)
+* [Vitest](https://vitest.dev/guide/)
+
+*See also:* playwright for end-to-end browser testing (Cross-cutting aspects → 2. Workstation tooling).
+
+#### Quality gates
+
+##### Java / Spring Boot
+
+* [Checkstyle](https://checkstyle.org/)
+* [SpotBugs](https://spotbugs.readthedocs.io/en/latest/introduction.html)
+* [JaCoCo](https://www.jacoco.org/jacoco/trunk/doc/)
+* [OWASP Dependency-Check](https://owasp.org/projects/dependency-check)
+
+##### Angular / TypeScript
+
+* [angular-eslint](https://github.com/angular-eslint/angular-eslint)
+* [typescript-eslint](https://typescript-eslint.io/getting-started/)
+* [Prettier](https://prettier.io/docs/)
+
+*See also:* opengrep and retire.js (Experimental stack → Quality gates).
 
 ### LLM and agent runtime
 
@@ -126,31 +203,7 @@ The per-project output layer: how work is specified, built, verified, and govern
 ### Method
 
 * [Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)
-
-### Testing
-
-* [PyTest](https://docs.pytest.org/en/stable/)
-
-*See also:* DeepEval for LLM-path evaluation (§4).
-
-### Quality gates — Python
-
-* [uv](https://docs.astral.sh/uv/getting-started/)
-* [ruff](https://docs.astral.sh/ruff/)
-* [bandit](https://bandit.readthedocs.io/en/latest/)
-* [radon](https://radon.readthedocs.io/en/latest/)
-
-### Quality gates — JavaScript/TypeScript
-
-* [oxlint](https://oxc.rs/docs/guide/usage/linter)
-* [oxfmt](https://oxc.rs/docs/guide/usage/formatter)
-* [retire.js](https://retirejs.github.io/retire.js/)
-* [plato](https://github.com/es-analysis/plato)
-
-### Quality gates — cross-platform
-
-* [opengrep](https://github.com/opengrep/opengrep)
-
+ 
 **Gaps — not yet sourced**
 
 > Every static-analysis tool is here; almost none of the *process* an implementation constitution actually rules on.
