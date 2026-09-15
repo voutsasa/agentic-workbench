@@ -19,6 +19,11 @@ answer. The split is by **lifetime**, not by platform:
 The test for which file a fact belongs in: *would this still be true on the other machine?* If yes it
 is policy or route. If no it belongs here.
 
+A fact in the wrong file gets edited at the wrong rate — the slowest-changing content at the rate of
+the fastest. That is why `AGENT-INSTRUCTIONS.md` names no platform, why `install.md` carries no current
+version or install status (a version survives there only as evidence for a trap, which cannot go
+stale), and why a machine's tool table is measured by `../scripts/inventory.py` rather than written.
+
 ## Files
 
 | Machine | Platform | Repo path | Inventory verified |

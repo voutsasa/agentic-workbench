@@ -18,10 +18,10 @@ of the tree is arranged around, and it has three consequences:
 
 | Path | Goes to | How |
 |---|---|---|
-| `CLAUDE.md` | `~/.claude/CLAUDE.md` | linked |
+| `AGENT-INSTRUCTIONS.md` | `~/.claude/CLAUDE.md` | linked |
 | `settings.json` | `~/.claude/settings.json` | **merged by hand — never linked** |
 | `skills/<skill>/` | `~/.claude/skills/<skill>` | linked — one per name in [`../scripts/link_config.py`](../scripts/link_config.py)'s `SKILLS` tuple |
-| `../machines/<platform>-<host>.md` | `~/.claude/machine.md` | linked |
+| `../machines/<platform>-<id>.md` | `~/.claude/machine.md` | linked |
 | `hooks/powershell-tool-prompt.ps1` | `~/.claude/hooks/powershell-tool-prompt.ps1` | **reference copy — copied by hand, never linked** |
 
 The last row before this one is the indirection that keeps this directory platform-neutral: one fixed
@@ -230,9 +230,7 @@ From the 2026-07-30 usage report, when `WORKING_PRACTICES.md` was folded into `C
   and both were true at once, which is the contradiction that forced the split. State now lives in
   [`../machines/`](../machines/) and is *measured* by `../scripts/inventory.py` rather than written by
   hand; the two per-platform link blocks moved to [`setup/`](setup/). The line drawn is **lifetime**,
-  not platform: policy never expires, a route expires slowly, state expires constantly. Putting all
-  three in one file meant the slowest-changing content was edited at the rate of the fastest.
-  A second machine is what exposed it, but one machine had the same defect — the `status:` field in
+  not platform — see [`../machines/README.md`](../machines/README.md). A second machine is what exposed it, but one machine had the same defect — the `status:` field in
   every `install.md` was already unanswerable.
 
 - **A `docsync` skill — delivered, in three parts.** The proposal was "reconcile the

@@ -65,7 +65,7 @@ workstation/              	this machine's setup — serves the repo, never a del
 pyproject.toml            	Python project metadata.   
 ```
 
-The top-level split is **`docs/` is what the workbench reads, `workstation/` is what it runs on, `skills/` is what it does.** Nothing under `workstation/` should ever reach a generated artefact — it describes the machines this runs on, not an architecture.
+The top-level split is **`docs/` is what the workbench reads, `workstation/` is what it runs on, `skills/` is what it does.**
 
 ## The register and its process
 
@@ -82,7 +82,7 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 | [`AGENTS.md`](AGENTS.md) | **Agent instructions for this repo** — file roles, the layer model, the ingestion invariant, and the rule that GitHub sources are fetched as raw READMEs rather than cloned. Read directly by GitHub Copilot; Claude Code reaches it through [`CLAUDE.md`](CLAUDE.md) and Antigravity through [`.agents/rules/workbench.md`](.agents/rules/workbench.md), each a one-line `@AGENTS.md` import. |
 ## The workstation — `workstation/`
 
-What the workbench runs on. This tree describes **the machines it runs on**, not an architecture, so nothing in it should reach a generated artefact.
+What the workbench runs on — the machines, not an architecture.
 
 **[`workstation/README.md`](workstation/README.md) is the map** — what each subfolder holds, where to start in it, and the rules spanning all of them. The summary:
 
@@ -94,11 +94,8 @@ What the workbench runs on. This tree describes **the machines it runs on**, not
 | [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `link_config.py` reports or repairs the `~/.claude` links, and with `--agent copilot` the `~/.copilot/skills` links. Both are read-only unless told otherwise. |
 | `workstation/agent/` | Claude Code configuration, **linked into `~/.claude/`** so it is versioned rather than scattered across a home directory. See below. |
 
-**The split is by lifetime, not by platform.** Policy never expires, a route expires slowly, machine
-state expires constantly — so they live in three different files rather than one. This is why
-`install.md` carries no current version and `CLAUDE.md` names no platform.
-[`workstation/machines/README.md`](workstation/machines/README.md) has the test for which file a given
-fact belongs in.
+**The split is by lifetime, not by platform** — policy, route and machine state live in different
+files. [`workstation/machines/README.md`](workstation/machines/README.md) has the table and the test.
 
 ### `workstation/agent/`
 
@@ -131,6 +128,4 @@ Because these are links into a git repo, check `git status` here before overwrit
 
 ## What is tracked in git
 
-The register, the guides, the authored guidance notes in `docs/guidance/`, the authored CLI and MCP guidance, and the agent config. **Not** the ingested third-party content — `docs/landing-zone/`, `workstation/cli/*/reference.md`, and `workstation/mcp/*/reference.md` are all excluded.
-
-On a fresh clone the corpus is therefore empty and every register entry will look un-ingested. That is expected. Rebuilding it is a deliberate, potentially long operation — see [`skills/ingest-source/`](skills/ingest-source/).
+Everything authored is tracked; the ingested third-party corpus is not, so a fresh clone's corpus is empty by design. [`AGENTS.md` § *The corpus is not in git*](AGENTS.md#the-corpus-is-not-in-git) has what is excluded and when to rebuild.

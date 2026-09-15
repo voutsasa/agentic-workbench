@@ -36,7 +36,7 @@ Enables engineers to set up their workstation and work in an agent-enabled envir
 
 **Top-level split:** `docs/` is what the workbench reads; `workstation/` is what it runs on; `skills/` is what it does. Nothing under `workstation/` should reach a generated artefact — it describes the machines this runs on, not an architecture.
 
-**Inside `workstation/`, the split is by lifetime.** Policy (`agent/AGENT-INSTRUCTIONS.md`) never expires; a route (`cli/<tool>/install.md`, `agent/setup/`) expires slowly, one tool at a time; machine state (`machines/<id>.md`) expires constantly. A fact in the wrong file gets edited at the wrong rate — which is why `CLAUDE.md` names no platform, `install.md` carries no current version or install status (a version survives there only as evidence for a trap, which cannot go stale), and a machine's tool table is measured by `workstation/scripts/inventory.py` rather than written by hand. The test is in `workstation/machines/README.md`: *would this still be true on the other machine?*
+**Inside `workstation/`, the split is by lifetime:** policy, route and machine state live in different files. Before adding a fact there, apply the test in `workstation/machines/README.md` — *would this still be true on the other machine?*
 
 ## The layer model
 

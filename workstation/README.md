@@ -20,18 +20,8 @@ What this workbench **runs on**, as opposed to what it reads. `docs/` is the cor
 
 **The user installs; these files record** — see [`AGENTS.md`](../AGENTS.md#the-user-installs-the-agent-records). A recorded route means the route is *known*, not that the tool is live here.
 
-**Split by lifetime, not by platform.** Three kinds of fact live in this tree and they expire at
-different rates, so they live in different files:
-
-| Kind | Lives in | Expires |
-|---|---|---|
-| **Policy** — how the agent should work | `agent/AGENT-INSTRUCTIONS.md` | never |
-| **Route** — how to install or link something | `cli/<tool>/install.md`, `agent/setup/` | slowly, one tool at a time |
-| **State** — what is present, what is broken | `machines/<id>.md` | constantly |
-
-Putting all three in one file means the slowest-changing content gets edited at the rate of the
-fastest. [`machines/README.md`](machines/README.md) carries the test: *would this still be true on the
-other machine?*
+**Split by lifetime, not by platform** — policy, route and machine state live in different files.
+[`machines/README.md`](machines/README.md) has the table and the test.
 
 **`agent/` is live configuration.** Editing `~/.claude/CLAUDE.md` or any of the linked skills (the `SKILLS` tuple in [`scripts/link_config.py`](scripts/link_config.py)) writes into this directory through the link. Check `git status` before overwriting any of them, and if this directory is ever moved or renamed, **repoint the links** — otherwise every session silently loses its global instructions. On Windows the files are hardlinks, which any atomic-saving editor severs without warning; [`agent/setup/windows.md`](agent/setup/windows.md) has the detection command.
 
