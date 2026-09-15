@@ -9,8 +9,12 @@
 #   - Python scripts show every line as modified when the same file is edited
 #     on another machine, which buries real diffs.
 #
+# Shell scripts get the same rule as `pre-push`, for the same shebang reason —
+# `scripts/verify-docs.sh` is the one tracked today.
+#
 # Scoped deliberately to the files that break. A blanket `* text=auto eol=lf`
 # would also rewrite the markdown corpus, which nothing here needs.
 
 pre-push  text eol=lf
+*.sh      text eol=lf
 *.py      text eol=lf
