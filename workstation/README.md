@@ -33,7 +33,7 @@ Putting all three in one file means the slowest-changing content gets edited at 
 fastest. [`machines/README.md`](machines/README.md) carries the test: *would this still be true on the
 other machine?*
 
-**`agent/` is live configuration.** Editing `~/.claude/CLAUDE.md` or any of the linked skills — `review`, `python-quality`, `verify-docs`, `fix-findings`, `pdf-deliverable`, `fetch-to-markdown` — writes into this directory through the link. Check `git status` before overwriting any of them, and if this directory is ever moved or renamed, **repoint the links** — otherwise every session silently loses its global instructions. On Windows the files are hardlinks, which any atomic-saving editor severs without warning; [`agent/setup/windows.md`](agent/setup/windows.md) has the detection command.
+**`agent/` is live configuration.** Editing `~/.claude/CLAUDE.md` or any of the linked skills (the `SKILLS` tuple in [`scripts/link_config.py`](scripts/link_config.py)) writes into this directory through the link. Check `git status` before overwriting any of them, and if this directory is ever moved or renamed, **repoint the links** — otherwise every session silently loses its global instructions. On Windows the files are hardlinks, which any atomic-saving editor severs without warning; [`agent/setup/windows.md`](agent/setup/windows.md) has the detection command.
 
 **`agent/settings.json` is the exception: merged by hand, never linked** — [`agent/README.md`](agent/README.md#settings-are-merged-never-linked) has why, and the procedure.
 

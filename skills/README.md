@@ -6,7 +6,10 @@ or the `workstation/` tree, so they would be wrong in any other repo.
 That is the line against [`../workstation/agent/skills/`](../workstation/agent/skills/), which holds
 the **global** skills, linked into `~/.claude/skills/` by
 [`../workstation/scripts/link_config.py`](../workstation/scripts/link_config.py) and shared unmodified
-by every machine — its `SKILLS` tuple is the authoritative list. A skill earns promotion there by
+by every machine — its `SKILLS` tuple is the authoritative list. **Never copy it into prose:** an
+untested copy goes stale the day a skill is promoted. The one copy allowed is the skill table in the
+root `README.md`, which `workstation/scripts/tests/test_readme_skills.py` holds to the tuple and to
+this folder. A skill earns promotion there by
 being register-free: a caller supplies whatever this repo would have decided. Until it is, it stays
 here.
 
