@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-14
+updated: 2026-09-15
 verified: never
 ---
 
@@ -16,18 +16,6 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
-
-### 1. `ingest-source` has never run end-to-end
-
-Opened 2026-09-13, when `fetch-to-markdown` was split out of it.
-
-The skill is loadable in this clone now, but nothing has exercised what it kept: deriving the filename
-from the bracket text, the `: ` → ` - ` rule, the *Cross-cutting aspects → 2. Workstation tooling*
-destination exception, and the `SOURCE_CATALOGUE.md` write-back.
-
-**Closes when:** one real `SOURCES.md` entry is ingested through the skill and lands at the right path
-with a matching catalogue line — ideally an entry whose title carries a colon, since that is the rule
-most likely to be got wrong.
 
 ### 2. `fetch-to-markdown` has one route proven of five
 
