@@ -13,9 +13,10 @@ provider steps, are in [`workstation/agent/setup/README.md`](../../workstation/a
 The linker is [`workstation/scripts/link_config.py`](../../workstation/scripts/link_config.py). Where
 this file and those disagree, they win — fix this file.
 
-Both scripts are stdlib-only. Use the repository's `.venv` interpreter when it exists; otherwise use
-the bootstrap interpreter — `python3` on macOS, `python` on Windows. That fallback is recorded in
-[`workstation/scripts/README.md`](../../workstation/scripts/README.md).
+Both scripts are stdlib-only. Every command below writes `<python>`: substitute the repository's
+`.venv` interpreter when it exists — `.venv/bin/python`, or `.venv\Scripts\python.exe` on Windows —
+and otherwise the bootstrap interpreter, `python3` on macOS and `python` on Windows. That fallback is
+recorded in [`workstation/scripts/README.md`](../../workstation/scripts/README.md).
 
 ## Never, whatever the user answers
 
@@ -29,7 +30,7 @@ the bootstrap interpreter — `python3` on macOS, `python` on Windows. That fall
 ## 1. Detect
 
 ```sh
-python3 skills/setup-agents/scripts/detect.py
+<python> skills/setup-agents/scripts/detect.py
 ```
 
 Show the user its three tables as printed. Add `--json` when you need to branch on a value.
@@ -61,7 +62,7 @@ because `.claude/` is gitignored. When the answer to *global* is yes, add one `-
 assistant that links: Claude Code → `claude`, Copilot CLI → `copilot`. VS Code has no links.
 
 ```sh
-python3 workstation/scripts/link_config.py --project --agent claude --agent copilot --json
+<python> workstation/scripts/link_config.py --project --agent claude --agent copilot --json
 ```
 
 | Status | The row says |
@@ -96,7 +97,7 @@ user steps stay theirs either way.
 
 1. `git status -s workstation/agent`. If it is dirty, say so before linking — linking makes
    those edits live.
-2. `python3 workstation/scripts/link_config.py --apply` with the same flags as step 3.
+2. `<python> workstation/scripts/link_config.py --apply` with the same flags as step 3.
 3. Re-run it without `--apply` and quote the `N of N linked` line. Anything short of that is
    reported, never retried with `--force`.
 4. Give the user steps from step 3, in order, as commands.
@@ -108,11 +109,11 @@ user steps stay theirs either way.
 ```sh
 cd <repo>
 git status -s workstation/agent
-python3 workstation/scripts/link_config.py --apply --project --agent claude --agent copilot
-python3 workstation/scripts/link_config.py --project --agent claude --agent copilot
+<python> workstation/scripts/link_config.py --apply --project --agent claude --agent copilot
+<python> workstation/scripts/link_config.py --project --agent claude --agent copilot
 ```
 
-On Windows it is `python`, not `python3`, in PowerShell. Hand over `link_config.py`, never hand-written
+Substitute `<python>` before handing the block over, and on Windows write it in PowerShell. Hand over `link_config.py`, never hand-written
 `ln -s` / `New-Item` lines: it derives both skill lists, so neither can go stale.
 
 ## Verify
