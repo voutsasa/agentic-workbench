@@ -254,7 +254,7 @@ From the 2026-07-30 usage report, when `WORKING_PRACTICES.md` was folded into `C
   line above's "on demand, never in front of every push", and the reversal is the point:
   that rule was about *cost*, not about claims. `verify_claims.py` calls no model, so the
   objection does not apply to it. Two things make it safe in a hook — it verifies only the
-  markdown in the push (~0.3s, against ~18s for the whole repo), and network-dependent
+  markdown in the push (typically sub-second), and network-dependent
   checks stay behind `--online`, so a push never fails because someone else's site is
   down. A tool that is merely absent reports `UNVERIFIABLE` and does not block; only a
   `REFUTED` row, where documentation and reality disagree, refuses the push.

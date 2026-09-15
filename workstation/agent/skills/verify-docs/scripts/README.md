@@ -27,7 +27,7 @@ python3 verify_claims.py --repo . --no-allow-file      # ignore .verify-claims-a
 
 | Tier | Kinds | Needs | Runtime here |
 |---|---|---|---|
-| offline (default) | `path`, `cli_flag`, `cli_invocation`, `version` | local filesystem and binaries | ~18s over 644 claims, ~0.3s over a typical change |
+| offline (default) | `path`, `cli_flag`, `cli_invocation`, `version` | local filesystem and binaries | scoped runs are typically sub-second; full runs vary by corpus and toolchain |
 | online (`--online`) | `url`, `install` | the network | minutes, and someone else's uptime |
 
 The split is the reason this can gate a push at all. A pre-push hook that fetches
@@ -188,7 +188,7 @@ extraction time, not silence the verifier downstream.
 
 Wired in [`../../review/scripts/pre-push`](../../review/scripts/pre-push),
 alongside `repo_check.py`. It verifies **only the markdown being pushed** —
-under a second for a typical change, against ~18s for the whole repo. A claim
+under a second for a typical change. A claim
 you did not touch is a claim you did not break; run the full sweep on demand.
 
 ```bash

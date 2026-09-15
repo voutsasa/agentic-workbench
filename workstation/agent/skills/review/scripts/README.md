@@ -85,7 +85,7 @@ doing nothing: claim verification lives in its own script, not in this one.
 |---|---|---|---|
 | Question | is the prose internally consistent? | is each claim still true? | what should be done about it? |
 | Method | reads the files | executes a verifier per claim | reads the evidence |
-| Runtime | **~0.065s** over 47 files | ~0.3s scoped, ~18s for all 644 claims | minutes |
+| Runtime | **~0.065s** over 47 files | scoped runs are typically sub-second; full runs vary by corpus and toolchain | minutes |
 | Cost | none | none | tokens |
 | Fits | every push | every push, scoped to the change | on demand, or CI |
 
@@ -126,7 +126,7 @@ The hook runs three checks in order, and stops at the first refusal:
    refuses the push rather than passing it.
 3. `verify_claims.py` over **only the markdown in this push**, worked out from the refs
    git feeds the hook on stdin. Scoped that way it is under a second; the whole repo
-   would be ~18s, because it executes `--help` for every documented tool. A claim you did
+   varies by corpus and toolchain, because it executes `--help` for every documented tool. A claim you did
    not touch is a claim you did not break.
 
 Path exemptions and test directories both come from the repo being pushed —

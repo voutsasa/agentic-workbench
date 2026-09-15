@@ -16,8 +16,8 @@
 # hook silently rots and never reaches a fresh clone.
 #
 # Why the third check is scoped to changed files: verifying every claim in the
-# repo runs 644 of them and takes ~18s, because it executes `--help` for every
-# documented tool. Scoped to what is actually being pushed it is under a second,
+# repo varies by corpus and toolchain, because it executes `--help` for every
+# documented tool. Scoped to what is actually being pushed it is typically under a second,
 # and a claim you did not touch is one you did not break. Run the full sweep on
 # demand instead:
 #
