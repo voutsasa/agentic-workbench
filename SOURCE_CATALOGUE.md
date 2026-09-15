@@ -1,6 +1,6 @@
 ---
 role: One-sentence capability summary per source, mirroring SOURCES.md
-updated: 2026-09-15
+updated: 2026-09-16
 verified: never
 ---
 
@@ -46,7 +46,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 
 ## 4. Technical architecture
 
-### Experimental stack
+### Experimentation stack
 
 #### Backend and API
 
@@ -89,7 +89,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 
 ---
 
-### Production stack
+### Enterprise stack
 
 #### Back end
 
@@ -137,7 +137,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [typescript-eslint](https://typescript-eslint.io/getting-started/) — Enables ESLint to lint TypeScript, including rules that use type information.
 * [Prettier](https://prettier.io/docs/) — Opinionated code formatter supporting TypeScript, Angular, HTML, CSS, JSON, and more.
 
-*See also:* opengrep and retire.js (Experimental stack → Quality gates).
+*See also:* opengrep and retire.js (Experimentation stack → Quality gates).
 
 ### LLM and agent runtime
 

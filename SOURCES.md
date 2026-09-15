@@ -1,6 +1,6 @@
 ---
 role: Source register — source of truth for what belongs in the project
-updated: 2026-09-15
+updated: 2026-09-16
 verified: never
 ---
 
@@ -88,7 +88,7 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 
 ## 4. Technical architecture
 
-### Experimental stack
+### Experimentation stack
 
 #### Backend and API
 
@@ -130,7 +130,7 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 
 ---
 
-### Production stack
+### Enterprise stack
 
 #### Back end
 
@@ -178,7 +178,7 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 * [typescript-eslint](https://typescript-eslint.io/getting-started/)
 * [Prettier](https://prettier.io/docs/)
 
-*See also:* opengrep and retire.js (Experimental stack → Quality gates).
+*See also:* opengrep and retire.js (Experimentation stack → Quality gates).
 
 ### LLM and agent runtime
 
