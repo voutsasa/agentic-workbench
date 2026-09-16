@@ -48,6 +48,7 @@ CLAUDE.md                 	imports AGENTS.md for Claude Code.
 docs/                     	the corpus — what the workbench reads.   
   landing-zone/           	ingested external sources     — not in git.   
   guidance/               	distilled agent-facing notes  — in git.   
+    DEVELOPMENT-PLAN.md   	phased curriculum for agents  — in git.   
 
 skills/                   	this repo's own skills — what the workbench does.   
   README.md               	the repo-local vs. global line, and how to load these.   
@@ -81,6 +82,7 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 | [`skills/ingest-source/`](skills/ingest-source/) | **Process.** Where a register entry lands, what its file is called, what gets written back to the catalogue, and how workstation tooling additionally gets its install route or registration recorded. A skill rather than a guide, so it is discovered by what you are doing rather than by knowing its filename. |
 | [`workstation/agent/skills/fetch-to-markdown/`](workstation/agent/skills/fetch-to-markdown/) | **Conversion.** How to route a document into clean markdown — GitHub repo, PDF, plain doc site, or JS-hydrated site — and how to quality-check the result. Register-free and **global**: linked into `~/.claude/skills/`, so it works on any document in any repo. |
 | [`TODO.md`](TODO.md) | **Open work.** Committed new work and unproven existing gaps, each item with the evidence that would close it. |
+| [`docs/guidance/DEVELOPMENT-PLAN.md`](docs/guidance/DEVELOPMENT-PLAN.md) | **Roadmap.** Phased curriculum on agentic AI coding, Skills, MCP and SDD, each phase ending in a concrete artefact. Reading is marked ✓ (registered in `SOURCES.md`) or ➕ (not registered yet), so it doubles as a prioritised ingestion backlog. Neither marker says whether the file is on disk. |
 | [`workstation/cli/README.md`](workstation/cli/README.md) | **CLI tool index.** What each per-tool file is for, a `command → product → folder` map, and the version-currency rule. |
 | [`workstation/mcp/README.md`](workstation/mcp/README.md) | **MCP server index.** The third-party servers configured into this machine, and the file contract they follow. |
 | [`workstation/machines/README.md`](workstation/machines/README.md) | **Machine index.** One file per machine this workbench runs on, and the test for whether a fact is policy, a route, or machine state. |

@@ -18,12 +18,12 @@ State it in the opening lines. Two kinds, in descending order of trust:
 
 | Kind | Evidence required | Example |
 |---|---|---|
-| **Corpus-derived** | Cite the `SOURCES.md` entry it distils. The register is the source of truth; guidance is a shortcut through it. | *(none yet)* |
-| **Workstation-verified** | State what was run and when. Claims about tool behaviour are worthless undated — a broken route gets fixed upstream and the note becomes a lie. | *(none — see* Why this folder is empty *below)* |
+| **Corpus-derived** | Cite the `SOURCES.md` entry it distils. The register is the source of truth; guidance is a shortcut through it. | [`DEVELOPMENT-PLAN.md`](DEVELOPMENT-PLAN.md) |
+| **Workstation-verified** | State what was run and when. Claims about tool behaviour are worthless undated — a broken route gets fixed upstream and the note becomes a lie. | *(none — see* Why the PDF note left *below)* |
 
-**Corpus-derived is the kind this workbench exists to produce.** That the folder currently holds none is worth noticing rather than smoothing over: it means the distillation half of the workbench has not started, and the register's per-layer gaps are the backlog for starting it.
+**Corpus-derived is the kind this workbench exists to produce.** The only one so far is the development plan, which *routes* reading rather than distilling it — worth noticing rather than smoothing over: the distillation half of the workbench has not started, and the register's per-layer gaps are the backlog for starting it.
 
-## Why this folder is empty
+## Why the PDF note left
 
 It held one note, `pdf-deliverables.md`, and that note is now the global `pdf-deliverable` skill at [`../../workstation/agent/skills/pdf-deliverable/`](../../workstation/agent/skills/pdf-deliverable/).
 
@@ -51,4 +51,4 @@ So the bar has a fourth clause in practice: **a note that tells you what to do w
 
 | File | Kind | What it gives you |
 |---|---|---|
-| *(none yet)* | — | — |
+| [`DEVELOPMENT-PLAN.md`](DEVELOPMENT-PLAN.md) | Corpus-derived | Phased curriculum on agentic AI coding, Skills, MCP and SDD, each phase ending in an artefact; ✓/➕ markers make it a prioritised ingestion backlog. |
