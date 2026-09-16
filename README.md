@@ -28,6 +28,7 @@ The first two capabilities deliver the agent-enabled workstation; the last two k
 | **Workstation toolchain support for agents** | Core | The tools agents rely on come with proven install routes and known pitfalls, and each machine's real state is measured rather than assumed. | [`workstation/`](workstation/README.md) |
 | **Rebuildable ingestion pipeline** | Integrity | The reference material behind that guidance is fetched from official sources on demand, so it can be refreshed instead of quietly ageing. | [`skills/ingest-source/`](skills/ingest-source/) |
 | **Documentation validation gate** | Integrity | Before a change is shared, documented paths, commands and versions are checked against a real machine, so drift is caught before anyone relies on it. | [`workstation/agent/skills/verify-docs/`](workstation/agent/skills/verify-docs/SKILL.md) |
+| **Agentic development plan** | Education | Development plan for software architects/developers, data scientists, devops engineers or other roles involved in the SDLC. | [Agentic development plan](docs/guidance/DEVELOPMENT-PLAN.md) |
 
 ### Skills
 
