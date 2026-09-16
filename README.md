@@ -96,7 +96,7 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 | [`workstation/cli/README.md`](workstation/cli/README.md) | **CLI tool index.** What each per-tool file is for, a `command → product → folder` map, and the version-currency rule. |
 | [`workstation/mcp/README.md`](workstation/mcp/README.md) | **MCP server index.** The third-party servers configured into this machine, and the file contract they follow. |
 | [`workstation/machines/README.md`](workstation/machines/README.md) | **Machine index.** One file per machine this workbench runs on, and the test for whether a fact is policy, a route, or machine state. |
-| [`AGENTS.md`](AGENTS.md) | **Agent instructions for this repo** — file roles, the layer model, the ingestion invariant, and the rule that GitHub sources are fetched as raw READMEs rather than cloned. Read directly by GitHub Copilot; Claude Code reaches it through `CLAUDE.md`, written per clone by the install command above, and Antigravity through [`.agents/rules/workbench.md`](.agents/rules/workbench.md), each a one-line `@AGENTS.md` import. |
+| [`AGENTS.md`](AGENTS.md) | **Agent instructions for this repo** — the invariants for working in the files this README describes, the layer model, the ingestion invariant, and the rule that GitHub sources are fetched as raw READMEs rather than cloned. Read directly by GitHub Copilot; Claude Code reaches it through `CLAUDE.md`, written per clone by the install command above, and Antigravity through [`.agents/rules/workbench.md`](.agents/rules/workbench.md), each a one-line `@AGENTS.md` import. |
 ## The workstation — `workstation/`
 
 What the workbench runs on — the machines, not an architecture.
