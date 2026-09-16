@@ -94,10 +94,17 @@ class OnPath:
         shutil.rmtree(self.dir, ignore_errors=True)
 
 
-def claim(kind: str, text: str, file: str = "doc.md", line: int = 1, command: str = "") -> Claim:
+def claim(
+    kind: str, text: str, file: str = "doc.md", line: int = 1, command: str = ""
+) -> Claim:
     return Claim(
-        id="C0001", file=file, line=line, kind=kind, claim=text,
-        verification_method="test", verification_command=command,
+        id="C0001",
+        file=file,
+        line=line,
+        kind=kind,
+        claim=text,
+        verification_method="test",
+        verification_command=command,
     )
 
 
@@ -115,8 +122,12 @@ class TestBaseDirectoryRegression(unittest.TestCase):
     """
 
     def test_dot_slash_resolves_against_the_document_directory(self):
-        bases = candidate_paths(Path("/repo"), "workstation/cli/pandoc/quick_start.md", "./NOTES.md")
-        self.assertEqual([("document", Path("/repo/workstation/cli/pandoc/NOTES.md"))], bases)
+        bases = candidate_paths(
+            Path("/repo"), "workstation/cli/pandoc/quick_start.md", "./NOTES.md"
+        )
+        self.assertEqual(
+            [("document", Path("/repo/workstation/cli/pandoc/NOTES.md"))], bases
+        )
 
     def test_dot_slash_is_given_no_repo_root_fallback(self):
         bases = candidate_paths(Path("/repo"), "a/b/doc.md", "./NOTES.md")
@@ -129,21 +140,31 @@ class TestBaseDirectoryRegression(unittest.TestCase):
 
     def test_a_root_level_namesake_does_not_rescue_a_broken_relative_link(self):
         """The regression itself, end to end, on a real filesystem."""
-        with TempRepo({
-            "NOTES.md": "a decoy at the repo root\n",
-            "deep/doc.md": "see [notes](./NOTES.md)\n",
-        }) as root:
+        with TempRepo(
+            {
+                "NOTES.md": "a decoy at the repo root\n",
+                "deep/doc.md": "see [notes](./NOTES.md)\n",
+            }
+        ) as root:
             verifier = Verifier(root)
-            result = verifier.verify_path(claim("path", "./NOTES.md", file="deep/doc.md"))
-            self.assertEqual(REFUTED, result[2], f"root-level decoy masked the break: {result}")
+            result = verifier.verify_path(
+                claim("path", "./NOTES.md", file="deep/doc.md")
+            )
+            self.assertEqual(
+                REFUTED, result[2], f"root-level decoy masked the break: {result}"
+            )
 
     def test_the_same_link_passes_when_the_file_is_actually_beside_the_document(self):
-        with TempRepo({
-            "deep/NOTES.md": "the real one\n",
-            "deep/doc.md": "see [notes](./NOTES.md)\n",
-        }) as root:
+        with TempRepo(
+            {
+                "deep/NOTES.md": "the real one\n",
+                "deep/doc.md": "see [notes](./NOTES.md)\n",
+            }
+        ) as root:
             verifier = Verifier(root)
-            verdict = verifier.verify_path(claim("path", "./NOTES.md", file="deep/doc.md"))
+            verdict = verifier.verify_path(
+                claim("path", "./NOTES.md", file="deep/doc.md")
+            )
             self.assertEqual(VERIFIED, verdict[2])
             self.assertIn("document", verdict[1])
 
@@ -158,12 +179,16 @@ class TestBaseDirectoryRegression(unittest.TestCase):
 
     def test_evidence_names_the_base_that_resolved(self):
         with TempRepo({"x/y.md": "y\n", "doc.md": "see `x/y.md`\n"}) as root:
-            _verifier, evidence, verdict = Verifier(root).verify_path(claim("path", "x/y.md"))
+            _verifier, evidence, verdict = Verifier(root).verify_path(
+                claim("path", "x/y.md")
+            )
             self.assertEqual(VERIFIED, verdict)
             self.assertIn("repo root", evidence)
 
     def test_percent_escapes_are_decoded_before_resolving(self):
-        bases = candidate_paths(Path("/repo"), "doc.md", "docs/Non-functional%20requirements.md")
+        bases = candidate_paths(
+            Path("/repo"), "doc.md", "docs/Non-functional%20requirements.md"
+        )
         self.assertEqual(Path("/repo/docs/Non-functional requirements.md"), bases[0][1])
 
     def test_anchor_and_query_are_not_part_of_the_path(self):
@@ -188,52 +213,70 @@ class TestSimilarLookingSubjects(unittest.TestCase):
     mentions another often enough to steal the attribution.
     """
 
-    MERMAID = (
-        "---\ntool: mermaid-cli\ncommand: mmdc\nversion_observed: 11.16.0\n---\n\n# mermaid\n"
-    )
+    MERMAID = "---\ntool: mermaid-cli\ncommand: mmdc\nversion_observed: 11.16.0\n---\n\n# mermaid\n"
     PLANTUML = (
         "---\ntool: plantuml-cli\ncommand: plantuml\nversion_observed: 1.2026.6\n---\n\n"
         "# plantuml\n\nInstall with `scoop install plantuml`; scoop is the usual route,\n"
         "and scoop keeps it current.\n"
     )
-    DBML = (
-        "---\ntool: dbml-cli\ncommand: dbml2sql, sql2dbml, db2dbml\nversion_observed: 10.1.1\n---\n"
-    )
+    DBML = "---\ntool: dbml-cli\ncommand: dbml2sql, sql2dbml, db2dbml\nversion_observed: 10.1.1\n---\n"
 
     def test_version_binds_to_the_declared_command_not_the_folder_name(self):
         with TempRepo({"workstation/cli/mermaid-cli/install.md": self.MERMAID}) as root:
-            claims = frontmatter_version_claims(root, ["workstation/cli/mermaid-cli/install.md"])
-            self.assertEqual(["mmdc reports version 11.16.0"], [c.claim for c in claims])
+            claims = frontmatter_version_claims(
+                root, ["workstation/cli/mermaid-cli/install.md"]
+            )
+            self.assertEqual(
+                ["mmdc reports version 11.16.0"], [c.claim for c in claims]
+            )
             self.assertNotIn("mermaid reports", " ".join(c.claim for c in claims))
 
     def test_version_is_not_stolen_by_the_installer_the_page_talks_about(self):
         """plantuml-cli's page mentions `scoop` three times; the version is PlantUML's."""
-        with TempRepo({"workstation/cli/plantuml-cli/install.md": self.PLANTUML}) as root:
-            claims = frontmatter_version_claims(root, ["workstation/cli/plantuml-cli/install.md"])
-            self.assertEqual(["plantuml reports version 1.2026.6"], [c.claim for c in claims])
+        with TempRepo(
+            {"workstation/cli/plantuml-cli/install.md": self.PLANTUML}
+        ) as root:
+            claims = frontmatter_version_claims(
+                root, ["workstation/cli/plantuml-cli/install.md"]
+            )
+            self.assertEqual(
+                ["plantuml reports version 1.2026.6"], [c.claim for c in claims]
+            )
 
     def test_a_multi_binary_tool_yields_one_claim_per_binary(self):
         with TempRepo({"workstation/cli/dbml-cli/install.md": self.DBML}) as root:
-            claims = frontmatter_version_claims(root, ["workstation/cli/dbml-cli/install.md"])
+            claims = frontmatter_version_claims(
+                root, ["workstation/cli/dbml-cli/install.md"]
+            )
             self.assertEqual(
-                ["db2dbml reports version 10.1.1",
-                 "dbml2sql reports version 10.1.1",
-                 "sql2dbml reports version 10.1.1"],
+                [
+                    "db2dbml reports version 10.1.1",
+                    "dbml2sql reports version 10.1.1",
+                    "sql2dbml reports version 10.1.1",
+                ],
                 sorted(c.claim for c in claims),
             )
 
     def test_two_tools_sharing_a_version_number_stay_separate(self):
         other = "---\ntool: other\ncommand: othertool\nversion_observed: 10.1.1\n---\n"
-        with TempRepo({
-            "workstation/cli/dbml-cli/install.md": self.DBML,
-            "workstation/cli/other/install.md": other,
-        }) as root:
+        with TempRepo(
+            {
+                "workstation/cli/dbml-cli/install.md": self.DBML,
+                "workstation/cli/other/install.md": other,
+            }
+        ) as root:
             claims = frontmatter_version_claims(
-                root, ["workstation/cli/dbml-cli/install.md", "workstation/cli/other/install.md"]
+                root,
+                [
+                    "workstation/cli/dbml-cli/install.md",
+                    "workstation/cli/other/install.md",
+                ],
             )
             binaries = {c.claim.split()[0] for c in claims}
             self.assertIn("othertool", binaries)
-            self.assertEqual(4, len(claims), "one claim per binary, not one per version string")
+            self.assertEqual(
+                4, len(claims), "one claim per binary, not one per version string"
+            )
 
     def test_a_flag_named_in_prose_can_be_confirmed_but_never_refuted(self):
         """pdf-deliverables.md compares pandoc and WeasyPrint.
@@ -243,11 +286,17 @@ class TestSimilarLookingSubjects(unittest.TestCase):
         flag it never claimed, so an inferred subject may only be confirmed.
         """
         page = "Verified: the identifier appears only when `--pdf-variant` is passed.\n"
-        with TempRepo({"docs/guidance/pdf-deliverables.md": page}) as root, \
-                OnPath("pandoc", "--pdf-engine\n--pdf-engine-opt\n"):
+        with (
+            TempRepo({"docs/guidance/pdf-deliverables.md": page}) as root,
+            OnPath("pandoc", "--pdf-engine\n--pdf-engine-opt\n"),
+        ):
             _name, evidence, verdict = Verifier(root).verify_cli_flag(
-                claim("cli_flag", "pandoc supports --pdf-variant",
-                      file="docs/guidance/pdf-deliverables.md", line=1)
+                claim(
+                    "cli_flag",
+                    "pandoc supports --pdf-variant",
+                    file="docs/guidance/pdf-deliverables.md",
+                    line=1,
+                )
             )
             self.assertEqual(UNVERIFIABLE, verdict)
             self.assertIn("inferred from prose", evidence)
@@ -258,7 +307,9 @@ class TestSimilarLookingSubjects(unittest.TestCase):
             _name, _evidence, verdict = Verifier(root).verify_cli_flag(
                 claim("cli_flag", "pandoc supports --pdf-variant", line=2)
             )
-            self.assertEqual(REFUTED, verdict, "an invocation on the line makes the subject certain")
+            self.assertEqual(
+                REFUTED, verdict, "an invocation on the line makes the subject certain"
+            )
 
 
 # --------------------------------------------------------------------------
@@ -268,22 +319,33 @@ class TestSimilarLookingSubjects(unittest.TestCase):
 
 class TestHelpSubject(unittest.TestCase):
     def test_a_subcommand_carries_the_flag(self):
-        argv, label = help_subject(Path("/repo"), "doc.md", ["git", "diff", "--stat"], "--stat")
+        argv, label = help_subject(
+            Path("/repo"), "doc.md", ["git", "diff", "--stat"], "--stat"
+        )
         self.assertEqual(["git", "diff"], argv)
         self.assertEqual("git diff", label)
 
     def test_a_bare_binary_keeps_its_own_flag(self):
-        argv, _ = help_subject(Path("/repo"), "doc.md", ["pandoc", "--wrap=none"], "--wrap")
+        argv, _ = help_subject(
+            Path("/repo"), "doc.md", ["pandoc", "--wrap=none"], "--wrap"
+        )
         self.assertEqual(["pandoc"], argv)
 
     def test_a_path_argument_is_not_mistaken_for_a_subcommand(self):
-        argv, _ = help_subject(Path("/repo"), "doc.md", ["magick", "in.png", "--resize"], "--resize")
+        argv, _ = help_subject(
+            Path("/repo"), "doc.md", ["magick", "in.png", "--resize"], "--resize"
+        )
         self.assertEqual(["magick"], argv)
 
     def test_an_interpreter_defers_to_its_script(self):
-        with TempRepo({"scripts/extract_claims.py": "#!/usr/bin/env python3\n"}) as root:
+        with TempRepo(
+            {"scripts/extract_claims.py": "#!/usr/bin/env python3\n"}
+        ) as root:
             argv, label = help_subject(
-                root, "doc.md", ["python3", "scripts/extract_claims.py", "--out"], "--out"
+                root,
+                "doc.md",
+                ["python3", "scripts/extract_claims.py", "--out"],
+                "--out",
             )
             self.assertEqual("python3", argv[0])
             self.assertTrue(argv[1].endswith("extract_claims.py"))
@@ -291,7 +353,9 @@ class TestHelpSubject(unittest.TestCase):
 
     def test_an_interpreter_with_no_script_on_disk_is_declined(self):
         with TempRepo({}) as root:
-            subject, _ = help_subject(root, "doc.md", ["python3", "missing.py", "--out"], "--out")
+            subject, _ = help_subject(
+                root, "doc.md", ["python3", "missing.py", "--out"], "--out"
+            )
             self.assertEqual("no-script", subject)
 
     def test_declining_a_script_is_not_reported_as_an_install_risk(self):
@@ -304,10 +368,14 @@ class TestHelpSubject(unittest.TestCase):
             self.assertIn("script this repo does not hold", evidence)
 
     def test_npx_is_never_run_because_it_would_install(self):
-        self.assertIsNone(help_subject(Path("/repo"), "doc.md", ["npx", "mmdc", "-i"], "-i"))
+        self.assertIsNone(
+            help_subject(Path("/repo"), "doc.md", ["npx", "mmdc", "-i"], "-i")
+        )
 
     def test_command_is_recovered_from_a_fenced_line(self):
-        self.assertEqual(["git", "diff", "--stat"], command_on_line("    git diff --stat", "--stat"))
+        self.assertEqual(
+            ["git", "diff", "--stat"], command_on_line("    git diff --stat", "--stat")
+        )
 
     def test_command_is_recovered_from_inline_code(self):
         self.assertEqual(
@@ -316,7 +384,9 @@ class TestHelpSubject(unittest.TestCase):
         )
 
     def test_a_prose_mention_yields_no_command(self):
-        self.assertIsNone(command_on_line("The `--fix` option is destructive.", "--fix"))
+        self.assertIsNone(
+            command_on_line("The `--fix` option is destructive.", "--fix")
+        )
 
     def test_a_markdown_table_row_is_not_an_invocation(self):
         """A report table contains flags in its text and begins with a pipe."""
@@ -339,7 +409,9 @@ class TestHelpSubject(unittest.TestCase):
                 self.assertIn("second", source_line(second, "doc.md", 1))
 
     def test_a_shell_prompt_marker_is_stripped(self):
-        self.assertEqual(["pandoc", "--wrap"], command_on_line("$ pandoc --wrap", "--wrap"))
+        self.assertEqual(
+            ["pandoc", "--wrap"], command_on_line("$ pandoc --wrap", "--wrap")
+        )
 
 
 class TestAdvertisedSubcommands(unittest.TestCase):
@@ -355,7 +427,9 @@ class TestAdvertisedSubcommands(unittest.TestCase):
     )
 
     def test_rich_boxed_commands_are_found(self):
-        self.assertEqual(["convert", "convert-remote"], advertised_subcommands(self.RICH))
+        self.assertEqual(
+            ["convert", "convert-remote"], advertised_subcommands(self.RICH)
+        )
 
     def test_plain_commands_are_found(self):
         self.assertEqual(["parse"], advertised_subcommands(self.PLAIN))
@@ -364,7 +438,9 @@ class TestAdvertisedSubcommands(unittest.TestCase):
         self.assertNotIn("help", advertised_subcommands(self.PLAIN))
 
     def test_a_tool_without_a_commands_section_offers_none(self):
-        self.assertEqual([], advertised_subcommands("Usage: pandoc [OPTIONS]\n  --wrap=auto\n"))
+        self.assertEqual(
+            [], advertised_subcommands("Usage: pandoc [OPTIONS]\n  --wrap=auto\n")
+        )
 
     def test_the_sweep_is_bounded(self):
         many = "Commands:\n" + "".join(f"  cmd{n}  does a thing\n" for n in range(20))
@@ -378,21 +454,33 @@ class TestAdvertisedSubcommands(unittest.TestCase):
 
 class TestManifestIndex(unittest.TestCase):
     def test_pyproject_name_and_version_are_indexed(self):
-        with TempRepo({"pyproject.toml": '[project]\nname = "sdd-workbench"\nversion = "0.1.0"\n'}) as root:
-            self.assertEqual(("0.1.0", "pyproject.toml"), ManifestIndex(root).lookup("sdd-workbench"))
+        with TempRepo(
+            {"pyproject.toml": '[project]\nname = "sdd-workbench"\nversion = "0.1.0"\n'}
+        ) as root:
+            self.assertEqual(
+                ("0.1.0", "pyproject.toml"), ManifestIndex(root).lookup("sdd-workbench")
+            )
 
     def test_requires_python_is_indexed_under_python(self):
-        with TempRepo({"pyproject.toml": '[project]\nname = "x"\nrequires-python = ">=3.14"\n'}) as root:
+        with TempRepo(
+            {"pyproject.toml": '[project]\nname = "x"\nrequires-python = ">=3.14"\n'}
+        ) as root:
             found = ManifestIndex(root).lookup("python")
             self.assertIsNotNone(found)
             self.assertEqual("3.14", found[0])
 
     def test_package_json_version_is_indexed(self):
-        with TempRepo({"package.json": json.dumps({"name": "site", "version": "2.3.4"})}) as root:
-            self.assertEqual(("2.3.4", "package.json"), ManifestIndex(root).lookup("site"))
+        with TempRepo(
+            {"package.json": json.dumps({"name": "site", "version": "2.3.4"})}
+        ) as root:
+            self.assertEqual(
+                ("2.3.4", "package.json"), ManifestIndex(root).lookup("site")
+            )
 
     def test_lookup_is_case_insensitive(self):
-        with TempRepo({"package.json": json.dumps({"name": "Site", "version": "1.0.0"})}) as root:
+        with TempRepo(
+            {"package.json": json.dumps({"name": "Site", "version": "1.0.0"})}
+        ) as root:
             self.assertIsNotNone(ManifestIndex(root).lookup("site"))
 
     def test_a_malformed_manifest_does_not_raise(self):
@@ -400,10 +488,12 @@ class TestManifestIndex(unittest.TestCase):
             self.assertIsNone(ManifestIndex(root).lookup("anything"))
 
     def test_a_manifest_disagreement_is_refuted_against_the_manifest(self):
-        with TempRepo({
-            "package.json": json.dumps({"name": "site", "version": "2.3.4"}),
-            "doc.md": "site 9.9.9\n",
-        }) as root:
+        with TempRepo(
+            {
+                "package.json": json.dumps({"name": "site", "version": "2.3.4"}),
+                "doc.md": "site 9.9.9\n",
+            }
+        ) as root:
             name, evidence, verdict = Verifier(root).verify_version(
                 claim("version", "site reports version 9.9.9")
             )
@@ -412,10 +502,12 @@ class TestManifestIndex(unittest.TestCase):
             self.assertIn("2.3.4", evidence)
 
     def test_a_manifest_agreement_is_verified_without_running_anything(self):
-        with TempRepo({
-            "package.json": json.dumps({"name": "site", "version": "2.3.4"}),
-            "doc.md": "site 2.3.4\n",
-        }) as root:
+        with TempRepo(
+            {
+                "package.json": json.dumps({"name": "site", "version": "2.3.4"}),
+                "doc.md": "site 2.3.4\n",
+            }
+        ) as root:
             _name, _evidence, verdict = Verifier(root).verify_version(
                 claim("version", "site reports version 2.3.4")
             )
@@ -433,31 +525,48 @@ class TestParseFrontmatter(unittest.TestCase):
         self.assertEqual({}, parse_frontmatter("# Title\n\ncommand: not-frontmatter\n"))
 
     def test_a_value_containing_a_colon_survives(self):
-        self.assertEqual({"url": "https://x.test/a"}, parse_frontmatter("---\nurl: https://x.test/a\n---\n"))
+        self.assertEqual(
+            {"url": "https://x.test/a"},
+            parse_frontmatter("---\nurl: https://x.test/a\n---\n"),
+        )
 
     def test_a_page_without_a_version_produces_no_claim(self):
-        with TempRepo({"workstation/cli/x/install.md": "---\ntool: x\ncommand: x\n---\n"}) as root:
-            self.assertEqual([], frontmatter_version_claims(root, ["workstation/cli/x/install.md"]))
+        with TempRepo(
+            {"workstation/cli/x/install.md": "---\ntool: x\ncommand: x\n---\n"}
+        ) as root:
+            self.assertEqual(
+                [], frontmatter_version_claims(root, ["workstation/cli/x/install.md"])
+            )
 
     def test_only_install_and_setup_pages_are_scanned(self):
         page = "---\ntool: x\ncommand: x\nversion_observed: 1.0\n---\n"
         with TempRepo({"workstation/cli/x/quick_start.md": page}) as root:
-            self.assertEqual([], frontmatter_version_claims(root, ["workstation/cli/x/quick_start.md"]))
+            self.assertEqual(
+                [],
+                frontmatter_version_claims(root, ["workstation/cli/x/quick_start.md"]),
+            )
 
 
 class TestPathVerdicts(unittest.TestCase):
     def test_a_placeholder_is_not_checkable(self):
         with TempRepo({"doc.md": "x\n"}) as root:
-            self.assertEqual(UNVERIFIABLE, Verifier(root).verify_path(claim("path", "<tool>/reference.md"))[2])
+            self.assertEqual(
+                UNVERIFIABLE,
+                Verifier(root).verify_path(claim("path", "<tool>/reference.md"))[2],
+            )
 
     def test_a_bare_word_from_link_syntax_prose_is_not_a_path(self):
         """`[text](target)` in a line explaining links must not become a claim."""
         with TempRepo({"doc.md": "links only ever see `[text](target)`\n"}) as root:
-            self.assertEqual(UNVERIFIABLE, Verifier(root).verify_path(claim("path", "target"))[2])
+            self.assertEqual(
+                UNVERIFIABLE, Verifier(root).verify_path(claim("path", "target"))[2]
+            )
 
     def test_a_slash_command_is_not_an_absolute_path(self):
         with TempRepo({"doc.md": "reinstall with `/plugin`\n"}) as root:
-            self.assertEqual(UNVERIFIABLE, Verifier(root).verify_path(claim("path", "/plugin"))[2])
+            self.assertEqual(
+                UNVERIFIABLE, Verifier(root).verify_path(claim("path", "/plugin"))[2]
+            )
 
     def test_an_absent_home_path_is_machine_state_not_a_doc_defect(self):
         with TempRepo({"doc.md": "x\n"}) as root:
@@ -466,6 +575,18 @@ class TestPathVerdicts(unittest.TestCase):
             )
             self.assertEqual(UNVERIFIABLE, verdict)
             self.assertIn("machine state", evidence)
+
+    def test_posix_venv_path_with_a_windows_alternative_is_not_refuted(self):
+        page = "Use `.venv/bin/python`, or `.venv\\Scripts\\python.exe` on Windows.\n"
+        with (
+            TempRepo({"doc.md": page}) as root,
+            mock.patch("verify_claims.platform.system", return_value="Windows"),
+        ):
+            _name, evidence, verdict = Verifier(root).verify_path(
+                claim("path", ".venv/bin/python", line=1)
+            )
+            self.assertEqual(UNVERIFIABLE, verdict)
+            self.assertIn("explicit Windows alternative", evidence)
 
     def test_a_path_for_a_foreign_machine_is_not_a_doc_defect(self):
         page = "---\nplatform: macOS 26\n---\n"
@@ -511,13 +632,18 @@ class TestPathVerdicts(unittest.TestCase):
         with TempRepo({"a/b/README.md": "see ../../nope.md\n"}) as root:
             self.assertEqual(
                 REFUTED,
-                Verifier(root).verify_path(claim("path", "../../nope.md", file="a/b/README.md", line=1))[2],
+                Verifier(root).verify_path(
+                    claim("path", "../../nope.md", file="a/b/README.md", line=1)
+                )[2],
             )
 
     def test_an_allow_glob_exempts_a_generated_path(self):
         with TempRepo({"doc.md": "writes .github/workflows/check.yml\n"}) as root:
             verifier = Verifier(root, allow_globs=(".github/**",))
-            self.assertEqual(UNVERIFIABLE, verifier.verify_path(claim("path", ".github/workflows/check.yml"))[2])
+            self.assertEqual(
+                UNVERIFIABLE,
+                verifier.verify_path(claim("path", ".github/workflows/check.yml"))[2],
+            )
 
     def test_an_allow_glob_matches_a_path_resolved_beside_the_document(self):
         with TempRepo({"workstation/cli/x/install.md": "x\n"}) as root:
@@ -543,10 +669,14 @@ class TestPathVerdicts(unittest.TestCase):
             self.assertIn("POSIX path", evidence)
 
     def test_a_symlink_counts_as_existing_even_when_dangling(self):
-        with (TempRepo({"doc.md": "x\n"}) as root,
-              mock.patch.object(Path, "exists", return_value=False),
-              mock.patch.object(Path, "is_symlink", return_value=True)):
-            self.assertEqual(VERIFIED, Verifier(root).verify_path(claim("path", "link.md"))[2])
+        with (
+            TempRepo({"doc.md": "x\n"}) as root,
+            mock.patch.object(Path, "exists", return_value=False),
+            mock.patch.object(Path, "is_symlink", return_value=True),
+        ):
+            self.assertEqual(
+                VERIFIED, Verifier(root).verify_path(claim("path", "link.md"))[2]
+            )
 
 
 class TestUnknownRoot(unittest.TestCase):
@@ -560,7 +690,9 @@ class TestUnknownRoot(unittest.TestCase):
 
     def test_a_root_at_neither_base_is_unknown(self):
         with TempRepo({"workstation/mcp/README.md": "see `cli/README.md`\n"}) as root:
-            self.assertFalse(root_is_known(root, "workstation/mcp/README.md", "cli/README.md"))
+            self.assertFalse(
+                root_is_known(root, "workstation/mcp/README.md", "cli/README.md")
+            )
 
     def test_a_root_at_the_repo_root_is_known(self):
         with TempRepo({"docs/x.md": "x\n", "a.md": "see `docs/x.md`\n"}) as root:
@@ -571,10 +703,12 @@ class TestUnknownRoot(unittest.TestCase):
             self.assertTrue(root_is_known(root, "a/doc.md", "sub/x.md"))
 
     def test_the_label_beside_a_correct_target_is_not_refuted(self):
-        with TempRepo({
-            "workstation/cli/README.md": "the real one\n",
-            "workstation/mcp/README.md": "The sibling of [`cli/README.md`](../cli/README.md).\n",
-        }) as root:
+        with TempRepo(
+            {
+                "workstation/cli/README.md": "the real one\n",
+                "workstation/mcp/README.md": "The sibling of [`cli/README.md`](../cli/README.md).\n",
+            }
+        ) as root:
             _n, evidence, verdict = Verifier(root).verify_path(
                 claim("path", "cli/README.md", file="workstation/mcp/README.md")
             )
@@ -586,27 +720,40 @@ class TestUnknownRoot(unittest.TestCase):
         with TempRepo({"docs/real.md": "x\n", "a.md": "see `docs/gone.md`\n"}) as root:
             self.assertEqual(
                 REFUTED,
-                Verifier(root).verify_path(claim("path", "docs/gone.md", file="a.md"))[2],
+                Verifier(root).verify_path(claim("path", "docs/gone.md", file="a.md"))[
+                    2
+                ],
             )
 
     def test_an_anchored_path_is_unaffected_by_the_rule(self):
         with TempRepo({"a/doc.md": "see [x](./gone.md)\n"}) as root:
             self.assertEqual(
                 REFUTED,
-                Verifier(root).verify_path(claim("path", "./gone.md", file="a/doc.md"))[2],
+                Verifier(root).verify_path(claim("path", "./gone.md", file="a/doc.md"))[
+                    2
+                ],
             )
 
     def test_a_deleted_root_directory_stops_being_checkable(self):
         """Deleting `.github/` turns its claims from REFUTED into UNVERIFIABLE."""
-        with TempRepo({".github/workflows/other.yml": "x\n", "s.md": "writes `.github/workflows/c.yml`\n"}) as root:
+        with TempRepo(
+            {
+                ".github/workflows/other.yml": "x\n",
+                "s.md": "writes `.github/workflows/c.yml`\n",
+            }
+        ) as root:
             self.assertEqual(
                 REFUTED,
-                Verifier(root).verify_path(claim("path", ".github/workflows/c.yml", file="s.md"))[2],
+                Verifier(root).verify_path(
+                    claim("path", ".github/workflows/c.yml", file="s.md")
+                )[2],
             )
             shutil.rmtree(root / ".github")
             self.assertEqual(
                 UNVERIFIABLE,
-                Verifier(root).verify_path(claim("path", ".github/workflows/c.yml", file="s.md"))[2],
+                Verifier(root).verify_path(
+                    claim("path", ".github/workflows/c.yml", file="s.md")
+                )[2],
             )
 
 
@@ -625,11 +772,13 @@ class TestAllowFile(unittest.TestCase):
             self.assertEqual([], read_allow_file(root))
 
     def test_an_exempt_path_does_not_fail_the_gate(self):
-        with TempRepo({
-            ".verify-claims-allow": ".github/**\n",
-            ".github/workflows/other.yml": "x\n",
-            "s.md": "writes `.github/workflows/c.yml`\n",
-        }) as root:
+        with TempRepo(
+            {
+                ".verify-claims-allow": ".github/**\n",
+                ".github/workflows/other.yml": "x\n",
+                "s.md": "writes `.github/workflows/c.yml`\n",
+            }
+        ) as root:
             verifier = Verifier(root, allow_globs=tuple(read_allow_file(root)))
             _n, evidence, verdict = verifier.verify_path(
                 claim("path", ".github/workflows/c.yml", file="s.md")
@@ -638,13 +787,18 @@ class TestAllowFile(unittest.TestCase):
             self.assertIn("--allow", evidence)
 
     def test_a_path_outside_the_globs_is_still_refuted(self):
-        with TempRepo({
-            ".verify-claims-allow": ".github/**\n",
-            "docs/real.md": "x\n",
-            "s.md": "see `docs/gone.md`\n",
-        }) as root:
+        with TempRepo(
+            {
+                ".verify-claims-allow": ".github/**\n",
+                "docs/real.md": "x\n",
+                "s.md": "see `docs/gone.md`\n",
+            }
+        ) as root:
             verifier = Verifier(root, allow_globs=tuple(read_allow_file(root)))
-            self.assertEqual(REFUTED, verifier.verify_path(claim("path", "docs/gone.md", file="s.md"))[2])
+            self.assertEqual(
+                REFUTED,
+                verifier.verify_path(claim("path", "docs/gone.md", file="s.md"))[2],
+            )
 
 
 class TestReportFrom(unittest.TestCase):
@@ -652,16 +806,31 @@ class TestReportFrom(unittest.TestCase):
 
     def test_a_saved_run_round_trips_through_json(self):
         rows = [
-            Result("C1", "a.md", 3, "path", "x/y.md", "filesystem", "no such path", REFUTED),
-            Result("C2", "b.md", 9, "url", "https://x.test", "http_head", "HTTP 200", VERIFIED),
+            Result(
+                "C1", "a.md", 3, "path", "x/y.md", "filesystem", "no such path", REFUTED
+            ),
+            Result(
+                "C2",
+                "b.md",
+                9,
+                "url",
+                "https://x.test",
+                "http_head",
+                "HTTP 200",
+                VERIFIED,
+            ),
         ]
-        restored = [Result(**row) for row in json.loads(json.dumps([asdict(r) for r in rows]))]
+        restored = [
+            Result(**row) for row in json.loads(json.dumps([asdict(r) for r in rows]))
+        ]
         self.assertEqual(rows, restored)
         self.assertEqual(format_report(rows), format_report(restored))
 
     def test_the_rendered_report_still_leads_with_refuted(self):
         rows = [Result("C1", "a.md", 1, "path", "x", "filesystem", "gone", REFUTED)]
-        restored = [Result(**row) for row in json.loads(json.dumps([asdict(r) for r in rows]))]
+        restored = [
+            Result(**row) for row in json.loads(json.dumps([asdict(r) for r in rows]))
+        ]
         self.assertIn("## Refuted", format_report(restored))
 
 
@@ -670,25 +839,53 @@ class TestTransportFailure(unittest.TestCase):
 
     @staticmethod
     def urls(n: int, evidence: str) -> list[Result]:
-        return [Result(f"C{i}", "a.md", i, "url", f"https://x{i}.test", "http_head", evidence, UNVERIFIABLE)
-                for i in range(n)]
+        return [
+            Result(
+                f"C{i}",
+                "a.md",
+                i,
+                "url",
+                f"https://x{i}.test",
+                "http_head",
+                evidence,
+                UNVERIFIABLE,
+            )
+            for i in range(n)
+        ]
 
     def test_a_uniform_tls_failure_is_a_broken_tier(self):
-        rows = self.urls(20, "unreachable: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED]>")
+        rows = self.urls(
+            20, "unreachable: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED]>"
+        )
         self.assertIn("transport", transport_failure(rows))
 
     def test_varied_failures_are_the_web_not_the_tier(self):
-        rows = self.urls(10, "unreachable: timed out") + self.urls(10, "unreachable: name resolution")
+        rows = self.urls(10, "unreachable: timed out") + self.urls(
+            10, "unreachable: name resolution"
+        )
         for i, row in enumerate(rows):
             row.id = f"C{i}"
         self.assertIsNone(transport_failure(rows))
 
     def test_a_healthy_run_reports_nothing(self):
-        rows = [Result("C1", "a.md", 1, "url", "https://x.test", "http_head", "HTTP 200", VERIFIED)] * 20
+        rows = [
+            Result(
+                "C1",
+                "a.md",
+                1,
+                "url",
+                "https://x.test",
+                "http_head",
+                "HTTP 200",
+                VERIFIED,
+            )
+        ] * 20
         self.assertIsNone(transport_failure(rows))
 
     def test_too_few_urls_to_conclude_anything(self):
-        self.assertIsNone(transport_failure(self.urls(3, "unreachable: <urlopen error>")))
+        self.assertIsNone(
+            transport_failure(self.urls(3, "unreachable: <urlopen error>"))
+        )
 
     def test_offline_skips_are_not_transport_failures(self):
         rows = self.urls(20, "skipped — network tier, run with --online")
@@ -707,9 +904,14 @@ class TestInstallPackageParsing(unittest.TestCase):
     def parsed(lookup: str) -> str:
         """Reproduce the extraction verify_install performs, without the network."""
         from verify_claims import REGISTRY_API
+
         for prefix in REGISTRY_API:
             if lookup.startswith(prefix):
-                rest = [tok for tok in lookup[len(prefix):].split() if not tok.startswith("-")]
+                rest = [
+                    tok
+                    for tok in lookup[len(prefix) :].split()
+                    if not tok.startswith("-")
+                ]
                 pkg = rest[0] if rest else ""
                 return "" if pkg in ("version", "versions") else pkg
         return ""
@@ -721,7 +923,10 @@ class TestInstallPackageParsing(unittest.TestCase):
         self.assertEqual("defuddle", self.parsed("npm view defuddle version"))
 
     def test_a_scoped_npm_package_survives(self):
-        self.assertEqual("@mermaid-js/mermaid-cli", self.parsed("npm view @mermaid-js/mermaid-cli version"))
+        self.assertEqual(
+            "@mermaid-js/mermaid-cli",
+            self.parsed("npm view @mermaid-js/mermaid-cli version"),
+        )
 
     def test_pypi_lookup(self):
         self.assertEqual("docling", self.parsed("pip index versions docling"))
@@ -769,14 +974,20 @@ class TestTlsAdvice(unittest.TestCase):
 class TestTiersAndDispatch(unittest.TestCase):
     def test_a_url_is_skipped_offline(self):
         with TempRepo({"doc.md": "x\n"}) as root:
-            result = Verifier(root, online=False).verify(claim("url", "https://example.test/a"))
+            result = Verifier(root, online=False).verify(
+                claim("url", "https://example.test/a")
+            )
             self.assertEqual(UNVERIFIABLE, result.verdict)
             self.assertIn("--online", result.evidence)
 
     def test_an_install_claim_is_skipped_offline(self):
         with TempRepo({"doc.md": "x\n"}) as root:
             result = Verifier(root, online=False).verify(
-                claim("install", "brew install pandoc", command="brew info --json=v2 pandoc")
+                claim(
+                    "install",
+                    "brew install pandoc",
+                    command="brew info --json=v2 pandoc",
+                )
             )
             self.assertEqual(UNVERIFIABLE, result.verdict)
 
@@ -788,21 +999,45 @@ class TestTiersAndDispatch(unittest.TestCase):
 
     def test_a_missing_binary_is_unverifiable_not_refuted(self):
         with TempRepo({"doc.md": "```sh\nnosuchtool-9e7f --flag\n```\n"}) as root:
-            result = Verifier(root).verify(claim("cli_flag", "nosuchtool-9e7f supports --flag", line=2))
+            result = Verifier(root).verify(
+                claim("cli_flag", "nosuchtool-9e7f supports --flag", line=2)
+            )
             self.assertEqual(UNVERIFIABLE, result.verdict)
             self.assertIn("not on PATH", result.evidence)
 
     def test_a_missing_binary_invocation_is_unverifiable(self):
         with TempRepo({"doc.md": "x\n"}) as root:
-            result = Verifier(root).verify(claim("cli_invocation", "nosuchtool-9e7f convert"))
+            result = Verifier(root).verify(
+                claim("cli_invocation", "nosuchtool-9e7f convert")
+            )
             self.assertEqual(UNVERIFIABLE, result.verdict)
 
 
 class TestReportAndCollection(unittest.TestCase):
     ROWS: ClassVar[list[Result]] = [
-        Result("C1", "a.md", 3, "path", "x/y.md", "filesystem", "no such path", REFUTED),
-        Result("C2", "b.md", 9, "cli_flag", "pandoc supports --wrap", "help_text", "--wrap=auto", VERIFIED),
-        Result("C3", "c.md", 1, "url", "https://x.test", "http_head", "skipped", UNVERIFIABLE),
+        Result(
+            "C1", "a.md", 3, "path", "x/y.md", "filesystem", "no such path", REFUTED
+        ),
+        Result(
+            "C2",
+            "b.md",
+            9,
+            "cli_flag",
+            "pandoc supports --wrap",
+            "help_text",
+            "--wrap=auto",
+            VERIFIED,
+        ),
+        Result(
+            "C3",
+            "c.md",
+            1,
+            "url",
+            "https://x.test",
+            "http_head",
+            "skipped",
+            UNVERIFIABLE,
+        ),
     ]
 
     def test_the_counts_line_reports_all_three_verdicts(self):
@@ -815,15 +1050,24 @@ class TestReportAndCollection(unittest.TestCase):
 
     def test_every_requested_column_is_present(self):
         report = format_report(self.ROWS)
-        self.assertIn("| id | claim | location | verifier | evidence | verdict |", report)
+        self.assertIn(
+            "| id | claim | location | verifier | evidence | verdict |", report
+        )
 
     def test_a_pipe_in_evidence_cannot_break_the_table(self):
         """An unescaped pipe would silently split one row into extra columns."""
         rows = [Result("C1", "a.md", 1, "path", "a|b", "filesystem", "x | y", REFUTED)]
-        row = next(ln for ln in format_report(rows).splitlines() if ln.startswith("| C1 "))
-        header = next(ln for ln in format_report(rows).splitlines() if ln.startswith("| id |"))
-        self.assertEqual(header.count("|"), row.count("|") - row.count("\\|"),
-                         "a pipe in the data changed the column count")
+        row = next(
+            ln for ln in format_report(rows).splitlines() if ln.startswith("| C1 ")
+        )
+        header = next(
+            ln for ln in format_report(rows).splitlines() if ln.startswith("| id |")
+        )
+        self.assertEqual(
+            header.count("|"),
+            row.count("|") - row.count("\\|"),
+            "a pipe in the data changed the column count",
+        )
 
     def test_a_clean_run_says_so(self):
         clean = [self.ROWS[1]]
@@ -844,10 +1088,12 @@ class TestReportAndCollection(unittest.TestCase):
             self.assertEqual(["mmdc reports version 11.16.0"], versions)
 
     def test_ids_are_assigned_in_file_order_and_are_unique(self):
-        with TempRepo({
-            "a.md": "see `docs/x.md`\n",
-            "b.md": "see `docs/y.md`\n",
-        }) as root:
+        with TempRepo(
+            {
+                "a.md": "see `docs/x.md`\n",
+                "b.md": "see `docs/y.md`\n",
+            }
+        ) as root:
             claims = collect_claims(root, ["a.md", "b.md"])
             self.assertEqual(len(claims), len({c.id for c in claims}))
             self.assertEqual(sorted(c.id for c in claims), [c.id for c in claims])

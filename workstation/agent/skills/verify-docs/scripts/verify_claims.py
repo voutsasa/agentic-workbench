@@ -85,6 +85,12 @@ HTTP_TIMEOUT = 10
 
 # A token the document never meant literally. Verifying it proves nothing.
 PLACEHOLDER_RE = re.compile(r"[<>{}]|\.\.\.|\bYOUR_|\bPATH_TO\b")
+# A cross-platform instruction may name a POSIX venv path before its explicit
+# Windows alternative. The earlier path is not a claim about a Windows host.
+WINDOWS_VENV_ALTERNATIVE_RE = re.compile(
+    r"\bor\s+`\.venv\\Scripts\\python(?:\.exe)?`\s+on\s+Windows\b",
+    re.IGNORECASE,
+)
 
 ALLOW_FILE_NAME = ".verify-claims-allow"
 
@@ -145,7 +151,10 @@ def candidate_paths(repo_root: Path, doc: str, token: str) -> list[tuple[str, Pa
     if token.startswith("/"):
         # A leading slash is root-relative in a site-rendered document, but may
         # also be a genuine absolute path such as ~/.claude's symlink target.
-        return [("repo root", joined(repo_root / token.lstrip("/"))), ("absolute", Path(token))]
+        return [
+            ("repo root", joined(repo_root / token.lstrip("/"))),
+            ("absolute", Path(token)),
+        ]
     return [("repo root", joined(repo_root)), ("document", joined(doc_dir))]
 
 
@@ -243,7 +252,9 @@ def frontmatter_version_claims(repo_root: Path, files: list[str]) -> list[Claim]
             continue
         fields = parse_frontmatter(target.read_text(encoding="utf-8", errors="replace"))
         expected = fields.get("version_observed", "").strip()
-        commands = [c.strip() for c in fields.get("command", "").split(",") if c.strip()]
+        commands = [
+            c.strip() for c in fields.get("command", "").split(",") if c.strip()
+        ]
         if not expected or not commands:
             continue
         for binary in commands:
@@ -265,7 +276,7 @@ class ManifestIndex:
     """Versions declared in pyproject.toml / package.json, for diffing against docs."""
 
     def __init__(self, repo_root: Path) -> None:
-        self.entries: dict[str, tuple[str, str]] = {}   # name -> (version, source)
+        self.entries: dict[str, tuple[str, str]] = {}  # name -> (version, source)
         self._load_pyproject(repo_root / "pyproject.toml")
         self._load_package_json(repo_root / "package.json")
 
@@ -278,7 +289,7 @@ class ManifestIndex:
             return
         try:
             data = tomllib.loads(path.read_text(encoding="utf-8"))
-        except (tomllib.TOMLDecodeError, OSError):
+        except tomllib.TOMLDecodeError, OSError:
             return
         project = data.get("project", {})
         self._record(project.get("name", ""), project.get("version", ""), path.name)
@@ -286,18 +297,24 @@ class ManifestIndex:
         if requires:
             # `>=3.14` documents a floor, not an installed version. Keep the
             # number; the verifier compares against it as a floor, not equality.
-            self._record("python", requires.lstrip(">=~^ ").strip(), f"{path.name} requires-python")
+            self._record(
+                "python",
+                requires.lstrip(">=~^ ").strip(),
+                f"{path.name} requires-python",
+            )
         for spec in project.get("dependencies", []) or []:
             match = re.match(r"^([A-Za-z0-9._-]+)\s*[=><~!]=*\s*([\w.]+)", str(spec))
             if match:
-                self._record(match.group(1), match.group(2), f"{path.name} dependencies")
+                self._record(
+                    match.group(1), match.group(2), f"{path.name} dependencies"
+                )
 
     def _load_package_json(self, path: Path) -> None:
         if not path.is_file():
             return
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-        except (json.JSONDecodeError, OSError):
+        except json.JSONDecodeError, OSError:
             return
         self._record(data.get("name", ""), data.get("version", ""), path.name)
         for section in ("dependencies", "devDependencies"):
@@ -328,30 +345,34 @@ SUBCOMMAND_RE = re.compile(r"^[a-z][a-z0-9-]*$")
 # A plausible binary name. Excludes `|`, so a markdown table row — which begins
 # with one and can contain a flag in its text — is never read as an invocation.
 BINARY_TOKEN_RE = re.compile(r"^[A-Za-z_./~][\w.+/~-]*$")
+SOURCE_LINE_CACHE: dict[tuple[str, str], list[str]] = {}
+FENCED_LINES_CACHE: dict[tuple[str, str], set[int]] = {}
 
 
-def source_line(repo_root: Path, file: str, line: int,
-                _cache: dict[tuple[str, str], list[str]] = {}) -> str:  # noqa: B006 — memo cache
+def source_line(repo_root: Path, file: str, line: int) -> str:
     """The raw text of one line, so a claim can be re-read in its own context.
 
     Keyed by repo root as well as path: one process may hold more than one tree,
     and two of them both having a `doc.md` must not share an entry.
     """
     key = (str(repo_root), file)
-    if key not in _cache:
+    if key not in SOURCE_LINE_CACHE:
         try:
-            _cache[key] = (repo_root / file).read_text(encoding="utf-8", errors="replace").splitlines()
+            SOURCE_LINE_CACHE[key] = (
+                (repo_root / file)
+                .read_text(encoding="utf-8", errors="replace")
+                .splitlines()
+            )
         except OSError:
-            _cache[key] = []
-    lines = _cache[key]
+            SOURCE_LINE_CACHE[key] = []
+    lines = SOURCE_LINE_CACHE[key]
     return lines[line - 1] if 0 < line <= len(lines) else ""
 
 
-def fenced_lines(repo_root: Path, file: str,
-                 _cache: dict[tuple[str, str], set[int]] = {}) -> set[int]:  # noqa: B006 — memo cache
+def fenced_lines(repo_root: Path, file: str) -> set[int]:
     """Line numbers inside a fenced code block, so shell examples can be told apart."""
     key = (str(repo_root), file)
-    if key not in _cache:
+    if key not in FENCED_LINES_CACHE:
         inside = False
         numbers: set[int] = set()
         try:
@@ -364,8 +385,8 @@ def fenced_lines(repo_root: Path, file: str,
                 continue
             if inside:
                 numbers.add(number)
-        _cache[key] = numbers
-    return _cache[key]
+        FENCED_LINES_CACHE[key] = numbers
+    return FENCED_LINES_CACHE[key]
 
 
 def command_on_line(text: str, flag: str) -> list[str] | None:
@@ -373,14 +394,18 @@ def command_on_line(text: str, flag: str) -> list[str] | None:
     candidates = [text.strip().lstrip("$> ").strip()]
     candidates += [m.strip() for m in INLINE_CODE_RE.findall(text)]
     for candidate in candidates:
-        if flag in candidate.split() or any(t.startswith(flag + "=") for t in candidate.split()):
+        if flag in candidate.split() or any(
+            t.startswith(flag + "=") for t in candidate.split()
+        ):
             tokens = [t for t in candidate.split() if t]
             if tokens and BINARY_TOKEN_RE.match(tokens[0]):
                 return tokens
     return None
 
 
-def help_subject(repo_root: Path, doc: str, tokens: list[str], flag: str) -> tuple[list[str], str] | None:
+def help_subject(
+    repo_root: Path, doc: str, tokens: list[str], flag: str
+) -> tuple[list[str], str] | None:
     """The argv prefix to run --help on, plus a human label. None when unsafe."""
     head = tokens[0]
     if head in NEVER_RUN:
@@ -391,10 +416,13 @@ def help_subject(repo_root: Path, doc: str, tokens: list[str], flag: str) -> tup
                 for _base, candidate in candidate_paths(repo_root, doc, token):
                     if candidate.is_file():
                         return ([head, str(candidate)], f"{head} {Path(token).name}")
-                return ("no-script", [])          # named a script that is not here
-        return ("no-script", [])                  # an interpreter with no script
+                return ("no-script", [])  # named a script that is not here
+        return ("no-script", [])  # an interpreter with no script
     # A bare word before the flag is a subcommand: `git diff --stat`.
-    flag_at = next((i for i, t in enumerate(tokens) if t == flag or t.startswith(flag + "=")), len(tokens))
+    flag_at = next(
+        (i for i, t in enumerate(tokens) if t == flag or t.startswith(flag + "=")),
+        len(tokens),
+    )
     subcommand = None
     if flag_at > 1:
         nxt = tokens[1]
@@ -408,7 +436,9 @@ def help_subject(repo_root: Path, doc: str, tokens: list[str], flag: str) -> tup
 # --- verifiers -----------------------------------------------------------------
 
 FLAG_CLAIM_RE = re.compile(r"^(?P<binary>\S+)\s+supports\s+(?P<flag>-{1,2}[\w-]+)$")
-VERSION_CLAIM_RE = re.compile(r"^(?P<binary>\S+)\s+reports version\s+(?P<expected>\S+)$")
+VERSION_CLAIM_RE = re.compile(
+    r"^(?P<binary>\S+)\s+reports version\s+(?P<expected>\S+)$"
+)
 
 REGISTRY_API = {
     "npm view": ("npm", "https://registry.npmjs.org/{pkg}"),
@@ -425,7 +455,9 @@ def clip(text: str, width: int = 110) -> str:
 
 HELP_FLAGS = ("--help", "-h", "--help-extra")
 MAX_SUBCOMMANDS = 6
-COMMANDS_HEADING_RE = re.compile(r"^\s*(?:[|│╭─\s]*)(?:Commands|COMMANDS|Subcommands)\b")
+COMMANDS_HEADING_RE = re.compile(
+    r"^\s*(?:[|│╭─\s]*)(?:Commands|COMMANDS|Subcommands)\b"
+)
 # A word at the start of a help line, after any box drawing: `│ convert   ...`
 COMMAND_WORD_RE = re.compile(r"^[\s|│├╰╭─]*([a-z][a-z0-9-]{1,24})(?:\s{2,}|\s*$|\s*\[)")
 
@@ -449,7 +481,13 @@ def advertised_subcommands(help_text: str) -> list[str]:
         if not line.strip() or set(line.strip()) <= set("─═-_ ╰╯│|"):
             continue
         match = COMMAND_WORD_RE.match(line)
-        if match and match.group(1) not in ("help", "options", "usage", "commands", *found):
+        if match and match.group(1) not in (
+            "help",
+            "options",
+            "usage",
+            "commands",
+            *found,
+        ):
             found.append(match.group(1))
         if len(found) >= MAX_SUBCOMMANDS:
             break
@@ -459,8 +497,9 @@ def advertised_subcommands(help_text: str) -> list[str]:
 class Verifier:
     """Runs one mechanical check per claim, caching the expensive subprocesses."""
 
-    def __init__(self, repo_root: Path, online: bool = False,
-                 allow_globs: tuple[str, ...] = ()) -> None:
+    def __init__(
+        self, repo_root: Path, online: bool = False, allow_globs: tuple[str, ...] = ()
+    ) -> None:
         self.repo_root = repo_root
         self.online = online
         self.allow_globs = allow_globs
@@ -477,19 +516,20 @@ class Verifier:
         help and then exit 1, and `--version` on a Java wrapper is noisy. What
         is being tested is the *text*, not the status.
         """
-        if not shutil.which(argv[0]):
+        executable = sys.executable if argv[0] in INTERPRETERS else argv[0]
+        if not shutil.which(executable):
             return None
         try:
             done = subprocess.run(
-                argv,
-                check=False,          # the text is under test, not the status
+                [executable, *argv[1:]],
+                check=False,  # the text is under test, not the status
                 capture_output=True,
                 text=True,
                 timeout=timeout,
                 errors="replace",
                 stdin=subprocess.DEVNULL,
             )
-        except (OSError, subprocess.SubprocessError):
+        except OSError, subprocess.SubprocessError:
             return None
         return (done.stdout or "") + (done.stderr or "")
 
@@ -510,22 +550,56 @@ class Verifier:
     def verify_path(self, claim: Claim) -> tuple[str, str, str]:
         token = claim.claim.strip().strip("`")
         if PLACEHOLDER_RE.search(token):
-            return ("filesystem", f"`{token}` is a placeholder, not a path", UNVERIFIABLE)
+            return (
+                "filesystem",
+                f"`{token}` is a placeholder, not a path",
+                UNVERIFIABLE,
+            )
+        if (
+            platform.system() == "Windows"
+            and token == ".venv/bin/python"
+            and WINDOWS_VENV_ALTERNATIVE_RE.search(
+                source_line(self.repo_root, claim.file, claim.line)
+            )
+        ):
+            return (
+                "filesystem",
+                "POSIX venv path has an explicit Windows alternative on this line",
+                UNVERIFIABLE,
+            )
         # `[text](target)` in a line explaining link syntax yields "target".
         # A token with neither a separator nor an extension is not a path.
         if "/" not in token and not PATH_EXT_RE.search(token):
-            return ("filesystem", f"`{token}` names no directory or file type", UNVERIFIABLE)
+            return (
+                "filesystem",
+                f"`{token}` names no directory or file type",
+                UNVERIFIABLE,
+            )
         # `/plugin` and `/config` are slash commands, not absolute paths.
-        if token.startswith("/") and token.count("/") == 1 and not PATH_EXT_RE.search(token):
-            return ("filesystem", f"`{token}` reads as a command, not a path", UNVERIFIABLE)
+        if (
+            token.startswith("/")
+            and token.count("/") == 1
+            and not PATH_EXT_RE.search(token)
+        ):
+            return (
+                "filesystem",
+                f"`{token}` reads as a command, not a path",
+                UNVERIFIABLE,
+            )
         if any(fnmatch(token, pattern) for pattern in self.allow_globs):
             return ("filesystem", "exempt by --allow", UNVERIFIABLE)
 
-        if token.startswith(("./", "../")) and claim.line in fenced_lines(self.repo_root, claim.file):
+        if token.startswith(("./", "../")) and claim.line in fenced_lines(
+            self.repo_root, claim.file
+        ):
             # `ln -sf ../../…/pre-push .git/hooks/pre-push` is relative to the
             # link's own directory, not to the document. The working directory a
             # shell example assumes is prose, not data, so this is not decidable.
-            return ("filesystem", "relative path in a shell block — working directory unknown", UNVERIFIABLE)
+            return (
+                "filesystem",
+                "relative path in a shell block — working directory unknown",
+                UNVERIFIABLE,
+            )
 
         candidates = candidate_paths(self.repo_root, claim.file, token)
         if not candidates:
@@ -556,15 +630,30 @@ class Verifier:
                 UNVERIFIABLE,
             )
         if posix_on_windows:
-            return ("filesystem", "POSIX path cannot be verified on Windows", UNVERIFIABLE)
+            return (
+                "filesystem",
+                "POSIX path cannot be verified on Windows",
+                UNVERIFIABLE,
+            )
         # Outside the repo the filesystem describes this machine, not the docs.
         # `~/.claude/settings.local.json` is documented as deliberately absent.
         if token.startswith("~"):
-            return ("filesystem", f"{token} is absent here — machine state, not repo truth", UNVERIFIABLE)
-        if ("/" in token and not token.startswith(("/", "./", "../"))
-                and not root_is_known(self.repo_root, claim.file, token)):
+            return (
+                "filesystem",
+                f"{token} is absent here — machine state, not repo truth",
+                UNVERIFIABLE,
+            )
+        if (
+            "/" in token
+            and not token.startswith(("/", "./", "../"))
+            and not root_is_known(self.repo_root, claim.file, token)
+        ):
             head = token.split("/")[0]
-            return ("filesystem", f"`{head}/` is at neither base — the path's root is unknown", UNVERIFIABLE)
+            return (
+                "filesystem",
+                f"`{head}/` is at neither base — the path's root is unknown",
+                UNVERIFIABLE,
+            )
         tried = ", ".join(f"{base}: {candidate}" for base, candidate in candidates)
         return ("filesystem", f"no such path — tried {tried}", REFUTED)
 
@@ -583,14 +672,18 @@ class Verifier:
         for help_flag in HELP_FLAGS:
             text = self.help_output(argv, help_flag)
             if text and flag in text:
-                line = next((ln.strip() for ln in text.splitlines() if flag in ln), flag)
+                line = next(
+                    (ln.strip() for ln in text.splitlines() if flag in ln), flag
+                )
                 label = " ".join(Path(a).name for a in argv)
                 return (f"{label} {help_flag}", clip(line, 80))
         top = self.help_output(argv, "--help") or ""
         for sub in advertised_subcommands(top):
             text = self.help_output([*argv, sub], "--help")
             if text and flag in text:
-                line = next((ln.strip() for ln in text.splitlines() if flag in ln), flag)
+                line = next(
+                    (ln.strip() for ln in text.splitlines() if flag in ln), flag
+                )
                 label = " ".join(Path(a).name for a in argv)
                 return (f"{label} {sub} --help", clip(line, 80))
         return None
@@ -598,14 +691,24 @@ class Verifier:
     def verify_cli_flag(self, claim: Claim) -> tuple[str, str, str]:
         match = FLAG_CLAIM_RE.match(claim.claim)
         if not match:
-            return ("help_text", f"claim not parseable as a flag: {claim.claim}", UNVERIFIABLE)
+            return (
+                "help_text",
+                f"claim not parseable as a flag: {claim.claim}",
+                UNVERIFIABLE,
+            )
         binary, flag = match.group("binary"), match.group("flag")
         if PLACEHOLDER_RE.search(binary):
             return ("help_text", f"`{binary}` is a placeholder", UNVERIFIABLE)
 
         if flag.endswith("-"):
-            return ("help_text", f"`{flag}` is a truncated wildcard, not a flag", UNVERIFIABLE)
-        tokens = command_on_line(source_line(self.repo_root, claim.file, claim.line), flag)
+            return (
+                "help_text",
+                f"`{flag}` is a truncated wildcard, not a flag",
+                UNVERIFIABLE,
+            )
+        tokens = command_on_line(
+            source_line(self.repo_root, claim.file, claim.line), flag
+        )
         # No invocation on the line means the subject came from the extractor's
         # guess at what the *document* is about — the most frequent command head.
         # That guess crosses tools: the pdf-deliverable skill compares pandoc and
@@ -617,9 +720,17 @@ class Verifier:
             tokens = [binary, flag]
         subject = help_subject(self.repo_root, claim.file, tokens, flag)
         if subject is None:
-            return ("help_text", f"`{tokens[0]}` would install a package to answer — not run in a gate", UNVERIFIABLE)
+            return (
+                "help_text",
+                f"`{tokens[0]}` would install a package to answer — not run in a gate",
+                UNVERIFIABLE,
+            )
         if subject[0] == "no-script":
-            return ("help_text", f"`{tokens[0]}` runs a script this repo does not hold", UNVERIFIABLE)
+            return (
+                "help_text",
+                f"`{tokens[0]}` runs a script this repo does not hold",
+                UNVERIFIABLE,
+            )
         argv, _label = subject
         if PLACEHOLDER_RE.search(argv[0]):
             return ("help_text", f"`{argv[0]}` is a placeholder", UNVERIFIABLE)
@@ -637,14 +748,22 @@ class Verifier:
                 where, line = hit
                 return ("help_text", f"`{where}`: {line}", VERIFIED)
         if not any(self.help_output(argv, hf) for hf in HELP_FLAGS):
-            return ("help_text", f"`{argv[0]}` prints no help — nothing to check against", UNVERIFIABLE)
+            return (
+                "help_text",
+                f"`{argv[0]}` prints no help — nothing to check against",
+                UNVERIFIABLE,
+            )
         if inferred:
             return (
                 "help_text",
                 f"{flag} is not {binary}'s; the subject was inferred from prose, not an invocation",
                 UNVERIFIABLE,
             )
-        return ("help_text", f"{flag} absent from the help of `{' '.join(argv)}`", REFUTED)
+        return (
+            "help_text",
+            f"{flag} absent from the help of `{' '.join(argv)}`",
+            REFUTED,
+        )
 
     def verify_cli_invocation(self, claim: Claim) -> tuple[str, str, str]:
         head = claim.claim.split()[0] if claim.claim.split() else ""
@@ -673,13 +792,21 @@ class Verifier:
             value, source = declared
             if expected.lstrip("v") == value.lstrip("v"):
                 return ("manifest_diff", f"{source} declares {value}", VERIFIED)
-            return ("manifest_diff", f"{source} declares {value}, doc says {expected}", REFUTED)
+            return (
+                "manifest_diff",
+                f"{source} declares {value}, doc says {expected}",
+                REFUTED,
+            )
 
         text = self.version_text(binary)
         if text is None:
             return ("binary_version", f"{binary} is not on PATH here", UNVERIFIABLE)
         if not text.strip():
-            return ("binary_version", f"`{binary} --version` produced no output", UNVERIFIABLE)
+            return (
+                "binary_version",
+                f"`{binary} --version` produced no output",
+                UNVERIFIABLE,
+            )
         if expected.lstrip("v") in text.replace("v", ""):
             return ("binary_version", clip(text.splitlines()[0]), VERIFIED)
         found = VERSION_TOKEN_RE.findall(text)
@@ -690,14 +817,20 @@ class Verifier:
         url = claim.claim.strip()
         if PLACEHOLDER_RE.search(url):
             return ("http_head", "templated URL, not an address", UNVERIFIABLE)
-        request = urllib.request.Request(url, method="HEAD", headers={"User-Agent": "verify-claims"})
+        request = urllib.request.Request(
+            url, method="HEAD", headers={"User-Agent": "verify-claims"}
+        )
         try:
             with urllib.request.urlopen(request, timeout=HTTP_TIMEOUT) as response:
                 return ("http_head", f"HTTP {response.status}", VERIFIED)
         except urllib.error.HTTPError as error:
             if error.code in (403, 405, 429):
                 # Bot-blocked or HEAD-refused. The address is not disproved.
-                return ("http_head", f"HTTP {error.code} — server refused the probe", UNVERIFIABLE)
+                return (
+                    "http_head",
+                    f"HTTP {error.code} — server refused the probe",
+                    UNVERIFIABLE,
+                )
             return ("http_head", f"HTTP {error.code}", REFUTED)
         except (urllib.error.URLError, OSError, ValueError) as error:
             return ("http_head", f"unreachable: {clip(error, 60)}", UNVERIFIABLE)
@@ -710,22 +843,42 @@ class Verifier:
                 # subcommands — `brew info --json=v2 sem`, `npm view sem version`.
                 # Take the first token that is neither, or the package name comes
                 # out as "--json=v2 sem" and every install claim is refuted.
-                rest = [token for token in lookup[len(prefix):].split() if not token.startswith("-")]
+                rest = [
+                    token
+                    for token in lookup[len(prefix) :].split()
+                    if not token.startswith("-")
+                ]
                 pkg = rest[0] if rest else ""
                 if pkg in ("version", "versions"):
                     pkg = ""
                 if not pkg or PLACEHOLDER_RE.search(pkg):
-                    return ("registry_lookup", "package name is a placeholder", UNVERIFIABLE)
+                    return (
+                        "registry_lookup",
+                        "package name is a placeholder",
+                        UNVERIFIABLE,
+                    )
                 url = template.format(pkg=urllib.parse.quote(pkg, safe="@/"))
                 try:
                     with urllib.request.urlopen(url, timeout=HTTP_TIMEOUT) as response:
                         payload = json.loads(response.read().decode("utf-8", "replace"))
                 except urllib.error.HTTPError as error:
                     if error.code == 404:
-                        return ("registry_lookup", f"{registry} has no package {pkg}", REFUTED)
-                    return ("registry_lookup", f"{registry} returned {error.code}", UNVERIFIABLE)
+                        return (
+                            "registry_lookup",
+                            f"{registry} has no package {pkg}",
+                            REFUTED,
+                        )
+                    return (
+                        "registry_lookup",
+                        f"{registry} returned {error.code}",
+                        UNVERIFIABLE,
+                    )
                 except (urllib.error.URLError, OSError, ValueError) as error:
-                    return ("registry_lookup", f"unreachable: {clip(error, 60)}", UNVERIFIABLE)
+                    return (
+                        "registry_lookup",
+                        f"unreachable: {clip(error, 60)}",
+                        UNVERIFIABLE,
+                    )
                 version = ""
                 if isinstance(payload, dict):
                     version = (
@@ -734,7 +887,11 @@ class Verifier:
                         or payload.get("versions", {}).get("stable")
                         or ""
                     )
-                return ("registry_lookup", f"{registry} has {pkg} {version}".strip(), VERIFIED)
+                return (
+                    "registry_lookup",
+                    f"{registry} has {pkg} {version}".strip(),
+                    VERIFIED,
+                )
         return ("registry_lookup", f"no registry adapter for `{lookup}`", UNVERIFIABLE)
 
     # -- dispatch
@@ -763,7 +920,11 @@ class Verifier:
         else:
             handler = handlers.get(claim.kind)
             if handler is None:
-                verifier, evidence, verdict = ("none", f"no verifier for kind {claim.kind}", UNVERIFIABLE)
+                verifier, evidence, verdict = (
+                    "none",
+                    f"no verifier for kind {claim.kind}",
+                    UNVERIFIABLE,
+                )
             else:
                 verifier, evidence, verdict = handler(claim)
         return Result(
@@ -781,7 +942,9 @@ class Verifier:
 # --- collection ----------------------------------------------------------------
 
 
-def collect_claims(repo_root: Path, files: list[str], kinds: tuple[str, ...] | None = None) -> list[Claim]:
+def collect_claims(
+    repo_root: Path, files: list[str], kinds: tuple[str, ...] | None = None
+) -> list[Claim]:
     """Every claim to be verified, with version claims re-bound to frontmatter.
 
     The extractor's own `version` kind is dropped rather than filtered later:
@@ -798,8 +961,13 @@ def collect_claims(repo_root: Path, files: list[str], kinds: tuple[str, ...] | N
     return claims
 
 
-def run(repo_root: Path, claims: list[Claim], online: bool = False,
-        allow_globs: tuple[str, ...] = (), workers: int = 8) -> list[Result]:
+def run(
+    repo_root: Path,
+    claims: list[Claim],
+    online: bool = False,
+    allow_globs: tuple[str, ...] = (),
+    workers: int = 8,
+) -> list[Result]:
     """Verify every claim. Order, and therefore the report, is independent of workers.
 
     The wall clock here is almost entirely spent waiting on `--help` and on the
@@ -857,7 +1025,9 @@ def format_report(results: list[Result], online: bool = False) -> str:
 
     if refuted:
         by_file = Counter(r.file for r in refuted)
-        lines.append("Files to fix: " + ", ".join(f"{f} ({n})" for f, n in by_file.most_common()))
+        lines.append(
+            "Files to fix: " + ", ".join(f"{f} ({n})" for f, n in by_file.most_common())
+        )
     else:
         lines.append("No claim was refuted.")
     return "\n".join(lines)
@@ -888,17 +1058,23 @@ def tls_advice() -> list[str]:
 
     configured = os.environ.get("SSL_CERT_FILE")
     if configured:
-        lines.append(f"SSL_CERT_FILE={configured}  (exists={Path(configured).exists()})")
+        lines.append(
+            f"SSL_CERT_FILE={configured}  (exists={Path(configured).exists()})"
+        )
     else:
         lines.append("SSL_CERT_FILE is not set.")
 
     paths = ssl.get_default_verify_paths()
-    for label, value in (("cafile", paths.cafile), ("openssl_cafile", paths.openssl_cafile)):
+    for label, value in (
+        ("cafile", paths.cafile),
+        ("openssl_cafile", paths.openssl_cafile),
+    ):
         if value:
             lines.append(f"{label}: {value}  (exists={Path(value).exists()})")
 
     try:
         import certifi
+
         lines.append(f"certifi is installed: {certifi.where()}")
     except ImportError:
         lines.append("certifi is not importable from this interpreter.")
@@ -907,8 +1083,12 @@ def tls_advice() -> list[str]:
     if usable:
         lines.append(f"A usable bundle is present at {usable}. To use it:")
         lines.append(f'  export SSL_CERT_FILE="{usable}"')
-        lines.append('  export REQUESTS_CA_BUNDLE="$SSL_CERT_FILE"   # requests ignores the first')
-        lines.append("Put both in ~/.zshenv, not ~/.zshrc: a git hook is not an interactive shell.")
+        lines.append(
+            '  export REQUESTS_CA_BUNDLE="$SSL_CERT_FILE"   # requests ignores the first'
+        )
+        lines.append(
+            "Put both in ~/.zshenv, not ~/.zshrc: a git hook is not an interactive shell."
+        )
     else:
         lines.append("No CA bundle found in the usual places. Install one — on macOS,")
         lines.append("  brew install ca-certificates")
@@ -930,7 +1110,7 @@ def transport_failure(results: list[Result]) -> str | None:
     reasons = Counter(r.evidence.split(":", 2)[-1].strip()[:60] for r in unreachable)
     reason, count = reasons.most_common(1)[0]
     if count < 0.8 * len(unreachable):
-        return None                       # varied failures: the web, not the tier
+        return None  # varied failures: the web, not the tier
     return (
         f"{len(unreachable)} of {len(urls)} URL checks failed identically: {reason}. "
         "That is the transport, not the documentation."
@@ -941,23 +1121,54 @@ def transport_failure(results: list[Result]) -> str | None:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter
+    )
     parser.add_argument("--repo", default=".", type=Path, help="repository root")
-    parser.add_argument("--files", nargs="*", help="repo-relative files (default: tracked *.md)")
-    parser.add_argument("--kind", action="append", help="verify only this claim kind (repeatable)")
-    parser.add_argument("--online", action="store_true", help="also verify URLs and registry lookups")
-    parser.add_argument("--strict", action="store_true", help="UNVERIFIABLE fails the gate too")
-    parser.add_argument("--workers", type=int, default=8, metavar="N",
-                        help="parallel verifiers (default 8; 1 forces sequential)")
-    parser.add_argument("--allow", action="append", default=[], metavar="GLOB",
-                        help=f"exempt path claims matching this glob; adds to {ALLOW_FILE_NAME}")
-    parser.add_argument("--no-allow-file", action="store_true",
-                        help=f"ignore the repo's {ALLOW_FILE_NAME}")
+    parser.add_argument(
+        "--files", nargs="*", help="repo-relative files (default: tracked *.md)"
+    )
+    parser.add_argument(
+        "--kind", action="append", help="verify only this claim kind (repeatable)"
+    )
+    parser.add_argument(
+        "--online", action="store_true", help="also verify URLs and registry lookups"
+    )
+    parser.add_argument(
+        "--strict", action="store_true", help="UNVERIFIABLE fails the gate too"
+    )
+    parser.add_argument(
+        "--workers",
+        type=int,
+        default=8,
+        metavar="N",
+        help="parallel verifiers (default 8; 1 forces sequential)",
+    )
+    parser.add_argument(
+        "--allow",
+        action="append",
+        default=[],
+        metavar="GLOB",
+        help=f"exempt path claims matching this glob; adds to {ALLOW_FILE_NAME}",
+    )
+    parser.add_argument(
+        "--no-allow-file",
+        action="store_true",
+        help=f"ignore the repo's {ALLOW_FILE_NAME}",
+    )
     parser.add_argument("--json", action="store_true", help="machine-readable results")
-    parser.add_argument("--report-from", type=Path, metavar="FILE",
-                        help="render the report from a saved --json run; verifies nothing")
-    parser.add_argument("--quiet", action="store_true", help="print only the counts line")
-    parser.add_argument("--include-sources", action="store_true", help="include docs/landing-zone/")
+    parser.add_argument(
+        "--report-from",
+        type=Path,
+        metavar="FILE",
+        help="render the report from a saved --json run; verifies nothing",
+    )
+    parser.add_argument(
+        "--quiet", action="store_true", help="print only the counts line"
+    )
+    parser.add_argument(
+        "--include-sources", action="store_true", help="include docs/landing-zone/"
+    )
     args = parser.parse_args(argv)
 
     repo = args.repo.resolve()
@@ -969,7 +1180,10 @@ def main(argv: list[str] | None = None) -> int:
             saved = json.loads(args.report_from.read_text(encoding="utf-8"))
             results = [Result(**row) for row in saved]
         except (OSError, json.JSONDecodeError, TypeError) as error:
-            print(f"verify_claims: cannot read {args.report_from}: {error}", file=sys.stderr)
+            print(
+                f"verify_claims: cannot read {args.report_from}: {error}",
+                file=sys.stderr,
+            )
             return EXIT_ERROR
         print(format_report(results, online=args.online))
         failed = [r for r in results if r.verdict == REFUTED]
@@ -981,17 +1195,28 @@ def main(argv: list[str] | None = None) -> int:
         excludes = () if args.include_sources else ("docs/landing-zone/",)
         files = args.files or tracked_markdown(repo, excludes)
         if not files:
-            print("verify_claims: no markdown in scope — refusing to report a pass.", file=sys.stderr)
+            print(
+                "verify_claims: no markdown in scope — refusing to report a pass.",
+                file=sys.stderr,
+            )
             return EXIT_ERROR
         claims = collect_claims(repo, files, tuple(args.kind) if args.kind else None)
         if not claims:
-            print("verify_claims: no claims extracted — refusing to report a pass.", file=sys.stderr)
+            print(
+                "verify_claims: no claims extracted — refusing to report a pass.",
+                file=sys.stderr,
+            )
             return EXIT_ERROR
         globs = list(args.allow)
         if not args.no_allow_file:
             globs += read_allow_file(repo)
-        results = run(repo, claims, online=args.online,
-                      allow_globs=tuple(dict.fromkeys(globs)), workers=args.workers)
+        results = run(
+            repo,
+            claims,
+            online=args.online,
+            allow_globs=tuple(dict.fromkeys(globs)),
+            workers=args.workers,
+        )
     except (OSError, subprocess.SubprocessError, ValueError) as error:
         print(f"verify_claims: the gate could not run: {error}", file=sys.stderr)
         return EXIT_ERROR
@@ -1010,8 +1235,11 @@ def main(argv: list[str] | None = None) -> int:
     broken = transport_failure(results)
     if broken:
         print(f"verify_claims: {broken}", file=sys.stderr)
-        print("verify_claims: refusing to report a pass on an online tier that could "
-              "not run.", file=sys.stderr)
+        print(
+            "verify_claims: refusing to report a pass on an online tier that could "
+            "not run.",
+            file=sys.stderr,
+        )
         if "CERTIFICATE" in broken.upper() or "SSL" in broken.upper():
             for line in tls_advice():
                 print(f"  {line}", file=sys.stderr)
