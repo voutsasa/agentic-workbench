@@ -28,6 +28,7 @@ def extract(html: str, selector: str) -> str:
     for pattern in (
         extract_article.HASH_LINK,
         extract_article.ANCHOR_BOOKMARK,
+        extract_article.ANCHOR_NO_HREF,
         extract_article.STYLE_TAG,
         extract_article.BACKTOP_ICON,
         extract_article.EDIT_DROPDOWN,
@@ -198,19 +199,39 @@ class StrippingTests(unittest.TestCase):
         self.assertNotIn("data:image", out)
         self.assertIn("/img/screenshot.png", out)
 
-    def test_strips_logo_and_icon_class_images_but_keeps_content_images(self):
-        """checkstyle.org decorates each feature card with <img class="cs-card-logo">."""
+    def test_strips_logo_and_icon_images_by_class_or_src_but_keeps_content_images(self):
+        """checkstyle.org decorates cards with <img class="cs-card-logo">;
+        site.mockito.org and java.testcontainers.org name theirs in the src."""
         html = (
             '<div class="a">'
-            '<img src="images/logo-maven.svg" class="cs-card-logo" />'
+            '<img src="images/report.png" class="cs-card-logo" />'
             '<img src="images/arrow.svg" class="nav-icon">'
-            '<img src="images/report.png" class="screenshot" alt="report">'
+            '<img src="https://site.mockito.org/img/logo%402x.png" width="400" alt="Mockito" />'
+            '<img src="https://java.testcontainers.org/sponsor_logos/vivy.png" style="width: 100%" />'
+            '<img src="images/screenshot.png" alt="report">'
+            '<img src="/assets/images/a-prettier-printer-by-james-long.png" alt="talk">'
             "</div>"
         )
         out = extract(html, "div.a")
-        self.assertNotIn("logo-maven.svg", out)
-        self.assertNotIn("arrow.svg", out)
-        self.assertIn("images/report.png", out)
+        for decoration in ("cs-card-logo", "arrow.svg", "logo%402x.png", "sponsor_logos/vivy.png"):
+            self.assertNotIn(decoration, out)
+        self.assertIn("images/screenshot.png", out)
+        self.assertIn("a-prettier-printer-by-james-long.png", out)
+
+    def test_unwraps_a_figure_around_a_code_block(self):
+        """site.mockito.org wraps every code block in <figure class="highlight">.
+        pandoc cannot express that in gfm and falls back to raw HTML for the whole
+        figure, syntax-highlighting spans and all."""
+        html = (
+            '<div class="a"><figure class="highlight">'
+            '<pre><code class="language-groovy" data-lang="groovy">mavenCentral()</code></pre>'
+            "<figcaption>Gradle</figcaption></figure></div>"
+        )
+        out = extract(html, "div.a")
+        self.assertNotIn("<figure", out)
+        self.assertNotIn("<figcaption", out)
+        self.assertIn('<code class="language-groovy" data-lang="groovy">mavenCentral()</code>', out)
+        self.assertIn("Gradle", out)
 
     def test_strips_style_blocks(self):
         html = '<div class="a"><style>.x{color:red}</style><p>Body.</p></div>'
@@ -234,6 +255,18 @@ class StrippingTests(unittest.TestCase):
         out = extract(html, "div.a")
         self.assertNotIn('id="Getting_Started"', out)
         self.assertIn('<a id="docs-link" href="/docs/">Read the docs</a>', out)
+
+    def test_unwraps_an_anchor_with_no_href_but_keeps_real_links(self):
+        """java.testcontainers.org marks the current page with a hrefless anchor,
+        which pandoc turns into a raw <span class="card-grid-item">."""
+        html = (
+            '<div class="a"><p><a class="card-grid-item">Java</a> '
+            '<a href="https://golang.testcontainers.org/" class="card-grid-item">Go</a></p></div>'
+        )
+        out = extract(html, "div.a")
+        self.assertNotIn('<a class="card-grid-item">', out)
+        self.assertIn("Java", out)
+        self.assertIn('<a href="https://golang.testcontainers.org/" class="card-grid-item">Go</a>', out)
 
     def test_strips_plantuml_backtop_and_edit_dropdown_with_their_content(self):
         """Unlike the layout tags, the dropdown's own text is chrome too — three

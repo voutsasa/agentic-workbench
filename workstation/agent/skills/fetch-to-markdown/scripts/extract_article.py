@@ -44,15 +44,26 @@ HASH_LINK = re.compile(r'<a\b[^>]*class=["\']?hash-link["\']?[^>]*>.*?</a>', re.
 # <section> joins the list for Doxia (maven.apache.org, checkstyle.org) and
 # Sphinx, which wrap every section in `<section id>`: pandoc's HTML reader maps
 # it to a Div, and the gfm writer falls back to a raw `<div class="section">`.
-DIV_TAG = re.compile(r"</?(?:div|header|span|section)\b[^>]*>")
+#
+# <figure> is the same failure with a worse blast radius. site.mockito.org wraps
+# every code block in `<figure class="highlight">`; pandoc reads that as a Figure,
+# gfm cannot express a figure holding a code block, and the writer falls back to
+# raw HTML for the whole thing — 124 syntax-highlighting <span>s out of three code
+# blocks, none of them in the input. Unwrapped, each block fences normally.
+DIV_TAG = re.compile(r"</?(?:div|header|span|section|figure|figcaption)\b[^>]*>")
 # Copy-button and admonition icons are inlined as base64 SVGs — a few hundred
 # bytes of noise per icon, never content. A real content image (a screenshot)
 # has a normal file src and is left alone.
 ICON_IMG = re.compile(r'<img\b[^>]*src=["\']?data:image[^"\'>]*["\']?[^>]*/?>')
-# The same noise with a file src: checkstyle.org decorates each feature card
-# with `<img class="cs-card-logo">`. Matched on a `logo` or `icon` class word, so
-# a screenshot or diagram, which carries neither, is left alone.
-DECORATIVE_IMG = re.compile(r'<img\b[^>]*\bclass=["\'][^"\']*\b(?:logo|icon)\b[^"\']*["\'][^>]*/?>')
+# The same noise with a file src: checkstyle.org decorates each feature card with
+# `<img class="cs-card-logo">`, site.mockito.org opens with `logo@2x.png`, and
+# java.testcontainers.org lists sponsors from `sponsor_logos/`. Matched on a
+# `logo` or `icon` class word, or either word anywhere in the src, so a screenshot
+# or diagram whose name carries neither is left alone.
+DECORATIVE_IMG = re.compile(
+    r'<img\b(?=[^>]*(?:class=["\'][^"\']*\b(?:logo|icon)\b|src=["\'][^"\']*(?:logo|icon)))[^>]*/?>',
+    re.IGNORECASE,
+)
 # Admonition/copy-button icons are inline <svg> markup, not <img> — pandoc's
 # HTML reader can't map them either, and re-encodes each one as a base64
 # data-URI image in the gfm output otherwise.
@@ -62,6 +73,12 @@ SVG_TAG = re.compile(r"<svg\b.*?</svg>", re.DOTALL)
 # each into a Span-with-id, which its gfm writer then has to fall back to raw
 # HTML for. Empty by construction, so a real link with an id is never matched.
 ANCHOR_BOOKMARK = re.compile(r'<a\b[^>]*\b(?:name|id)=["\']?[^"\'\s>]*["\']?[^>]*>\s*</a>')
+# An anchor with no href is not a link — java.testcontainers.org marks the page
+# you are already on that way, `<a class="card-grid-item">Java</a>` among its
+# links to the other languages. Pandoc maps it to a Span-with-class and the gfm
+# writer emits raw HTML. Only the opening tag goes: the text is content, and the
+# orphaned `</a>` left behind is ignored by pandoc's reader (measured, 3.11).
+ANCHOR_NO_HREF = re.compile(r'<a\b(?![^>]*\bhref=)[^>]*>')
 # Inline CSS is never content, and pandoc's HTML reader passes an unrecognised
 # <style> block through verbatim rather than dropping it.
 STYLE_TAG = re.compile(r"<style\b.*?</style>", re.DOTALL)
@@ -207,6 +224,7 @@ def main() -> int:
         return 1
     article = HASH_LINK.sub("", article)
     article = ANCHOR_BOOKMARK.sub("", article)
+    article = ANCHOR_NO_HREF.sub("", article)
     article = STYLE_TAG.sub("", article)
     article = BACKTOP_ICON.sub("", article)
     article = EDIT_DROPDOWN.sub("", article)
