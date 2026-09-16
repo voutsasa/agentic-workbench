@@ -23,10 +23,10 @@ half of `ingest-source`, and takes its destination path from the caller.
 
 ## Loading them
 
-**Claude Code discovers `.claude/skills/`, not this folder.** These are versioned here and linked
-across, so the skill loads while the source of truth stays in the tracked tree — this repo authors
-skills as a deliverable, which is the reason for the second tree. A repo that merely *uses* a skill
-should write it straight into `.claude/skills/` and skip the link.
+**Claude Code and Copilot discover `.claude/skills/`, not this folder.** These are versioned here and
+linked across, so the skill loads while the source of truth stays in the tracked tree — this repo
+authors skills as a deliverable, which is the reason for the second tree. A repo that merely *uses* a
+skill should write it straight into `.claude/skills/` and skip the link.
 
 ```sh
 python3 workstation/scripts/link_config.py --project --apply
