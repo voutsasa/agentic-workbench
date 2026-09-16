@@ -44,7 +44,10 @@ def main() -> int:
     for root in (ROOT,):
         if root.is_dir():
             for document in documents(root):
-                anchors[document.resolve()] = {slug(h) for h in HEADING.findall(document.read_text(encoding="utf-8"))}
+                anchors[document.resolve()] = {
+                    slug(h)
+                    for h in HEADING.findall(document.read_text(encoding="utf-8"))
+                }
 
     broken: list[str] = []
     checked = documents(ROOT, checkable=True)
@@ -66,7 +69,9 @@ def main() -> int:
     for problem in broken:
         print(problem, file=sys.stderr)
     skipped = len(documents(ROOT)) - len(checked)
-    print(f"{len(checked)} documents checked ({skipped} exempt), {len(broken)} broken links")
+    print(
+        f"{len(checked)} documents checked ({skipped} exempt), {len(broken)} broken links"
+    )
     return 1 if broken else 0
 
 

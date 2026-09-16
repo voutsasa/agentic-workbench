@@ -43,8 +43,13 @@ from urllib.parse import urlparse
 
 #: Frontmatter fields, in the order defuddle writes them, mapped to its JSON keys.
 #: `source`, `domain` and `word_count` are the caller's and are added separately.
-DEFUDDLE_KEYS = (("title", "title"), ("author", "author"), ("site", "site"),
-                 ("language", "language"), ("description", "description"))
+DEFUDDLE_KEYS = (
+    ("title", "title"),
+    ("author", "author"),
+    ("site", "site"),
+    ("language", "language"),
+    ("description", "description"),
+)
 
 #: Title/site separators, in the order publishers use them. Only for the fallback
 #: path: a title ending in one of these followed by the site name is that name
@@ -103,14 +108,22 @@ def strip_site_suffix(title: str, site: str, domain: str = "") -> str:
     name is left as it is.
     """
     host = domain.lower().removeprefix("www.")
-    brands = {site.strip().lower(), host, host.rsplit(".", 1)[0] if "." in host else host}
+    brands = {
+        site.strip().lower(),
+        host,
+        host.rsplit(".", 1)[0] if "." in host else host,
+    }
     brands.discard("")
     for separator in SEPARATORS:
         head, found, tail = title.rpartition(separator)
         if not found or not head.strip() or not tail.strip():
             continue
         low = tail.strip().lower()
-        if low == head.strip().lower() or low in brands or any(b.startswith(low) for b in brands):
+        if (
+            low == head.strip().lower()
+            or low in brands
+            or any(b.startswith(low) for b in brands)
+        ):
             return head.strip()
     return title.strip()
 
@@ -122,9 +135,14 @@ def metadata_from_defuddle(html: str, run=subprocess.run) -> dict[str, str] | No
     second request could answer differently from the one that was converted.
     """
     try:
-        done = run(["defuddle", "parse", "-", "--json"], input=html, capture_output=True,
-                   text=True, check=False)
-    except (OSError, ValueError):
+        done = run(
+            ["defuddle", "parse", "-", "--json"],
+            input=html,
+            capture_output=True,
+            text=True,
+            check=False,
+        )
+    except OSError, ValueError:
         return None
     if done.returncode != 0 or not done.stdout.strip():
         return None
@@ -139,8 +157,10 @@ def metadata_from_html(html: str, domain: str = "") -> dict[str, str]:
     """The same fields from the page itself, for a machine without defuddle."""
     parser = PageMetadata()
     parser.feed(html)
-    found = {field: next((parser.meta[key] for key in keys if key in parser.meta), "")
-             for field, keys in META_FIELDS.items()}
+    found = {
+        field: next((parser.meta[key] for key in keys if key in parser.meta), "")
+        for field, keys in META_FIELDS.items()
+    }
     title = unescape(parser.title).strip() or found["title"]
     return {
         "title": strip_site_suffix(title, found["site"], domain),
@@ -182,11 +202,14 @@ def main() -> int:
     markdown_path, html_path, url = Path(sys.argv[1]), Path(sys.argv[2]), sys.argv[3]
     body = markdown_path.read_text(encoding="utf-8")
     if body.startswith("---\n"):
-        print(f"{markdown_path} already has frontmatter; left unchanged", file=sys.stderr)
+        print(
+            f"{markdown_path} already has frontmatter; left unchanged", file=sys.stderr
+        )
         return 0
     html = html_path.read_text(encoding="utf-8", errors="replace")
-    markdown_path.write_text(frontmatter(html, url, body) + body.lstrip("\n"),
-                             encoding="utf-8")
+    markdown_path.write_text(
+        frontmatter(html, url, body) + body.lstrip("\n"), encoding="utf-8"
+    )
     return 0
 
 

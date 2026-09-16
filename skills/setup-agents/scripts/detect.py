@@ -46,7 +46,11 @@ VERSION = re.compile(r"\d+\.\d+(?:\.\d+)?")
 PROBE_TIMEOUT = 15
 
 #: Provider switches Claude Code reads, in precedence order for the report.
-PROVIDER_VARS = ("CLAUDE_CODE_USE_BEDROCK", "CLAUDE_CODE_USE_VERTEX", "ANTHROPIC_API_KEY")
+PROVIDER_VARS = (
+    "CLAUDE_CODE_USE_BEDROCK",
+    "CLAUDE_CODE_USE_VERTEX",
+    "ANTHROPIC_API_KEY",
+)
 
 
 @dataclass(frozen=True)
@@ -80,16 +84,20 @@ class Found:
     detail: str
 
 
-def probe(spec: Spec, which: Callable[[str], str | None] = shutil.which,
-          run: Callable[..., subprocess.CompletedProcess] = subprocess.run) -> Found:
+def probe(
+    spec: Spec,
+    which: Callable[[str], str | None] = shutil.which,
+    run: Callable[..., subprocess.CompletedProcess] = subprocess.run,
+) -> Found:
     """Resolve one assistant on ``PATH`` and read its version."""
     base = (spec.id, spec.name, spec.command, spec.configurable)
     path = which(spec.command)
     if path is None:
         return Found(*base, None, None, "not on PATH")
     try:
-        done = run([path, "--version"], capture_output=True, text=True,
-                   timeout=PROBE_TIMEOUT)
+        done = run(
+            [path, "--version"], capture_output=True, text=True, timeout=PROBE_TIMEOUT
+        )
     except (OSError, subprocess.TimeoutExpired) as exc:
         return Found(*base, path, None, f"version probe failed: {type(exc).__name__}")
     match = VERSION.search(f"{done.stdout or ''}\n{done.stderr or ''}")
@@ -110,7 +118,9 @@ def read_json(path: Path) -> tuple[str, dict]:
         data = json.loads(path.read_text(encoding="utf-8"))
     except (OSError, ValueError) as exc:
         return f"unreadable: {type(exc).__name__}", {}
-    return ("read", data) if isinstance(data, dict) else ("unreadable: not an object", {})
+    return (
+        ("read", data) if isinstance(data, dict) else ("unreadable: not an object", {})
+    )
 
 
 def claude_provider(home: Path, environ: Mapping[str, str]) -> dict:
@@ -149,11 +159,15 @@ def settings_drift(home: Path, repo: Path) -> dict:
     return {"live": live_state, "reference": ref_state, "differs": differs}
 
 
-def vscode_user_settings(platform: str, home: Path, environ: Mapping[str, str]) -> Path | None:
+def vscode_user_settings(
+    platform: str, home: Path, environ: Mapping[str, str]
+) -> Path | None:
     """VS Code's user ``settings.json``, on the platforms a route records it for."""
     token = link_config.platform_token(platform)
     if token == "macos":
-        return home / "Library" / "Application Support" / "Code" / "User" / "settings.json"
+        return (
+            home / "Library" / "Application Support" / "Code" / "User" / "settings.json"
+        )
     if token == "windows" and environ.get("APPDATA"):
         return Path(environ["APPDATA"]) / "Code" / "User" / "settings.json"
     return None
@@ -181,19 +195,39 @@ def jsonc_flag(path: Path | None, key: str) -> bool | None:
     return None
 
 
-def link_summary(repo: Path, home: Path, agents: tuple[str, ...], copilot_root: Path,
-                 platform: str | None, hostname: str | None, project: bool = False) -> dict:
-    report = link_config.inspect_all(link_config.plan(
-        repo, home, platform=platform, hostname=hostname,
-        agents=agents, copilot_root=copilot_root, project=project))
+def link_summary(
+    repo: Path,
+    home: Path,
+    agents: tuple[str, ...],
+    copilot_root: Path,
+    platform: str | None,
+    hostname: str | None,
+    project: bool = False,
+) -> dict:
+    report = link_config.inspect_all(
+        link_config.plan(
+            repo,
+            home,
+            platform=platform,
+            hostname=hostname,
+            agents=agents,
+            copilot_root=copilot_root,
+            project=project,
+        )
+    )
     linked = sum(1 for s in report.states if s.status == link_config.LINKED)
     return {"linked": linked, "total": len(report.states), "status": report.status}
 
 
-def collect(repo: Path, home: Path, environ: Mapping[str, str] | None = None,
-            platform: str | None = None, hostname: str | None = None,
-            which: Callable[[str], str | None] = shutil.which,
-            run: Callable[..., subprocess.CompletedProcess] = subprocess.run) -> dict:
+def collect(
+    repo: Path,
+    home: Path,
+    environ: Mapping[str, str] | None = None,
+    platform: str | None = None,
+    hostname: str | None = None,
+    which: Callable[[str], str | None] = shutil.which,
+    run: Callable[..., subprocess.CompletedProcess] = subprocess.run,
+) -> dict:
     env = os.environ if environ is None else environ
     plat = platform or sys.platform
     note = link_config.machine_file(repo, plat, hostname)
@@ -217,14 +251,20 @@ def collect(repo: Path, home: Path, environ: Mapping[str, str] | None = None,
         "claude": {
             **claude_provider(home, env),
             "settings_drift": settings_drift(home, repo),
-            "links": link_summary(repo, home, ("claude",), copilot_root, plat, hostname),
+            "links": link_summary(
+                repo, home, ("claude",), copilot_root, plat, hostname
+            ),
         },
         "copilot": {
             "home": str(copilot_root),
-            "links": link_summary(repo, home, ("copilot",), copilot_root, plat, hostname),
+            "links": link_summary(
+                repo, home, ("copilot",), copilot_root, plat, hostname
+            ),
         },
         "project": {
-            "links": link_summary(repo, home, (), copilot_root, plat, hostname, project=True),
+            "links": link_summary(
+                repo, home, (), copilot_root, plat, hostname, project=True
+            ),
         },
         "vscode": {
             "user_settings": str(vscode_settings) if vscode_settings else None,
@@ -235,7 +275,7 @@ def collect(repo: Path, home: Path, environ: Mapping[str, str] | None = None,
 
 
 def _tilde(path: str, home: Path) -> str:
-    return "~" + path[len(str(home)):] if path.startswith(str(home)) else path
+    return "~" + path[len(str(home)) :] if path.startswith(str(home)) else path
 
 
 def _flag(value: bool | None) -> str:
@@ -247,43 +287,69 @@ def render(facts: dict, home: Path) -> str:
     pr = facts["project"]
     note = f"`{m['machine_note']}` ({'present' if m['machine_note_exists'] else '**absent**'})"
     out = [
-        "## Machine", "",
-        "| What | Value |", "|---|---|",
+        "## Machine",
+        "",
+        "| What | Value |",
+        "|---|---|",
         f"| Platform | {m['platform']} (`{m['os']}`) |",
         f"| Hostname | {m['hostname']} |",
         f"| Shell | `{m['shell'] or 'unknown'}` |",
         f"| Machine note | {note} |",
-        "", "## Assistants", "",
-        "| Assistant | Path | Version | This skill |", "|---|---|---|---|",
+        "",
+        "## Assistants",
+        "",
+        "| Assistant | Path | Version | This skill |",
+        "|---|---|---|---|",
     ]
     found = [a for a in facts["assistants"] if a["path"]]
     for a in found:
         version = a["version"] or f"— ({a['detail']})"
-        route = "configurable" if a["configurable"] else "report only — no route recorded"
-        out.append(f"| {a['name']} | `{_tilde(a['path'], home)}` | {version} | {route} |")
+        route = (
+            "configurable" if a["configurable"] else "report only — no route recorded"
+        )
+        out.append(
+            f"| {a['name']} | `{_tilde(a['path'], home)}` | {version} | {route} |"
+        )
     if not found:
         out.append("| _none found on PATH_ | — | — | — |")
     absent = [a["command"] for a in facts["assistants"] if not a["path"]]
     if absent:
         out += ["", "Not on PATH: " + ", ".join(f"`{cmd}`" for cmd in absent) + "."]
     drift = c["settings_drift"]
-    drift_text = (", ".join(f"`{k}`" for k in drift["differs"]) or "none"
-                  if drift["live"] == "read" else f"live file {drift['live']}")
-    set_vars = ", ".join(f"`{k}` ({v})" for k, v in c["set_vars"].items()) or "no provider variable set"
+    drift_text = (
+        ", ".join(f"`{k}`" for k in drift["differs"]) or "none"
+        if drift["live"] == "read"
+        else f"live file {drift['live']}"
+    )
+    set_vars = (
+        ", ".join(f"`{k}` ({v})" for k, v in c["set_vars"].items())
+        or "no provider variable set"
+    )
     settings = vs["user_settings"]
-    vs_text = (f"{_flag(vs['chat.useClaudeMdFile'])} in `{_tilde(settings, home)}`"
-               if settings and vs["user_settings_exists"]
-               else "no user settings file" if settings else "no route for this platform")
+    vs_text = (
+        f"{_flag(vs['chat.useClaudeMdFile'])} in `{_tilde(settings, home)}`"
+        if settings and vs["user_settings_exists"]
+        else "no user settings file"
+        if settings
+        else "no route for this platform"
+    )
     out += [
-        "", "## Current configuration", "",
-        "| What | State |", "|---|---|",
+        "",
+        "## Current configuration",
+        "",
+        "| What | State |",
+        "|---|---|",
         f"| Claude provider | **{c['provider']}** — {set_vars} |",
         f"| Claude global links (`~/.claude`) | {c['links']['linked']} of {c['links']['total']} linked |",
         f"| Claude settings keys differing from `workstation/agent/settings.json` | {drift_text} |",
-        (f"| Copilot global skill links (`{_tilde(cp['home'], home)}/skills`) | "
-         f"{cp['links']['linked']} of {cp['links']['total']} linked |"),
-        (f"| This repo's skills (`.claude/skills`, project scope) | "
-         f"{pr['links']['linked']} of {pr['links']['total']} linked |"),
+        (
+            f"| Copilot global skill links (`{_tilde(cp['home'], home)}/skills`) | "
+            f"{cp['links']['linked']} of {cp['links']['total']} linked |"
+        ),
+        (
+            f"| This repo's skills (`.claude/skills`, project scope) | "
+            f"{pr['links']['linked']} of {pr['links']['total']} linked |"
+        ),
         f"| VS Code `chat.useClaudeMdFile` | {vs_text} |",
     ]
     return "\n".join(out)
@@ -291,10 +357,18 @@ def render(facts: dict, home: Path) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--repo", type=Path, default=REPO_ROOT,
-                        help="repo root (default: inferred from this file)")
-    parser.add_argument("--home", type=Path, default=Path.home(),
-                        help="home directory to inspect (default: your home)")
+    parser.add_argument(
+        "--repo",
+        type=Path,
+        default=REPO_ROOT,
+        help="repo root (default: inferred from this file)",
+    )
+    parser.add_argument(
+        "--home",
+        type=Path,
+        default=Path.home(),
+        help="home directory to inspect (default: your home)",
+    )
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     args = parser.parse_args(argv)
 

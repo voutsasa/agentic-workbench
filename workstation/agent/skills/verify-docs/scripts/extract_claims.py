@@ -41,7 +41,16 @@ DEFAULT_EXCLUDES = ("docs/landing-zone/",)
 
 FENCE_RE = re.compile(r"^\s*(?:```|~~~)\s*([\w+-]*)")
 # Only these fences hold shell. A python/json/text block is not a command list.
-SHELL_FENCES = {"", "bash", "sh", "shell", "zsh", "console", "shell-session", "terminal"}
+SHELL_FENCES = {
+    "",
+    "bash",
+    "sh",
+    "shell",
+    "zsh",
+    "console",
+    "shell-session",
+    "terminal",
+}
 # A binary name, not a word of prose and not a Python identifier expression.
 BINARY_RE = re.compile(r"^[a-z][a-z0-9_.+-]*$")
 INLINE_CODE_RE = re.compile(r"`([^`\n]+)`")
@@ -122,7 +131,9 @@ class Claim:
 # --- corpus --------------------------------------------------------------------
 
 
-def tracked_markdown(repo: Path, excludes: tuple[str, ...] = DEFAULT_EXCLUDES) -> list[str]:
+def tracked_markdown(
+    repo: Path, excludes: tuple[str, ...] = DEFAULT_EXCLUDES
+) -> list[str]:
     """Return repo-relative markdown paths tracked by git, minus excluded prefixes."""
     out = subprocess.run(
         ["git", "-C", str(repo), "ls-files", "*.md"],
@@ -149,12 +160,14 @@ def looks_like_path(token: str) -> bool:
     if "/" not in token:
         return False
     if not re.search(r"[A-Za-z0-9]", token.replace("/", "")):
-        return False   # `...`, `../..`, and friends are not paths to test
+        return False  # `...`, `../..`, and friends are not paths to test
     # `and/or` is prose. Accept only an anchored path, a filename with an
     # extension, or a multi-segment path. A bare two-segment `docs/guidance`
     # is deliberately missed rather than risk flooding the manifest.
     return bool(
-        PATH_ANCHOR_RE.match(token) or PATH_EXT_RE.search(token) or token.count("/") >= 2
+        PATH_ANCHOR_RE.match(token)
+        or PATH_EXT_RE.search(token)
+        or token.count("/") >= 2
     )
 
 
@@ -179,9 +192,9 @@ def looks_like_command(line: str, head: str) -> bool:
     """Is this fenced line a shell invocation, or prose/Python/a directory tree?"""
     if not BINARY_RE.match(head):
         return False
-    if line.rstrip().endswith(":"):        # `with sync_playwright() as p:`
+    if line.rstrip().endswith(":"):  # `with sync_playwright() as p:`
         return False
-    if "=" in line.split(" ")[0] or " = " in line:   # `page = browser.new_page()`
+    if "=" in line.split(" ")[0] or " = " in line:  # `page = browser.new_page()`
         return False
     # Two spaces mid-line means a column-aligned tree or table, not a command.
     return "  " not in line.strip()
@@ -291,13 +304,21 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
             if installed:
                 pkg, lookup, present = installed
                 add(line_no, INSTALL, command, "registry_lookup", lookup)
-                add(line_no, INSTALL, f"{pkg} is installed here", "installed_check", present)
+                add(
+                    line_no,
+                    INSTALL,
+                    f"{pkg} is installed here",
+                    "installed_check",
+                    present,
+                )
                 continue
 
             if head in SHELL_NOISE or not looks_like_command(command, head):
                 continue
 
-            add(line_no, CLI_INVOCATION, command, "binary_present", f"command -v {head}")
+            add(
+                line_no, CLI_INVOCATION, command, "binary_present", f"command -v {head}"
+            )
             for flag in dict.fromkeys(FLAG_RE.findall(command)):
                 built = flag_claim(head, flag)
                 if built:
@@ -310,15 +331,23 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
 
         # Prose lines.
         if GIT_KEYWORDS.search(raw):
-            add(line_no, GIT, raw.strip(), "git_state", "git log --oneline -5 && git branch --merged")
+            add(
+                line_no,
+                GIT,
+                raw.strip(),
+                "git_state",
+                "git log --oneline -5 && git branch --merged",
+            )
 
         for target in MD_LINK_RE.findall(raw):
             target = target.split("#", 1)[0]
             if not target or target.startswith(("http", "mailto:", "//")):
                 continue
-            resolved = target if target.startswith("/") else Path(
-                os.path.normpath(doc_dir / target)
-            ).as_posix()
+            resolved = (
+                target
+                if target.startswith("/")
+                else Path(os.path.normpath(doc_dir / target)).as_posix()
+            )
             add(line_no, PATH, target, "filesystem", f"test -e {resolved}")
 
         for snippet in INLINE_CODE_RE.findall(raw):
@@ -390,9 +419,15 @@ def summarise(claims: list[Claim]) -> str:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", default=".", type=Path, help="repository root")
-    parser.add_argument("--files", nargs="*", help="repo-relative files (default: tracked *.md)")
-    parser.add_argument("--out", type=Path, help="write JSONL manifest here (default: stdout)")
-    parser.add_argument("--summary", action="store_true", help="print a markdown summary to stderr")
+    parser.add_argument(
+        "--files", nargs="*", help="repo-relative files (default: tracked *.md)"
+    )
+    parser.add_argument(
+        "--out", type=Path, help="write JSONL manifest here (default: stdout)"
+    )
+    parser.add_argument(
+        "--summary", action="store_true", help="print a markdown summary to stderr"
+    )
     parser.add_argument(
         "--include-sources",
         action="store_true",

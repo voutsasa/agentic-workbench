@@ -52,7 +52,6 @@ class TempTree(unittest.TestCase):
         path.write_text("state\n", encoding="utf-8")
         return path
 
-
     def plan(self, platform: str = "win32", hostname: str = "box") -> list[lc.Link]:
         return lc.plan(self.repo, self.home, platform=platform, hostname=hostname)
 
@@ -89,8 +88,8 @@ class TestPlan(TempTree):
 
     def test_skills_come_first_so_junctions_are_never_blocked(self) -> None:
         links = self.plan()
-        self.assertTrue(all(link.is_dir for link in links[:len(lc.SKILLS)]))
-        self.assertFalse(any(link.is_dir for link in links[len(lc.SKILLS):]))
+        self.assertTrue(all(link.is_dir for link in links[: len(lc.SKILLS)]))
+        self.assertFalse(any(link.is_dir for link in links[len(lc.SKILLS) :]))
 
     def test_settings_json_is_absent_from_the_plan(self) -> None:
         dests = [link.dest.name for link in self.plan()]
@@ -99,7 +98,9 @@ class TestPlan(TempTree):
         self.assertNotIn("settings.json", sources)
 
     def test_machine_note_is_named_from_platform_and_host(self) -> None:
-        link = next(l for l in self.plan("darwin", "Air.local") if l.label == "machine.md")
+        link = next(
+            l for l in self.plan("darwin", "Air.local") if l.label == "machine.md"
+        )
         self.assertEqual(link.source.name, "macos-air.md")
         self.assertEqual(link.dest.name, "machine.md")
 
@@ -204,8 +205,9 @@ class TestApply(TempTree):
     def test_links_everything_from_a_clean_home(self) -> None:
         self.machine_file()
         report = lc.apply(lc.inspect_all(self.plan()))
-        self.assertTrue(report.ok,
-                        msg=[(s.link.label, s.status, s.detail) for s in report.states])
+        self.assertTrue(
+            report.ok, msg=[(s.link.label, s.status, s.detail) for s in report.states]
+        )
         self.assertTrue(all(s.repaired for s in report.states))
 
     def test_a_second_run_is_a_no_op(self) -> None:
@@ -290,19 +292,23 @@ class TestClearDest(TempTree):
 
     def test_clearing_a_dangling_junction_removes_the_junction(self) -> None:
         link = next(l for l in self.plan() if l.label == "skills/review")
-        with (mock.patch.object(os.path, "isjunction", return_value=True, create=True),
-              mock.patch("link_config.os.rmdir") as remove):
+        with (
+            mock.patch.object(os.path, "isjunction", return_value=True, create=True),
+            mock.patch("link_config.os.rmdir") as remove,
+        ):
             lc.clear_dest(lc.LinkState(link, lc.DETACHED))
         remove.assert_called_once_with(link.dest)
 
 
 class TestReport(TempTree):
     def test_status_is_the_worst_of_the_set(self) -> None:
-        report = lc.Report([
-            lc.LinkState(self.plan()[0], lc.LINKED),
-            lc.LinkState(self.plan()[1], lc.DIVERGED),
-            lc.LinkState(self.plan()[2], lc.MISSING),
-        ])
+        report = lc.Report(
+            [
+                lc.LinkState(self.plan()[0], lc.LINKED),
+                lc.LinkState(self.plan()[1], lc.DIVERGED),
+                lc.LinkState(self.plan()[2], lc.MISSING),
+            ]
+        )
         self.assertEqual(report.status, lc.DIVERGED)
 
     def test_ok_only_when_everything_is_linked(self) -> None:
@@ -346,10 +352,12 @@ class TestMain(TempTree):
     reads as ``no_source`` and no run could ever reach ``ok``. Overriding the
     default here keeps the suite valid on Windows and macOS alike."""
 
-    def machine_file(self, platform: str | None = None,
-                     hostname: str | None = None) -> Path:
-        return super().machine_file(platform or sys.platform,
-                                    hostname or lc.short_hostname())
+    def machine_file(
+        self, platform: str | None = None, hostname: str | None = None
+    ) -> Path:
+        return super().machine_file(
+            platform or sys.platform, hostname or lc.short_hostname()
+        )
 
     def test_reports_nonzero_when_nothing_is_linked(self) -> None:
         self.machine_file()
@@ -382,44 +390,96 @@ class TestMain(TempTree):
         self.machine_file()
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            lc.main(["--repo", str(self.repo), "--home", str(self.home), "--json",
-                     "--agent", "claude", "--agent", "copilot", "--agent", "copilot"])
+            lc.main(
+                [
+                    "--repo",
+                    str(self.repo),
+                    "--home",
+                    str(self.home),
+                    "--json",
+                    "--agent",
+                    "claude",
+                    "--agent",
+                    "copilot",
+                    "--agent",
+                    "copilot",
+                ]
+            )
         payload = json.loads(buf.getvalue())
         self.assertEqual(payload["agents"], ["claude", "copilot"])
         self.assertEqual(len(payload["links"]), 2 * len(lc.SKILLS) + 2)
 
     def test_copilot_agent_writes_only_under_dot_copilot(self) -> None:
-        code = lc.main(["--repo", str(self.repo), "--home", str(self.home),
-                        "--agent", "copilot", "--apply"])
+        code = lc.main(
+            [
+                "--repo",
+                str(self.repo),
+                "--home",
+                str(self.home),
+                "--agent",
+                "copilot",
+                "--apply",
+            ]
+        )
         self.assertEqual(code, 0)
-        self.assertTrue((self.home / ".copilot" / "skills" / "review" / "SKILL.md").exists())
+        self.assertTrue(
+            (self.home / ".copilot" / "skills" / "review" / "SKILL.md").exists()
+        )
         self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
         self.assertFalse((self.home / ".claude" / "skills").exists())
 
     def test_an_inherited_copilot_home_cannot_redirect_a_scratch_home(self) -> None:
         elsewhere = self.base / "elsewhere"
         with mock.patch.dict(os.environ, {"COPILOT_HOME": str(elsewhere)}):
-            lc.main(["--repo", str(self.repo), "--home", str(self.home),
-                     "--agent", "copilot", "--apply"])
+            lc.main(
+                [
+                    "--repo",
+                    str(self.repo),
+                    "--home",
+                    str(self.home),
+                    "--agent",
+                    "copilot",
+                    "--apply",
+                ]
+            )
         self.assertFalse(elsewhere.exists())
         self.assertTrue((self.home / ".copilot" / "skills" / "review").exists())
 
     def test_copilot_home_flag_wins(self) -> None:
         chosen = self.base / "chosen"
-        lc.main(["--repo", str(self.repo), "--home", str(self.home),
-                 "--agent", "copilot", "--copilot-home", str(chosen), "--apply"])
+        lc.main(
+            [
+                "--repo",
+                str(self.repo),
+                "--home",
+                str(self.home),
+                "--agent",
+                "copilot",
+                "--copilot-home",
+                str(chosen),
+                "--apply",
+            ]
+        )
         self.assertTrue((chosen / "skills" / "review" / "SKILL.md").exists())
         self.assertFalse((self.home / ".copilot").exists())
 
 
 class TestCopilotPlan(TempTree):
     def copilot(self, agents: tuple[str, ...] = ("copilot",)) -> list[lc.Link]:
-        return lc.plan(self.repo, self.home, platform="win32", hostname="box",
-                       agents=agents, copilot_root=self.home / ".copilot")
+        return lc.plan(
+            self.repo,
+            self.home,
+            platform="win32",
+            hostname="box",
+            agents=agents,
+            copilot_root=self.home / ".copilot",
+        )
 
     def test_links_the_skills_and_nothing_else(self) -> None:
-        self.assertEqual([link.label for link in self.copilot()],
-                         [f"copilot/skills/{s}" for s in lc.SKILLS])
+        self.assertEqual(
+            [link.label for link in self.copilot()],
+            [f"copilot/skills/{s}" for s in lc.SKILLS],
+        )
 
     def test_every_destination_is_under_the_copilot_root(self) -> None:
         for link in self.copilot():
@@ -432,14 +492,18 @@ class TestCopilotPlan(TempTree):
     def test_shares_its_sources_with_claude(self) -> None:
         both = self.copilot(("claude", "copilot"))
         claude = {l.dest.name: l.source for l in both if l.label.startswith("skills/")}
-        copilot = {l.dest.name: l.source for l in both if l.label.startswith("copilot/")}
+        copilot = {
+            l.dest.name: l.source for l in both if l.label.startswith("copilot/")
+        }
         self.assertEqual(claude, copilot)
 
     def test_both_agents_keep_every_directory_ahead_of_the_files(self) -> None:
         links = self.copilot(("claude", "copilot"))
         dirs = 2 * len(lc.SKILLS)
         self.assertTrue(all(link.is_dir for link in links[:dirs]))
-        self.assertEqual([link.label for link in links[dirs:]], ["CLAUDE.md", "machine.md"])
+        self.assertEqual(
+            [link.label for link in links[dirs:]], ["CLAUDE.md", "machine.md"]
+        )
 
     def test_needs_no_machine_note(self) -> None:
         report = lc.apply(lc.inspect_all(self.copilot()))
@@ -455,7 +519,9 @@ class TestProjectPlan(TempTree):
         super().setUp()
         for name in ("beta", "alpha"):
             (self.repo / "skills" / name).mkdir(parents=True)
-            (self.repo / "skills" / name / "SKILL.md").write_text(f"# {name}\n", encoding="utf-8")
+            (self.repo / "skills" / name / "SKILL.md").write_text(
+                f"# {name}\n", encoding="utf-8"
+            )
         (self.repo / "skills" / "not-a-skill").mkdir()
         (self.repo / "skills" / "README.md").write_text("index\n", encoding="utf-8")
 
@@ -470,8 +536,10 @@ class TestProjectPlan(TempTree):
 
     def test_links_each_repo_skill_into_the_repos_own_dot_claude(self) -> None:
         links = self.project()
-        self.assertEqual([link.label for link in links],
-                         ["project/skills/alpha", "project/skills/beta"])
+        self.assertEqual(
+            [link.label for link in links],
+            ["project/skills/alpha", "project/skills/beta"],
+        )
         for link in links:
             self.assertEqual(link.dest.parent, self.repo / ".claude" / "skills")
             self.assertTrue(link.is_dir)
@@ -480,7 +548,9 @@ class TestProjectPlan(TempTree):
         report = lc.apply(lc.inspect_all(self.project()))
         self.assertTrue(report.ok, lc.render(report))
         self.assertFalse((self.home / ".claude" / "skills").exists())
-        self.assertTrue((self.repo / ".claude" / "skills" / "alpha" / "SKILL.md").exists())
+        self.assertTrue(
+            (self.repo / ".claude" / "skills" / "alpha" / "SKILL.md").exists()
+        )
 
     @unittest.skipIf(os.name == "nt", "creating a symlink on Windows needs elevation")
     def test_a_hand_made_relative_link_counts_as_linked(self) -> None:
@@ -493,8 +563,17 @@ class TestProjectPlan(TempTree):
     def test_main_with_project_alone_links_only_the_repo_skills(self) -> None:
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            code = lc.main(["--repo", str(self.repo), "--home", str(self.home),
-                            "--project", "--apply", "--json"])
+            code = lc.main(
+                [
+                    "--repo",
+                    str(self.repo),
+                    "--home",
+                    str(self.home),
+                    "--project",
+                    "--apply",
+                    "--json",
+                ]
+            )
         payload = json.loads(buf.getvalue())
         self.assertEqual(code, 0)
         self.assertEqual((payload["agents"], payload["project"]), ([], True))
@@ -525,7 +604,9 @@ class TestClaudeMd(TempTree):
         (self.repo / "CLAUDE.md").write_text("my own notes\n", encoding="utf-8")
         report = lc.apply(lc.inspect_all([self.link()]))
         self.assertEqual(report.status, lc.DIVERGED)
-        self.assertEqual((self.repo / "CLAUDE.md").read_text(encoding="utf-8"), "my own notes\n")
+        self.assertEqual(
+            (self.repo / "CLAUDE.md").read_text(encoding="utf-8"), "my own notes\n"
+        )
 
     def test_force_replaces_diverged_content(self) -> None:
         (self.repo / "CLAUDE.md").write_text("my own notes\n", encoding="utf-8")
@@ -540,8 +621,17 @@ class TestClaudeMd(TempTree):
     def test_main_with_claude_md_alone_leaves_home_alone(self) -> None:
         buf = io.StringIO()
         with contextlib.redirect_stdout(buf):
-            code = lc.main(["--repo", str(self.repo), "--home", str(self.home),
-                            "--claude-md", "--apply", "--json"])
+            code = lc.main(
+                [
+                    "--repo",
+                    str(self.repo),
+                    "--home",
+                    str(self.home),
+                    "--claude-md",
+                    "--apply",
+                    "--json",
+                ]
+            )
         payload = json.loads(buf.getvalue())
         self.assertEqual(code, 0)
         self.assertEqual((payload["agents"], payload["claude_md"]), ([], True))
@@ -552,24 +642,36 @@ class TestClaudeMd(TempTree):
 class TestCopilotHome(unittest.TestCase):
     def test_copilot_home_wins_for_the_real_home(self) -> None:
         self.assertEqual(
-            lc.copilot_home(Path("/h"), {"COPILOT_HOME": "/c"}, default_home=Path("/h")),
-            Path("/c"))
+            lc.copilot_home(
+                Path("/h"), {"COPILOT_HOME": "/c"}, default_home=Path("/h")
+            ),
+            Path("/c"),
+        )
 
     def test_copilot_home_is_ignored_for_any_other_home(self) -> None:
         self.assertEqual(
-            lc.copilot_home(Path("/scratch"), {"COPILOT_HOME": "/c"}, default_home=Path("/h")),
-            Path("/scratch/.copilot"))
+            lc.copilot_home(
+                Path("/scratch"), {"COPILOT_HOME": "/c"}, default_home=Path("/h")
+            ),
+            Path("/scratch/.copilot"),
+        )
 
     def test_unset_falls_back_to_dot_copilot(self) -> None:
-        self.assertEqual(lc.copilot_home(Path("/h"), {}, default_home=Path("/h")),
-                         Path("/h/.copilot"))
+        self.assertEqual(
+            lc.copilot_home(Path("/h"), {}, default_home=Path("/h")),
+            Path("/h/.copilot"),
+        )
 
 
 class TestMachineFile(TempTree):
     """Resolution order, so a machine file need not be named after a hostname."""
 
-    def resolve(self, platform: str = "darwin", hostname: str = "box",
-                machine: str | None = None) -> Path:
+    def resolve(
+        self,
+        platform: str = "darwin",
+        hostname: str = "box",
+        machine: str | None = None,
+    ) -> Path:
         return lc.machine_file(self.repo, platform, hostname, machine)
 
     def test_explicit_machine_wins_over_everything(self) -> None:
@@ -577,15 +679,21 @@ class TestMachineFile(TempTree):
         self.assertEqual(self.resolve(machine="macos-chosen").name, "macos-chosen.md")
 
     def test_explicit_machine_accepts_a_name_that_already_ends_in_md(self) -> None:
-        self.assertEqual(self.resolve(machine="macos-chosen.md").name, "macos-chosen.md")
+        self.assertEqual(
+            self.resolve(machine="macos-chosen.md").name, "macos-chosen.md"
+        )
 
     def test_the_conventional_name_is_used_when_it_exists(self) -> None:
         self.machine_file("darwin", "box")
         self.assertEqual(self.resolve().name, "macos-box.md")
 
-    def test_the_only_file_for_this_platform_is_used_when_the_host_does_not_match(self) -> None:
+    def test_the_only_file_for_this_platform_is_used_when_the_host_does_not_match(
+        self,
+    ) -> None:
         self.machine_file("darwin", "workstation")
-        self.assertEqual(self.resolve(hostname="unmatched").name, "macos-workstation.md")
+        self.assertEqual(
+            self.resolve(hostname="unmatched").name, "macos-workstation.md"
+        )
 
     def test_another_platforms_file_is_never_borrowed(self) -> None:
         self.machine_file("win32", "some-pc")

@@ -36,9 +36,9 @@ DEFAULT_TIMEOUT = 60
 # investigate. Collapsing them is how a blocked tool gets mistaken for a
 # missing one and reinstalled pointlessly.
 INSTALLED = "installed"  # ran, and reported a version
-BLOCKED = "blocked"      # resolved on PATH, but the OS refused to run it
-ABSENT = "absent"        # nothing of that name on PATH
-ERROR = "error"          # ran, but produced no usable version output
+BLOCKED = "blocked"  # resolved on PATH, but the OS refused to run it
+ABSENT = "absent"  # nothing of that name on PATH
+ERROR = "error"  # ran, but produced no usable version output
 
 # Worst-wins ordering, for a tool that ships more than one command.
 SEVERITY = {INSTALLED: 0, ERROR: 1, BLOCKED: 2, ABSENT: 3}
@@ -103,7 +103,9 @@ def discover_tools(cli_dir: Path) -> list[Tool]:
     tools: list[Tool] = []
     for install in sorted(cli_dir.glob("*/install.md")):
         frontmatter = parse_frontmatter(install.read_text(encoding="utf-8"))
-        commands = [c.strip() for c in frontmatter.get("command", "").split(",") if c.strip()]
+        commands = [
+            c.strip() for c in frontmatter.get("command", "").split(",") if c.strip()
+        ]
         if not commands:
             continue
         tools.append(
@@ -162,12 +164,20 @@ def probe_command(
         # PermissionError is an OSError. A binary that resolves on PATH but
         # cannot be launched is the signature of an endpoint-security
         # quarantine, not of a bad install.
-        return Probe(command, BLOCKED, path=resolved, detail=f"{type(exc).__name__}: {exc}")
+        return Probe(
+            command, BLOCKED, path=resolved, detail=f"{type(exc).__name__}: {exc}"
+        )
 
     output = (completed.stdout or "") + (completed.stderr or "")
     version = extract_version(output)
     if version:
-        return Probe(command, INSTALLED, version=version, path=resolved, detail=first_line(output))
+        return Probe(
+            command,
+            INSTALLED,
+            version=version,
+            path=resolved,
+            detail=first_line(output),
+        )
     detail = first_line(output) or f"exit {completed.returncode}, no version output"
     return Probe(command, ERROR, path=resolved, detail=detail)
 
@@ -186,7 +196,9 @@ def roll_up(tool: Tool, probes: list[Probe]) -> ToolResult:
     )
 
 
-def run_inventory(tools: list[Tool], timeout: int = DEFAULT_TIMEOUT, **probe_kwargs) -> list[ToolResult]:
+def run_inventory(
+    tools: list[Tool], timeout: int = DEFAULT_TIMEOUT, **probe_kwargs
+) -> list[ToolResult]:
     """Probe every command of every tool."""
     results = []
     for tool in tools:
@@ -225,8 +237,9 @@ def suggested_id(facts: dict[str, str]) -> str:
     return f"{system}-{facts['node'].split('.')[0].lower()}"
 
 
-def render_markdown(results: list[ToolResult], facts: dict[str, str],
-                    host: str | None = None) -> str:
+def render_markdown(
+    results: list[ToolResult], facts: dict[str, str], host: str | None = None
+) -> str:
     """The inventory table, ready to paste into a machine file.
 
     ``host`` replaces the probed node name in the provenance line. A machine
@@ -235,9 +248,11 @@ def render_markdown(results: list[ToolResult], facts: dict[str, str],
     """
     usable = sum(1 for r in results if r.status == INSTALLED)
     lines = [
-        (f"Probed on `{host or facts['node']}` "
-         f"({facts['system']} {facts['version']}, Python {facts['python']}) "
-         f"by `workstation/scripts/inventory.py`."),
+        (
+            f"Probed on `{host or facts['node']}` "
+            f"({facts['system']} {facts['version']}, Python {facts['python']}) "
+            f"by `workstation/scripts/inventory.py`."
+        ),
         "",
         f"**{usable} of {len(results)} usable.**",
         "",
@@ -263,12 +278,14 @@ def main(argv: list[str] | None = None) -> int:
         default=default_cli,
         help=f"directory holding <tool>/install.md (default: {default_cli})",
     )
-    parser.add_argument("--json", action="store_true", help="emit JSON instead of a markdown table")
+    parser.add_argument(
+        "--json", action="store_true", help="emit JSON instead of a markdown table"
+    )
     parser.add_argument(
         "--host",
         metavar="LABEL",
         help="name to print instead of the probed hostname, for a machine file "
-             "that is committed under a chosen id rather than a DNS name",
+        "that is committed under a chosen id rather than a DNS name",
     )
     parser.add_argument(
         "--timeout",
@@ -289,7 +306,9 @@ def main(argv: list[str] | None = None) -> int:
 
     tools = discover_tools(args.cli_dir)
     if not tools:
-        parser.error(f"no <tool>/install.md with a `command:` field under {args.cli_dir}")
+        parser.error(
+            f"no <tool>/install.md with a `command:` field under {args.cli_dir}"
+        )
 
     facts = machine_facts()
     results = run_inventory(tools, timeout=args.timeout)

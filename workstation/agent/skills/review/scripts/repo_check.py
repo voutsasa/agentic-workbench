@@ -46,8 +46,7 @@ EXIT_ERROR = 2
 
 # [text](target) and ![alt](target). Angle-bracket targets — [x](<a b.md>) — are
 # markdown's own escape for spaces, so the brackets are stripped after matching.
-INLINE_LINK = re.compile(
-    r"!?\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]+(?:\s+\"[^\"]*\")?)\s*\)")
+INLINE_LINK = re.compile(r"!?\[[^\]]*\]\(\s*(<[^>]*>|[^)\s]+(?:\s+\"[^\"]*\")?)\s*\)")
 # [label]: target — a reference definition at the start of a line.
 REF_DEFINITION = re.compile(r"^\s{0,3}\[[^\]]+\]:\s*(\S+)")
 FENCE = re.compile(r"^\s*(```|~~~)")
@@ -72,6 +71,7 @@ class CheckError(RuntimeError):
 # config and scope
 # --------------------------------------------------------------------------- #
 
+
 def load_config(path: Path) -> dict:
     try:
         return tomllib.loads(path.read_text(encoding="utf-8"))
@@ -82,8 +82,11 @@ def load_config(path: Path) -> dict:
 
 
 def enabled_checks(config: dict) -> list[str]:
-    return [name for name, body in config.get("checks", {}).items()
-            if body.get("enabled", False)]
+    return [
+        name
+        for name, body in config.get("checks", {}).items()
+        if body.get("enabled", False)
+    ]
 
 
 def collect_files(repo_root: Path, config: dict, runner=subprocess.run) -> list[str]:
@@ -94,14 +97,19 @@ def collect_files(repo_root: Path, config: dict, runner=subprocess.run) -> list[
     """
     proc = runner(
         ["git", "-C", str(repo_root), "ls-files", "-z", "*.md"],
-        capture_output=True, text=True, check=False,
+        capture_output=True,
+        text=True,
+        check=False,
     )
     if proc.returncode != 0:
         raise CheckError(f"git ls-files failed: {proc.stderr.strip()}")
 
     excluded = config.get("scope", {}).get("exclude_globs", [])
-    files = [rel for rel in proc.stdout.split("\0") if rel.strip()
-             and not any(_matches(rel, pat) for pat in excluded)]
+    files = [
+        rel
+        for rel in proc.stdout.split("\0")
+        if rel.strip() and not any(_matches(rel, pat) for pat in excluded)
+    ]
     return sorted(files)
 
 
@@ -115,6 +123,7 @@ def _matches(rel_path: str, pattern: str) -> bool:
 # --------------------------------------------------------------------------- #
 # reading
 # --------------------------------------------------------------------------- #
+
 
 def prose_lines(text: str, *, keep_code: bool = False) -> list[tuple[int, str]]:
     """Lines outside fenced code blocks, with inline code spans blanked out.
@@ -139,8 +148,14 @@ def prose_lines(text: str, *, keep_code: bool = False) -> list[tuple[int, str]]:
             continue
         if fence_marker is not None:
             continue
-        out.append((lineno, line if keep_code
-                    else INLINE_CODE.sub(lambda m: " " * len(m.group(0)), line)))
+        out.append(
+            (
+                lineno,
+                line
+                if keep_code
+                else INLINE_CODE.sub(lambda m: " " * len(m.group(0)), line),
+            )
+        )
     return out
 
 
@@ -154,6 +169,7 @@ def read_text(path: Path) -> str:
 # --------------------------------------------------------------------------- #
 # checks
 # --------------------------------------------------------------------------- #
+
 
 def _link_targets(line: str) -> list[str]:
     targets = [m.group(1) for m in INLINE_LINK.finditer(line)]
@@ -171,9 +187,9 @@ def resolve_target(target: str) -> str | None:
     """
     target = target.strip()
     if target.startswith("<") and target.endswith(">"):
-        target = target[1:-1]                         # markdown's escape for spaces
+        target = target[1:-1]  # markdown's escape for spaces
     else:
-        target = target.split(" ", 1)[0].strip()      # drop a trailing "title"
+        target = target.split(" ", 1)[0].strip()  # drop a trailing "title"
     if not target or target.startswith("#"):
         return None
     if target.lower().startswith(NON_FILE_SCHEMES):
@@ -205,18 +221,27 @@ def check_links(repo_root: Path, files: list[str], config: dict) -> list[dict]:
                 if resolved is None:
                     continue
                 base = repo_root if resolved.startswith("/") else path.parent
-                candidate = (base / resolved.lstrip("/"))
+                candidate = base / resolved.lstrip("/")
                 if candidate.exists():
                     continue
-                candidate_rel = (resolved.lstrip("/") if resolved.startswith("/")
-                    else posixpath.normpath(posixpath.join(posixpath.dirname(rel), resolved)))
+                candidate_rel = (
+                    resolved.lstrip("/")
+                    if resolved.startswith("/")
+                    else posixpath.normpath(
+                        posixpath.join(posixpath.dirname(rel), resolved)
+                    )
+                )
                 if any(_matches(candidate_rel, glob) for glob in allow_globs):
                     continue
-                violations.append({
-                    "check": "links", "file": rel, "line": lineno,
-                    "detail": f"link target does not exist: {resolved}",
-                    "evidence": line.strip()[:200],
-                })
+                violations.append(
+                    {
+                        "check": "links",
+                        "file": rel,
+                        "line": lineno,
+                        "detail": f"link target does not exist: {resolved}",
+                        "evidence": line.strip()[:200],
+                    }
+                )
     return violations
 
 
@@ -274,23 +299,33 @@ def check_bare_paths(repo_root: Path, files: list[str], config: dict) -> list[di
                     continue
                 if (repo_root / candidate).exists():
                     continue
-                violations.append({
-                    "check": "bare_paths", "file": rel, "line": lineno,
-                    "detail": f"path does not exist: {candidate}",
-                    "evidence": line.strip()[:200],
-                })
+                violations.append(
+                    {
+                        "check": "bare_paths",
+                        "file": rel,
+                        "line": lineno,
+                        "detail": f"path does not exist: {candidate}",
+                        "evidence": line.strip()[:200],
+                    }
+                )
     return violations
 
 
 def check_terminology(repo_root: Path, files: list[str], config: dict) -> list[dict]:
-    rules = [r for r in config["checks"]["terminology"].get("rules", [])
-             if r.get("enabled", True)]
+    rules = [
+        r
+        for r in config["checks"]["terminology"].get("rules", [])
+        if r.get("enabled", True)
+    ]
     if not rules:
         return []
 
     compiled = [
-        (rule, re.compile(rf"\b{re.escape(rule['wrong'])}\w*\b", re.IGNORECASE),
-         [a.lower() for a in rule.get("allow_context", [])])
+        (
+            rule,
+            re.compile(rf"\b{re.escape(rule['wrong'])}\w*\b", re.IGNORECASE),
+            [a.lower() for a in rule.get("allow_context", [])],
+        )
         for rule in rules
     ]
     violations = []
@@ -309,12 +344,16 @@ def check_terminology(repo_root: Path, files: list[str], config: dict) -> list[d
                     continue
                 if any(phrase in lowered for phrase in allowed):
                     continue
-                violations.append({
-                    "check": "terminology", "file": rel, "line": lineno,
-                    "detail": f"use \"{rule['right']}\" rather than \"{match.group(0)}\""
-                              f" — {rule.get('why', 'house glossary')}",
-                    "evidence": prose.strip()[:200],
-                })
+                violations.append(
+                    {
+                        "check": "terminology",
+                        "file": rel,
+                        "line": lineno,
+                        "detail": f'use "{rule["right"]}" rather than "{match.group(0)}"'
+                        f" — {rule.get('why', 'house glossary')}",
+                        "evidence": prose.strip()[:200],
+                    }
+                )
     return violations
 
 
@@ -370,7 +409,8 @@ def validate_fields(rel: str, fields: dict[str, str], schema: dict) -> list[str]
         allowed = spec.get("allowed_values")
         if allowed and value not in allowed:
             problems.append(
-                f"`{name}` is {value!r}, expected one of {', '.join(allowed)}")
+                f"`{name}` is {value!r}, expected one of {', '.join(allowed)}"
+            )
 
         # A sentinel is an honest answer where a date would be a lie: `never`
         # says nobody has checked these claims yet, which is a fact worth
@@ -383,11 +423,14 @@ def validate_fields(rel: str, fields: dict[str, str], schema: dict) -> list[str]
             expected = Path(rel).parent.name
             if value != expected:
                 problems.append(
-                    f"`{name}` is {value!r} but its directory is {expected!r}")
+                    f"`{name}` is {value!r} but its directory is {expected!r}"
+                )
     return problems
 
 
-def check_metadata_header(repo_root: Path, files: list[str], config: dict) -> list[dict]:
+def check_metadata_header(
+    repo_root: Path, files: list[str], config: dict
+) -> list[dict]:
     """Validate frontmatter against the schema for each document family.
 
     A file matching no schema is not checked. That is the exemption mechanism:
@@ -405,20 +448,29 @@ def check_metadata_header(repo_root: Path, files: list[str], config: dict) -> li
 
         fields, error = parse_frontmatter(read_text(repo_root / rel))
         if error:
-            violations.append({
-                "check": "metadata_header", "file": rel, "line": 1,
-                "detail": error, "evidence": f"schema: {schema.get('name', '?')}",
-            })
+            violations.append(
+                {
+                    "check": "metadata_header",
+                    "file": rel,
+                    "line": 1,
+                    "detail": error,
+                    "evidence": f"schema: {schema.get('name', '?')}",
+                }
+            )
             continue
 
         problems = validate_fields(rel, fields, schema)
         if problems:
-            violations.append({
-                "check": "metadata_header", "file": rel, "line": 1,
-                "detail": "; ".join(problems),
-                "evidence": f"schema: {schema.get('name', '?')}; "
-                            f"present: {', '.join(sorted(fields)) or '(none)'}",
-            })
+            violations.append(
+                {
+                    "check": "metadata_header",
+                    "file": rel,
+                    "line": 1,
+                    "detail": "; ".join(problems),
+                    "evidence": f"schema: {schema.get('name', '?')}; "
+                    f"present: {', '.join(sorted(fields)) or '(none)'}",
+                }
+            )
     return violations
 
 
@@ -447,6 +499,7 @@ def run_checks(repo_root: Path, files: list[str], config: dict) -> list[dict]:
 # reporting
 # --------------------------------------------------------------------------- #
 
+
 def format_report(violations: list[dict]) -> str:
     if not violations:
         return "repo_check: all enabled checks passed."
@@ -469,12 +522,17 @@ def format_report(violations: list[dict]) -> str:
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
-    parser.add_argument("--repo-root", type=Path, default=None,
-                        help="repo to check (default: the git root above this script)")
+    parser.add_argument(
+        "--repo-root",
+        type=Path,
+        default=None,
+        help="repo to check (default: the git root above this script)",
+    )
     parser.add_argument("--config", type=Path, default=DEFAULT_CONFIG)
     parser.add_argument("--json", action="store_true", help="emit raw violation JSON")
-    parser.add_argument("--list-files", action="store_true",
-                        help="print the files in scope and stop")
+    parser.add_argument(
+        "--list-files", action="store_true", help="print the files in scope and stop"
+    )
     args = parser.parse_args(argv)
 
     try:
@@ -483,8 +541,10 @@ def main(argv: list[str] | None = None) -> int:
 
         active = enabled_checks(config)
         if not active:
-            print("repo_check: no checks enabled in checks.toml — nothing to do.",
-                  file=sys.stderr)
+            print(
+                "repo_check: no checks enabled in checks.toml — nothing to do.",
+                file=sys.stderr,
+            )
             return EXIT_OK
 
         files = collect_files(repo_root, config)
@@ -498,8 +558,10 @@ def main(argv: list[str] | None = None) -> int:
         violations = run_checks(repo_root, files, config)
     except CheckError as exc:
         print(f"repo_check: ERROR — {exc}", file=sys.stderr)
-        print("repo_check: the check did not run; not treating that as a pass.",
-              file=sys.stderr)
+        print(
+            "repo_check: the check did not run; not treating that as a pass.",
+            file=sys.stderr,
+        )
         return EXIT_ERROR
 
     if args.json:
@@ -510,8 +572,12 @@ def main(argv: list[str] | None = None) -> int:
 
 
 def _git_root(start: Path) -> Path:
-    proc = subprocess.run(["git", "-C", str(start), "rev-parse", "--show-toplevel"],
-                          capture_output=True, text=True, check=False)
+    proc = subprocess.run(
+        ["git", "-C", str(start), "rev-parse", "--show-toplevel"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
     if proc.returncode != 0:
         raise CheckError(f"not inside a git repo: {start}")
     return Path(proc.stdout.strip())

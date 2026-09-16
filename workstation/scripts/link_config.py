@@ -66,8 +66,14 @@ REPAIRABLE = (MISSING, DETACHED)
 #: is authoritative and is merged by hand; see workstation/agent/README.md.
 NEVER_LINK = frozenset({"settings.json"})
 
-SKILLS = ("review", "python-quality", "verify-docs", "fix-findings", "pdf-deliverable",
-          "fetch-to-markdown")
+SKILLS = (
+    "review",
+    "python-quality",
+    "verify-docs",
+    "fix-findings",
+    "pdf-deliverable",
+    "fetch-to-markdown",
+)
 
 #: Agents whose home this script can link into. Claude is the default so every
 #: invocation written before ``--agent`` existed keeps its meaning.
@@ -133,8 +139,12 @@ def short_hostname(hostname: str | None = None) -> str:
     return name.split(".")[0].lower()
 
 
-def machine_file(repo_root: Path, platform: str | None = None,
-                 hostname: str | None = None, machine: str | None = None) -> Path:
+def machine_file(
+    repo_root: Path,
+    platform: str | None = None,
+    hostname: str | None = None,
+    machine: str | None = None,
+) -> Path:
     """The ``machines/`` file this box should link as ``~/.claude/machine.md``.
 
     Resolved rather than derived, because a machine file is *named* by whoever
@@ -163,8 +173,9 @@ def machine_file(repo_root: Path, platform: str | None = None,
     return conventional
 
 
-def copilot_home(home: Path, environ: dict[str, str] | None = None,
-                 default_home: Path | None = None) -> Path:
+def copilot_home(
+    home: Path, environ: dict[str, str] | None = None, default_home: Path | None = None
+) -> Path:
     """Where Copilot keeps its user config: ``$COPILOT_HOME``, else ``<home>/.copilot``.
 
     ``COPILOT_HOME`` is honoured only when ``home`` is the real home directory.
@@ -186,11 +197,17 @@ def repo_skills(repo_root: Path) -> tuple[str, ...]:
     return tuple(sorted(p.parent.name for p in root.glob("*/SKILL.md")))
 
 
-def plan(repo_root: Path, home: Path, platform: str | None = None,
-         hostname: str | None = None, machine: str | None = None,
-         agents: tuple[str, ...] = ("claude",),
-         copilot_root: Path | None = None, project: bool = False,
-         claude_md: bool = False) -> list[Link]:
+def plan(
+    repo_root: Path,
+    home: Path,
+    platform: str | None = None,
+    hostname: str | None = None,
+    machine: str | None = None,
+    agents: tuple[str, ...] = ("claude",),
+    copilot_root: Path | None = None,
+    project: bool = False,
+    claude_md: bool = False,
+) -> list[Link]:
     """The links this repo expects, in the order they should be applied.
 
     Skills come first: they are directories, so on Windows they are junctions,
@@ -204,37 +221,66 @@ def plan(repo_root: Path, home: Path, platform: str | None = None,
     links: list[Link] = []
     if "claude" in agents:
         links += [
-            Link(f"skills/{skill}", agent / "skills" / skill,
-                 home / ".claude" / "skills" / skill, is_dir=True)
+            Link(
+                f"skills/{skill}",
+                agent / "skills" / skill,
+                home / ".claude" / "skills" / skill,
+                is_dir=True,
+            )
             for skill in SKILLS
         ]
     if "copilot" in agents:
         root = copilot_root if copilot_root is not None else home / ".copilot"
         links += [
-            Link(f"copilot/skills/{skill}", agent / "skills" / skill,
-                 root / "skills" / skill, is_dir=True)
+            Link(
+                f"copilot/skills/{skill}",
+                agent / "skills" / skill,
+                root / "skills" / skill,
+                is_dir=True,
+            )
             for skill in SKILLS
         ]
     if project:
         links += [
-            Link(f"project/skills/{name}", repo_root / "skills" / name,
-                 repo_root / ".claude" / "skills" / name, is_dir=True)
+            Link(
+                f"project/skills/{name}",
+                repo_root / "skills" / name,
+                repo_root / ".claude" / "skills" / name,
+                is_dir=True,
+            )
             for name in repo_skills(repo_root)
         ]
     if claude_md:
-        links.append(Link("project/CLAUDE.md", repo_root / "AGENTS.md",
-                          repo_root / "CLAUDE.md", is_dir=False,
-                          content=CLAUDE_MD_IMPORT))
+        links.append(
+            Link(
+                "project/CLAUDE.md",
+                repo_root / "AGENTS.md",
+                repo_root / "CLAUDE.md",
+                is_dir=False,
+                content=CLAUDE_MD_IMPORT,
+            )
+        )
     if "claude" in agents:
         # Source and destination names differ on purpose: the repo calls this file
         # AGENT-INSTRUCTIONS.md because more than one agent reads it, but Claude Code
         # only ever loads ``~/.claude/CLAUDE.md``, so the destination name is fixed.
         # Every label here names the destination artefact, not the source.
-        links.append(Link("CLAUDE.md", agent / "AGENT-INSTRUCTIONS.md",
-                          home / ".claude" / "CLAUDE.md", is_dir=False))
-        links.append(Link("machine.md",
-                          machine_file(repo_root, platform, hostname, machine),
-                          home / ".claude" / "machine.md", is_dir=False))
+        links.append(
+            Link(
+                "CLAUDE.md",
+                agent / "AGENT-INSTRUCTIONS.md",
+                home / ".claude" / "CLAUDE.md",
+                is_dir=False,
+            )
+        )
+        links.append(
+            Link(
+                "machine.md",
+                machine_file(repo_root, platform, hostname, machine),
+                home / ".claude" / "machine.md",
+                is_dir=False,
+            )
+        )
     for link in links:
         if link.dest.name in NEVER_LINK:
             raise AssertionError(
@@ -274,8 +320,9 @@ def inspect(link: Link) -> LinkState:
         # blocks `os.symlink`. This repo's config moved from `workstation-agent/`
         # to `workstation/agent/`, so links from that era are exactly this.
         if link.dest.is_symlink():
-            return LinkState(link, DETACHED,
-                             f"dangling symlink → {os.readlink(link.dest)}")
+            return LinkState(
+                link, DETACHED, f"dangling symlink → {os.readlink(link.dest)}"
+            )
         if is_junction(link.dest):
             return LinkState(link, DETACHED, "dangling junction")
         return LinkState(link, MISSING, f"not present in {link.dest.parent}")
@@ -286,17 +333,23 @@ def inspect(link: Link) -> LinkState:
             return LinkState(link, OCCUPIED, f"unreadable: {exc}")
         if matches:
             return LinkState(link, LINKED, "")
-        return LinkState(link, DIVERGED,
-                         f"holds other content, expected {link.content.strip()!r} — reconcile first")
+        return LinkState(
+            link,
+            DIVERGED,
+            f"holds other content, expected {link.content.strip()!r} — reconcile first",
+        )
     if same_target(link.source, link.dest):
         return LinkState(link, LINKED, "")
     if link.is_dir:
         # A directory that is not the target and holds files is somebody's data.
         entries = sorted(p.name for p in link.dest.iterdir())
         if entries:
-            return LinkState(link, OCCUPIED,
-                             f"real directory holding {len(entries)} entr"
-                             f"{'y' if len(entries) == 1 else 'ies'}")
+            return LinkState(
+                link,
+                OCCUPIED,
+                f"real directory holding {len(entries)} entr"
+                f"{'y' if len(entries) == 1 else 'ies'}",
+            )
         return LinkState(link, DETACHED, "empty directory, not a link")
     try:
         matches = link.dest.read_bytes() == link.source.read_bytes()
@@ -327,8 +380,11 @@ def make_link(link: Link, run=subprocess.run) -> None:
         os.symlink(link.source, link.dest, target_is_directory=link.is_dir)
         return
     if link.is_dir:
-        run(["cmd", "/c", "mklink", "/J", str(link.dest), str(link.source)],
-            check=True, capture_output=True)
+        run(
+            ["cmd", "/c", "mklink", "/J", str(link.dest), str(link.source)],
+            check=True,
+            capture_output=True,
+        )
     else:
         os.link(link.source, link.dest)
 
@@ -385,37 +441,71 @@ def render(report: Report) -> str:
         rows.append(f"| `{state.link.label}` | {kind} | {state.status} | {detail} |")
     linked = sum(1 for s in report.states if s.status == LINKED)
     rows.append("")
-    rows.append(f"**{linked} of {len(report.states)} linked.** "
-                "`settings.json` is excluded by design — it is merged by hand.")
+    rows.append(
+        f"**{linked} of {len(report.states)} linked.** "
+        "`settings.json` is excluded by design — it is merged by hand."
+    )
     return "\n".join(rows)
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
-    parser.add_argument("--repo", type=Path, default=Path(__file__).resolve().parents[2],
-                        help="repo root (default: inferred from this file)")
-    parser.add_argument("--home", type=Path, default=Path.home(),
-                        help="home directory holding .claude (default: your home)")
-    parser.add_argument("--agent", action="append", choices=AGENTS, dest="agents",
-                        help="agent to link for; repeat for several (default: claude)")
-    parser.add_argument("--copilot-home", type=Path, metavar="DIR",
-                        help="Copilot config root (default: $COPILOT_HOME when --home "
-                             "is your home, else <home>/.copilot)")
-    parser.add_argument("--project", action="store_true",
-                        help="link this repo's own skills/<name> into <repo>/.claude/skills, "
-                             "where Claude Code and Copilot read them at project scope")
-    parser.add_argument("--claude-md", action="store_true",
-                        help="write <repo>/CLAUDE.md importing AGENTS.md, for Claude Code; "
-                             "leave it out in a Copilot-only clone, where it would load "
-                             "the instructions twice")
-    parser.add_argument("--machine", metavar="ID",
-                        help="machines/<ID>.md to link as ~/.claude/machine.md "
-                             "(default: <platform>-<hostname>.md, else the only "
-                             "file for this platform)")
-    parser.add_argument("--apply", action="store_true",
-                        help="create missing and detached links (default: report only)")
-    parser.add_argument("--force", action="store_true",
-                        help="with --apply, also replace a diverged or occupied destination")
+    parser.add_argument(
+        "--repo",
+        type=Path,
+        default=Path(__file__).resolve().parents[2],
+        help="repo root (default: inferred from this file)",
+    )
+    parser.add_argument(
+        "--home",
+        type=Path,
+        default=Path.home(),
+        help="home directory holding .claude (default: your home)",
+    )
+    parser.add_argument(
+        "--agent",
+        action="append",
+        choices=AGENTS,
+        dest="agents",
+        help="agent to link for; repeat for several (default: claude)",
+    )
+    parser.add_argument(
+        "--copilot-home",
+        type=Path,
+        metavar="DIR",
+        help="Copilot config root (default: $COPILOT_HOME when --home "
+        "is your home, else <home>/.copilot)",
+    )
+    parser.add_argument(
+        "--project",
+        action="store_true",
+        help="link this repo's own skills/<name> into <repo>/.claude/skills, "
+        "where Claude Code and Copilot read them at project scope",
+    )
+    parser.add_argument(
+        "--claude-md",
+        action="store_true",
+        help="write <repo>/CLAUDE.md importing AGENTS.md, for Claude Code; "
+        "leave it out in a Copilot-only clone, where it would load "
+        "the instructions twice",
+    )
+    parser.add_argument(
+        "--machine",
+        metavar="ID",
+        help="machines/<ID>.md to link as ~/.claude/machine.md "
+        "(default: <platform>-<hostname>.md, else the only "
+        "file for this platform)",
+    )
+    parser.add_argument(
+        "--apply",
+        action="store_true",
+        help="create missing and detached links (default: report only)",
+    )
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="with --apply, also replace a diverged or occupied destination",
+    )
     parser.add_argument("--json", action="store_true", help="machine-readable output")
     args = parser.parse_args(argv)
 
@@ -428,32 +518,45 @@ def main(argv: list[str] | None = None) -> int:
     repo_only = args.project or args.claude_md
     agents = tuple(dict.fromkeys(args.agents or ([] if repo_only else ["claude"])))
     copilot_root = args.copilot_home or copilot_home(args.home)
-    report = inspect_all(plan(args.repo, args.home, machine=args.machine,
-                              agents=agents, copilot_root=copilot_root,
-                              project=args.project, claude_md=args.claude_md))
+    report = inspect_all(
+        plan(
+            args.repo,
+            args.home,
+            machine=args.machine,
+            agents=agents,
+            copilot_root=copilot_root,
+            project=args.project,
+            claude_md=args.claude_md,
+        )
+    )
     if args.apply:
         report = apply(report, force=args.force)
 
     if args.json:
-        print(json.dumps({
-            "agents": list(agents),
-            "project": args.project,
-            "claude_md": args.claude_md,
-            "ok": report.ok,
-            "status": report.status,
-            "links": [
+        print(
+            json.dumps(
                 {
-                    "label": s.link.label,
-                    "source": str(s.link.source),
-                    "dest": str(s.link.dest),
-                    "kind": "dir" if s.link.is_dir else "file",
-                    "status": s.status,
-                    "detail": s.detail,
-                    "repaired": s.repaired,
-                }
-                for s in report.states
-            ],
-        }, indent=2))
+                    "agents": list(agents),
+                    "project": args.project,
+                    "claude_md": args.claude_md,
+                    "ok": report.ok,
+                    "status": report.status,
+                    "links": [
+                        {
+                            "label": s.link.label,
+                            "source": str(s.link.source),
+                            "dest": str(s.link.dest),
+                            "kind": "dir" if s.link.is_dir else "file",
+                            "status": s.status,
+                            "detail": s.detail,
+                            "repaired": s.repaired,
+                        }
+                        for s in report.states
+                    ],
+                },
+                indent=2,
+            )
+        )
     else:
         print(render(report))
         if not report.ok and not args.apply:

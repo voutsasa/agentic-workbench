@@ -90,7 +90,9 @@ def run_hook(*args: str) -> subprocess.CompletedProcess:
                 proc.stdin.close()
         out_f.seek(0)
         err_f.seek(0)
-        return subprocess.CompletedProcess(proc.args, proc.returncode, out_f.read(), err_f.read())
+        return subprocess.CompletedProcess(
+            proc.args, proc.returncode, out_f.read(), err_f.read()
+        )
 
 
 class GuardTests(unittest.TestCase):
@@ -152,7 +154,12 @@ class Sample(unittest.TestCase):
 
 #: Variables that change what the hook does; stripped so the developer's own
 #: shell, or an outer hook run, cannot decide a test's outcome.
-HOOK_ENV_FLAGS = ("SKIP_REPO_CHECK", "SKIP_VERIFY_CLAIMS", "SKIP_PRE_PUSH_TESTS", "PRE_PUSH_IN_TESTS")
+HOOK_ENV_FLAGS = (
+    "SKIP_REPO_CHECK",
+    "SKIP_VERIFY_CLAIMS",
+    "SKIP_PRE_PUSH_TESTS",
+    "PRE_PUSH_IN_TESTS",
+)
 
 
 class UnitTestStepTests(unittest.TestCase):

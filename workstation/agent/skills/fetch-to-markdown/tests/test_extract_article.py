@@ -213,7 +213,12 @@ class StrippingTests(unittest.TestCase):
             "</div>"
         )
         out = extract(html, "div.a")
-        for decoration in ("cs-card-logo", "arrow.svg", "logo%402x.png", "sponsor_logos/vivy.png"):
+        for decoration in (
+            "cs-card-logo",
+            "arrow.svg",
+            "logo%402x.png",
+            "sponsor_logos/vivy.png",
+        ):
             self.assertNotIn(decoration, out)
         self.assertIn("images/screenshot.png", out)
         self.assertIn("a-prettier-printer-by-james-long.png", out)
@@ -230,7 +235,10 @@ class StrippingTests(unittest.TestCase):
         out = extract(html, "div.a")
         self.assertNotIn("<figure", out)
         self.assertNotIn("<figcaption", out)
-        self.assertIn('<code class="language-groovy" data-lang="groovy">mavenCentral()</code>', out)
+        self.assertIn(
+            '<code class="language-groovy" data-lang="groovy">mavenCentral()</code>',
+            out,
+        )
         self.assertIn("Gradle", out)
 
     def test_strips_style_blocks(self):
@@ -266,7 +274,10 @@ class StrippingTests(unittest.TestCase):
         out = extract(html, "div.a")
         self.assertNotIn('<a class="card-grid-item">', out)
         self.assertIn("Java", out)
-        self.assertIn('<a href="https://golang.testcontainers.org/" class="card-grid-item">Go</a>', out)
+        self.assertIn(
+            '<a href="https://golang.testcontainers.org/" class="card-grid-item">Go</a>',
+            out,
+        )
 
     def test_strips_plantuml_backtop_and_edit_dropdown_with_their_content(self):
         """Unlike the layout tags, the dropdown's own text is chrome too — three
@@ -305,7 +316,13 @@ class StrippingTests(unittest.TestCase):
         out = extract(html, "article.doc")
         self.assertIn("<h1>Spring Boot</h1>", out)
         self.assertIn("Real text.", out)
-        for chrome in ("copy-url", "breadcrumbs", "Overview", "pagination", "Documentation"):
+        for chrome in (
+            "copy-url",
+            "breadcrumbs",
+            "Overview",
+            "pagination",
+            "Documentation",
+        ):
             self.assertNotIn(chrome, out)
 
     def test_keeps_a_nav_the_article_uses_for_its_own_content(self):
@@ -344,14 +361,14 @@ class StrippingTests(unittest.TestCase):
             "<html><body>"
             '<nav class="navbar"><span>Docs</span></nav>'
             '<div class="theme-doc-markdown markdown">'
-            '<style>.hidden{display:none}</style>'
+            "<style>.hidden{display:none}</style>"
             '<h1>Writing tests<a class="hash-link" href="#t">\u200b</a></h1>'
             "<p>Playwright <strong>is</strong> an end-to-end test framework.</p>"
             '<div class="tabs-container"><div class="tab"><pre><code>npm i</code></pre>'
             '<button><svg><path d="M0"/></svg></button></div></div>'
             "<ul><li>One</li><li>Two</li></ul>"
             "</div>"
-            '<footer><div>Edit this page</div></footer>'
+            "<footer><div>Edit this page</div></footer>"
             "</body></html>"
         )
         out = extract(html, "div.theme-doc-markdown")
@@ -383,7 +400,9 @@ class AbsolutiseTests(unittest.TestCase):
 
     def test_dot_slash_relative_href(self) -> None:
         out = self.absolutise('<a href="./assets/intro.pdf">Intro</a>')
-        self.assertIn('href="https://rdi.berkeley.edu/llm-agents/assets/intro.pdf"', out)
+        self.assertIn(
+            'href="https://rdi.berkeley.edu/llm-agents/assets/intro.pdf"', out
+        )
 
     def test_bare_relative_src(self) -> None:
         out = self.absolutise('<img src="assets/dawn.jpg" height="200" />')
@@ -396,8 +415,12 @@ class AbsolutiseTests(unittest.TestCase):
     def test_unquoted_root_relative_href_is_resolved_and_quoted(self) -> None:
         """Minified Docusaurus output (typescript-eslint.io, prettier.io) drops
         attribute quotes, which a quoted-only pattern never matched."""
-        out = self.absolutise("<a href=/getting-started/typed-linting>Typed Linting</a>")
-        self.assertIn('href="https://rdi.berkeley.edu/getting-started/typed-linting"', out)
+        out = self.absolutise(
+            "<a href=/getting-started/typed-linting>Typed Linting</a>"
+        )
+        self.assertIn(
+            'href="https://rdi.berkeley.edu/getting-started/typed-linting"', out
+        )
         self.assertIn(">Typed Linting</a>", out)
 
     def test_unquoted_absolute_url_is_untouched(self) -> None:
@@ -410,7 +433,10 @@ class AbsolutiseTests(unittest.TestCase):
 
     def test_fragment_is_untouched(self) -> None:
         """An intra-document link must stay intra-document."""
-        for html in ('<a href="#syllabus">Syllabus</a>', "<a href=#syllabus>Syllabus</a>"):
+        for html in (
+            '<a href="#syllabus">Syllabus</a>',
+            "<a href=#syllabus>Syllabus</a>",
+        ):
             with self.subTest(html=html):
                 self.assertEqual(html, self.absolutise(html))
 

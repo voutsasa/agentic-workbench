@@ -39,13 +39,19 @@ def absent(*args, **kwargs):
 
 def defuddle_returning(**payload):
     """A stub `run` answering as `defuddle parse - --json` would."""
+
     def run(cmd, **kwargs):
         assert cmd[:2] == ["defuddle", "parse"], cmd
-        return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(payload), stderr="")
+        return subprocess.CompletedProcess(
+            cmd, 0, stdout=json.dumps(payload), stderr=""
+        )
+
     return run
 
 
-def block(html: str = PAGE, url: str = URL, body: str = "one two three", run=absent) -> str:
+def block(
+    html: str = PAGE, url: str = URL, body: str = "one two three", run=absent
+) -> str:
     return add_frontmatter.frontmatter(html, url, body, run=run)
 
 
@@ -63,10 +69,20 @@ class DefuddleMetadata(unittest.TestCase):
     """The preferred path: defuddle's own values, so both routes agree."""
 
     def test_uses_defuddles_fields_verbatim(self):
-        run = defuddle_returning(title="Learn Java", site="Dev.java: The Destination",
-                                 language="en", author="", description="")
-        got = fields(block("<html><head><title>Learn Java - Dev.java</title></head></html>",
-                           "https://dev.java/learn/", run=run))
+        run = defuddle_returning(
+            title="Learn Java",
+            site="Dev.java: The Destination",
+            language="en",
+            author="",
+            description="",
+        )
+        got = fields(
+            block(
+                "<html><head><title>Learn Java - Dev.java</title></head></html>",
+                "https://dev.java/learn/",
+                run=run,
+            )
+        )
         self.assertEqual(got["title"], "Learn Java")
         self.assertEqual(got["site"], "Dev.java: The Destination")
         self.assertEqual(got["language"], "en")
@@ -75,16 +91,38 @@ class DefuddleMetadata(unittest.TestCase):
 
     def test_source_and_domain_still_come_from_the_url(self):
         run = defuddle_returning(title="Testing", site="docs.spring.io")
-        got = fields(block(PAGE, "https://docs.spring.io/spring-boot/reference/testing/index.html", run=run))
-        self.assertEqual(got["source"], "https://docs.spring.io/spring-boot/reference/testing/index.html")
+        got = fields(
+            block(
+                PAGE,
+                "https://docs.spring.io/spring-boot/reference/testing/index.html",
+                run=run,
+            )
+        )
+        self.assertEqual(
+            got["source"],
+            "https://docs.spring.io/spring-boot/reference/testing/index.html",
+        )
         self.assertEqual(got["domain"], "docs.spring.io")
 
     def test_field_order_matches_defuddle(self):
-        run = defuddle_returning(title="T", author="A", site="S", language="en", description="D")
-        keys = [line.split(":")[0] for line in block(run=run).split("---\n")[1].splitlines()]
+        run = defuddle_returning(
+            title="T", author="A", site="S", language="en", description="D"
+        )
+        keys = [
+            line.split(":")[0] for line in block(run=run).split("---\n")[1].splitlines()
+        ]
         self.assertEqual(
             keys,
-            ["title", "author", "site", "source", "domain", "language", "description", "word_count"],
+            [
+                "title",
+                "author",
+                "site",
+                "source",
+                "domain",
+                "language",
+                "description",
+                "word_count",
+            ],
         )
 
     def test_falls_back_when_defuddle_is_not_installed(self):
@@ -99,7 +137,9 @@ class DefuddleMetadata(unittest.TestCase):
 
         for run in (failing, garbage):
             with self.subTest(run=run):
-                self.assertEqual(fields(block(run=run))["title"], "Getting Started | Guide")
+                self.assertEqual(
+                    fields(block(run=run))["title"], "Getting Started | Guide"
+                )
 
     def test_the_fetched_html_is_what_gets_parsed(self):
         """Fed on stdin, never re-fetched: a second request could differ from the
@@ -108,7 +148,9 @@ class DefuddleMetadata(unittest.TestCase):
 
         def run(cmd, **kwargs):
             seen["input"] = kwargs.get("input")
-            return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps({"title": "T"}), stderr="")
+            return subprocess.CompletedProcess(
+                cmd, 0, stdout=json.dumps({"title": "T"}), stderr=""
+            )
 
         block(run=run)
         self.assertEqual(seen["input"], PAGE)
@@ -122,21 +164,29 @@ class FallbackFields(unittest.TestCase):
         self.assertEqual(got["title"], "Getting Started | Guide")
         self.assertEqual(got["site"], "Vitest")
         self.assertEqual(got["language"], "en-US")
-        self.assertEqual(got["description"], "Next generation testing framework powered by Vite")
+        self.assertEqual(
+            got["description"], "Next generation testing framework powered by Vite"
+        )
 
     def test_word_count_counts_the_converted_body(self):
         """Whitespace-separated tokens of the markdown, `#` included — the count
         already written into the corpus, and within a word or two of defuddle's."""
-        self.assertEqual(fields(block(body="# Title\n\none two three four"))["word_count"], "6")
+        self.assertEqual(
+            fields(block(body="# Title\n\none two three four"))["word_count"], "6"
+        )
 
     def test_absent_fields_are_omitted_not_written_empty(self):
-        got = fields(block("<html><head><title>Bare</title></head><body></body></html>"))
+        got = fields(
+            block("<html><head><title>Bare</title></head><body></body></html>")
+        )
         self.assertEqual(got["title"], "Bare")
         for missing in ("author", "site", "language", "description"):
             self.assertNotIn(missing, got)
 
     def test_a_twitter_handle_is_not_an_author(self):
-        html = PAGE.replace("<head>", '<head><meta name="twitter:creator" content="@java">')
+        html = PAGE.replace(
+            "<head>", '<head><meta name="twitter:creator" content="@java">'
+        )
         self.assertNotIn("author", fields(block(html)))
 
     def test_entities_in_the_title_element_are_decoded(self):
@@ -153,7 +203,9 @@ class FallbackFields(unittest.TestCase):
             '"Next generation testing framework powered by Vite"',
             '"Next generation\n   testing framework"',
         )
-        self.assertEqual(fields(block(html))["description"], "Next generation testing framework")
+        self.assertEqual(
+            fields(block(html))["description"], "Next generation testing framework"
+        )
 
 
 class TitleSuffix(unittest.TestCase):
@@ -162,36 +214,47 @@ class TitleSuffix(unittest.TestCase):
     def test_strips_a_site_name_that_opens_the_site_field(self):
         self.assertEqual(
             add_frontmatter.strip_site_suffix(
-                "Learn Java - Dev.java", "Dev.java: The Destination for Java Developers"),
+                "Learn Java - Dev.java", "Dev.java: The Destination for Java Developers"
+            ),
             "Learn Java",
         )
 
     def test_strips_a_tail_matching_the_domain(self):
         self.assertEqual(
-            add_frontmatter.strip_site_suffix("Checkstyle 14.1.0 – checkstyle", "", "checkstyle.org"),
+            add_frontmatter.strip_site_suffix(
+                "Checkstyle 14.1.0 – checkstyle", "", "checkstyle.org"
+            ),
             "Checkstyle 14.1.0",
         )
 
     def test_ignores_www_when_matching_the_domain(self):
         self.assertEqual(
-            add_frontmatter.strip_site_suffix("Docs | typescriptlang", "", "www.typescriptlang.org"),
+            add_frontmatter.strip_site_suffix(
+                "Docs | typescriptlang", "", "www.typescriptlang.org"
+            ),
             "Docs",
         )
 
     def test_collapses_a_title_repeated_around_a_separator(self):
         """Antora writes "Spring Boot :: Spring Boot" on a page with no section."""
         self.assertEqual(
-            add_frontmatter.strip_site_suffix("Spring Boot :: Spring Boot", ""), "Spring Boot"
+            add_frontmatter.strip_site_suffix("Spring Boot :: Spring Boot", ""),
+            "Spring Boot",
         )
 
     def test_keeps_a_title_whose_tail_is_neither_site_nor_domain(self):
         self.assertEqual(
-            add_frontmatter.strip_site_suffix("Testing - Overview", "Angular", "angular.dev"),
+            add_frontmatter.strip_site_suffix(
+                "Testing - Overview", "Angular", "angular.dev"
+            ),
             "Testing - Overview",
         )
 
     def test_a_title_that_is_only_the_site_name_survives(self):
-        self.assertEqual(add_frontmatter.strip_site_suffix("Vitest", "Vitest", "vitest.dev"), "Vitest")
+        self.assertEqual(
+            add_frontmatter.strip_site_suffix("Vitest", "Vitest", "vitest.dev"),
+            "Vitest",
+        )
 
 
 class FileHandling(unittest.TestCase):

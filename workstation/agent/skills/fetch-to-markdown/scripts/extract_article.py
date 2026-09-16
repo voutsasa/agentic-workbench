@@ -72,13 +72,15 @@ SVG_TAG = re.compile(r"<svg\b.*?</svg>", re.DOTALL)
 # `<a id="Section_Title"></a>` before every heading). Pandoc's HTML reader turns
 # each into a Span-with-id, which its gfm writer then has to fall back to raw
 # HTML for. Empty by construction, so a real link with an id is never matched.
-ANCHOR_BOOKMARK = re.compile(r'<a\b[^>]*\b(?:name|id)=["\']?[^"\'\s>]*["\']?[^>]*>\s*</a>')
+ANCHOR_BOOKMARK = re.compile(
+    r'<a\b[^>]*\b(?:name|id)=["\']?[^"\'\s>]*["\']?[^>]*>\s*</a>'
+)
 # An anchor with no href is not a link — java.testcontainers.org marks the page
 # you are already on that way, `<a class="card-grid-item">Java</a>` among its
 # links to the other languages. Pandoc maps it to a Span-with-class and the gfm
 # writer emits raw HTML. Only the opening tag goes: the text is content, and the
 # orphaned `</a>` left behind is ignored by pandoc's reader (measured, 3.11).
-ANCHOR_NO_HREF = re.compile(r'<a\b(?![^>]*\bhref=)[^>]*>')
+ANCHOR_NO_HREF = re.compile(r"<a\b(?![^>]*\bhref=)[^>]*>")
 # Inline CSS is never content, and pandoc's HTML reader passes an unrecognised
 # <style> block through verbatim rather than dropping it.
 STYLE_TAG = re.compile(r"<style\b.*?</style>", re.DOTALL)
@@ -104,7 +106,9 @@ NAV_CHROME = re.compile(
 # inside the article node: "On this page", the heading links, "Back to the top".
 # Pandoc maps <aside> to a Div and emits it raw. Matched on that heading rather
 # than on every <aside>, because an aside can also be a note that is content.
-TOC_ASIDE = re.compile(r"<aside\b[^>]*>(?:(?!</aside>).)*?\bOn this page\b.*?</aside>", re.DOTALL)
+TOC_ASIDE = re.compile(
+    r"<aside\b[^>]*>(?:(?!</aside>).)*?\bOn this page\b.*?</aside>", re.DOTALL
+)
 
 
 #: Attributes whose value is a single URL. `srcset` is deliberately absent: it
@@ -114,7 +118,9 @@ URL_ATTRS = ("href", "src", "poster")
 # Quoted, or bare: minified Docusaurus output (typescript-eslint.io, prettier.io)
 # drops the quotes, `href=/getting-started/`, which a quoted-only pattern misses.
 _URL_ATTR_RE = re.compile(
-    r'\b(' + "|".join(URL_ATTRS) + r')=(?:(["\'])(?P<url>[^"\']*)\2|(?P<bare>[^\s"\'=<>`]+))',
+    r"\b("
+    + "|".join(URL_ATTRS)
+    + r')=(?:(["\'])(?P<url>[^"\']*)\2|(?P<bare>[^\s"\'=<>`]+))',
     re.IGNORECASE,
 )
 
@@ -129,11 +135,18 @@ def absolutise(html: str, base_url: str) -> str:
     (``mailto:``, ``data:``, ``javascript:``) is not a path. A resolved bare
     value is written back quoted.
     """
+
     def replace(match: re.Match[str]) -> str:
-        url = match.group("url") if match.group("url") is not None else match.group("bare")
+        url = (
+            match.group("url")
+            if match.group("url") is not None
+            else match.group("bare")
+        )
         if not url or url.startswith(("#", "data:")):
             return match.group(0)
-        if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", url) and not url.startswith(("http:", "https:")):
+        if re.match(r"^[a-zA-Z][a-zA-Z0-9+.-]*:", url) and not url.startswith(
+            ("http:", "https:")
+        ):
             return match.group(0)
         joined = urljoin(base_url, url)
         if joined == url:
@@ -159,7 +172,9 @@ def parse_selector(selector: str) -> tuple[str, str, str]:
     if "#" in selector:
         tag, _, value = selector.partition("#")
         return tag, "id", value
-    raise ValueError(f"selector must be tag.class, tag#id or tag[attr=value], got {selector!r}")
+    raise ValueError(
+        f"selector must be tag.class, tag#id or tag[attr=value], got {selector!r}"
+    )
 
 
 class ArticleExtractor(HTMLParser):
@@ -219,8 +234,9 @@ def main() -> int:
     parser.feed(html)
     article = "".join(parser.chunks).strip()
     if not article:
-        print(f"no <{tag} {attr}=\"...{value}...\"> found in {html_path}",
-              file=sys.stderr)
+        print(
+            f'no <{tag} {attr}="...{value}..."> found in {html_path}', file=sys.stderr
+        )
         return 1
     article = HASH_LINK.sub("", article)
     article = ANCHOR_BOOKMARK.sub("", article)

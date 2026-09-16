@@ -45,7 +45,9 @@ class TestInstallClaim(unittest.TestCase):
         self.assertEqual(present, "npm ls -g --depth=0 @mermaid-js/mermaid-cli")
 
     def test_uv_tool_install_uses_pypi(self):
-        self.assertEqual(install_claim("uv tool install docling")[1], "pip index versions docling")
+        self.assertEqual(
+            install_claim("uv tool install docling")[1], "pip index versions docling"
+        )
 
     def test_non_install_command_returns_none(self):
         self.assertIsNone(install_claim("pandoc input.md -o out.pdf"))
@@ -61,17 +63,24 @@ class TestPathHeuristic(unittest.TestCase):
         self.assertFalse(looks_like_path("pandoc"))
         self.assertFalse(looks_like_path("https://example.com/x"))
         self.assertFalse(looks_like_path("and/or"))  # one slash, no extension
-        self.assertFalse(looks_like_path("..."))     # ellipsis in prose
-        self.assertFalse(looks_like_path("../.."))   # no name component
+        self.assertFalse(looks_like_path("..."))  # ellipsis in prose
+        self.assertFalse(looks_like_path("../.."))  # no name component
 
 
 class TestSubjectBinary(unittest.TestCase):
     def test_prefers_the_command_head_over_the_folder_name(self):
         text = "# mermaid-cli\n\n```\nmmdc -i a.mmd -o a.svg\nmmdc -i b.mmd -o b.svg\n```\n"
-        self.assertEqual(subject_binary(text, "workstation/cli/mermaid-cli/quick_start.md"), "mmdc")
+        self.assertEqual(
+            subject_binary(text, "workstation/cli/mermaid-cli/quick_start.md"), "mmdc"
+        )
 
     def test_falls_back_to_the_cli_folder_name(self):
-        self.assertEqual(subject_binary("# d2\n\nProse only.\n", "workstation/cli/d2-cli/quick_start.md"), "d2")
+        self.assertEqual(
+            subject_binary(
+                "# d2\n\nProse only.\n", "workstation/cli/d2-cli/quick_start.md"
+            ),
+            "d2",
+        )
 
     def test_returns_none_outside_the_cli_tree(self):
         self.assertIsNone(subject_binary("# Readme\n\nProse.\n", "README.md"))
@@ -86,22 +95,39 @@ class TestExtraction(unittest.TestCase):
 
     def test_bare_flag_in_prose_binds_to_the_document_subject(self):
         text = "```\npandoc a.md -o b.pdf\n```\n\nOverride with `--wrap=none`.\n"
-        claim = by_kind(extract_from_text("workstation/cli/pandoc/quick_start.md", text), "cli_flag")[0]
+        claim = by_kind(
+            extract_from_text("workstation/cli/pandoc/quick_start.md", text), "cli_flag"
+        )[0]
         self.assertEqual(claim.claim, "pandoc supports --wrap")
-        self.assertEqual(claim.verification_command, "pandoc --help 2>&1 | grep -F -- '--wrap'")
+        self.assertEqual(
+            claim.verification_command, "pandoc --help 2>&1 | grep -F -- '--wrap'"
+        )
 
     def test_flag_claim_is_dropped_when_no_binary_can_be_inferred(self):
         # No fenced block and not under workstation/cli, so there is no subject.
-        self.assertEqual(by_kind(extract_from_text("README.md", "Use `--wrap=none` here.\n"), "cli_flag"), [])
+        self.assertEqual(
+            by_kind(
+                extract_from_text("README.md", "Use `--wrap=none` here.\n"), "cli_flag"
+            ),
+            [],
+        )
 
     def test_short_flags_in_prose_are_captured(self):
         text = "```\npandoc a.md\n```\n\nOverride with `-f` and `-t`.\n"
-        found = by_kind(extract_from_text("workstation/cli/pandoc/quick_start.md", text), "cli_flag")
-        self.assertEqual([c.claim for c in found], ["pandoc supports -f", "pandoc supports -t"])
+        found = by_kind(
+            extract_from_text("workstation/cli/pandoc/quick_start.md", text), "cli_flag"
+        )
+        self.assertEqual(
+            [c.claim for c in found], ["pandoc supports -f", "pandoc supports -t"]
+        )
 
     def test_markdown_link_targets_resolve_against_the_document_directory(self):
-        text = "See [install](install.md) and [sibling](../weasyprint/quick_start.md).\n"
-        found = by_kind(extract_from_text("workstation/cli/pandoc/quick_start.md", text), "path")
+        text = (
+            "See [install](install.md) and [sibling](../weasyprint/quick_start.md).\n"
+        )
+        found = by_kind(
+            extract_from_text("workstation/cli/pandoc/quick_start.md", text), "path"
+        )
         self.assertEqual(
             [c.verification_command for c in found],
             [
@@ -113,11 +139,18 @@ class TestExtraction(unittest.TestCase):
     def test_anchors_are_stripped_and_external_links_ignored(self):
         text = "See [a](README.md#section) and [b](https://example.com/page).\n"
         found = by_kind(extract_from_text("docs/x.md", text), "path")
-        self.assertEqual([c.verification_command for c in found], ["test -e docs/README.md"])
+        self.assertEqual(
+            [c.verification_command for c in found], ["test -e docs/README.md"]
+        )
 
     def test_urls_become_http_head_claims(self):
-        claim = by_kind(extract_from_text("README.md", "Docs: <https://pandoc.org/>\n"), "url")[0]
-        self.assertIn("curl -sS -o /dev/null -w '%{http_code}' -I -L 'https://pandoc.org/'", claim.verification_command)
+        claim = by_kind(
+            extract_from_text("README.md", "Docs: <https://pandoc.org/>\n"), "url"
+        )[0]
+        self.assertIn(
+            "curl -sS -o /dev/null -w '%{http_code}' -I -L 'https://pandoc.org/'",
+            claim.verification_command,
+        )
 
     def test_placeholder_url_templates_are_not_claims(self):
         for line in (
@@ -128,16 +161,25 @@ class TestExtraction(unittest.TestCase):
                 self.assertEqual(by_kind(extract_from_text("x.md", line), "url"), [])
 
     def test_trailing_sentence_punctuation_is_stripped(self):
-        claim = by_kind(extract_from_text("x.md", "See https://pandoc.org/index.html.\n"), "url")[0]
+        claim = by_kind(
+            extract_from_text("x.md", "See https://pandoc.org/index.html.\n"), "url"
+        )[0]
         self.assertEqual(claim.claim, "https://pandoc.org/index.html")
 
     def test_git_state_prose_is_flagged(self):
-        claims = by_kind(extract_from_text("README.md", "The refactor was merged into main last week.\n"), "git")
+        claims = by_kind(
+            extract_from_text(
+                "README.md", "The refactor was merged into main last week.\n"
+            ),
+            "git",
+        )
         self.assertEqual(len(claims), 1)
         self.assertIn("git branch --merged", claims[0].verification_command)
 
     def test_comments_and_shell_noise_are_skipped(self):
-        claims = extract_from_text("x.md", "```\n# just a comment\ncd /tmp\nexport FOO=1\n```\n")
+        claims = extract_from_text(
+            "x.md", "```\n# just a comment\ncd /tmp\nexport FOO=1\n```\n"
+        )
         self.assertEqual(claims, [])
 
     def test_duplicate_claims_are_collapsed(self):
@@ -152,7 +194,9 @@ class TestExtraction(unittest.TestCase):
             self.assertGreater(claim.line, 0)
 
     def test_ids_are_sequential_and_unique(self):
-        claims = extract_from_text("x.md", "```\nbrew install pandoc\nbrew install pandoc-crossref\n```\n")
+        claims = extract_from_text(
+            "x.md", "```\nbrew install pandoc\nbrew install pandoc-crossref\n```\n"
+        )
         ids = [c.id for c in claims]
         self.assertEqual(ids, sorted(ids))
         self.assertEqual(len(ids), len(set(ids)))
@@ -169,11 +213,17 @@ class TestCommandPlausibility(unittest.TestCase):
         self.assertFalse(looks_like_command("with sync_playwright() as p:", "with"))
 
     def test_rejects_column_aligned_directory_trees(self):
-        self.assertFalse(looks_like_command("CLAUDE.md          instructions", "CLAUDE.md"))
-        self.assertFalse(looks_like_command("install.md      authored — how to", "install.md"))
+        self.assertFalse(
+            looks_like_command("CLAUDE.md          instructions", "CLAUDE.md")
+        )
+        self.assertFalse(
+            looks_like_command("install.md      authored — how to", "install.md")
+        )
 
     def test_rejects_prose_fragments(self):
-        self.assertFalse(looks_like_command("involved) then extract with defuddle", "involved)"))
+        self.assertFalse(
+            looks_like_command("involved) then extract with defuddle", "involved)")
+        )
         self.assertFalse(looks_like_command("Ordered, concrete, each one", "Ordered,"))
 
 
@@ -189,29 +239,40 @@ class TestFenceLanguages(unittest.TestCase):
                 self.assertIn("cli_invocation", kinds(claims))
 
     def test_text_fences_are_skipped(self):
-        self.assertEqual(extract_from_text("x.md", "```text\npandoc a.md --toc\n```\n"), [])
+        self.assertEqual(
+            extract_from_text("x.md", "```text\npandoc a.md --toc\n```\n"), []
+        )
 
 
 class TestVersionClaims(unittest.TestCase):
     def test_a_bare_version_string_binds_to_the_document_subject(self):
         # `0.7.1` is the output of `d2 --version`, not a command in its own right.
         text = "```\nd2 in.d2 out.svg\n```\n\nExpect `0.7.1`.\n"
-        claim = by_kind(extract_from_text("workstation/cli/d2-cli/install.md", text), "version")[0]
+        claim = by_kind(
+            extract_from_text("workstation/cli/d2-cli/install.md", text), "version"
+        )[0]
         self.assertEqual(claim.claim, "`d2 --version` reports 0.7.1")
         self.assertEqual(claim.verification_command, "d2 --version")
 
     def test_version_is_dropped_when_no_binary_can_be_inferred(self):
-        self.assertEqual(by_kind(extract_from_text("README.md", "Expect `0.7.1`.\n"), "version"), [])
+        self.assertEqual(
+            by_kind(extract_from_text("README.md", "Expect `0.7.1`.\n"), "version"), []
+        )
 
 
 class TestGitClaims(unittest.TestCase):
     def test_matches_real_merge_language(self):
         for line in ("It was merged into main.", "Everything here is tracked in git."):
             with self.subTest(line=line):
-                self.assertEqual(len(by_kind(extract_from_text("x.md", line), "git")), 1)
+                self.assertEqual(
+                    len(by_kind(extract_from_text("x.md", line), "git")), 1
+                )
 
     def test_does_not_match_pdf_tagging_or_prose_commitment(self):
-        for line in ("`--pdf-tags` produces a tagged PDF.", "The team committed to the plan."):
+        for line in (
+            "`--pdf-tags` produces a tagged PDF.",
+            "The team committed to the plan.",
+        ):
             with self.subTest(line=line):
                 self.assertEqual(by_kind(extract_from_text("x.md", line), "git"), [])
 

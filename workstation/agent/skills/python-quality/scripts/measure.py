@@ -80,7 +80,9 @@ def propose_coverage(actual: int, headroom: int = COVERAGE_HEADROOM) -> int:
 def parse_radon(output: str) -> dict[str, int]:
     """Function name -> cyclomatic complexity, from `radon cc -s` output."""
 
-    return {name: int(score) for _line, name, _grade, score in RADON_LINE.findall(output)}
+    return {
+        name: int(score) for _line, name, _grade, score in RADON_LINE.findall(output)
+    }
 
 
 def parse_coverage(output: str) -> int | None:
@@ -129,7 +131,9 @@ def run(command: list[str], cwd: Path) -> tuple[int, str]:
 
     # S603: the argument list is built from literals and paths this module controls,
     # never from a shell string, and no shell is involved.
-    result = subprocess.run(command, cwd=cwd, capture_output=True, text=True, check=False)
+    result = subprocess.run(
+        command, cwd=cwd, capture_output=True, text=True, check=False
+    )
     return result.returncode, result.stdout + result.stderr
 
 
@@ -150,7 +154,10 @@ def measure(project: Path) -> list[Finding]:
                 "ruff",
                 True,
                 f"{total} finding(s)" if total else "clean",
-                detail=[f"{count:>5}  {code}" for code, count in sorted(counts.items(), key=lambda i: -i[1])],
+                detail=[
+                    f"{count:>5}  {code}"
+                    for code, count in sorted(counts.items(), key=lambda i: -i[1])
+                ],
             )
         )
     else:
@@ -169,28 +176,58 @@ def measure(project: Path) -> list[Finding]:
                 "pyright",
                 True,
                 f"{errors} error(s)",
-                proposal="" if _venv_configured(project) else "set [tool.pyright] venvPath='.' and venv='.venv'",
+                proposal=""
+                if _venv_configured(project)
+                else "set [tool.pyright] venvPath='.' and venv='.venv'",
             )
         )
     else:
-        findings.append(Finding("pyright", False, "not installed — `uv add --dev pyright`"))
+        findings.append(
+            Finding("pyright", False, "not installed — `uv add --dev pyright`")
+        )
 
     python = venv / "python"
     if python.is_file():
-        _, output = run([str(python), "-m", "pytest", "-q", "--cov", "--cov-report=term"], project)
+        _, output = run(
+            [str(python), "-m", "pytest", "-q", "--cov", "--cov-report=term"], project
+        )
         actual = parse_coverage(output)
         if actual is None:
-            findings.append(Finding("coverage", False, "no coverage reported — `uv add --dev pytest-cov`"))
+            findings.append(
+                Finding(
+                    "coverage",
+                    False,
+                    "no coverage reported — `uv add --dev pytest-cov`",
+                )
+            )
         else:
             findings.append(
-                Finding("coverage", True, f"{actual}%", proposal=f"--cov-fail-under={propose_coverage(actual)}")
+                Finding(
+                    "coverage",
+                    True,
+                    f"{actual}%",
+                    proposal=f"--cov-fail-under={propose_coverage(actual)}",
+                )
             )
     else:
-        findings.append(Finding("coverage", False, "no project venv — run `uv sync` first"))
+        findings.append(
+            Finding("coverage", False, "no project venv — run `uv sync` first")
+        )
 
     if ruff.is_file():
         # Gate at 1 so every function reports its number; this is a measurement, not a check.
-        _, output = run([str(ruff), "check", ".", "--select", "C901", "--config", "lint.mccabe.max-complexity = 1"], project)
+        _, output = run(
+            [
+                str(ruff),
+                "check",
+                ".",
+                "--select",
+                "C901",
+                "--config",
+                "lint.mccabe.max-complexity = 1",
+            ],
+            project,
+        )
         scores = parse_ruff_complexity(output)
         if scores:
             gate = propose_complexity(list(scores.values()))
@@ -200,11 +237,22 @@ def measure(project: Path) -> list[Finding]:
                     True,
                     f"{len(scores)} function(s), worst {max(scores.values())} (ruff C901)",
                     proposal=f"max-complexity = {gate} — green today; at the gate: {', '.join(at_the_gate(scores, gate))}",
-                    detail=[f"{score:>5}  {name}" for name, score in sorted(scores.items(), key=lambda i: -i[1])[:8]],
+                    detail=[
+                        f"{score:>5}  {name}"
+                        for name, score in sorted(scores.items(), key=lambda i: -i[1])[
+                            :8
+                        ]
+                    ],
                 )
             )
         else:
-            findings.append(Finding("complexity", True, "nothing measurable — no functions with branches"))
+            findings.append(
+                Finding(
+                    "complexity",
+                    True,
+                    "nothing measurable — no functions with branches",
+                )
+            )
 
     if shutil.which("uvx"):
         # radon reports a trend a gate cannot, and must run on the version the project targets:
@@ -213,12 +261,26 @@ def measure(project: Path) -> list[Finding]:
         if target:
             command += ["--python", target]
         _, output = run([*command, "radon", "cc", ".", "-a", "-nb"], project)
-        average = next((line.strip() for line in output.splitlines() if "Average complexity" in line), "")
+        average = next(
+            (
+                line.strip()
+                for line in output.splitlines()
+                if "Average complexity" in line
+            ),
+            "",
+        )
         findings.append(
-            Finding("radon", bool(average), average or "no average reported", proposal="advisory only; ruff is the gate")
+            Finding(
+                "radon",
+                bool(average),
+                average or "no average reported",
+                proposal="advisory only; ruff is the gate",
+            )
         )
     else:
-        findings.append(Finding("radon", False, "uvx not on PATH — the trend report is optional"))
+        findings.append(
+            Finding("radon", False, "uvx not on PATH — the trend report is optional")
+        )
 
     return findings
 
@@ -229,7 +291,9 @@ def _venv_configured(project: Path) -> bool:
     pyproject = project / "pyproject.toml"
     if not pyproject.is_file():
         return False
-    return "venvPath" in tomllib.loads(pyproject.read_text(encoding="utf-8")).get("tool", {}).get("pyright", {})
+    return "venvPath" in tomllib.loads(pyproject.read_text(encoding="utf-8")).get(
+        "tool", {}
+    ).get("pyright", {})
 
 
 def report(findings: list[Finding]) -> str:

@@ -16,7 +16,7 @@ Render the page, then hand it to defuddle — see [`fetch-to-markdown`](../../ag
 from playwright.sync_api import sync_playwright
 
 with sync_playwright() as p:
-    browser = p.chromium.launch()          # headless by default
+    browser = p.chromium.launch()  # headless by default
     page = browser.new_page()
     page.goto(url, wait_until="networkidle")
     html = page.content()

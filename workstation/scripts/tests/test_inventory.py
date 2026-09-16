@@ -36,12 +36,16 @@ from inventory import (
 
 def completed(stdout: str = "", stderr: str = "", returncode: int = 0):
     """A stand-in for `subprocess.run`'s return value."""
-    return subprocess.CompletedProcess(args=["x"], returncode=returncode, stdout=stdout, stderr=stderr)
+    return subprocess.CompletedProcess(
+        args=["x"], returncode=returncode, stdout=stdout, stderr=stderr
+    )
 
 
 class ParseFrontmatterTests(unittest.TestCase):
     def test_reads_flat_pairs(self):
-        text = "---\ntool: magick\ncommand: magick\nproduct: ImageMagick\n---\n\n# body\n"
+        text = (
+            "---\ntool: magick\ncommand: magick\nproduct: ImageMagick\n---\n\n# body\n"
+        )
         self.assertEqual(
             parse_frontmatter(text),
             {"tool": "magick", "command": "magick", "product": "ImageMagick"},
@@ -71,17 +75,24 @@ class DiscoverToolsTests(unittest.TestCase):
     def write(self, folder: str, frontmatter: str):
         directory = self.cli / folder
         directory.mkdir(parents=True)
-        (directory / "install.md").write_text(f"---\n{frontmatter}\n---\n", encoding="utf-8")
+        (directory / "install.md").write_text(
+            f"---\n{frontmatter}\n---\n", encoding="utf-8"
+        )
 
     def test_splits_multiple_commands(self):
-        self.write("dbml-cli", "command: dbml2sql, sql2dbml, db2dbml\nproduct: DBML CLI")
+        self.write(
+            "dbml-cli", "command: dbml2sql, sql2dbml, db2dbml\nproduct: DBML CLI"
+        )
         (tool,) = discover_tools(self.cli)
         self.assertEqual(tool.commands, ["dbml2sql", "sql2dbml", "db2dbml"])
         self.assertEqual(tool.product, "DBML CLI")
 
     def test_version_flag_defaults_and_overrides(self):
         self.write("pandoc", "command: pandoc\nproduct: Pandoc")
-        self.write("plantuml-cli", "command: plantuml\nproduct: PlantUML\nversion_flag: -version")
+        self.write(
+            "plantuml-cli",
+            "command: plantuml\nproduct: PlantUML\nversion_flag: -version",
+        )
         flags = {t.folder: t.version_flag for t in discover_tools(self.cli)}
         self.assertEqual(flags, {"pandoc": "--version", "plantuml-cli": "-version"})
 
@@ -115,7 +126,9 @@ class ExtractVersionTests(unittest.TestCase):
                 self.assertEqual(extract_version(output), expected)
 
     def test_skips_leading_lines_without_a_version(self):
-        self.assertEqual(extract_version("warning: something\n\npandoc 3.10.2\n"), "3.10.2")
+        self.assertEqual(
+            extract_version("warning: something\n\npandoc 3.10.2\n"), "3.10.2"
+        )
 
     def test_bare_integer_is_not_a_version(self):
         # A lone "5" is far more likely to be an exit code or a count than a
@@ -175,7 +188,9 @@ class ProbeCommandTests(unittest.TestCase):
         def fail(*_args, **_kwargs):
             raise OSError("Exec format error")
 
-        self.assertEqual(probe_command("x", which=lambda _: "/bin/x", run=fail).status, BLOCKED)
+        self.assertEqual(
+            probe_command("x", which=lambda _: "/bin/x", run=fail).status, BLOCKED
+        )
 
     def test_timeout_is_error(self):
         def hang(*_args, **_kwargs):
@@ -210,7 +225,9 @@ class ProbeCommandTests(unittest.TestCase):
             seen["argv"] = argv
             return completed(stdout="PlantUML version 1.2026.6")
 
-        probe_command("plantuml", "-version", which=lambda _: "/bin/plantuml", run=capture)
+        probe_command(
+            "plantuml", "-version", which=lambda _: "/bin/plantuml", run=capture
+        )
         self.assertEqual(seen["argv"], ["/bin/plantuml", "-version"])
 
 
@@ -228,19 +245,25 @@ class RollUpTests(unittest.TestCase):
 
     def test_blocked_outranks_error(self):
         tool = Tool("t", "T", ["a", "b"])
-        result = roll_up(tool, [Probe("a", ERROR, detail="e"), Probe("b", BLOCKED, detail="denied")])
+        result = roll_up(
+            tool, [Probe("a", ERROR, detail="e"), Probe("b", BLOCKED, detail="denied")]
+        )
         self.assertEqual(result.status, BLOCKED)
 
     def test_all_installed_keeps_version_and_drops_detail(self):
         tool = Tool("pandoc", "Pandoc", ["pandoc"])
-        result = roll_up(tool, [Probe("pandoc", INSTALLED, version="3.10.2", detail="pandoc 3.10.2")])
+        result = roll_up(
+            tool, [Probe("pandoc", INSTALLED, version="3.10.2", detail="pandoc 3.10.2")]
+        )
         self.assertEqual(result.status, INSTALLED)
         self.assertEqual(result.version, "3.10.2")
         self.assertEqual(result.detail, "")
 
     def test_version_is_kept_even_when_a_sibling_is_missing(self):
         tool = Tool("t", "T", ["a", "b"])
-        result = roll_up(tool, [Probe("a", ABSENT), Probe("b", INSTALLED, version="2.0.0")])
+        result = roll_up(
+            tool, [Probe("a", ABSENT), Probe("b", INSTALLED, version="2.0.0")]
+        )
         self.assertEqual(result.version, "2.0.0")
 
 
@@ -267,14 +290,21 @@ class RenderMarkdownTests(unittest.TestCase):
         self.assertIn("**1 of 3 usable.**", self.render(results))
 
     def test_records_the_host_it_probed(self):
-        output = self.render([roll_up(Tool("a", "A", ["a"]), [Probe("a", INSTALLED, version="1.0")])])
+        output = self.render(
+            [roll_up(Tool("a", "A", ["a"]), [Probe("a", INSTALLED, version="1.0")])]
+        )
         self.assertIn("HOST-1", output)
         self.assertIn("Python 3.14.7", output)
 
     def test_escapes_pipes_so_the_table_survives(self):
-        results = [roll_up(Tool("a", "A", ["a"]), [Probe("a", ERROR, detail="use a | b")])]
-        row = next(line for line in self.render(results).splitlines()
-                   if line.startswith("| `a`"))
+        results = [
+            roll_up(Tool("a", "A", ["a"]), [Probe("a", ERROR, detail="use a | b")])
+        ]
+        row = next(
+            line
+            for line in self.render(results).splitlines()
+            if line.startswith("| `a`")
+        )
         self.assertIn(r"use a \| b", row)
         # 5 columns => 6 border pipes, plus the one escaped inside a cell.
         self.assertEqual(row.count("|"), 7)
@@ -287,25 +317,37 @@ class RenderMarkdownTests(unittest.TestCase):
     def test_a_host_label_replaces_the_probed_name(self):
         """A machine file is committed under a chosen id, and a hostname can be
         a person's name. Everything else in the provenance line is unaffected."""
-        results = [roll_up(Tool("a", "A", ["a"]), [Probe("a", INSTALLED, version="1.0")])]
+        results = [
+            roll_up(Tool("a", "A", ["a"]), [Probe("a", INSTALLED, version="1.0")])
+        ]
         output = render_markdown(results, self.facts, host="workstation")
         self.assertIn("Probed on `workstation`", output)
         self.assertNotIn("HOST-1", output)
         self.assertIn("Python 3.14.7", output)
 
     def test_no_host_label_keeps_the_probed_name(self):
-        results = [roll_up(Tool("a", "A", ["a"]), [Probe("a", INSTALLED, version="1.0")])]
+        results = [
+            roll_up(Tool("a", "A", ["a"]), [Probe("a", INSTALLED, version="1.0")])
+        ]
         self.assertIn("Probed on `HOST-1`", render_markdown(results, self.facts))
 
     def test_multiple_commands_listed_in_one_cell(self):
         tool = Tool("dbml-cli", "DBML CLI", ["dbml2sql", "sql2dbml"])
-        probes = [Probe("dbml2sql", INSTALLED, version="10.1.1"), Probe("sql2dbml", INSTALLED, version="10.1.1")]
-        self.assertIn("| `dbml2sql`, `sql2dbml` |", self.render([roll_up(tool, probes)]))
+        probes = [
+            Probe("dbml2sql", INSTALLED, version="10.1.1"),
+            Probe("sql2dbml", INSTALLED, version="10.1.1"),
+        ]
+        self.assertIn(
+            "| `dbml2sql`, `sql2dbml` |", self.render([roll_up(tool, probes)])
+        )
 
 
 class SuggestedIdTests(unittest.TestCase):
     def test_windows(self):
-        self.assertEqual(suggested_id({"system": "Windows", "node": "EMA-PF5N4XE7"}), "windows-ema-pf5n4xe7")
+        self.assertEqual(
+            suggested_id({"system": "Windows", "node": "EMA-PF5N4XE7"}),
+            "windows-ema-pf5n4xe7",
+        )
 
     def test_darwin_becomes_macos(self):
         self.assertEqual(suggested_id({"system": "Darwin", "node": "MBP"}), "macos-mbp")
@@ -316,7 +358,9 @@ class SuggestedIdTests(unittest.TestCase):
     def test_an_fqdn_keeps_only_the_first_label(self):
         """macOS reports `host.local`; link_config.py matches on the short form,
         so an id carrying the domain names a file nothing looks for."""
-        self.assertEqual(suggested_id({"system": "Darwin", "node": "MBP.local"}), "macos-mbp")
+        self.assertEqual(
+            suggested_id({"system": "Darwin", "node": "MBP.local"}), "macos-mbp"
+        )
 
     def test_a_multi_label_domain_is_dropped_too(self):
         self.assertEqual(
