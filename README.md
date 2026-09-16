@@ -123,7 +123,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 | Path | Role |
 |---|---|
 | [`skills/README.md`](skills/README.md) | Index of this repo's own skills, the line dividing them from the global ones in `workstation/agent/skills/`, and the per-clone symlink that makes them load — Claude Code discovers `.claude/skills/`, not `skills/`. |
-| `pyproject.toml` | Project metadata. No dependencies: the workbench runs on the workstation CLI toolchain plus the standard library. |
+| `pyproject.toml` | Project metadata. No runtime dependencies; the `dev` dependency group supplies `pytest` and `ruff` for repository quality checks. |
 | `.python-version` | Pins the interpreter for `uv` — currently 3.14. |
 | `.verify-claims-allow` | Path claims the documentation gate is to leave alone, one glob per line with a reason above each. Repo-local on purpose: the pre-push hook is shared by every repo that links it, so exemptions must not travel with it. |
 | `.pre-push-tests` | Unit-test directories the pre-push hook runs before a push, one per line. Repo-local for the same reason. |
