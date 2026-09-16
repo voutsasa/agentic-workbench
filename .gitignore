@@ -43,3 +43,8 @@ wheels/
 # loads the instructions twice in every Copilot clone. Written by
 # `link_config.py --claude-md --apply`.
 /CLAUDE.md
+
+# IDEs
+**/.vscode/
+**/.idea/
+**/.zed/
