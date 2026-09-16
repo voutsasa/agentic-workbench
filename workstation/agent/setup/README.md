@@ -16,7 +16,7 @@ place — symlinks on macOS, junctions plus hardlinks on Windows — stay in [`m
 is a command that drifts.
 
 Every step marked **user** changes your machine and is yours to run; see *The user installs; the agent
-records* in [`../../../CLAUDE.md`](../../../CLAUDE.md#the-user-installs-the-agent-records).
+records* in [`../../../AGENTS.md`](../../../AGENTS.md#the-user-installs-the-agent-records).
 
 ## What each agent reads
 

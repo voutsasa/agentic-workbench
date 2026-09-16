@@ -58,11 +58,14 @@ Build the list from evidence, not from this file.
 
 **Links.** Run the report, read-only. Pass `--project` always: it links this repo's own skills into
 `.claude/skills/`, which Claude Code and Copilot both read at project scope, and a fresh clone has none
-because `.claude/` is gitignored. When the answer to *global* is yes, add one `--agent` per selected
+because `.claude/` is gitignored. Add `--claude-md` when Claude Code is selected, global or not: it
+writes the gitignored root `CLAUDE.md` (`@AGENTS.md`), Claude Code's only route to the repo
+instructions. Leave it out when only Copilot is selected — Copilot CLI reads `AGENTS.md` and `CLAUDE.md`
+both, so the file would load the instructions twice. When the answer to *global* is yes, add one `--agent` per selected
 assistant that links: Claude Code → `claude`, Copilot CLI → `copilot`. VS Code has no links.
 
 ```sh
-<python> workstation/scripts/link_config.py --project --agent claude --agent copilot --json
+<python> workstation/scripts/link_config.py --project --claude-md --agent claude --agent copilot --json
 ```
 
 | Status | The row says |
@@ -109,8 +112,8 @@ user steps stay theirs either way.
 ```sh
 cd <repo>
 git status -s workstation/agent
-<python> workstation/scripts/link_config.py --apply --project --agent claude --agent copilot
-<python> workstation/scripts/link_config.py --project --agent claude --agent copilot
+<python> workstation/scripts/link_config.py --apply --project --claude-md --agent claude --agent copilot
+<python> workstation/scripts/link_config.py --project --claude-md --agent claude --agent copilot
 ```
 
 Substitute `<python>` before handing the block over, and on Windows write it in PowerShell. Hand over `link_config.py`, never hand-written

@@ -37,3 +37,9 @@ wheels/
 # but the links there are symlinks on macOS and junctions on Windows, so the
 # link itself cannot be tracked. skills/README.md carries the command.
 .claude/
+
+# Per-clone Claude Code route to AGENTS.md, one line: `@AGENTS.md`. Untracked
+# because Copilot CLI reads AGENTS.md and CLAUDE.md both, so a tracked import
+# loads the instructions twice in every Copilot clone. Written by
+# `link_config.py --claude-md --apply`.
+/CLAUDE.md

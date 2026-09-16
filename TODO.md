@@ -143,10 +143,10 @@ Opened 2026-09-14, when `CLAUDE.md` became `AGENTS.md` plus one-line `@AGENTS.md
 | Assistant | Route | State |
 |---|---|---|
 | Claude Code | `CLAUDE.md` → `@AGENTS.md` | **unproven in this repo.** The mechanism is observed: in a scratch folder, Claude Code 2.1.270 quoted a marker that existed only in the imported `AGENTS.md` |
-| Copilot CLI | reads `AGENTS.md` **and** `CLAUDE.md` | **measured: loads it twice, accepted.** See below |
+| Copilot CLI | reads `AGENTS.md` **and** `CLAUDE.md` | **double load removed 2026-09-16, unproven.** `CLAUDE.md` is now gitignored and written only by `link_config.py --claude-md`, so a Copilot-only clone matches run C below. A clone running both assistants still loads twice, as run B |
 | Antigravity | `.agents/rules/workbench.md` → `@AGENTS.md` | **unproven.** Whether the rule is set to **Always On** and applies, and whether Antigravity also reads `AGENTS.md` natively — its rules page does not mention it |
 
-**Copilot's double load is accepted, not open.** Copilot CLI 1.0.83 on the macOS workstation,
+**Copilot's double load, as measured before `CLAUDE.md` was untracked.** Copilot CLI 1.0.83 on the macOS workstation,
 `/context` as the first command of a fresh session, System Prompt line:
 
 | Run | Setup | System Prompt |
@@ -157,7 +157,10 @@ Opened 2026-09-14, when `CLAUDE.md` became `AGENTS.md` plus one-line `@AGENTS.md
 
 One copy is C − A = 3.5k; B − A = 6.9k is two. Copilot's docs dedupe "identical" instruction files, and
 a one-line import is not identical. The duplicate is identical text, so it cannot conflict, and costs
-3.5k of a 1M context. Every route that would remove it was checked and is worse:
+3.5k of a 1M context. It was first accepted, because every route below that would remove it was
+checked and is worse. The route taken instead is **not tracking `CLAUDE.md` at all**: each clone
+writes it with `link_config.py --claude-md --apply` only when Claude Code runs there, so the cost
+falls only on clones that use both assistants.
 
 | Route | Why not |
 |---|---|
@@ -171,7 +174,8 @@ a one-line import is not identical. The duplicate is identical text, so it canno
 Revisit only if Copilot starts deduplicating imports or Claude Code gains a setting for the file name.
 
 **Closes when:** `/context` in a fresh Claude Code session in this repo lists `AGENTS.md` under Memory
-files, and Antigravity, with the rule set to **Always On**, shows the rule applied to a session —
+files; `/context` as the first command of Copilot CLI in a clone set up without `--claude-md` shows
+the System Prompt at run C's size, not run B's; and Antigravity, with the rule set to **Always On**, shows the rule applied to a session —
 each observation recorded in the machine note.
 
 ## Closed

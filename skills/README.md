@@ -32,6 +32,9 @@ should write it straight into `.claude/skills/` and skip the link.
 python3 workstation/scripts/link_config.py --project --apply
 ```
 
+Add `--claude-md` in a clone where Claude Code runs; the root README's *Install* section says why a
+Copilot-only clone leaves it out.
+
 It links every `skills/<name>/SKILL.md` here into `.claude/skills/<name>` — a symlink on macOS, a
 junction on Windows, where the command is `python` — so adding a skill needs no new line in this file.
 Without `--apply` it reports and writes nothing. The `setup-agents` skill includes these links in

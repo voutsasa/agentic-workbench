@@ -7,7 +7,16 @@ Enables engineers to set up their workstation and work in an agent-enabled envir
 - **Required — an AI coding assistant, installed and signed in.** The skills here are instructions an assistant carries out, so without one they do nothing. Claude Code and GitHub Copilot CLI both load them. `setup-agents` configures an assistant you already have; it does not install one.
 - **Recommended — a package manager for the toolchain.** The install routes in [`workstation/cli/`](workstation/cli/README.md) assume Homebrew on macOS and Scoop on Windows, with `pipx` or `npm` for tools published to Python or Node registries. winget is noted where a tool offers it. A package manager keeps every tool installable and upgradable with one command, instead of by hand.
 
-Start with the [`setup-agents`](skills/setup-agents/SKILL.md) skill — it finds the AI assistants on your machine and sets them up with the shared instructions and skills.
+## Install
+
+A fresh clone loads nothing on its own: the repo skills and Claude Code's `CLAUDE.md` are per-clone and gitignored. Run one command from the repo root before the first session. Use `python3` on macOS and `python` on Windows. The script is stdlib-only, so no venv is needed yet.
+
+| You use | Run | It puts in place |
+|---|---|---|
+| Claude Code, alone or with Copilot | `python3 workstation/scripts/link_config.py --project --claude-md --apply` | `.claude/skills/` links, and `CLAUDE.md` holding `@AGENTS.md` |
+| GitHub Copilot only | `python3 workstation/scripts/link_config.py --project --apply` | `.claude/skills/` links. No `CLAUDE.md`: Copilot reads `AGENTS.md` directly, and reads `CLAUDE.md` too, so adding it would load the instructions twice |
+
+Then start the assistant in the repo — restart it if a session was already open, since instructions are read at session start — and run the [`setup-agents`](skills/setup-agents/SKILL.md) skill. It finds the AI assistants on your machine and sets them up with the shared instructions and skills. Re-run either command without `--apply` to check: it exits non-zero unless everything reads `linked`.
 
 ## Executive summary
 
@@ -42,7 +51,7 @@ SOURCES.md                	the register — source of truth.
 SOURCE_CATALOGUE.md       	one-line capability summary per source.   
 TODO.md                   	open work carried between sessions.   
 AGENTS.md                 	instructions for agents working in this repo.   
-CLAUDE.md                 	imports AGENTS.md for Claude Code.   
+CLAUDE.md                 	imports AGENTS.md for Claude Code — per clone, not in git.   
 .agents/rules/            	imports AGENTS.md for Antigravity.   
 
 docs/                     	the corpus — what the workbench reads.   
@@ -86,7 +95,7 @@ The top-level split is **`docs/` is what the workbench reads, `workstation/` is 
 | [`workstation/cli/README.md`](workstation/cli/README.md) | **CLI tool index.** What each per-tool file is for, a `command → product → folder` map, and the version-currency rule. |
 | [`workstation/mcp/README.md`](workstation/mcp/README.md) | **MCP server index.** The third-party servers configured into this machine, and the file contract they follow. |
 | [`workstation/machines/README.md`](workstation/machines/README.md) | **Machine index.** One file per machine this workbench runs on, and the test for whether a fact is policy, a route, or machine state. |
-| [`AGENTS.md`](AGENTS.md) | **Agent instructions for this repo** — file roles, the layer model, the ingestion invariant, and the rule that GitHub sources are fetched as raw READMEs rather than cloned. Read directly by GitHub Copilot; Claude Code reaches it through [`CLAUDE.md`](CLAUDE.md) and Antigravity through [`.agents/rules/workbench.md`](.agents/rules/workbench.md), each a one-line `@AGENTS.md` import. |
+| [`AGENTS.md`](AGENTS.md) | **Agent instructions for this repo** — file roles, the layer model, the ingestion invariant, and the rule that GitHub sources are fetched as raw READMEs rather than cloned. Read directly by GitHub Copilot; Claude Code reaches it through `CLAUDE.md`, written per clone by the install command above, and Antigravity through [`.agents/rules/workbench.md`](.agents/rules/workbench.md), each a one-line `@AGENTS.md` import. |
 ## The workstation — `workstation/`
 
 What the workbench runs on — the machines, not an architecture.
@@ -129,7 +138,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 | `.python-version` | Pins the interpreter for `uv` — currently 3.14. |
 | `.verify-claims-allow` | Path claims the documentation gate is to leave alone, one glob per line with a reason above each. Repo-local on purpose: the pre-push hook is shared by every repo that links it, so exemptions must not travel with it. |
 | `.pre-push-tests` | Unit-test directories the pre-push hook runs before a push, one per line. Repo-local for the same reason. |
-| `.gitignore` | Excludes the ingested corpus, `.venv/`, `.DS_Store`, and Python build artefacts. |
+| `.gitignore` | Excludes the ingested corpus, the per-clone `.claude/` and `CLAUDE.md`, `.venv/`, `.DS_Store`, and Python build artefacts. |
 | `.github/workflows/verify-docs.yml` | Weekly documentation audit on GitHub Actions, opening a pull request with the reports. **Dormant:** the repo is hosted on Azure DevOps, where it does not run — porting it is [`TODO.md`](TODO.md) #9. |
 | `scripts/verify-docs.sh` | Headless `verify-docs` run through `claude -p`, writing a report and editing no documentation. Called by the dormant workflow above; runnable by hand with `ANTHROPIC_API_KEY` set. |
 

@@ -499,6 +499,54 @@ class TestProjectPlan(TempTree):
         self.assertEqual(code, 0)
         self.assertEqual((payload["agents"], payload["project"]), ([], True))
         self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
+        self.assertFalse((self.repo / "CLAUDE.md").exists())
+
+
+class TestClaudeMd(TempTree):
+    """The per-clone CLAUDE.md: generated, never tracked, never linked."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        (self.repo / "AGENTS.md").write_text("# repo rules\n", encoding="utf-8")
+
+    def link(self) -> lc.Link:
+        links = lc.plan(self.repo, self.home, agents=(), claude_md=True)
+        self.assertEqual([link.label for link in links], ["project/CLAUDE.md"])
+        return links[0]
+
+    def test_absent_reads_missing_and_apply_writes_the_import(self) -> None:
+        self.assertEqual(lc.inspect(self.link()).status, lc.MISSING)
+        report = lc.apply(lc.inspect_all([self.link()]))
+        self.assertTrue(report.ok, lc.render(report))
+        self.assertEqual((self.repo / "CLAUDE.md").read_bytes(), b"@AGENTS.md\n")
+        self.assertEqual(lc.inspect(self.link()).status, lc.LINKED)
+
+    def test_a_file_with_other_content_is_diverged_and_kept(self) -> None:
+        (self.repo / "CLAUDE.md").write_text("my own notes\n", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([self.link()]))
+        self.assertEqual(report.status, lc.DIVERGED)
+        self.assertEqual((self.repo / "CLAUDE.md").read_text(encoding="utf-8"), "my own notes\n")
+
+    def test_force_replaces_diverged_content(self) -> None:
+        (self.repo / "CLAUDE.md").write_text("my own notes\n", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([self.link()]), force=True)
+        self.assertTrue(report.ok, lc.render(report))
+        self.assertEqual((self.repo / "CLAUDE.md").read_bytes(), b"@AGENTS.md\n")
+
+    def test_no_agents_md_is_no_source(self) -> None:
+        (self.repo / "AGENTS.md").unlink()
+        self.assertEqual(lc.inspect(self.link()).status, lc.NO_SOURCE)
+
+    def test_main_with_claude_md_alone_leaves_home_alone(self) -> None:
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            code = lc.main(["--repo", str(self.repo), "--home", str(self.home),
+                            "--claude-md", "--apply", "--json"])
+        payload = json.loads(buf.getvalue())
+        self.assertEqual(code, 0)
+        self.assertEqual((payload["agents"], payload["claude_md"]), ([], True))
+        self.assertTrue((self.repo / "CLAUDE.md").exists())
+        self.assertEqual(list((self.home / ".claude").iterdir()), [])
 
 
 class TestCopilotHome(unittest.TestCase):

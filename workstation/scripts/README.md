@@ -86,6 +86,12 @@ scratch tree cannot be redirected by an inherited variable; `--copilot-home` ove
 gitignored, so a fresh clone has none. On its own it links only those; `--agent` flags alongside it add
 their homes.
 
+**`--claude-md` writes the root `CLAUDE.md`** — one line, `@AGENTS.md` — for clones where Claude Code
+runs. It is a generated file, not a link, so it cannot detach: `linked` means the content matches, and
+any other content reads `diverged` and is kept unless `--force`. The file is gitignored because Copilot
+CLI reads `AGENTS.md` and `CLAUDE.md` both; a Copilot-only clone leaves the flag out. Like `--project`,
+on its own it touches the repo only.
+
 Checks every link the agent config needs: each skill named in the script's `SKILLS` tuple,
 `CLAUDE.md`, and the machine note at `~/.claude/machine.md`. Exits non-zero unless all of them are
 live, so it works as a check as well as a fixer. Adding a skill means adding it to `SKILLS` and

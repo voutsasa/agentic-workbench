@@ -9,7 +9,10 @@ note into ``~/.claude``. ``--agent copilot`` links the same skills into
 VS Code's ``chat.useClaudeMdFile``, which is a settings edit and not a link.
 ``--project`` links this repo's own ``skills/<name>/`` into ``<repo>/.claude/skills``,
 where both agents load them at project scope; ``.claude/`` is gitignored, so every
-clone needs it once.
+clone needs it once. ``--claude-md`` writes ``<repo>/CLAUDE.md`` holding one line,
+``@AGENTS.md`` — Claude Code's only route to the repo instructions. It is gitignored
+rather than tracked because Copilot CLI reads ``AGENTS.md`` *and* ``CLAUDE.md``, so a
+tracked import loads the instructions twice in every Copilot clone.
 
 Two things make this more than a wrapper around ``ln -s``:
 
@@ -70,15 +73,25 @@ SKILLS = ("review", "python-quality", "verify-docs", "fix-findings", "pdf-delive
 #: invocation written before ``--agent`` existed keeps its meaning.
 AGENTS = ("claude", "copilot")
 
+#: The whole of the per-clone ``CLAUDE.md``. An import, not a link: a hardlink to
+#: ``AGENTS.md`` detaches on the first checkout that replaces it, and an import
+#: cannot go stale.
+CLAUDE_MD_IMPORT = "@AGENTS.md\n"
+
 
 @dataclass(frozen=True)
 class Link:
-    """One artefact to be reachable at a fixed path under an agent's home."""
+    """One artefact to be reachable at a fixed path under an agent's home.
+
+    ``content`` set means a generated file rather than a link: ``dest`` must hold
+    exactly that text, and ``source`` is only what it depends on.
+    """
 
     label: str
     source: Path
     dest: Path
     is_dir: bool
+    content: str | None = None
 
 
 @dataclass
@@ -176,7 +189,8 @@ def repo_skills(repo_root: Path) -> tuple[str, ...]:
 def plan(repo_root: Path, home: Path, platform: str | None = None,
          hostname: str | None = None, machine: str | None = None,
          agents: tuple[str, ...] = ("claude",),
-         copilot_root: Path | None = None, project: bool = False) -> list[Link]:
+         copilot_root: Path | None = None, project: bool = False,
+         claude_md: bool = False) -> list[Link]:
     """The links this repo expects, in the order they should be applied.
 
     Skills come first: they are directories, so on Windows they are junctions,
@@ -207,6 +221,10 @@ def plan(repo_root: Path, home: Path, platform: str | None = None,
                  repo_root / ".claude" / "skills" / name, is_dir=True)
             for name in repo_skills(repo_root)
         ]
+    if claude_md:
+        links.append(Link("project/CLAUDE.md", repo_root / "AGENTS.md",
+                          repo_root / "CLAUDE.md", is_dir=False,
+                          content=CLAUDE_MD_IMPORT))
     if "claude" in agents:
         # Source and destination names differ on purpose: the repo calls this file
         # AGENT-INSTRUCTIONS.md because more than one agent reads it, but Claude Code
@@ -261,6 +279,15 @@ def inspect(link: Link) -> LinkState:
         if is_junction(link.dest):
             return LinkState(link, DETACHED, "dangling junction")
         return LinkState(link, MISSING, f"not present in {link.dest.parent}")
+    if link.content is not None:
+        try:
+            matches = link.dest.read_text(encoding="utf-8") == link.content
+        except (OSError, UnicodeDecodeError) as exc:
+            return LinkState(link, OCCUPIED, f"unreadable: {exc}")
+        if matches:
+            return LinkState(link, LINKED, "")
+        return LinkState(link, DIVERGED,
+                         f"holds other content, expected {link.content.strip()!r} — reconcile first")
     if same_target(link.source, link.dest):
         return LinkState(link, LINKED, "")
     if link.is_dir:
@@ -292,6 +319,10 @@ def make_link(link: Link, run=subprocess.run) -> None:
     standard account; neither needs elevation.
     """
     link.dest.parent.mkdir(parents=True, exist_ok=True)
+    if link.content is not None:
+        with link.dest.open("w", encoding="utf-8", newline="\n") as handle:
+            handle.write(link.content)
+        return
     if os.name != "nt":
         os.symlink(link.source, link.dest, target_is_directory=link.is_dir)
         return
@@ -373,6 +404,10 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--project", action="store_true",
                         help="link this repo's own skills/<name> into <repo>/.claude/skills, "
                              "where Claude Code and Copilot read them at project scope")
+    parser.add_argument("--claude-md", action="store_true",
+                        help="write <repo>/CLAUDE.md importing AGENTS.md, for Claude Code; "
+                             "leave it out in a Copilot-only clone, where it would load "
+                             "the instructions twice")
     parser.add_argument("--machine", metavar="ID",
                         help="machines/<ID>.md to link as ~/.claude/machine.md "
                              "(default: <platform>-<hostname>.md, else the only "
@@ -388,13 +423,14 @@ def main(argv: list[str] | None = None) -> int:
     if hasattr(sys.stdout, "reconfigure"):
         sys.stdout.reconfigure(encoding="utf-8")
 
-    # No target named at all means Claude, as it always has; `--project` on its
-    # own is a complete request and links the repo's skills only.
-    agents = tuple(dict.fromkeys(args.agents or ([] if args.project else ["claude"])))
+    # No target named at all means Claude, as it always has; `--project` and
+    # `--claude-md` are each a complete request and touch the repo only.
+    repo_only = args.project or args.claude_md
+    agents = tuple(dict.fromkeys(args.agents or ([] if repo_only else ["claude"])))
     copilot_root = args.copilot_home or copilot_home(args.home)
     report = inspect_all(plan(args.repo, args.home, machine=args.machine,
                               agents=agents, copilot_root=copilot_root,
-                              project=args.project))
+                              project=args.project, claude_md=args.claude_md))
     if args.apply:
         report = apply(report, force=args.force)
 
@@ -402,6 +438,7 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps({
             "agents": list(agents),
             "project": args.project,
+            "claude_md": args.claude_md,
             "ok": report.ok,
             "status": report.status,
             "links": [
