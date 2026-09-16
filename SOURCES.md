@@ -180,7 +180,7 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 
 *See also:* opengrep and retire.js (Experimentation stack → Quality gates).
 
-### LLM and agent runtime
+### LLM and agent stack
 
 * [Pydantic AI](https://pydantic.dev/docs/ai/overview/)
 * [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview)

@@ -139,7 +139,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 
 *See also:* opengrep and retire.js (Experimentation stack → Quality gates).
 
-### LLM and agent runtime
+### LLM and agent stack
 
 * [Pydantic AI](https://pydantic.dev/docs/ai/overview/) — Model-agnostic Python agent framework for building type-safe, production-grade generative AI applications.
 * [LangGraph](https://docs.langchain.com/oss/python/langgraph/overview) — LangChain's framework for building stateful, graph-based multi-step agent workflows.
