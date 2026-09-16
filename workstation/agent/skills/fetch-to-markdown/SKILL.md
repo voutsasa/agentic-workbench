@@ -132,7 +132,7 @@ point any diff or reviewer can work with it:
 python3 <skill>/scripts/clean_md_images.py "<dest>.md"
 ```
 
-It writes `<dest>-no-base64.md` beside the original and the PNGs into a sibling `<dest>/` folder.
+It writes `<dest>-no-base64.md` beside the original and the extracted images into a sibling `<dest>/` folder.
 **It never overwrites the original** — check the cleaned file, then replace.
 
 pandoc's `--extract-media` covers the same problem for pandoc's own conversions only; docling output

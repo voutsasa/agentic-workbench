@@ -34,9 +34,9 @@ class RewriteTests(unittest.TestCase):
     def _capture(self):
         written: list[tuple[int, bytes]] = []
 
-        def write_image(index: int, data: bytes) -> str:
+        def write_image(index: int, data: bytes, extension: str) -> str:
             written.append((index, data))
-            return f"image_{index}.png"
+            return f"image_{index}.{extension}"
 
         return written, write_image
 
@@ -49,9 +49,10 @@ class RewriteTests(unittest.TestCase):
                     "Doc",
                     write_image,
                 )
+                extension = "jpg" if fmt == "jpeg" else fmt
                 self.assertEqual(count, 1)
                 self.assertEqual(written, [(1, PIXEL)])
-                self.assertIn("![alt](Doc/image_1.png)", out)
+                self.assertIn(f"![alt](Doc/image_1.{extension})", out)
                 self.assertNotIn("base64", out)
 
     def test_numbers_images_sequentially(self):
@@ -131,7 +132,7 @@ class ExtractBase64ImagesTests(unittest.TestCase):
         path.write_text(content, encoding="utf-8")
         return path
 
-    def test_writes_pngs_and_a_cleaned_file(self):
+    def test_writes_format_preserving_images_and_a_cleaned_file(self):
         src = self._write(
             "Report.md",
             _doc(
@@ -144,7 +145,7 @@ class ExtractBase64ImagesTests(unittest.TestCase):
         assert out is not None  # narrows Path | None for the reader and the checker
         self.assertEqual(out, self.tmp / "Report-no-base64.md")
         self.assertEqual((self.tmp / "Report" / "image_1.png").read_bytes(), PIXEL)
-        self.assertEqual((self.tmp / "Report" / "image_2.png").read_bytes(), PIXEL)
+        self.assertEqual((self.tmp / "Report" / "image_2.jpg").read_bytes(), PIXEL)
         self.assertNotIn("base64", out.read_text(encoding="utf-8"))
 
     def test_the_original_is_never_overwritten(self):

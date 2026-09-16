@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Extract base64 data-URI images out of converted markdown into sibling PNGs.
+"""Extract base64 data-URI images out of converted markdown into sibling image files.
 
 docling and pandoc both inline figures as `data:image/...;base64,...` URIs when
 converting a PDF or a `.docx`. A page of screenshots becomes megabytes of
@@ -8,7 +8,7 @@ each one to a file and rewrites the link to point at it.
 
 Usage: python clean_md_images.py <markdown-file>
 
-Writes `<name>-no-base64.md` beside the source and the PNGs into a sibling
+Writes `<name>-no-base64.md` beside the source and the extracted images into a sibling
 `<name>/` folder. **The original is never overwritten** — the ingestion guide's
 quality check tells the reader to compare the two before replacing it, which is
 only possible if both survive the run.
@@ -36,7 +36,7 @@ IMAGE_PATTERN = re.compile(
 def rewrite(content: str, document_name: str, write_image) -> tuple[str, int]:
     """Replace every embedded image with a link to a file `write_image` saved.
 
-    Pure but for the callback, which takes (index, bytes) and returns the
+    Pure but for the callback, which takes (index, bytes, extension) and returns the
     filename it wrote — so a test can drive the rewriting without a filesystem.
     Returns the new markdown and the number of images extracted.
     """
@@ -49,10 +49,11 @@ def rewrite(content: str, document_name: str, write_image) -> tuple[str, int]:
         alt_text = match.group(1) or f"extracted_img_{counter}"
         try:
             # validate=True so a corrupted URI raises here rather than writing a
-            # PNG that no viewer can open. b64decode otherwise discards any
+            # image that no viewer can open. b64decode otherwise discards any
             # character outside the alphabet and decodes whatever is left.
             data = base64.b64decode(match.group(3), validate=True)
-            filename = write_image(counter, data)
+            extension = "jpg" if match.group(2) == "jpeg" else match.group(2)
+            filename = write_image(counter, data, extension)
         # binascii.Error (a ValueError) for malformed base64, OSError if the
         # sibling folder is unwritable. Anything else is a real bug worth raising.
         except (ValueError, OSError) as exc:
@@ -84,11 +85,8 @@ def extract_base64_images(md_file_path: Path) -> Path | None:
 
     images_folder.mkdir(parents=True, exist_ok=True)
 
-    def write_image(index: int, data: bytes) -> str:
-        # Everything is written as .png regardless of the source format. The
-        # extension is cosmetic here — the bytes are unchanged, and every viewer
-        # that matters sniffs the magic number rather than trusting the suffix.
-        filename = f"image_{index}.png"
+    def write_image(index: int, data: bytes, extension: str) -> str:
+        filename = f"image_{index}.{extension}"
         (images_folder / filename).write_bytes(data)
         print(f"Saved: {images_folder / filename}")
         return filename
