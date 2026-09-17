@@ -71,15 +71,13 @@ Leave `env` exactly as it is, and do not move it to `settings.local.json`.
 
 ## The machine note
 
-[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) closes by telling the agent to read `~/.claude/machine.md`. Point it at
-this machine's file in [`../../machines/`](../../machines/):
+[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) closes by telling the agent to read
+`~/.claude/machine.md`. The `link_config.py --apply` command in *Link it* creates that
+hardlink alongside the skills and resolves the right file in
+[`../../machines/`](../../machines/), including an explicitly named `--machine` file or
+the sole Windows machine file.
 
-```powershell
-$Machine = Join-Path $Root "workstation\machines\windows-$($env:COMPUTERNAME.ToLower()).md"
-New-Item -ItemType HardLink -Force -Path "$HOME\.claude\machine.md" -Target $Machine
-```
-
-If no such file exists yet, create it first — see
+If it reports `no_source`, create the machine file first — see
 [`../../machines/README.md`](../../machines/README.md#adding-a-machine). Do not link the macOS file as
 a stand-in.
 
