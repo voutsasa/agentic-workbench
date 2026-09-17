@@ -1,6 +1,6 @@
 ---
 name: fetch-to-markdown
-description: Fetch one web page, PDF or Office document and convert it to clean local markdown — classify the source, route it to the right tool (raw README, curl, HTML node extractor plus pandoc, docling, or Playwright plus defuddle), quality-check the result against the original, and strip embedded base64 images. Use when asked to fetch, retrieve, scrape, ingest or convert a docs page, README, PDF or .docx into markdown at a given path. Not for general web research — this writes a file.
+description: Fetch one web page, PDF or Office document and convert it to clean local markdown — classify the source, route it to the right tool (raw README, curl, HTML node extractor plus pandoc, docling, soffice for legacy binary formats, or Playwright plus defuddle), quality-check the result against the original, and strip embedded base64 images. Use when asked to fetch, retrieve, scrape, ingest or convert a docs page, README, PDF, .docx, .doc, .pptx or .ppt into markdown at a given path. Not for general web research — this writes a file.
 ---
 
 # Fetch a document to markdown
@@ -20,6 +20,7 @@ makes them itself. If the request did not name a destination path, ask for one b
 | `github.com/<owner>/<repo>` | **Raw README only. Never clone.** | `curl -s https://raw.githubusercontent.com/<owner>/<repo>/<branch>/README.md` |
 | A direct `.pdf` | Fetch the file itself, never scrape a rendered viewer | `curl -sL -o "<dest>.pdf" <url>` |
 | A local or fetched PDF / Office document | `docling` — real layout understanding, ahead of pandoc | `docling convert <input> --to md --output <dir>` |
+| A legacy binary `.doc` or `.ppt` | Two-step — neither docling nor pandoc reads the old binary format | see below |
 | **Any server-rendered HTML** — Docusaurus, Sphinx, ReadTheDocs, MkDocs, VitePress, mdBook, Jekyll, a classic blog, hand-rolled | curl → extract the article node → pandoc | see below |
 | A JS-hydrated platform (Mintlify, Fern, Rspress — anything whose raw HTML holds no article text; agentskills.io is one, returning raw component/JSX source under WebFetch) | Playwright → defuddle → pandoc | headless; no browser extension |
 
@@ -27,6 +28,20 @@ makes them itself. If the request did not name a destination path, ask for one b
 Splitting it by generator only invited the question *which of these is Docusaurus* when the answer
 never changed the command. Confirm the text is in the raw HTML — `curl -s <url> | grep -c "<some
 sentence from the page>"` — and if it is, this route works whatever built the page.
+
+### The legacy `.doc` / `.ppt` route
+
+`soffice` converts the old binary formats to PDF; docling then reads that PDF like any other:
+
+```sh
+soffice --headless --convert-to pdf --outdir <tmp> <input>
+docling convert <tmp>/<stem>.pdf --to md --output <dir>
+```
+
+A 0-byte or missing `<tmp>/<stem>.pdf` means `soffice` failed silently — common on a locked or
+corrupt source file. Report it; don't retry blindly. `soffice` may need its `program` directory
+prepended to `PATH` for this run — check the machine note for the exact path and whether a shim
+already resolves it.
 
 ### The server-rendered route
 
