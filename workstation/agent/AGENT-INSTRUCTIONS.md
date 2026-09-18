@@ -61,7 +61,7 @@ is in the machine note, not here.
 - **Editing a file is an editor's job, not Python's.** Prefer the editor tool over `python -c`, `perl -pi -e` or `sed` whenever the change is just text in a file; write a script only where the edit is genuinely programmatic. Either way, confirm with `git diff --stat` — a substitution that matched nothing is silent.
 - Commit as you go. I under-commit and leave work unversioned.
   - Before each commit, run `git status` and `git diff --staged`; the staged set is the intended change and nothing else.
-  - A defect you found but did not fix is reported, never dropped.
+  - Anything found but not fixed, or started but not completed, goes in the repo's TODO file in the same commit — reported in chat alone, it is dropped. No TODO file → ask before creating one.
 
 ## Documents
 

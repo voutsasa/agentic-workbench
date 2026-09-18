@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-15
+updated: 2026-09-18
 verified: never
 ---
 
@@ -177,6 +177,38 @@ Revisit only if Copilot starts deduplicating imports or Claude Code gains a sett
 files; `/context` as the first command of Copilot CLI in a clone set up without `--claude-md` shows
 the System Prompt at run C's size, not run B's; and Antigravity, with the rule set to **Always On**, shows the rule applied to a session —
 each observation recorded in the machine note.
+
+### 11. `verify_claims.py` has four Pyright errors
+
+Opened 2026-09-18, found while fixing the man-page overstrike defect (`7b0daf4`) and left unfixed as
+outside that change. None fails a test or the pre-push gate today.
+
+| Location | Error | Consequence |
+|---|---|---|
+| `workstation/agent/skills/verify-docs/scripts/verify_claims.py:419-420` | `help_subject` returns `("no-script", [])` against a declared `tuple[list[str], str] \| None` | a sentinel smuggled through the return type; callers must special-case it with nothing checking that they do |
+| same file, L839 and L882 | an exception object passed to `clip(text: str)` | works because `clip` calls `str()`; the annotation is wrong |
+| same file, L1079 | `import certifi` unresolved in this repo's `.venv` | only the TLS-advice path reaches it; unproven whether it degrades cleanly |
+
+**Closes when:** `.venv/bin/pyright workstation/agent/skills/verify-docs/scripts/verify_claims.py`
+reports 0 errors (pyright is not yet in this repo's venv — adding it is the user's install) and the
+verify-docs suite still passes.
+
+### 12. `review`'s Apply mode changes have not run on a real review
+
+Opened 2026-09-18, with `5949ef5`. Approve-each (step 2), failing-test-first (step 4) and recording
+unfixed findings (step 8) exist only as prose; the unit tests cover `repo_check.py`, not the procedure.
+
+**Closes when:** one review in Apply mode on a code target uses approve-each, shows a regression test
+failing before its fix, and records an unapplied finding in that repo's TODO file.
+
+### 13. New addition 2 in the global instructions is undecided
+
+Opened 2026-09-18. `workstation/agent/AGENT-INSTRUCTIONS.md` § *New additions* still holds "add it to
+TODO.md under `## Unverified`". The recommendation is to drop it: this file has no `## Unverified`
+section, and the global file must not name one repo's file.
+
+**Closes when:** the user decides, and the line and the § *New additions* heading are removed or
+folded in.
 
 ## Closed
 
