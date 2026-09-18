@@ -281,9 +281,8 @@ From the 2026-07-30 usage report, when `WORKING_PRACTICES.md` was folded into `C
   ignored. The confirmation gates stay prose. Reopen this if the agent is actually
   observed breaking them — that evidence would change the answer.
 
-## Open ideas
-
-Not adopted, not binding:
-
-- **Task agents for repo exploration** — a compact proposal instead of scrolling directory
-  listings. Note this pulls against `CLAUDE.md`'s "don't spawn agents I didn't ask for".
+- **Autonomous non-destructive delegation — 2026-09-18.** Agents may delegate bounded,
+  non-destructive tasks when doing so improves the outcome, reduces latency, or preserves
+  context. They state the objective and model tier, retain all confirmation gates, and keep
+  pushes with the parent agent. A subagent may edit and make a local commit only within its
+  explicit scope.
