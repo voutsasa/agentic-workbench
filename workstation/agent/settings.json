@@ -7,5 +7,19 @@
     "pyright-lsp@claude-plugins-official": true
   },
   "tui": "fullscreen",
-  "fastMode": true
+  "fastMode": true,
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "p=\"${CLAUDE_PROJECT_DIR:-$PWD}/.venv/bin/python\"; [ -x \"$p\" ] || exit 0; \"$p\" ~/.claude/hooks/ruff_on_edit.py",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
 }

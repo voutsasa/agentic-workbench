@@ -73,6 +73,7 @@ python workstation/scripts/link_config.py --json                # machine-readab
 python workstation/scripts/link_config.py --agent copilot       # the skills, into ~/.copilot/skills
 python workstation/scripts/link_config.py --agent claude --agent copilot  # both
 python workstation/scripts/link_config.py --project             # this repo's skills, into .claude/skills
+python workstation/scripts/link_config.py --hooks --agent claude --agent copilot  # also the post-edit hooks
 ```
 
 **`--agent` picks whose home is linked**, repeatable, default `claude`. `copilot` links the `SKILLS`
@@ -91,6 +92,12 @@ runs. It is a generated file, not a link, so it cannot detach: `linked` means th
 any other content reads `diverged` and is kept unless `--force`. The file is gitignored because Copilot
 CLI reads `AGENTS.md` and `CLAUDE.md` both; a Copilot-only clone leaves the flag out. Like `--project`,
 on its own it touches the repo only.
+
+**`--hooks` adds the post-edit hooks**, opt-in because a hook acts on every edit. For each name in
+`HOOKS` it links `workstation/agent/hooks/<name>.py` into each selected agent's `hooks/`, and for
+Copilot also `<name>.copilot.json` as `hooks/<name>.json`, which is Copilot's registration. Claude's
+registration is the `hooks` block in `workstation/agent/settings.json`, merged by hand — this script
+never writes a settings file.
 
 Checks every link the agent config needs: each skill named in the script's `SKILLS` tuple,
 `CLAUDE.md`, and the machine note at `~/.claude/machine.md`. Exits non-zero unless all of them are

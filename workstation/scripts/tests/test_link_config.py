@@ -639,6 +639,61 @@ class TestClaudeMd(TempTree):
         self.assertEqual(list((self.home / ".claude").iterdir()), [])
 
 
+class TestHooks(TempTree):
+    """Post-edit hooks: opt-in, linked per agent, registration JSON only for Copilot."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        hooks = self.repo / "workstation" / "agent" / "hooks"
+        hooks.mkdir()
+        (hooks / "ruff_on_edit.py").write_text("# hook\n", encoding="utf-8")
+        (hooks / "ruff-on-edit.copilot.json").write_text("{}\n", encoding="utf-8")
+
+    def hook_links(self, agents: tuple[str, ...], hooks: bool = True) -> list[lc.Link]:
+        links = lc.plan(
+            self.repo,
+            self.home,
+            platform="win32",
+            hostname="box",
+            agents=agents,
+            copilot_root=self.home / ".copilot",
+            hooks=hooks,
+        )
+        return [link for link in links if "hooks/" in link.label]
+
+    def test_off_by_default(self) -> None:
+        self.assertEqual(self.hook_links(("claude", "copilot"), hooks=False), [])
+
+    def test_claude_gets_the_script_only(self) -> None:
+        [link] = self.hook_links(("claude",))
+        self.assertEqual(link.dest, self.home / ".claude" / "hooks" / "ruff_on_edit.py")
+
+    def test_copilot_gets_the_script_and_its_registration(self) -> None:
+        dests = {link.dest for link in self.hook_links(("copilot",))}
+        root = self.home / ".copilot" / "hooks"
+        self.assertEqual(dests, {root / "ruff_on_edit.py", root / "ruff-on-edit.json"})
+
+    def test_files_come_after_every_directory(self) -> None:
+        links = lc.plan(
+            self.repo,
+            self.home,
+            platform="win32",
+            hostname="box",
+            agents=("claude", "copilot"),
+            copilot_root=self.home / ".copilot",
+            hooks=True,
+        )
+        first_file = next(i for i, link in enumerate(links) if not link.is_dir)
+        self.assertFalse(any(link.is_dir for link in links[first_file:]))
+
+    def test_apply_links_them(self) -> None:
+        report = lc.apply(lc.inspect_all(self.hook_links(("claude", "copilot"))))
+        self.assertTrue(report.ok, lc.render(report))
+        self.assertTrue(
+            (self.home / ".copilot" / "hooks" / "ruff-on-edit.json").exists()
+        )
+
+
 class TestCopilotHome(unittest.TestCase):
     def test_copilot_home_wins_for_the_real_home(self) -> None:
         self.assertEqual(

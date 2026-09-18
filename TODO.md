@@ -210,6 +210,23 @@ section, and the global file must not name one repo's file.
 **Closes when:** the user decides, and the line and the § *New additions* heading are removed or
 folded in.
 
+### 14. The ruff post-edit hook has not fired inside either assistant
+
+Opened 2026-09-18, with `workstation/agent/hooks/ruff_on_edit.py`. Proven: its unit tests, and the
+registration command piped a Claude-shaped and a Copilot-shaped payload by hand, formatting a scratch
+file both times. Not proven:
+
+| Unproven | Why it could differ |
+|---|---|
+| Claude fires it | the `hooks` block in `workstation/agent/settings.json` is not yet merged into `~/.claude/settings.json`, and `~/.claude/hooks/` does not exist until `link_config.py --hooks --apply` |
+| Copilot fires it | `matcher`, and `toolArgs` carrying the path under `path`, come from a docs page read on 2026-09-18, never a live payload; the registration also hard-codes `~/.copilot`, ignoring `COPILOT_HOME` |
+| Windows | both registrations are `bash` with `.venv/bin/python`; Copilot's `powershell` field is not set, and a Windows venv has `Scripts\python.exe` |
+
+**Closes when:** after the merge and `link_config.py --hooks --agent claude --agent copilot --apply`,
+one `.py` edit in a Claude Code session and one in a Copilot CLI session each leave the file
+ruff-formatted, recorded in the machine note — and the Windows row is either proven or the hook is
+documented as POSIX-only.
+
 ## Closed
 
 Nothing yet. An item moves here with the evidence that closed it, or is deleted outright; a list of

@@ -23,6 +23,8 @@ of the tree is arranged around, and it has three consequences:
 | `skills/<skill>/` | `~/.claude/skills/<skill>` | linked — one per name in [`../scripts/link_config.py`](../scripts/link_config.py)'s `SKILLS` tuple |
 | `../machines/<platform>-<id>.md` | `~/.claude/machine.md` | linked |
 | `hooks/powershell-tool-prompt.ps1` | `~/.claude/hooks/powershell-tool-prompt.ps1` | **reference copy — copied by hand, never linked** |
+| `hooks/ruff_on_edit.py` | `~/.claude/hooks/` and `~/.copilot/hooks/` | linked with `link_config.py --hooks` |
+| `hooks/ruff-on-edit.copilot.json` | `~/.copilot/hooks/ruff-on-edit.json` | linked with `link_config.py --hooks --agent copilot` |
 
 The last row before this one is the indirection that keeps this directory platform-neutral: one fixed
 path, different content per machine, so `CLAUDE.md` can point at machine truth without naming a
@@ -33,6 +35,14 @@ body is portable, but its *registration* — the `hooks.SessionStart`/`hooks.Pre
 `pwsh.exe`'s absolute path and this script's absolute path — is Windows-specific and user-specific, so
 it stays in the live `~/.claude/settings.json` only. See "There is a PowerShell tool" in
 `~/.claude/machine.md`.
+
+`hooks/ruff_on_edit.py` is the opposite case: portable script *and* portable registration, so it is
+linked. After an agent edits or creates a `.py` file it runs the project's own `.venv` ruff —
+`check --fix`, then `format` — on the whole file; with no `.venv` or no ruff there it does nothing, and
+it never installs. Formatting the whole file, not only the edited lines, is a deliberate choice: an
+unformatted file shows formatter changes the edit did not make. Claude registers it through the
+`hooks.PostToolUse` block in `settings.json` (merged by hand, like the rest of that file); Copilot
+through `ruff-on-edit.copilot.json`, linked into `~/.copilot/hooks/`.
 
 ## Settings are merged, never linked
 

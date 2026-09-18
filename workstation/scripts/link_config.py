@@ -12,7 +12,9 @@ where both agents load them at project scope; ``.claude/`` is gitignored, so eve
 clone needs it once. ``--claude-md`` writes ``<repo>/CLAUDE.md`` holding one line,
 ``@AGENTS.md`` — Claude Code's only route to the repo instructions. It is gitignored
 rather than tracked because Copilot CLI reads ``AGENTS.md`` *and* ``CLAUDE.md``, so a
-tracked import loads the instructions twice in every Copilot clone.
+tracked import loads the instructions twice in every Copilot clone. ``--hooks``
+adds the post-edit hook scripts to each selected agent's ``hooks/``, plus
+Copilot's hook registration; Claude's registration lives in ``settings.json``.
 
 Two things make this more than a wrapper around ``ln -s``:
 
@@ -74,6 +76,11 @@ SKILLS = (
     "pdf-deliverable",
     "fetch-to-markdown",
 )
+
+#: Post-edit hook scripts under ``workstation/agent/hooks/``, linked with ``--hooks``.
+#: Claude registers them in ``settings.json``, merged by hand; Copilot loads the
+#: ``<name>.copilot.json`` beside each from ``~/.copilot/hooks/<name>.json``.
+HOOKS = ("ruff_on_edit",)
 
 #: Agents whose home this script can link into. Claude is the default so every
 #: invocation written before ``--agent`` existed keeps its meaning.
@@ -207,6 +214,7 @@ def plan(
     copilot_root: Path | None = None,
     project: bool = False,
     claude_md: bool = False,
+    hooks: bool = False,
 ) -> list[Link]:
     """The links this repo expects, in the order they should be applied.
 
@@ -281,6 +289,37 @@ def plan(
                 is_dir=False,
             )
         )
+    if hooks:
+        for name in HOOKS:
+            script = agent / "hooks" / f"{name}.py"
+            if "claude" in agents:
+                links.append(
+                    Link(
+                        f"hooks/{name}.py",
+                        script,
+                        home / ".claude" / "hooks" / script.name,
+                        is_dir=False,
+                    )
+                )
+            if "copilot" in agents:
+                root = copilot_root if copilot_root is not None else home / ".copilot"
+                # Copilot's registration uses its own hook name, so the file name
+                # drops the `.copilot` marker it carries in the repo.
+                dest_json = f"{name.replace('_', '-')}.json"
+                links += [
+                    Link(
+                        f"copilot/hooks/{script.name}",
+                        script,
+                        root / "hooks" / script.name,
+                        is_dir=False,
+                    ),
+                    Link(
+                        f"copilot/hooks/{dest_json}",
+                        agent / "hooks" / f"{name.replace('_', '-')}.copilot.json",
+                        root / "hooks" / dest_json,
+                        is_dir=False,
+                    ),
+                ]
     for link in links:
         if link.dest.name in NEVER_LINK:
             raise AssertionError(
@@ -490,6 +529,13 @@ def main(argv: list[str] | None = None) -> int:
         "the instructions twice",
     )
     parser.add_argument(
+        "--hooks",
+        action="store_true",
+        help="also link the post-edit hook scripts (and Copilot's hook "
+        "registration) into each agent's hooks/; Claude's registration "
+        "is merged into settings.json by hand",
+    )
+    parser.add_argument(
         "--machine",
         metavar="ID",
         help="machines/<ID>.md to link as ~/.claude/machine.md "
@@ -527,6 +573,7 @@ def main(argv: list[str] | None = None) -> int:
             copilot_root=copilot_root,
             project=args.project,
             claude_md=args.claude_md,
+            hooks=args.hooks,
         )
     )
     if args.apply:
@@ -539,6 +586,7 @@ def main(argv: list[str] | None = None) -> int:
                     "agents": list(agents),
                     "project": args.project,
                     "claude_md": args.claude_md,
+                    "hooks": args.hooks,
                     "ok": report.ok,
                     "status": report.status,
                     "links": [

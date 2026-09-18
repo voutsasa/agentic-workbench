@@ -1,0 +1,13 @@
+{
+  "version": 1,
+  "hooks": {
+    "postToolUse": [
+      {
+        "type": "command",
+        "matcher": "edit|create",
+        "bash": "p=\"$PWD/.venv/bin/python\"; [ -x \"$p\" ] || exit 0; \"$p\" ~/.copilot/hooks/ruff_on_edit.py",
+        "timeoutSec": 30
+      }
+    ]
+  }
+}
