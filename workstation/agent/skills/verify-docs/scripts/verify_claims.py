@@ -289,7 +289,7 @@ class ManifestIndex:
             return
         try:
             data = tomllib.loads(path.read_text(encoding="utf-8"))
-        except tomllib.TOMLDecodeError, OSError:
+        except (tomllib.TOMLDecodeError, OSError):
             return
         project = data.get("project", {})
         self._record(project.get("name", ""), project.get("version", ""), path.name)
@@ -314,7 +314,7 @@ class ManifestIndex:
             return
         try:
             data = json.loads(path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError, OSError:
+        except (json.JSONDecodeError, OSError):
             return
         self._record(data.get("name", ""), data.get("version", ""), path.name)
         for section in ("dependencies", "devDependencies"):
@@ -530,7 +530,7 @@ class Verifier:
                 errors="replace",
                 stdin=subprocess.DEVNULL,
             )
-        except OSError, subprocess.SubprocessError:
+        except (OSError, subprocess.SubprocessError):
             return None
         # A piped man page (`git diff --help`) still carries nroff overstrike:
         # bold is `c\bc` and underline `_\bc`, so `--staged` never matches as text.

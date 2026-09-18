@@ -3,7 +3,8 @@ name = "agentic-workbench"
 version = "0.1.0"
 description = "Enables engineers to set up their workstation and work in an agent-enabled environment: AI coding assistants configured consistently, on a toolchain that is known to work."
 readme = "README.md"
-requires-python = ">=3.14"
+# Python 3.12 is the minimum supported version. Earlier versions have not been tested.
+requires-python = ">=3.12"
 dependencies = []
 
 [dependency-groups]

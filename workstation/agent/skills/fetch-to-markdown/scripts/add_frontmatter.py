@@ -142,7 +142,7 @@ def metadata_from_defuddle(html: str, run=subprocess.run) -> dict[str, str] | No
             text=True,
             check=False,
         )
-    except OSError, ValueError:
+    except (OSError, ValueError):
         return None
     if done.returncode != 0 or not done.stdout.strip():
         return None

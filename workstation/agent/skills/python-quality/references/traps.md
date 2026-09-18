@@ -27,12 +27,12 @@ worth having.
 missing from the report. Buried in the output: `ERROR: multiple exception types must be parenthesized`.
 
 **Cause.** `uvx radon` runs on whatever Python uv picks, which may be older than the project's
-target. ruff formats to the project's `requires-python` — at 3.14 that means PEP 758's
-`except A, B:` without parentheses, which older interpreters reject.
+target. Ruff formats to the project's `requires-python`, so it can produce syntax an older
+interpreter rejects.
 
 ```make
 complexity:
-	uvx --python 3.14 radon cc src -a -nb     # match the project's own version
+	uvx --python 3.12 radon cc src -a -nb     # match the project's own version
 ```
 
 **The general rule.** Any tool that parses the source must run on at least the version the code
