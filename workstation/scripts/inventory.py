@@ -29,7 +29,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
 DEFAULT_VERSION_FLAG = "--version"
-DEFAULT_TIMEOUT = 60
+DEFAULT_TIMEOUT = 120
 
 # Four statuses, deliberately. "Not usable here" collapses three situations
 # that call for three different responses: install it, get it allow-listed, or

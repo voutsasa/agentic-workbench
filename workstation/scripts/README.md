@@ -61,8 +61,8 @@ three commands missing does not report as installed.
 - A version *lower* than the one in `install.md`'s history is a stale local install. **Record it, tell
   the user, and stop** — see [the version-currency rule](../cli/README.md#version-currency--raise-it-dont-fix-it).
   The script deliberately cannot upgrade anything.
-- `--timeout` defaults to 60s because `plantuml` and `mmdc` start a JVM and a Node runtime respectively.
-  A timeout reports `error`, not `absent`.
+- `--timeout` defaults to 120s because `plantuml` and `mmdc` start a JVM and a Node runtime, and
+  Docling can take longer to initialise. A timeout reports `error`, not `absent`.
 
 ## `link_config.py`
 
