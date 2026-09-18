@@ -23,7 +23,7 @@ What each file and folder is: [`README.md`](README.md) — § *Layout*, then the
 - `docs/landing-zone/` and every `reference.md` under `workstation/cli/` and `workstation/mcp/` are machine-written — never hand-edit them.
 - `docs/guidance/`: every note declares its provenance; read `docs/guidance/README.md` before adding one.
 - `DEVELOPMENT-PLAN.md`'s ✓/➕ markers say whether a source is registered, not whether its file is on disk — check the path. ➕ means write the `SOURCES.md` entry first.
-- `TODO.md` holds only committed new work and unproven existing gaps, each saying what would close it. Delete an item when its evidence exists, not when it feels handled.
+- `TODO.md` holds only committed new work and unproven existing gaps, each saying what would close it. Delete an item when its evidence exists, not when it feels handled. A defect found but not fixed is recorded here in the same commit that finds it.
 
 **Skills**
 
