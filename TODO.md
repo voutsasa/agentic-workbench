@@ -201,17 +201,6 @@ unfixed findings (step 8) exist only as prose; the unit tests cover `repo_check.
 **Closes when:** one review in Apply mode on a code target uses approve-each, shows a regression test
 failing before its fix, and records an unapplied finding in that repo's TODO file.
 
-### 13. New addition N5 and the subagent rule are undecided
-
-Opened 2026-09-18. `workstation/agent/AGENT-INSTRUCTIONS.md` § *New additions* still holds N5 — a
-standing instruction to spawn a Task agent for an end-to-end findings sweep. Reviewed that day: it
-collides with *Don't spawn agents I didn't ask for* (§ *Skills and subagents*) and with the 5–10-file
-exploration limit, and duplicates the `review` and `verify-docs` skills. The user deferred it to
-reconsider the subagent direction as a whole.
-
-**Closes when:** the user decides the subagent rule, N5 is dropped or folded in, and the § *New
-additions* heading is removed.
-
 ### 14. The ruff post-edit hook is unproven on Windows and under `COPILOT_HOME`
 
 Opened 2026-09-18, with `workstation/agent/hooks/ruff_on_edit.py`. Proven on macOS the same day: it
@@ -228,14 +217,16 @@ fires in Claude Code (`Write`) and in Copilot CLI (`create`), each leaving a `.p
 hook is documented as POSIX-only; the registration resolves the script through `COPILOT_HOME`; and a
 Copilot `edit` of an existing file is observed formatted.
 
-### 15. The trigger-based *Design before build* has not been seen steering a session
+### 15. The trigger-based *Design before build* and the subagent rule have not steered a session
 
 Opened 2026-09-18, with the rewrite of principle 5 in `workstation/agent/AGENT-INSTRUCTIONS.md`
-(divergence, effort, impact, plus the mid-course checkpoint). It loads from the next session on; no
-session has yet run under it.
+(divergence, effort, impact, plus the mid-course checkpoint) and, the same day, the subagent rule in §
+*Skills and subagents* (spawn without asking only for deterministic or designed-and-approved work, or
+a bounded thinking task). Both load from the next session on; no session has yet run under them.
 
-**Closes when:** one later session is observed both proceeding without asking on work that meets no
-trigger and stopping on one that does — the case and the call recorded here or in the machine note.
+**Closes when:** one later session is observed proceeding without asking on work that meets no
+trigger and stopping on one that does, and spawning a subagent under the new rule whose result the
+parent re-checks — each case and call recorded here or in the machine note.
 
 ## Closed
 

@@ -97,9 +97,10 @@ Everything machine-specific — the repo path, the shell, which CLI tools actual
 
 - Skill scripts go in `<skill>/scripts/`, documented, with unit tests. If several skills need the same functionality, propose extracting it to a local MCP server and confirm the split with me first.
 - Gates, checkers and validators are deterministic — parsers, regex, AST, exit codes. No `claude -p` or other model call in a pre-push or CI path. The exception is `verify-docs`: whether a document's prose is true cannot be settled by code alone.
-- Don't spawn agents I didn't ask for. When you do fan out, pick the cheapest model that clears the bar for each subtask rather than one tier for the whole batch, and say which you chose.
-
-## New additions
----
-
-- Use a Task agent to explore this repo end-to-end and report back a findings list only — no edits. Have it map the real directory layout first (including where Claude/agent config actually lives), then check: docs-vs-code truth, stale paths in .env and configs, symlink targets, version-string consistency, and test coverage gaps. Return findings as a table with file:line citations and severity. I'll pick which to apply.
+- **Subagents do work whose thinking is already done.** Spawn one without asking when the task is:
+  - **deterministic** — a script run, a mechanical transformation, a check with a defined pass/fail; or
+  - **designed and approved** — it passed *Design before build*, and ideally the parent has already done one instance (*Start small*), so the subagent repeats a proven pattern.
+- **A thinking task** — search, analysis, review — may be spawned only when bounded: a narrow question, a named scope (folders or files), a fixed output format and a stop condition, so it cannot spend a lot of tokens down a wrong route that then has to be redone. If it cannot be bounded that tightly, do it inline.
+- **The brief carries everything the subagent needs** — the approved design or the finished instance, the files, the acceptance check. The parent re-runs that check before reporting: a subagent's "done" is a claim until the parent has checked it. The mid-course checkpoint in principle 5 applies to subagents too.
+- **Never delegate** design decisions, or anything that meets an *impact* trigger (push, settings, deletion) — those stay with the parent and me.
+- Pick the cheapest model that clears the bar for each subtask rather than one tier for the whole batch, and say which you chose.
