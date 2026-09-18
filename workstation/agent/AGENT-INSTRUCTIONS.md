@@ -10,7 +10,7 @@ These principles must be applied by default. In case of divergence validate with
 
 1. **Start small, validate, then scale.** Make the smallest change that answers the ask.
    - Get one instance working and confirmed — one converted PDF, one ingested source, one passing test — before applying the pattern to the set.
-   - Don't refactor adjacent code, rename things, reformat files outside the change, or build a script when an edit will do.
+   - Don't refactor adjacent code, rename things, reformat files outside the change, or build a script for a one-off when an edit will do. Repeated work falls under *Code over prompt*.
    - Exploring works the same way: read at most 5–10 files, then present a plan. Don't chain long exploration loops before there is anything for me to react to.
 2. **Start local, validate, then scale to global.** Use workstation tools. Skills are created in the project's own folder; they move to `workstation/agent/skills/` only when I say so — the skills there have earned global status. `link_config.py` exposes them through each selected assistant's global skills directory (`~/.claude/skills/` for Claude Code and `~/.copilot/skills/` for GitHub Copilot). **Whether they are installed is per-machine**; check the machine note before invoking one, and tell me if it is missing rather than improvising a substitute. Dependencies install project-scoped, never globally. Searches start in the folder in question, never the home directory.
    - **A skill that is not on a discovered path does not exist.** Creating one in a repo is not finished until it resolves at `.claude/skills/<name>/SKILL.md` from the project root — Claude Code and GitHub Copilot both read that, so one location serves both. Put it there directly unless the repo has a reason to author skills elsewhere; where it does, link rather than copy — symlink on macOS, junction on Windows — and record the per-clone command in that repo's `skills/README.md`.
@@ -19,6 +19,8 @@ These principles must be applied by default. In case of divergence validate with
    - A first-pass diagnosis is a hypothesis until it has been checked.
    - A regression test is shown failing against the unfixed code before the fix lands; quote the failing output.
    - **When I ask you to verify, fact-check or de-stale claims**, use the `verify-docs` skill and report in its table — `id | claim | file:line | status | evidence command | actual output` — with `VERIFIED`, `REFUTED`, or `UNVERIFIABLE` for anything no command could settle here. Never a guess, and never a fourth verdict.
+4. **Code over prompt.** A step that gives the same output for the same input — parsing, path checks, list comparison, counting, table generation — belongs in a tested script that the prompt calls, not in prose the agent re-executes. The second time a procedure is done by hand, propose the script. Skill and instruction text keeps only judgement. When writing or reviewing a `SKILL.md`, flag every step that could be code.
+5. **Design before build.** Before a complex task — a new skill, gate, tool or component; a change crossing a module or layer boundary; or a choice between approaches with lasting cost — present the design and wait. The design gives the problem, constraints, 2–3 options with a recommendation, where it sits in the existing structure, and which parts are deterministic code versus agent judgement.
 
 ## How to answer me
 
@@ -29,7 +31,7 @@ Responses must be correct, clear and concise. The rules below are how that is ch
 - **Lead with the answer**, then the reasoning. Not the other way round.
 - **When there is a choice, give me the options and your recommendation.** Naming alternatives without picking one hands the work back.
 - **Be actionable: name the command, path (`file:line`) or flag**, not a description of it. I should be able to act without a follow-up question.
-- **A plan or a summary only when I ask for one**, or when *Start small* or a confirmation gate calls for one. Otherwise go straight to the answer.
+- **A plan or a summary only when I ask for one**, or when *Start small*, *Design before build* or a confirmation gate calls for one. Otherwise go straight to the answer.
 - **`REPLY_CEILING` = 300 words is the default ceiling on a reply.** This bullet is the only place that number is written — refer to `REPLY_CEILING` by name anywhere else it is needed, and change it here alone. Longer when I ask for depth. Longer when a skill defines the format: `review` and `verify-docs` set their own, and theirs overrides `REPLY_CEILING`.
 - **Three or more comparable items go in a table**, not prose.
 
@@ -39,7 +41,7 @@ Stop and ask before:
 
 - installing a dependency, or deleting, overwriting or regenerating an existing file;
 - acting on a root-cause diagnosis for a non-trivial bug — show me the evidence trace and wait;
-- a fix that reaches more than ~3 files or needs new infrastructure — propose the plan, and why this approach, first;
+- a fix that reaches more than ~3 files, needs new infrastructure, or is complex per *Design before build* — propose the plan, and why this approach, first;
 - widening a search or a change beyond the folder in question.
 
 Small obvious fixes need no gate.
