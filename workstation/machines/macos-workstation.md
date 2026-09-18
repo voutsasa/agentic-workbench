@@ -152,8 +152,14 @@ Until 2026-09-12 it was a symlink into the sibling `sdd-workbench`, which meant 
 landed in that repo's git tree and any `git checkout` there rewrote this machine's settings. The link
 was broken by hand; the agent must not write this file.
 
-Its five keys — `enabledPlugins`, `fastMode`, `model`, `permissions`, `tui` — are **identical** to
-[`../agent/settings.json`](../agent/settings.json). There is nothing outstanding to merge.
+Its six keys — `enabledPlugins`, `fastMode`, `hooks`, `model`, `permissions`, `tui` — are
+**identical** to [`../agent/settings.json`](../agent/settings.json), compared with `json.tool` and
+`diff` on 2026-09-18. There is nothing outstanding to merge. `hooks` was added by the agent that day, on
+the user's explicit one-off authorisation, the previous file backed up first.
+
+**The ruff post-edit hook fires in Claude Code**, 2026-09-18: a `Write` of `import os,sys` /
+`x=[1,2 ,3]` to a `.py` file in this repo read back as `x = [1, 2, 3]`, and Claude Code reported
+"PostToolUse hook modified … after your edit".
 
 ### Copilot CLI
 
@@ -168,6 +174,7 @@ their observation recorded here rather than a quoted output.
 | Binary | `/opt/homebrew/bin/copilot` → Caskroom `copilot-cli/1.0.24` | `readlink -f` |
 | This repo's skills at project scope | 2 of 2 linked in `.claude/skills` | `link_config.py --project` |
 | VS Code `chat.useClaudeMdFile` | not set | `skills/setup-agents/scripts/detect.py` |
+| Ruff post-edit hook | **fires**, 2026-09-18: Copilot reported `Create hook_probe_copilot.py +2`; the file read back as the one line `x = [1, 2, 3]` | `link_config.py --hooks --agent copilot --apply`, then `copilot -p … --allow-tool=write --add-dir <repo>` |
 
 **The cask directory and the running version disagree** — the resolved path still names 1.0.24 on
 2026-09-14 while the binary reports 1.0.83, up from 1.0.63 a day earlier. Homebrew did not do it:
