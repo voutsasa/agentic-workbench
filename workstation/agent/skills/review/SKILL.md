@@ -115,18 +115,28 @@ above; applying does not replace it.
 1. **Rate every finding high / medium / low confidence** in the report, and say what the rating rests
    on. Confidence is about whether the finding is *true*, not how easy the fix is.
 2. **Apply high and medium.** Leave low-confidence findings in the report unapplied and say so.
+   **Unless the user wants to pick** — "ask me which", "let me approve each": then ask which
+   findings to apply, one choice per finding with its confidence, and apply only the approved ones.
+   A finding not approved is left unapplied, with *not approved* as its reason.
 3. **Stop for product decisions.** Anything where the fix is a judgement call — which of two
    contradicting rules wins, what an absent rule should say, a scope question — goes to *Decisions
    requested* and is left untouched, however confident the finding is. Asking is not a failure of
    nerve here; guessing is.
-4. **Verify each fix empirically** — re-read the changed lines, run the command, fetch the URL — and
+4. **For a code finding, write the regression test first** and show it failing against the unfixed
+   code — quote the failure. A test that passes before the fix proves nothing. Documents have no
+   such test; step 5's evidence covers them.
+5. **Verify each fix empirically** — re-read the changed lines, run the command, fetch the URL — and
    quote the actual output. A fix asserted without evidence counts as unapplied.
-5. **Run the project's full gate**: whatever the repo actually has — tests, lint, type check, link
-   check. Name each one and give its result. If a gate doesn't exist in this repo, say that rather
-   than reporting a pass; a docs repo may have no test suite at all.
-6. **Commit each logical group separately**, message per repo convention, and don't sweep unrelated
-   pre-existing changes into the commit.
-7. **Close with the delta re-check** (below), then this table:
+6. **Run the project's full gate**: whatever the repo actually has — the full test suite, not just the
+   new test, plus lint, type check, link check. Name each one and give its result. If a gate doesn't
+   exist in this repo, say that rather than reporting a pass; a docs repo may have no test suite at all.
+7. **Commit each logical group separately**, message per repo convention. Run `git status` and
+   `git diff --staged` first: the staged set is that group and nothing else — no unrelated
+   pre-existing changes, no deletions or formatter churn nobody asked for.
+8. **Record what was found but not fixed** — low confidence, not approved, a decision pending — in the
+   repo's TODO file if it keeps one, in the same commit. Where it keeps none, the closing table is
+   the record.
+9. **Close with the delta re-check** (below), then this table:
 
    | Finding | Fix | Evidence | Commit |
    |---|---|---|---|
