@@ -5,8 +5,8 @@ description: Identify this machine and the AI coding assistants on it (Claude Co
 
 # Set up the agents on this machine
 
-Detect, ask, describe, then ask again. **Nothing on the machine changes before the user answers
-step 4**, and even then the only thing this skill ever writes is links.
+Detect agents and the toolchain, ask, describe, then ask again. **Nothing on the machine changes
+before the user answers step 4**, and even then the only thing this skill ever writes is links.
 
 This skill orchestrates recorded routes; it does not carry them. Which agent reads what, and the
 provider steps, are in [`workstation/agent/setup/README.md`](../../workstation/agent/setup/README.md).
@@ -25,6 +25,7 @@ recorded in [`workstation/scripts/README.md`](../../workstation/scripts/README.m
 - **Pass `--force`** to `link_config.py`, unless the user asks for it after seeing the `diff`.
 - **Install, upgrade or sign in to an assistant.** One not on `PATH` is reported absent, and the skill
   stops there for that assistant.
+- **Install or upgrade a CLI tool or its dependencies.** Give the user the recorded commands only.
 - **Set up a report-only assistant.** No route is recorded for it. Say so.
 
 ## 1. Detect
@@ -40,6 +41,20 @@ Show the user its three tables as printed. Add `--json` when you need to branch 
 | Machine note **absent** | Say so. Claude's `machine.md` link stays `no_source` until it exists. Creating it is [`workstation/machines/README.md` § *Adding a machine*](../../workstation/machines/README.md#adding-a-machine); ask the user for the id first — the file is pushed, and a hostname is often a person's name. |
 | No configurable assistant on `PATH` | Report it and stop. |
 
+### Assess the CLI toolchain
+
+Run the inventory with the same `<python>` choice:
+
+```sh
+<python> workstation/scripts/inventory.py
+```
+
+Show its complete table. `installed` means the version probe worked; `absent` means the product is
+missing. `blocked` and `error` are not install requests: report their detail and consult that tool's
+`quick_start.md` and `install.md` for the non-installing diagnostic or required runtime dependency.
+For each product the user wants to use, include any required dependency named in those files, separating
+it from optional components such as extra browsers or OCR languages.
+
 ## 2. Ask
 
 One round, with only the questions that apply. Use a structured question tool where the harness has one.
@@ -49,6 +64,7 @@ One round, with only the questions that apply. Use a structured question tool wh
 | Which assistants should this set up? (multi-select) | always | each **configurable** assistant detect found; name the report-only ones in the question text as not configurable |
 | Should Claude Code use AWS Bedrock or your own subscription? | Claude Code selected | Bedrock · Own subscription. Quote detect's current provider in the question, so a switch reads as one. |
 | Should this workbench's instructions and skills be global? | always | Yes — link into `~/.claude` and `~/.copilot` · No — this repo only |
+| Do you want to install missing toolchain products or required dependencies? | inventory reports `absent`, or a needed product lacks a required dependency | All missing items · selected items · none. Give the exact platform commands from the relevant `install.md`; the user runs them. |
 
 "No" still leaves this repo working for both, through the project links in step 3.
 
@@ -88,6 +104,7 @@ writes into this repo.
 | Claude, global | add the keys detect lists as differing from `workstation/agent/settings.json` | `macos.md` / `windows.md` § *Settings* |
 | Copilot CLI | `copilot login` if not signed in | setup README §3 |
 | VS Code, global | set `"chat.useClaudeMdFile": true` in the user settings file detect named | setup README §3 |
+| Toolchain installation requested | commands for the selected missing products and required dependencies, from each tool's `install.md` | `workstation/cli/<tool>/install.md` |
 
 Present one table: `# | change | path | who runs it | status now`.
 
@@ -126,3 +143,4 @@ Substitute `<python>` before handing the block over, and on Windows write it in 
 | Claude Code | `/context` lists `CLAUDE.md` under Memory files; `/status` shows the chosen provider |
 | Copilot CLI | `/skills` lists the linked skills |
 | VS Code | Chat's loaded context lists the instruction file |
+| CLI toolchain | User re-runs `<python> workstation/scripts/inventory.py`; requested products report `installed` |

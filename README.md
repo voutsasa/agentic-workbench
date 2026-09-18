@@ -2,9 +2,9 @@
 
 Enables engineers to set up their workstation and work in an agent-enabled environment: AI coding assistants configured consistently, on a toolchain that is known to work.
 
-**Before you start**, the workstation needs two things this repo does not install:
+**Before you start**, the workstation needs three things this repo does not install:
 
-- **Required — Python3 and an AI coding assistant, installed and signed in.** The skills here are instructions an assistant carries out, so without one they do nothing. Claude Code and GitHub Copilot CLI both load them. `setup-agents` configures an assistant you already have; it does not install one. Also, the scripts supporting the capabilities of this repo are written in Python 3.
+- **Required — Python3, Node.js/npm, and an AI coding assistant, installed and signed in.** The skills here are instructions an assistant carries out, so without one they do nothing. Claude Code and GitHub Copilot CLI both load them. `setup-agents` configures an assistant you already have; it does not install one. Python runs the workstation scripts; Node.js/npm supplies the Node-based toolchain components.
 - **Recommended — a package manager for the toolchain.** The install routes in [`workstation/cli/`](workstation/cli/README.md) assume Homebrew on macOS and Scoop on Windows, with `pipx` or `npm` for tools published to Python or Node registries. winget is noted where a tool offers it. A package manager keeps every tool installable and upgradable with one command, instead of by hand.
 
 ## Install
@@ -36,7 +36,7 @@ Repo skills serve this workbench; global skills work in any repo. The authoritat
 
 | Skill | Scope | What it does |
 |---|---|---|
-| [`setup-agents`](skills/setup-agents/SKILL.md) | repo | Sets up an engineer's AI coding assistants, confirming each choice, then applying shared instructions and skills or handing over commands. |
+| [`setup-agents`](skills/setup-agents/SKILL.md) | repo | Assesses the workstation toolchain and sets up an engineer's AI coding assistants, confirming each choice, then applying shared instructions and skills or handing over commands. |
 | [`ingest-source`](skills/ingest-source/SKILL.md) | repo | Adds a registered source to the knowledge base, filed under a predictable name and recorded in the catalogue for traceability. |
 | [`fetch-to-markdown`](workstation/agent/skills/fetch-to-markdown/SKILL.md) | global | Converts web pages, PDFs or Office documents to clean markdown, routing each to the right tool and quality-checking the result. |
 | [`verify-docs`](workstation/agent/skills/verify-docs/SKILL.md) | global | Audits documentation for stale claims by running a command that proves or refutes each, reporting them in an evidence table. |
