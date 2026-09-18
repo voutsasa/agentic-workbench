@@ -108,7 +108,7 @@ What the workbench runs on — the machines, not an architecture.
 | [`workstation/cli/`](workstation/cli/README.md) | The CLI toolchain. One folder per tool: authored `install.md` and `quick_start.md`, plus an ingested `reference.md`. Read `quick_start.md` before invoking a tool you haven't used this session. |
 | [`workstation/mcp/`](workstation/mcp/README.md) | Third-party MCP servers. One folder per server: authored `setup.md` plus an ingested `reference.md`. |
 | [`workstation/machines/`](workstation/machines/README.md) | One file per machine: paths, shell, which tools actually run, what is broken. **The only place a machine-specific fact belongs.** |
-| [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `link_config.py` reports or repairs the `~/.claude` links, and with `--agent copilot` the `~/.copilot/skills` links. Both are read-only unless told otherwise. |
+| [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `link_config.py` reports or repairs the `~/.claude` links and, with `--agent copilot`, the global instruction and skill links under `~/.copilot`. Both are read-only unless told otherwise. |
 | `workstation/agent/` | Claude Code configuration, **linked into `~/.claude/`** so it is versioned rather than scattered across a home directory. See below. |
 
 **The split is by lifetime, not by platform** — policy, route and machine state live in different
@@ -124,11 +124,11 @@ Edits to `~/.claude/CLAUDE.md` or the `review` skill land here, because those pa
 |---|---|
 | `workstation/agent/README.md` | The contract: what is linked where, and what is deliberately left untracked. |
 | `workstation/agent/setup/<platform>.md` | Per-platform setup for a new machine. macOS uses symlinks; Windows uses junctions and hardlinks, because symlinks there need admin. |
-| `workstation/agent/AGENT-INSTRUCTIONS.md` | Global instructions applying to every project — linked to `~/.claude/CLAUDE.md`. Policy only, no platform, no paths. |
+| `workstation/agent/AGENT-INSTRUCTIONS.md` | Global instructions applying to every project — linked to `~/.claude/CLAUDE.md` and `~/.copilot/copilot-instructions.md`. Policy only, no platform, no paths. |
 | `workstation/agent/settings.json` | Reference copy of the shared Claude Code settings — **merged into `~/.claude/settings.json` by hand, never linked.** [Why, and the procedure](workstation/agent/README.md#settings-are-merged-never-linked). |
 | `workstation/agent/skills/<skill>/` | The skills promoted to global scope, each linked to `~/.claude/skills/<skill>`. Which skills those are is [`link_config.py`](workstation/scripts/link_config.py)'s `SKILLS` tuple — see [`skills/README.md`](skills/README.md). A skill earns promotion here by working in a repo that is not this one; until then it stays in [`skills/`](skills/). `SKILL.md` is a skill's definition; `scripts/` and `tests/` hold its repeatable actions. |
 
-Because these are links into a git repo, check `git status` here before overwriting or regenerating any of them — and if this directory is ever moved or renamed, **repoint the links**, or every session silently loses its global instructions. On Windows `CLAUDE.md` and `machine.md` are hardlinks and any atomic-saving editor severs them silently; [`workstation/agent/setup/windows.md`](workstation/agent/setup/windows.md) carries the detection command.
+Because these are links into a git repo, check `git status` here before overwriting or regenerating any of them — and if this directory is ever moved or renamed, **repoint the links**, or every session silently loses its global instructions. On Windows `CLAUDE.md`, `machine.md`, and Copilot's `copilot-instructions.md` are hardlinks and any atomic-saving editor severs them silently; [`workstation/agent/setup/windows.md`](workstation/agent/setup/windows.md) carries the detection command.
 
 ## Repo mechanics
 

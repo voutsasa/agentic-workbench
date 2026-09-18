@@ -35,8 +35,7 @@ PowerShell 7.6.5, not bash.
 - There is no `sed`, `awk`, `tr` or `head`, so there is no shell route to an in-place substitution at
   all. That makes [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md)'s *editing a file is an editor's job*
   the only route here, not a preference: use the editor tool. Where an edit is genuinely programmatic,
-  it goes through the project's venv like any other Python, and this repo has **no `.venv`** — see
-  *Python scaffolding* below.
+  it goes through this repo's present `.venv` like any other Python — see *Python scaffolding* below.
 
 **The Bash tool cannot resolve anything on `PATH`.** It receives the Windows semicolon-separated
 `PATH` and hands it to Git Bash, which expects colons, so every bare command fails

@@ -5,7 +5,7 @@
       {
         "type": "command",
         "matcher": "edit|create",
-        "bash": "p=\"$PWD/.venv/bin/python\"; [ -x \"$p\" ] || exit 0; \"$p\" ~/.copilot/hooks/ruff_on_edit.py",
+        "bash": "for p in \"$PWD/.venv/bin/python\" \"$PWD/.venv/Scripts/python.exe\"; do [ -x \"$p\" ] && exec \"$p\" \"${COPILOT_HOME:-$HOME/.copilot}/hooks/ruff_on_edit.py\"; done; exit 0",
         "timeoutSec": 30
       }
     ]

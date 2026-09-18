@@ -18,7 +18,8 @@ of the tree is arranged around, and it has three consequences:
 
 | Path | Goes to | How |
 |---|---|---|
-| `AGENT-INSTRUCTIONS.md` | `~/.claude/CLAUDE.md` | linked |
+| `AGENT-INSTRUCTIONS.md` | `~/.claude/CLAUDE.md` | linked for Claude Code and VS Code with `chat.useClaudeMdFile` |
+| `AGENT-INSTRUCTIONS.md` | `~/.copilot/copilot-instructions.md` | linked for Copilot CLI |
 | `settings.json` | `~/.claude/settings.json` | **merged by hand — never linked** |
 | `skills/<skill>/` | `~/.claude/skills/<skill>` | linked — one per name in [`../scripts/link_config.py`](../scripts/link_config.py)'s `SKILLS` tuple |
 | `../machines/<platform>-<id>.md` | `~/.claude/machine.md` | linked |
@@ -37,7 +38,8 @@ it stays in the live `~/.claude/settings.json` only. See "There is a PowerShell 
 `~/.claude/machine.md`.
 
 `hooks/ruff_on_edit.py` is the opposite case: portable script *and* portable registration, so it is
-linked. After an agent edits or creates a `.py` file it runs the project's own `.venv` ruff —
+linked. The registration checks `.venv/bin/python` and `.venv/Scripts/python.exe`, covering POSIX and
+Windows venv layouts. After an agent edits or creates a `.py` file it runs the project's own `.venv` ruff —
 `check --fix`, then `format` — on the whole file; with no `.venv` or no ruff there it does nothing, and
 it never installs. Formatting the whole file, not only the edited lines, is a deliberate choice: an
 unformatted file shows formatter changes the edit did not make. Claude registers it through the
@@ -170,7 +172,7 @@ One command reports every path in the *Contents* table and writes nothing. Run i
 python workstation/scripts/link_config.py
 ```
 
-It exits non-zero unless every link in the *Contents* table is live, distinguishes a *detached* copy
+It exits non-zero unless every Claude link in the *Contents* table is live, distinguishes a *detached* copy
 from a *diverged* one, and never touches `settings.json`. Add `--apply` to repair:
 
 ```
@@ -181,11 +183,15 @@ python workstation/scripts/link_config.py --apply
 rather than overwriting it, because reconciling two edited copies is judgement work — confirm the live
 side carries nothing unique, then use `--force`.
 
-**On Windows this is routine, not exceptional.** `CLAUDE.md` and `machine.md` are hardlinks there, and a
-hardlink is severed both by `git checkout` and by any atomic-saving editor — Zed, VS Code, and Claude
-Code's own `Edit` tool included. So **re-run `--apply` after editing either file, and after any merge,
-branch switch or pull that touches them.** Which side you edited makes no difference. The skill
-junctions are immune, as is every symlink on macOS. Details in
+Pass `--agent copilot` to check or apply Copilot's global skills and
+`~/.copilot/copilot-instructions.md`. Pass both agents to maintain both homes in one run.
+
+**On Windows this is routine, not exceptional.** `CLAUDE.md`, `machine.md`, and Copilot's
+`copilot-instructions.md` are hardlinks there, and a hardlink is severed both by `git checkout` and by
+any atomic-saving editor — Zed, VS Code, and Claude Code's own `Edit` tool included. So **re-run
+`--apply` for each configured agent after editing a linked file, and after any merge, branch switch or
+pull that touches one.** Which side you edited makes no difference. The skill junctions are immune, as
+is every symlink on macOS. Details in
 [`setup/windows.md`](setup/windows.md#windows-traps).
 
 ### One surface ignores these links entirely

@@ -249,7 +249,9 @@ class TestCollect(TempTree):
         facts = self.facts({})
         self.assertEqual(facts["claude"]["links"]["linked"], 0)
         self.assertEqual(facts["claude"]["links"]["total"], len(link_config.SKILLS) + 2)
-        self.assertEqual(facts["copilot"]["links"]["total"], len(link_config.SKILLS))
+        self.assertEqual(
+            facts["copilot"]["links"]["total"], len(link_config.SKILLS) + 1
+        )
 
     def test_reports_the_machine_note_as_absent_by_its_conventional_name(self) -> None:
         machine = self.facts({})["machine"]

@@ -343,7 +343,7 @@ def render(facts: dict, home: Path) -> str:
         f"| Claude global links (`~/.claude`) | {c['links']['linked']} of {c['links']['total']} linked |",
         f"| Claude settings keys differing from `workstation/agent/settings.json` | {drift_text} |",
         (
-            f"| Copilot global skill links (`{_tilde(cp['home'], home)}/skills`) | "
+            f"| Copilot global instruction and skill links (`{_tilde(cp['home'], home)}`) | "
             f"{cp['links']['linked']} of {cp['links']['total']} linked |"
         ),
         (

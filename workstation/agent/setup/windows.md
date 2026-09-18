@@ -46,8 +46,8 @@ python (Join-Path $Root "workstation\scripts\link_config.py") --apply
 It uses the two link types that need no elevation: a junction per global skill in
 `$HOME\.claude\skills`, and hardlinks for `$HOME\.claude\CLAUDE.md` and `$HOME\.claude\machine.md`.
 A diverged `CLAUDE.md` is reported and skipped rather than overwritten — reconcile it first, per the
-section above. Add `--agent copilot` to link the same skills into `~/.copilot/skills`, and `--project`
-for this repo's own skills.
+section above. Add `--agent copilot` to link the same skills and `copilot-instructions.md` under
+`~/.copilot`, and `--project` for this repo's own skills.
 
 `settings.json` is not among them, and cannot be: the script refuses to plan a link for it, since a
 link is a replace and not a merge.
@@ -155,9 +155,11 @@ Because it is a copy, **re-run it after pulling a change to the hook.** Nothing 
 
   Junctions are immune, so the skill directories never need it. `settings.json` is exempt because it is
   never linked — edit that one in `~/.claude/` only.
-- **Assume both hardlinks are broken and check.** Between git operations and atomic saves, they detach
-  during routine work rather than exceptionally. This is why the *Verify* step below is not optional,
-  and why `link_config.py` exists instead of a one-time setup command.
+- **Assume every configured file hardlink is broken and check.** The default Claude route has
+  `CLAUDE.md` and `machine.md`; adding Copilot adds `~/.copilot/copilot-instructions.md`. Between git
+  operations and atomic saves, they detach during routine work rather than exceptionally. This is why
+  the *Verify* step below is not optional, and why `link_config.py` exists instead of a one-time setup
+  command.
 - **`core.symlinks` is `false`.** A symlink committed to this repo would check out here as a text file
   containing its target path. Nothing in the repo relies on one.
 
@@ -169,9 +171,11 @@ One command checks every link and writes nothing:
 python (Join-Path $Root "workstation\scripts\link_config.py")
 ```
 
-It exits non-zero unless every one is live, distinguishes a *detached* copy from a *diverged* one, and
-leaves `settings.json` alone. Add `--apply` to repair; a diverged `CLAUDE.md` is reported and skipped
-rather than overwritten, because that is reconciliation work.
+It checks every Claude link and exits non-zero unless every one is live. If you also linked Copilot,
+add `--agent copilot`; use `--agent claude --agent copilot` to check both homes. It distinguishes a
+*detached* copy from a *diverged* one and leaves `settings.json` alone. Add `--apply` to repair; a
+diverged `CLAUDE.md` is reported and skipped rather than overwritten, because that is reconciliation
+work.
 
 The underlying checks, if you want them by hand. `LinkType` reports `HardLink` or `Junction` when a link
 is live and an **empty string** when the path is a plain copy — that empty string is exactly what a

@@ -15,7 +15,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "p=\"${CLAUDE_PROJECT_DIR:-$PWD}/.venv/bin/python\"; [ -x \"$p\" ] || exit 0; \"$p\" ~/.claude/hooks/ruff_on_edit.py",
+            "command": "root=\"${CLAUDE_PROJECT_DIR:-$PWD}\"; for p in \"$root/.venv/bin/python\" \"$root/.venv/Scripts/python.exe\"; do [ -x \"$p\" ] && exec \"$p\" ~/.claude/hooks/ruff_on_edit.py; done; exit 0",
             "timeout": 30
           }
         ]

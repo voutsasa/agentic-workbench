@@ -16,10 +16,31 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 import ruff_on_edit as hook
 
 
+class TestRegistrations(unittest.TestCase):
+    def setUp(self):
+        self.hooks = Path(__file__).resolve().parent.parent
+        self.agent = self.hooks.parent
+
+    def test_claude_registration_supports_both_venv_layouts(self):
+        settings = json.loads((self.agent / "settings.json").read_text())
+        command = settings["hooks"]["PostToolUse"][0]["hooks"][0]["command"]
+        self.assertIn(".venv/bin/python", command)
+        self.assertIn(".venv/Scripts/python.exe", command)
+
+    def test_copilot_registration_supports_both_venv_layouts(self):
+        registration = json.loads(
+            (self.hooks / "ruff-on-edit.copilot.json").read_text()
+        )
+        command = registration["hooks"]["postToolUse"][0]["bash"]
+        self.assertIn(".venv/bin/python", command)
+        self.assertIn(".venv/Scripts/python.exe", command)
+
+
 class TestEditedPath(unittest.TestCase):
     def test_claude_payload(self):
-        payload = {"tool_input": {"file_path": "/repo/a.py"}}
-        self.assertEqual(hook.edited_path(payload), Path("/repo/a.py"))
+        path = Path(Path.cwd().anchor) / "repo" / "a.py"
+        payload = {"tool_input": {"file_path": str(path)}}
+        self.assertEqual(hook.edited_path(payload), path)
 
     def test_copilot_payload_as_object(self):
         payload = {"toolArgs": {"path": "/repo/a.py"}, "cwd": "/repo"}

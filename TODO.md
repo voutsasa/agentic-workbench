@@ -210,12 +210,10 @@ fires in Claude Code (`Write`) and in Copilot CLI (`create`), each leaving a `.p
 | Unproven | Why it could differ |
 |---|---|
 | Windows | both registrations are `bash` with `.venv/bin/python`; Copilot's `powershell` field is not set, and a Windows venv has `Scripts\python.exe` |
-| `COPILOT_HOME` set | the Copilot registration hard-codes `~/.copilot/hooks/ruff_on_edit.py`, while `link_config.py` links into `$COPILOT_HOME/hooks` |
 | Copilot's `edit` tool | only `create` was observed; `edit` is assumed to carry the path under the same key |
 
 **Closes when:** a `.py` edit on the Windows machine is formatted by the hook in each assistant, or the
-hook is documented as POSIX-only; the registration resolves the script through `COPILOT_HOME`; and a
-Copilot `edit` of an existing file is observed formatted.
+hook is documented as POSIX-only; and a Copilot `edit` of an existing file is observed formatted.
 
 ### 15. The trigger-based *Design before build* and the subagent rule have not steered a session
 

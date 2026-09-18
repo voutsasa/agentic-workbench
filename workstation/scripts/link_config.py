@@ -4,9 +4,9 @@
 Standard library only, so it runs on a fresh clone before anything is installed.
 
 ``--agent claude`` (the default) links the skills, ``CLAUDE.md`` and the machine
-note into ``~/.claude``. ``--agent copilot`` links the same skills into
-``~/.copilot/skills`` and nothing else: Copilot reaches the instructions through
-VS Code's ``chat.useClaudeMdFile``, which is a settings edit and not a link.
+note into ``~/.claude``. ``--agent copilot`` links the same skills and
+``copilot-instructions.md`` into ``~/.copilot``. VS Code can also read the Claude
+destination when ``chat.useClaudeMdFile`` is enabled.
 ``--project`` links this repo's own ``skills/<name>/`` into ``<repo>/.claude/skills``,
 where both agents load them at project scope; ``.claude/`` is gitignored, so every
 clone needs it once. ``--claude-md`` writes ``<repo>/CLAUDE.md`` holding one line,
@@ -266,6 +266,16 @@ def plan(
                 repo_root / "CLAUDE.md",
                 is_dir=False,
                 content=CLAUDE_MD_IMPORT,
+            )
+        )
+    if "copilot" in agents:
+        root = copilot_root if copilot_root is not None else home / ".copilot"
+        links.append(
+            Link(
+                "copilot/copilot-instructions.md",
+                agent / "AGENT-INSTRUCTIONS.md",
+                root / "copilot-instructions.md",
+                is_dir=False,
             )
         )
     if "claude" in agents:

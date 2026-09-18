@@ -25,7 +25,7 @@ skill format is identical — only the parent directory differs.
 
 | | Claude Code | GitHub Copilot |
 |---|---|---|
-| **User instructions** | `~/.claude/CLAUDE.md` | the same file, once `chat.useClaudeMdFile` is on; natively `AGENTS.md` |
+| **User instructions** | `~/.claude/CLAUDE.md` | CLI: `~/.copilot/copilot-instructions.md`; VS Code: `~/.claude/CLAUDE.md` once `chat.useClaudeMdFile` is on |
 | **Project instructions** | `CLAUDE.md` or `.claude/CLAUDE.md`, at the project root | `.github/copilot-instructions.md`, `AGENTS.md`; the CLI and cloud agent also `CLAUDE.md` and `GEMINI.md`, the CLI `.claude/CLAUDE.md` too. VS Code Chat reads `CLAUDE.md` only once `chat.useClaudeMdFile` is on |
 | **Skills** | `~/.claude/skills/<name>/SKILL.md` | `~/.copilot/skills/<name>/SKILL.md`; per project `.github/skills/`, `.agents/skills/`, `.claude/skills/` |
 | **Settings** | `~/.claude/settings.json` | VS Code `settings.json`; CLI `~/.copilot/settings.json` |
@@ -204,11 +204,15 @@ Same `SKILL.md` format as Claude, different parent directory:
 ```
 
 A project already carrying `.claude/skills/` needs nothing further. For the personal location, link
-the global skills rather than copying them:
+the global instructions and skills rather than copying them:
 
 ```sh
 python3 workstation/scripts/link_config.py --agent copilot --apply
 ```
+
+That creates `~/.copilot/copilot-instructions.md` for the CLI. For VS Code, also run the Claude link
+route once so `~/.claude/CLAUDE.md` exists, then enable `chat.useClaudeMdFile`; Claude Code itself does
+not need to be installed for that file to serve as VS Code's instruction source.
 
 ### The CLI
 
@@ -216,6 +220,7 @@ python3 workstation/scripts/link_config.py --agent copilot --apply
 
 | Path | Role |
 |---|---|
+| `~/.copilot/copilot-instructions.md` | user instructions loaded by Copilot CLI |
 | `~/.copilot/settings.json` | **user settings — the file to edit** |
 | `~/.copilot/config.json` | machine-managed; its own header says user settings belong in `settings.json` |
 | `~/.copilot/mcp-config.json` | MCP servers |
@@ -288,7 +293,8 @@ The routes above mix observed fact with vendor documentation. Which is which:
 
 | Claim | Status |
 |---|---|
-| macOS link route, `link_config.py` behaviour, 6 of 6 linked | **observed** on the macOS workstation |
+| macOS Claude link route, `link_config.py` behaviour, 8 of 8 linked | **observed** on the macOS workstation |
+| Copilot CLI loads `~/.copilot/copilot-instructions.md` | **observed** — listed by Copilot CLI 1.0.85 under `/instructions` help |
 | VS Code user settings path; `chat.useClaudeMdFile` / `useAgentsMdFile` exist and default to off | **observed** — VS Code 1.137.0, bundled `copilot-chat` 0.65.0 |
 | Skills paths `.github/skills/`, `.agents/skills/`, `.claude/skills/` | **observed** — literal table in the VS Code 1.137.0 build |
 | `~/.copilot/` layout, `COPILOT_HOME`, token precedence, `powershellFlags`, plugin layout | **observed** — `copilot help config`, `copilot help environment`, `copilot plugin --help` on macOS |

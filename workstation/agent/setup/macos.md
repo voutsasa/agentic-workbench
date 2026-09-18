@@ -39,8 +39,8 @@ python3 workstation/scripts/link_config.py --apply
 It creates one symlink per global skill in `~/.claude/skills/`, `AGENT-INSTRUCTIONS.md` →
 `~/.claude/CLAUDE.md`, and the machine note → `~/.claude/machine.md` (see *The machine note*).
 Re-running is safe: a live link is left alone, a stale one is replaced, and a destination holding content
-the repo lacks is reported and skipped. Add `--agent copilot` to link the same skills into
-`~/.copilot/skills`, and `--project` for this repo's own skills.
+the repo lacks is reported and skipped. Add `--agent copilot` to link the same skills and
+`copilot-instructions.md` under `~/.copilot`, and `--project` for this repo's own skills.
 
 `settings.json` is not among them, and cannot be: the script refuses to plan a link for it, since a
 symlink is not a merge.
@@ -102,9 +102,10 @@ Do not assume it worked — re-run the report, which writes nothing.
 python3 "$(git rev-parse --show-toplevel)/workstation/scripts/link_config.py"
 ```
 
-That checks every link, writes nothing, and exits non-zero unless every one is live. `--apply`
-repairs what is missing; a destination whose content has diverged from the repo is reported and skipped
-rather than overwritten. It never touches `settings.json`.
+That checks every Claude link, writes nothing, and exits non-zero unless every one is live. If you
+also linked Copilot, add `--agent copilot`; use `--agent claude --agent copilot` to check both homes.
+`--apply` repairs what is missing; a destination whose content has diverged from the repo is reported
+and skipped rather than overwritten. It never touches `settings.json`.
 
 By hand, every path should print as `->` pointing into your clone:
 

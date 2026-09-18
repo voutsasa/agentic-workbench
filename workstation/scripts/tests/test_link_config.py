@@ -23,6 +23,22 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 import link_config as lc
 
 
+class TestCopilotHookRegistration(unittest.TestCase):
+    def test_uses_copilot_home_environment_variable(self) -> None:
+        registration = (
+            Path(__file__).resolve().parents[2]
+            / "agent"
+            / "hooks"
+            / "ruff-on-edit.copilot.json"
+        )
+        hook = json.loads(registration.read_text(encoding="utf-8"))
+        command = hook["hooks"]["postToolUse"][0]["bash"]
+
+        self.assertIn(
+            '"${COPILOT_HOME:-$HOME/.copilot}/hooks/ruff_on_edit.py"', command
+        )
+
+
 def build_repo(root: Path) -> Path:
     """A minimal repo tree carrying everything plan() expects."""
     agent = root / "workstation" / "agent"
@@ -407,7 +423,7 @@ class TestMain(TempTree):
             )
         payload = json.loads(buf.getvalue())
         self.assertEqual(payload["agents"], ["claude", "copilot"])
-        self.assertEqual(len(payload["links"]), 2 * len(lc.SKILLS) + 2)
+        self.assertEqual(len(payload["links"]), 2 * len(lc.SKILLS) + 3)
 
     def test_copilot_agent_writes_only_under_dot_copilot(self) -> None:
         code = lc.main(
@@ -425,6 +441,7 @@ class TestMain(TempTree):
         self.assertTrue(
             (self.home / ".copilot" / "skills" / "review" / "SKILL.md").exists()
         )
+        self.assertTrue((self.home / ".copilot" / "copilot-instructions.md").exists())
         self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
         self.assertFalse((self.home / ".claude" / "skills").exists())
 
@@ -475,15 +492,29 @@ class TestCopilotPlan(TempTree):
             copilot_root=self.home / ".copilot",
         )
 
-    def test_links_the_skills_and_nothing_else(self) -> None:
+    def test_links_the_skills_and_global_instructions(self) -> None:
         self.assertEqual(
             [link.label for link in self.copilot()],
-            [f"copilot/skills/{s}" for s in lc.SKILLS],
+            [f"copilot/skills/{s}" for s in lc.SKILLS]
+            + ["copilot/copilot-instructions.md"],
         )
 
     def test_every_destination_is_under_the_copilot_root(self) -> None:
         for link in self.copilot():
-            self.assertEqual(link.dest.parent, self.home / ".copilot" / "skills")
+            self.assertTrue(link.dest.is_relative_to(self.home / ".copilot"))
+
+    def test_global_instructions_use_copilots_native_user_path(self) -> None:
+        link = next(
+            link
+            for link in self.copilot()
+            if link.label == "copilot/copilot-instructions.md"
+        )
+        self.assertEqual(
+            link.source,
+            self.repo / "workstation" / "agent" / "AGENT-INSTRUCTIONS.md",
+        )
+        self.assertEqual(link.dest, self.home / ".copilot" / "copilot-instructions.md")
+        self.assertFalse(link.is_dir)
 
     def test_default_root_is_dot_copilot_under_home(self) -> None:
         links = lc.plan(self.repo, self.home, agents=("copilot",))
@@ -493,7 +524,7 @@ class TestCopilotPlan(TempTree):
         both = self.copilot(("claude", "copilot"))
         claude = {l.dest.name: l.source for l in both if l.label.startswith("skills/")}
         copilot = {
-            l.dest.name: l.source for l in both if l.label.startswith("copilot/")
+            l.dest.name: l.source for l in both if l.label.startswith("copilot/skills/")
         }
         self.assertEqual(claude, copilot)
 
@@ -502,7 +533,8 @@ class TestCopilotPlan(TempTree):
         dirs = 2 * len(lc.SKILLS)
         self.assertTrue(all(link.is_dir for link in links[:dirs]))
         self.assertEqual(
-            [link.label for link in links[dirs:]], ["CLAUDE.md", "machine.md"]
+            [link.label for link in links[dirs:]],
+            ["copilot/copilot-instructions.md", "CLAUDE.md", "machine.md"],
         )
 
     def test_needs_no_machine_note(self) -> None:

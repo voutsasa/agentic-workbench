@@ -71,15 +71,16 @@ python workstation/scripts/link_config.py                       # report only â€
 python workstation/scripts/link_config.py --apply               # create what is missing or detached
 python workstation/scripts/link_config.py --machine macos-workstation  # pick the machine note
 python workstation/scripts/link_config.py --json                # machine-readable
-python workstation/scripts/link_config.py --agent copilot       # the skills, into ~/.copilot/skills
+python workstation/scripts/link_config.py --agent copilot       # instructions + skills under ~/.copilot
 python workstation/scripts/link_config.py --agent claude --agent copilot  # both
 python workstation/scripts/link_config.py --project             # this repo's skills, into .claude/skills
 python workstation/scripts/link_config.py --hooks --agent claude --agent copilot  # also the post-edit hooks
 ```
 
 **`--agent` picks whose home is linked**, repeatable, default `claude`. `copilot` links the `SKILLS`
-directories into `$COPILOT_HOME/skills` (default `~/.copilot/skills`) and nothing else â€” Copilot reaches
-the instructions through VS Code's `chat.useClaudeMdFile`, a settings edit rather than a link.
+directories into `$COPILOT_HOME/skills` and `AGENT-INSTRUCTIONS.md` as
+`$COPILOT_HOME/copilot-instructions.md` (default root `~/.copilot`). VS Code reaches the same source
+through `~/.claude/CLAUDE.md` when `chat.useClaudeMdFile` is enabled.
 `COPILOT_HOME` is honoured only when `--home` is your real home, so a test pointing `--home` at a
 scratch tree cannot be redirected by an inherited variable; `--copilot-home` overrides both.
 
