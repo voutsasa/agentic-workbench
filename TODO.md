@@ -201,14 +201,16 @@ unfixed findings (step 8) exist only as prose; the unit tests cover `repo_check.
 **Closes when:** one review in Apply mode on a code target uses approve-each, shows a regression test
 failing before its fix, and records an unapplied finding in that repo's TODO file.
 
-### 13. New addition 2 in the global instructions is undecided
+### 13. New addition N5 and the subagent rule are undecided
 
-Opened 2026-09-18. `workstation/agent/AGENT-INSTRUCTIONS.md` § *New additions* still holds "add it to
-TODO.md under `## Unverified`". The recommendation is to drop it: this file has no `## Unverified`
-section, and the global file must not name one repo's file.
+Opened 2026-09-18. `workstation/agent/AGENT-INSTRUCTIONS.md` § *New additions* still holds N5 — a
+standing instruction to spawn a Task agent for an end-to-end findings sweep. Reviewed that day: it
+collides with *Don't spawn agents I didn't ask for* (§ *Skills and subagents*) and with the 5–10-file
+exploration limit, and duplicates the `review` and `verify-docs` skills. The user deferred it to
+reconsider the subagent direction as a whole.
 
-**Closes when:** the user decides, and the line and the § *New additions* heading are removed or
-folded in.
+**Closes when:** the user decides the subagent rule, N5 is dropped or folded in, and the § *New
+additions* heading is removed.
 
 ### 14. The ruff post-edit hook is unproven on Windows and under `COPILOT_HOME`
 
@@ -225,6 +227,15 @@ fires in Claude Code (`Write`) and in Copilot CLI (`create`), each leaving a `.p
 **Closes when:** a `.py` edit on the Windows machine is formatted by the hook in each assistant, or the
 hook is documented as POSIX-only; the registration resolves the script through `COPILOT_HOME`; and a
 Copilot `edit` of an existing file is observed formatted.
+
+### 15. The trigger-based *Design before build* has not been seen steering a session
+
+Opened 2026-09-18, with the rewrite of principle 5 in `workstation/agent/AGENT-INSTRUCTIONS.md`
+(divergence, effort, impact, plus the mid-course checkpoint). It loads from the next session on; no
+session has yet run under it.
+
+**Closes when:** one later session is observed both proceeding without asking on work that meets no
+trigger and stopping on one that does — the case and the call recorded here or in the machine note.
 
 ## Closed
 

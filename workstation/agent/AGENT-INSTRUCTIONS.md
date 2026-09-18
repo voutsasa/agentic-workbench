@@ -10,17 +10,24 @@ These principles must be applied by default. In case of divergence validate with
 
 1. **Start small, validate, then scale.** Make the smallest change that answers the ask.
    - Get one instance working and confirmed — one converted PDF, one ingested source, one passing test — before applying the pattern to the set.
+   - A batch over many items preflights its config (paths exist, resolved values printed), records each item's status in a progress ledger, retries rate limits a bounded number of times, and resumes from the ledger. That machinery is code, per *Code over prompt*.
    - Don't refactor adjacent code, rename things, reformat files outside the change, or build a script for a one-off when an edit will do. Repeated work falls under *Code over prompt*.
    - Exploring works the same way: read at most 5–10 files, then present a plan. Don't chain long exploration loops before there is anything for me to react to.
 2. **Start local, validate, then scale to global.** Use workstation tools. Skills are created in the project's own folder; they move to `workstation/agent/skills/` only when I say so — the skills there have earned global status. `link_config.py` exposes them through each selected assistant's global skills directory (`~/.claude/skills/` for Claude Code and `~/.copilot/skills/` for GitHub Copilot). **Whether they are installed is per-machine**; check the machine note before invoking one, and tell me if it is missing rather than improvising a substitute. Dependencies install project-scoped, never globally. Searches start in the folder in question, never the home directory.
    - **A skill that is not on a discovered path does not exist.** Creating one in a repo is not finished until it resolves at `.claude/skills/<name>/SKILL.md` from the project root — Claude Code and GitHub Copilot both read that, so one location serves both. Put it there directly unless the repo has a reason to author skills elsewhere; where it does, link rather than copy — symlink on macOS, junction on Windows — and record the per-clone command in that repo's `skills/README.md`.
 3. **Validate against the real thing.** Evidence, not inference: run the full test suite and give me the pass/fail count, fetch the actual URL, hit the actual endpoint, open the actual file.
    - Never assert a fact without first running a command that proves it, and quote that command's real output. "Works" means the whole flow ran end-to-end in this session; passing parts are not the flow passing.
+   - When reporting work as done, close with `Claim | Command + output | Status`. Status is VERIFIED, FAILED, NOT DONE (a run could settle it but did not happen here) or UNVERIFIABLE (no run anywhere could). Every NOT DONE row becomes a TODO item in the same commit; nothing NOT DONE or UNVERIFIABLE is described as working.
    - A first-pass diagnosis is a hypothesis until it has been checked.
    - A regression test is shown failing against the unfixed code before the fix lands; quote the failing output.
    - **When I ask you to verify, fact-check or de-stale claims**, use the `verify-docs` skill and report in its table — `id | claim | file:line | status | evidence command | actual output` — with `VERIFIED`, `REFUTED`, or `UNVERIFIABLE` for anything no command could settle here. Never a guess, and never a fourth verdict.
 4. **Code over prompt.** A step that gives the same output for the same input — parsing, path checks, list comparison, counting, table generation — belongs in a tested script that the prompt calls, not in prose the agent re-executes. The second time a procedure is done by hand, propose the script. Skill and instruction text keeps only judgement. When writing or reviewing a `SKILL.md`, flag every step that could be code.
-5. **Design before build.** Before a complex task — a new skill, gate, tool or component; a change crossing a module or layer boundary; or a choice between approaches with lasting cost — present the design and wait. The design gives the problem, constraints, 2–3 options with a recommendation, where it sits in the existing structure, and which parts are deterministic code versus agent judgement.
+5. **Design before build — stop only when it matters.** Proceed without asking unless one of these holds:
+   - **Divergence** — the work would break or bend a rule in this file or the repo's `AGENTS.md`, or the approach runs against a principle (e.g. a model call in a gate).
+   - **Effort** — a new component, skill, gate, tool or dependency; more than ~3 files; or a change crossing a module or layer boundary. **Mid-course**, stop and re-plan when a turn passes ~50K tokens where the assistant shows a count, touches files the plan did not name, or goes three fix-and-retry rounds without a passing check.
+   - **Impact, whatever the size** — hard to reverse (deleting, overwriting, rewriting history); outward-facing (push, publish, send); shared by others or loaded by every session (global instructions, settings, hooks, CI and pre-push gates); or touching compliance, security or data.
+
+   When one holds, stop with the design — the problem, constraints, where it sits in the existing structure, which parts are deterministic code versus agent judgement, and the options as a table (runtime, determinism, dependencies, failure modes) with the pick and why — and wait. When none holds, act, state any assumption in one line, and report after. A question that meets none of these triggers is a delay, not a safeguard.
 
 ## How to answer me
 
@@ -41,7 +48,7 @@ Stop and ask before:
 
 - installing a dependency, or deleting, overwriting or regenerating an existing file;
 - acting on a root-cause diagnosis for a non-trivial bug — show me the evidence trace and wait;
-- a fix that reaches more than ~3 files, needs new infrastructure, or is complex per *Design before build* — propose the plan, and why this approach, first;
+- work that meets a *Design before build* trigger — propose the design first;
 - widening a search or a change beyond the folder in question.
 
 Small obvious fixes need no gate.
@@ -60,8 +67,8 @@ is in the machine note, not here.
 - **Where the scaffolding is missing, stop and ask me to create it. Never fall back to the global interpreter.** No `.python-version` → ask which Python version the project needs, first, because the answer feeds both commands below. No `pyproject.toml` → `uv init`. No `.venv` → `uv venv`. I run them, per *I install; you record* — hand me the command and wait.
 - **Editing a file is an editor's job, not Python's.** Prefer the editor tool over `python -c`, `perl -pi -e` or `sed` whenever the change is just text in a file; write a script only where the edit is genuinely programmatic. Either way, confirm with `git diff --stat` — a substitution that matched nothing is silent.
 - Commit as you go. I under-commit and leave work unversioned.
-  - Before each commit, run `git status` and `git diff --staged`; the staged set is the intended change and nothing else.
-  - Anything found but not fixed, or started but not completed, goes in the repo's TODO file in the same commit — reported in chat alone, it is dropped. No TODO file → ask before creating one.
+  - Before each commit, run `git status --porcelain` and `git diff --staged --stat`, and give a one-line reason per file. Unstage deletions, formatter-only files and anything unrelated, and say so. Wait for my OK on the first commit of each session; after that, apply the same check without asking.
+  - Anything found but not fixed, or started but not completed, goes in the repo's TODO file in the same commit — reported in chat alone, it is dropped. A claim a run could settle but did not is uncompleted work too. No TODO file → ask before creating one.
 
 ## Documents
 
@@ -95,4 +102,4 @@ Everything machine-specific — the repo path, the shell, which CLI tools actual
 ## New additions
 ---
 
-- If something could not be verified (e.g. Windows-only paths, live API calls), add it to TODO.md under `## Unverified` instead of claiming success.
+- Use a Task agent to explore this repo end-to-end and report back a findings list only — no edits. Have it map the real directory layout first (including where Claude/agent config actually lives), then check: docs-vs-code truth, stale paths in .env and configs, symlink targets, version-string consistency, and test coverage gaps. Return findings as a table with file:line citations and severity. I'll pick which to apply.
