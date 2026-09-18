@@ -14,6 +14,10 @@ Binary: `docling`. Product: Docling. Python tool, installed the same way on both
 | macOS | `pipx install docling` |
 | Windows | `pipx install docling` |
 
+**`pipx`, not `uv tool`, and the user runs it.** A global Python CLI install is the one exception to the
+uv-and-venv rule in [`AGENT-INSTRUCTIONS.md`](../../agent/AGENT-INSTRUCTIONS.md); an agent hands over
+this command and never runs it.
+
 Verify with `docling --version`. It prints a block, one line per component, and **the version numbers deliberately differ** — do not read a mismatch as a fault. A sample, recorded on Windows when this page was written, kept for its shape rather than its numbers:
 
 ```

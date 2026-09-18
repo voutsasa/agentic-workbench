@@ -108,7 +108,7 @@ the half that can fail for reasons outside this repo.
 
 2. **Link the config** — follow [`windows.md`](windows.md). Read its *Stop: read this before running
    anything* section first. Directories become junctions and files become hardlinks, both of which
-   work unelevated; `$Repo` must sit on the **same volume as `$HOME`**, because a hardlink cannot
+   work unelevated; the clone must sit on the **same volume as `$HOME`**, because a hardlink cannot
    cross volumes.
 
 3. **Configure Bedrock.** (**user**) Run `claude`, choose **3rd-party platform → Amazon Bedrock**, and
@@ -210,7 +210,8 @@ the global instructions and skills rather than copying them:
 python3 workstation/scripts/link_config.py --agent copilot --apply
 ```
 
-That creates `~/.copilot/copilot-instructions.md` for the CLI. For VS Code, also run the Claude link
+That creates `~/.copilot/copilot-instructions.md` for the CLI, and `~/.claude/machine.md`, the one
+path the instructions name for machine state whichever agent reads them. For VS Code, also run the Claude link
 route once so `~/.claude/CLAUDE.md` exists, then enable `chat.useClaudeMdFile`; Claude Code itself does
 not need to be installed for that file to serve as VS Code's instruction source.
 

@@ -18,7 +18,7 @@ it immune to the severance trap below — the trap that produced this repo's con
 fails accordingly. Until that changes, hardlinks are the only option for files and they need
 re-applying.
 
-Requires PowerShell 7. `$Repo` must be on the **same volume as `$HOME`** — a hardlink cannot cross
+Requires PowerShell 7. The clone (`$Root` below) must be on the **same volume as `$HOME`** — a hardlink cannot cross
 volumes.
 
 ## Stop: read this before running anything
@@ -71,7 +71,7 @@ Leave `env` exactly as it is, and do not move it to `settings.local.json`.
 
 ## The machine note
 
-[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) closes by telling the agent to read
+[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) tells the agent to read
 `~/.claude/machine.md`. The `link_config.py --apply` command in *Link it* creates that
 hardlink alongside the skills and resolves the right file in
 [`../../machines/`](../../machines/), including an explicitly named `--machine` file or
@@ -191,7 +191,7 @@ Get-ChildItem "$HOME\.claude\skills" | Select-Object Name, LinkType
 Content is the real test, since a link can be live and still point at the wrong file:
 
 ```powershell
-(Get-FileHash "$HOME\.claude\CLAUDE.md").Hash -eq (Get-FileHash "$Repo\AGENT-INSTRUCTIONS.md").Hash
+(Get-FileHash "$HOME\.claude\CLAUDE.md").Hash -eq (Get-FileHash (Join-Path $Root "workstation\agent\AGENT-INSTRUCTIONS.md")).Hash
 ```
 
 Then start a session and confirm every skill is offered.

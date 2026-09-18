@@ -38,7 +38,7 @@ Show the user its three tables as printed. Add `--json` when you need to branch 
 
 | Detected | Then |
 |---|---|
-| Machine note **absent** | Say so. Claude's `machine.md` link stays `no_source` until it exists. Creating it is [`workstation/machines/README.md` § *Adding a machine*](../../workstation/machines/README.md#adding-a-machine); ask the user for the id first — the file is pushed, and a hostname is often a person's name. |
+| Machine note **absent** | Say so. The `machine.md` link — made for Claude and Copilot alike — stays `no_source` until it exists. Creating it is [`workstation/machines/README.md` § *Adding a machine*](../../workstation/machines/README.md#adding-a-machine); ask the user for the id first — the file is pushed, and a hostname is often a person's name. |
 | No configurable assistant on `PATH` | Report it and stop. |
 
 ### Assess the CLI toolchain

@@ -226,6 +226,40 @@ a bounded thinking task). Both load from the next session on; no session has yet
 trigger and stopping on one that does, and spawning a subagent under the new rule whose result the
 parent re-checks — each case and call recorded here or in the machine note.
 
+### 16. The Windows machine note predates six skills, the hooks key, Copilot and `typst`
+
+Opened 2026-09-18, from the review of `workstation/`. `windows-ema-pf5n4xe7.md` § *Claude Code config*
+records four skills and *6 of 6 linked*, while `link_config.py`'s `SKILLS` tuple now holds six and
+`machine.md` is now linked for Copilot too. Its settings table has no row for the `hooks` key in
+`workstation/agent/settings.json`, and its live `env` still carries the deprecated
+`ANTHROPIC_SMALL_FAST_MODEL`. The *Two installs are behind* table compares against a version
+"recorded" in `install.md`, which `install.md` no longer carries. `typst` was added to the toolchain
+the same day and has never been probed there.
+
+**Closes when:** on the Windows machine, `python workstation\scripts\link_config.py --agent claude
+--agent copilot` and `python workstation\scripts\inventory.py --host ema-pf5n4xe7` are run and their
+output replaces the two tables; the settings table gains the `hooks` row with its measured state; and
+the version comparison is restated against the machine's own earlier measurement or removed.
+
+### 17. The 2026-09-18 instruction changes have not steered a session outside this repo
+
+Opened 2026-09-18, from the review of `workstation/agent/AGENT-INSTRUCTIONS.md`. New that day:
+`workstation/…` paths resolve against the machine note's `repo:` field, `~/.claude/machine.md` is
+read by Copilot too, the settings rule covers `~/.copilot/settings.json`, the overwrite gate excludes
+ordinary edits, and plan mode, effort and model tiers are named. `~/.copilot/copilot-instructions.md`
+was linked on this machine the same day and not yet seen in a Copilot session.
+
+One review finding was left unapplied, as low confidence: the file carries about thirty bold or
+"never" emphases, which may make current models apply rules too broadly. That is a judgement, not a
+measurement.
+
+**Closes when:** a Claude Code session and a Copilot CLI session, each started in a repo other than
+this one, read a `workstation/cli/<tool>/quick_start.md` through the `repo:` path without searching,
+and `/context` in the Copilot session lists the user-level instructions — both recorded in
+`workstation/machines/macos-workstation.md`. The emphasis finding closes when a session is observed
+over-applying a rule because of it (then trim), or after a month of sessions without such a case
+(then drop).
+
 ## Closed
 
 Nothing yet. An item moves here with the evidence that closed it, or is deleted outright; a list of

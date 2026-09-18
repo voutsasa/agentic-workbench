@@ -19,9 +19,9 @@ Each tool has a folder here at `<tool>/` holding three files with distinct jobs.
 **The user installs; these files record** — see [`AGENTS.md`](../../AGENTS.md#the-user-installs-the-agent-records). An entry means the route is known, not that the command runs here.
 
 Each `install.md` carries a `| Platform | Command |` table, currently macOS and Windows. **Adding a
-platform means adding a row to each of the twelve** — plus one `../agent/setup/<platform>.md` and one
+platform means adding a row to each of them** — plus one `../agent/setup/<platform>.md` and one
 file in [`../machines/`](../machines/). Do that when a machine of that platform exists, not in advance:
-twelve guessed `apt` package names would be twelve unverified claims, and the *Do not cross ecosystems
+a dozen guessed `apt` package names would be a dozen unverified claims, and the *Do not cross ecosystems
 by name* trap at the bottom of this page is exactly how guessing goes wrong.
 
 Install routes — formula names, buckets, and npm/pipx channels — **are not dated here**, because they go stale one tool at a time: each `install.md` carries its own `verified` date in frontmatter, and that is the one to trust. [`skills/ingest-source/references/workstation-tooling.md`](../../skills/ingest-source/references/workstation-tooling.md) §A defines how an install route is resolved and verified; these files are the result of applying it.
@@ -96,6 +96,7 @@ Each row is named by the **command you type**, which is often not the package na
 | `plantuml` | PlantUML | [`plantuml-cli/`](plantuml-cli/) |
 | `mmdc` | Mermaid CLI | [`mermaid-cli/`](mermaid-cli/) |
 | `d2` | D2 | [`d2-cli/`](d2-cli/) |
+| `typst` | Typst | [`typst/`](typst/) |
 
 ## Do not cross ecosystems by name
 

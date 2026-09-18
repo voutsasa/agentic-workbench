@@ -425,7 +425,10 @@ class TestMain(TempTree):
         self.assertEqual(payload["agents"], ["claude", "copilot"])
         self.assertEqual(len(payload["links"]), 2 * len(lc.SKILLS) + 3)
 
-    def test_copilot_agent_writes_only_under_dot_copilot(self) -> None:
+    def test_copilot_agent_writes_under_dot_copilot_plus_the_machine_note(
+        self,
+    ) -> None:
+        self.machine_file()
         code = lc.main(
             [
                 "--repo",
@@ -442,6 +445,7 @@ class TestMain(TempTree):
             (self.home / ".copilot" / "skills" / "review" / "SKILL.md").exists()
         )
         self.assertTrue((self.home / ".copilot" / "copilot-instructions.md").exists())
+        self.assertTrue((self.home / ".claude" / "machine.md").exists())
         self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
         self.assertFalse((self.home / ".claude" / "skills").exists())
 
@@ -496,12 +500,20 @@ class TestCopilotPlan(TempTree):
         self.assertEqual(
             [link.label for link in self.copilot()],
             [f"copilot/skills/{s}" for s in lc.SKILLS]
-            + ["copilot/copilot-instructions.md"],
+            + ["copilot/copilot-instructions.md", "machine.md"],
         )
 
-    def test_every_destination_is_under_the_copilot_root(self) -> None:
+    def test_every_destination_but_the_machine_note_is_under_the_copilot_root(
+        self,
+    ) -> None:
         for link in self.copilot():
-            self.assertTrue(link.dest.is_relative_to(self.home / ".copilot"))
+            if link.label != "machine.md":
+                self.assertTrue(link.dest.is_relative_to(self.home / ".copilot"))
+
+    def test_machine_note_goes_to_the_one_fixed_path(self) -> None:
+        # AGENT-INSTRUCTIONS.md names ~/.claude/machine.md for every assistant.
+        link = next(l for l in self.copilot() if l.label == "machine.md")
+        self.assertEqual(link.dest, self.home / ".claude" / "machine.md")
 
     def test_global_instructions_use_copilots_native_user_path(self) -> None:
         link = next(
@@ -537,7 +549,8 @@ class TestCopilotPlan(TempTree):
             ["copilot/copilot-instructions.md", "CLAUDE.md", "machine.md"],
         )
 
-    def test_needs_no_machine_note(self) -> None:
+    def test_applies_cleanly_once_the_machine_note_exists(self) -> None:
+        self.machine_file()
         report = lc.apply(lc.inspect_all(self.copilot()))
         self.assertTrue(report.ok, lc.render(report))
 

@@ -11,7 +11,7 @@ verified: 2026-09-14
 # Windows 11 — `EMA-PF5N4XE7`
 
 State for this box only. Policy is in [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md); install routes are
-in [`../cli/<tool>/install.md`](../cli/). **Where this file contradicts either, this file wins** — it
+in [`../cli/<tool>/install.md`](../cli/). **Where a measured fact here contradicts either, the fact wins** — it
 is the one that was measured.
 
 ## Paths

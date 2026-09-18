@@ -18,7 +18,7 @@ facts about the local environment.
    - A batch over many items preflights its config (paths exist, resolved values printed), records each item's status in a progress ledger, retries rate limits a bounded number of times, and resumes from the ledger. That machinery is code, per *Code over prompt*.
    - Don't refactor adjacent code, rename things, reformat files outside the change, or build a script for a one-off when an edit will do. Repeated work falls under *Code over prompt*.
    - Keep exploration proportional to the task. Use targeted searches, parallel reads, and bounded delegation when they provide better evidence or preserve the primary agent's context; do not widen a search without a task-relevant reason.
-2. **Start local, validate, then scale to global.** Use workstation tools. Skills are created in the project's own folder; they move to `workstation/agent/skills/` only when I say so — the skills there have earned global status. `link_config.py` exposes them through each selected assistant's global skills directory (`~/.claude/skills/` for Claude Code and `~/.copilot/skills/` for GitHub Copilot). **Whether they are installed is per-machine**; check the machine note before invoking one, and tell me if it is missing rather than improvising a substitute. Dependencies install project-scoped, never globally. Searches start in the folder in question, never the home directory.
+2. **Start local, validate, then scale to global.** Use workstation tools. Skills are created in the project's own folder; they move to `workstation/agent/skills/` only when I say so — the skills there have earned global status. `link_config.py` exposes them through each selected assistant's global skills directory (`~/.claude/skills/` for Claude Code and `~/.copilot/skills/` for GitHub Copilot). **Whether they are installed is per-machine**; check the machine note before invoking one, and tell me if it is missing rather than improvising a substitute. Dependencies install project-scoped, never globally. The one exception is a Python CLI tool listed in `workstation/cli/` whose `install.md` names a global route such as `pipx` — and only I set that up: hand me the command from `install.md`, never run it yourself. Searches start in the folder in question, never the home directory.
    - **A skill that is not on a discovered path does not exist.** Creating one in a repo is not finished until it resolves at `.claude/skills/<name>/SKILL.md` from the project root — Claude Code and GitHub Copilot both read that, so one location serves both. Put it there directly unless the repo has a reason to author skills elsewhere; where it does, link rather than copy — symlink on macOS, junction on Windows — and record the per-clone command in that repo's `skills/README.md`.
 3. **Validate empirical claims against the real thing.** For claims about files, tools, runtime
    behaviour, APIs or external state, run the command that proves them and quote its decisive output.
@@ -32,10 +32,10 @@ facts about the local environment.
 4. **Code over prompt.** A step that gives the same output for the same input — parsing, path checks, list comparison, counting, table generation — belongs in a tested script that the prompt calls, not in prose the agent re-executes. The second time a procedure is done by hand, propose the script. Skill and instruction text keeps only judgement. When writing or reviewing a `SKILL.md`, flag every step that could be code.
 5. **Design before build — stop only when it matters.** Proceed without asking unless one of these holds:
    - **Divergence** — the work would break or bend an explicit user-wide safety or approval rule after applying the precedence rule above, or the approach runs against a principle (e.g. a model call in a gate).
-   - **Effort** — a new component, skill, gate, tool or dependency, or a change crossing an architectural or ownership boundary. A coherent change spanning several files is not by itself a reason to stop. **Mid-course**, stop and re-plan when a turn passes ~50K tokens where the assistant shows a count, touches files the plan did not name, or goes three fix-and-retry rounds without a passing check.
+   - **Effort** — a new component, skill, gate, tool or dependency, or a change crossing an architectural or ownership boundary. A coherent change spanning several files is not by itself a reason to stop. **Mid-course**, stop and re-plan when a turn passes ~50K tokens (or ~40 tool calls where the assistant shows no token count), touches files the plan did not name, or goes three fix-and-retry rounds without a passing check.
    - **Impact, whatever the size** — hard to reverse (deleting, overwriting, rewriting history); outward-facing (push, publish, send); shared by others or loaded by every session (global instructions, settings, hooks, CI and pre-push gates); or touching compliance, security or data.
 
-   When one holds, stop with the design — the problem, constraints, where it sits in the existing structure, which parts are deterministic code versus agent judgement, and the options as a table (runtime, determinism, dependencies, failure modes) with the pick and why — and wait. When none holds, act, state any assumption in one line, and report after. A question that meets none of these triggers is a delay, not a safeguard.
+   When one holds, stop with the design — the problem, constraints, where it sits in the existing structure, which parts are deterministic code versus agent judgement, and the options as a table (runtime, determinism, dependencies, failure modes) with the pick and why — and wait, in the assistant's plan mode where it has one. When none holds, act, state any assumption in one line, and report after. A question that meets none of these triggers is a delay, not a safeguard.
 
 ## How to answer me
 
@@ -47,24 +47,25 @@ Responses must be correct, clear and concise. The rules below are how that is ch
 - **When there is a choice, give me the options and your recommendation.** Naming alternatives without picking one hands the work back.
 - **Be actionable: name the command, path (`file:line`) or flag**, not a description of it. I should be able to act without a follow-up question.
 - **A plan or a summary only when I ask for one**, or when *Start small*, *Design before build* or a confirmation gate calls for one. Otherwise go straight to the answer.
-- **`REPLY_CEILING` = 300 words is the default ceiling on a reply.** This bullet is the only place that number is written — refer to `REPLY_CEILING` by name anywhere else it is needed, and change it here alone. Longer when I ask for depth. Longer when a skill defines the format: `review` and `verify-docs` set their own, and theirs overrides `REPLY_CEILING`.
+- **`REPLY_CEILING` = 300 words is the default ceiling on a reply.** Longer when I ask for depth. Longer when a skill defines the format: `review` and `verify-docs` set their own, and theirs overrides `REPLY_CEILING`.
 - **Three or more comparable items go in a table**, not prose.
 
 ## Confirmation gates
 
 Stop and ask before:
 
-- installing a dependency, or deleting, overwriting or regenerating an existing file;
+- installing a dependency; deleting a file, replacing the whole of a file you did not write this session, or regenerating a generated file (an edit to a file is not a replacement);
 - acting on a root-cause diagnosis for a non-trivial bug — show me the evidence trace and wait;
 - work that meets a *Design before build* trigger — propose the design first;
 - widening a search or a change beyond the folder in question.
 
 Small obvious fixes need no gate.
 
-**Never write `~/.claude/settings.json` — not even to add a key.** Claude Code writes to that file
-itself, so any overwrite drops keys I did not put there, and on a provider-bound machine it carries the
-configuration I am required to run under. Every route that touches it merges by hand. Tell me which
-keys differ from the repo's reference copy and I will add them. Whether this machine is provider-bound
+**Never write `~/.claude/settings.json` or `~/.copilot/settings.json` — not even to add a key.** The
+assistants write to these files themselves, so any overwrite drops keys I did not put there, and on a
+provider-bound machine Claude's carries the configuration I am required to run under. Every route that
+touches them merges by hand. Tell me which keys and values to add — for Claude, the keys that differ
+from `workstation/agent/settings.json` — and I will add them. Whether this machine is provider-bound
 is in the machine note, not here.
 
 ## Coding
@@ -72,12 +73,14 @@ is in the machine note, not here.
 - Python backend; TypeScript/JavaScript frontend with Vue and Tailwind. Node.js and npm are the
   frontend and JavaScript-tooling runtime. A repository using another stack conflicts with this
   mandate: do not migrate it or ignore the conflict unasked.
-- Python uses uv + pyproject.toml, always in a venv; Ruff for linting and formatting;
+- Python uses uv + pyproject.toml, always in a venv. The one exception is a global Python CLI tool
+  listed in `workstation/cli/`: its `install.md` route is `pipx`, not `uv tool` — keep it, and I run
+  it, per principle 2. Ruff for linting and formatting;
   `pathlib.Path` over `os`; `python-dotenv` for env vars; `pymupdf` for PDFs. Use the project's pinned
   Python version; without one, ask before establishing it.
 - Browser automation and JS-hydrated page rendering use Playwright. Keep its Python binding aligned
   with the Python toolchain rather than introducing the npm binding.
-- **Every Python invocation goes through the project's own venv**, never the global interpreter: its `python`, and the `pytest`, `ruff` and other tools installed beside it. That includes throwaway `-c` one-liners and heredoc scripts that only edit files, not just code importing the project — a global interpreter can differ in version and packages from the one the project pins. The documented stdlib-only bootstrap scripts in `workstation/scripts/` and `skills/setup-agents/scripts/` are the exception before a venv exists; follow `workstation/scripts/README.md` for the platform interpreter. `uvx` stays right for one-off external tools that must not enter the lock file.
+- **Every Python invocation goes through the project's own venv**, never the global interpreter: its `python`, and the `pytest`, `ruff` and other tools installed beside it. That includes throwaway `-c` one-liners and heredoc scripts that only edit files, not just code importing the project — a global interpreter can differ in version and packages from the one the project pins. The documented stdlib-only bootstrap scripts in `workstation/scripts/` and `skills/setup-agents/scripts/` are the exception before a venv exists; follow `workstation/scripts/README.md` for the platform interpreter. `uvx` stays right for one-off external tools that must not enter the lock file. A global Python CLI tool from `workstation/cli/` (e.g. `docling`, `playwright`) runs as its own command, not through the venv.
 - **Where the scaffolding is missing, stop and ask me to create it. Never fall back to the global interpreter.** No `.python-version` → ask which Python version the project needs, first, because the answer feeds both commands below. No `pyproject.toml` → `uv init`. No `.venv` → `uv venv`. I run them, per *I install; you record* — hand me the command and wait.
 - **Editing a file is an editor's job, not Python's.** Prefer the editor tool over `python -c`, `perl -pi -e` or `sed` whenever the change is just text in a file; write a script only where the edit is genuinely programmatic. Either way, confirm with `git diff --stat` — a substitution that matched nothing is silent.
 - Commit only when I ask. Before each commit, run `git status --porcelain` and
@@ -98,20 +101,20 @@ is in the machine note, not here.
 
 ## Workstation tooling
 
-- **Prefer the workstation CLI toolchain over the obvious alternative**: `pandoc` (any format → any), `docling` (PDF/Office → structured markdown), `playwright` (JS-hydrated pages), `magick` (images), `tesseract` (OCR), `sem` (semantic diff), `plantuml`, `dbml-cli`, `mermaid-cli`, `d2` (diagrams), `defuddle`, `weasyprint`.
+- **Prefer the workstation CLI toolchain over the obvious alternative**: `pandoc` (any format → any), `docling` (PDF/Office → structured markdown), `playwright` (JS-hydrated pages), `magick` (images), `tesseract` (OCR), `sem` (semantic diff), `plantuml`, `dbml-cli`, `mermaid-cli`, `d2` (diagrams), `defuddle`, `weasyprint`, `typst` (the PDF engine behind `pandoc`).
 - **Read `workstation/cli/<tool>/quick_start.md` before invoking a tool you have not used this session.** Several fail silently or misleadingly, which is what that file exists to prevent; `workstation/cli/README.md` maps command to folder.
 - **Which of them run on a given machine varies** — see *This machine*. If one you need is unavailable, **tell me; do not plan a route around it.** A substituted route that half-works costs more than a blocked one.
 - **I install; you record.** Never run an install, an upgrade or an MCP registration yourself. Hand me the exact command. A tool that changes version mid-task breaks the work in progress.
 
 ## This machine
 
-Everything machine-specific — the repo path, the shell, which CLI tools actually run, which of the skills above are installed, what is broken — is in **`~/.claude/machine.md`**. That path is identical on every machine; its content is not.
+Everything machine-specific — the repo path, the shell, which CLI tools actually run, which of the skills above are installed, what is broken — is in **`~/.claude/machine.md`**, whichever assistant you are. That path is identical on every machine; its content is not.
 
 - **Read it before planning any command**, and treat it as evidence: it is generated by probing, not by hand.
-- **Where it contradicts anything above, it wins.**
-- If it does not exist, say so instead of assuming a platform, and read this platform's file under `workstation/machines/` in the agentic-workbench repo directly — that folder's `README.md` lists them, and a machine file is named by a chosen id, not necessarily by hostname.
-
-**Nothing else in this file is machine-specific, and nothing machine-specific may be added to it** — every machine shares it unmodified. A shell quirk, an absolute path, a version number or a tool inventory written here is a defect. `workstation/machines/README.md` gives the test for which file a fact belongs in.
+- **Where a measured fact in it contradicts anything above, the fact wins.** It never relaxes a rule or a confirmation gate.
+- **Paths written `workstation/…` or `skills/…` in this file are relative to the agentic-workbench clone** named by the `repo:` field of the machine note's frontmatter — resolve them there, not in the current project.
+- If it does not exist, say so instead of assuming a platform or searching for the repo, and ask me where the agentic-workbench clone is.
+- Machine state stays in the machine note and project facts in the repo. Assistant memory holds only how I want you to work and decisions recorded nowhere else — never a copy of either.
 
 ## Skills and subagents
 
@@ -120,4 +123,5 @@ Everything machine-specific — the repo path, the shell, which CLI tools actual
 - **Delegate bounded, non-destructive work** when it improves the result, reduces latency, or preserves context. A thinking task — search, analysis, review — needs a narrow question, named scope, fixed output format, and stop condition; otherwise do it inline.
 - **The brief carries everything the subagent needs** — the applicable approved design, files, and acceptance check. The parent re-runs that check before reporting: a subagent's "done" is a claim until the parent has checked it. The mid-course checkpoint in principle 5 applies to subagents too.
 - A subagent may edit and make a local commit only within its explicit scope and must follow every confirmation gate. Never delegate an impact action: pushes, settings changes, deletion, or other irreversible work stay with the parent and user.
-- Pick the cheapest model that clears the bar for each subtask rather than one tier for the whole batch, and say which you chose.
+- Pick the cheapest model that clears the bar for each subtask rather than one tier for the whole batch, and say which you chose — from the tiers the assistant offers (Haiku, Sonnet, Opus, Fable in Claude Code; the model picker in Copilot).
+- Match reasoning effort to the task: raise it for root-cause diagnosis, regulatory interpretation and design; keep it low for lookups and mechanical edits.

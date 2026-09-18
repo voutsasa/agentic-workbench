@@ -48,3 +48,8 @@ CLAUDE.md
 # "Do not follow the README's .claude/settings.json snippet." Documenting a
 # thing to avoid does not assert that it exists here.
 .claude/**
+
+# The Windows venv interpreter. agent/README.md names it beside .venv/bin/python
+# as the second layout the ruff hook's registration probes; a venv has one layout
+# or the other, so on any given machine one of the two cannot exist.
+.venv/Scripts/python.exe

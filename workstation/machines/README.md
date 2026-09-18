@@ -29,7 +29,7 @@ stale), and why a machine's tool table is measured by `../scripts/inventory.py` 
 | Machine | Platform | Repo path | Inventory verified |
 |---|---|---|---|
 | [`windows-ema-pf5n4xe7.md`](windows-ema-pf5n4xe7.md) | Windows 11 (build 26200) | `C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench` | 14 September 2026 |
-| [`macos-workstation.md`](macos-workstation.md) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 4 September 2026 |
+| [`macos-workstation.md`](macos-workstation.md) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 18 September 2026 |
 
 The filename is `<platform>-<id>.md`, lowercased. The id is usually the hostname —
 `workstation/scripts/inventory.py --json` prints that form under `suggested_id` — but it does
@@ -54,13 +54,13 @@ without it falls back to the only file for the platform.
 5. Follow the matching [`../agent/setup/`](../agent/setup/) file to put the config in place.
 
 A new **platform** additionally needs one `setup/<platform>.md` and a third row in each
-`install.md` platform table. Write those when a machine exists — twelve guessed `apt` package names
-would be twelve unverified claims, which is worse than an absent row.
+`install.md` platform table. Write those when a machine exists — a dozen guessed `apt` package names
+would be a dozen unverified claims, which is worse than an absent row.
 
 ## How the agent reads this
 
-Nothing here is loaded automatically. [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) closes by
-instructing the agent to read `~/.claude/machine.md`, which is a path that is **identical on every
+Nothing here is loaded automatically. [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) tells
+the agent to read `~/.claude/machine.md`, which is a path that is **identical on every
 machine while its content differs** — that indirection is what lets the shared file point at
 per-machine truth without naming a platform.
 

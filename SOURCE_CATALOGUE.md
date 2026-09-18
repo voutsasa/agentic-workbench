@@ -190,6 +190,7 @@ See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command �
 * [plantuml-cli](https://plantuml.com/command-line) — Runs PlantUML from the terminal to render diagram sources into images.
 * [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) — Renders Mermaid diagram definitions into SVG, PNG, or PDF from the command line.
 * [d2-cli](https://d2lang.com/tour/install/) — Renders D2 diagram scripts into SVG, PNG, PDF, and other formats from the terminal.
+* [typst](https://github.com/typst/typst) — Markup-based typesetting system; the PDF engine pandoc uses here in place of LaTeX.
 
 #### MCP servers
 

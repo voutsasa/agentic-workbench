@@ -14,6 +14,14 @@ of the tree is arranged around, and it has three consequences:
 - Anything else machine-local, and not provider-bound, belongs in `~/.claude/settings.local.json`,
   which is untracked by design.
 
+Two authoring rules for `AGENT-INSTRUCTIONS.md`, kept here because they govern its edits, not a session:
+
+- **Nothing machine-specific goes in it.** A shell quirk, an absolute path, a version number or a tool
+  inventory written there is a defect; its *This machine* section points at `~/.claude/machine.md`
+  instead.
+- **`REPLY_CEILING`'s number is written once**, in its *How to answer me* bullet. Skills refer to it by
+  name, so change the number there alone.
+
 ## Contents
 
 | Path | Goes to | How |
@@ -22,7 +30,7 @@ of the tree is arranged around, and it has three consequences:
 | `AGENT-INSTRUCTIONS.md` | `~/.copilot/copilot-instructions.md` | linked for Copilot CLI |
 | `settings.json` | `~/.claude/settings.json` | **merged by hand — never linked** |
 | `skills/<skill>/` | `~/.claude/skills/<skill>` | linked — one per name in [`../scripts/link_config.py`](../scripts/link_config.py)'s `SKILLS` tuple |
-| `../machines/<platform>-<id>.md` | `~/.claude/machine.md` | linked |
+| `../machines/<platform>-<id>.md` | `~/.claude/machine.md` | linked for every agent, Copilot included — the instructions name this one path |
 | `hooks/powershell-tool-prompt.ps1` | `~/.claude/hooks/powershell-tool-prompt.ps1` | **reference copy — copied by hand, never linked** |
 | `hooks/ruff_on_edit.py` | `~/.claude/hooks/` and `~/.copilot/hooks/` | linked with `link_config.py --hooks` |
 | `hooks/ruff-on-edit.copilot.json` | `~/.copilot/hooks/ruff-on-edit.json` | linked with `link_config.py --hooks --agent copilot` |

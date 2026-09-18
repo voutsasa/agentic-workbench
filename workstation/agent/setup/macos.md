@@ -64,7 +64,7 @@ Leave `env` exactly as it is, and do not move it to `settings.local.json`.
 
 ## The machine note
 
-[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) closes by telling the agent to read `~/.claude/machine.md`. Point it at
+[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) tells the agent to read `~/.claude/machine.md`. Point it at
 this machine's file in [`../../machines/`](../../machines/) — `link_config.py` will do it, and finds the
 right file without being told when there is only one for this platform:
 

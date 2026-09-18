@@ -256,6 +256,7 @@ Each tool has a folder at `workstation/cli/<tool>/` with install commands, a qui
 * [plantuml-cli](https://plantuml.com/command-line)
 * [mermaid-cli](https://github.com/mermaid-js/mermaid-cli)
 * [d2-cli](https://d2lang.com/tour/install/)
+* [typst](https://github.com/typst/typst)
 
 #### MCP servers
 
