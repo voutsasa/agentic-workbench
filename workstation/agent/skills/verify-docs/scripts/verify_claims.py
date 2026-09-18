@@ -454,6 +454,7 @@ def clip(text: str, width: int = 110) -> str:
 
 
 HELP_FLAGS = ("--help", "-h", "--help-extra")
+OVERSTRIKE_RE = re.compile(r".\x08")
 MAX_SUBCOMMANDS = 6
 COMMANDS_HEADING_RE = re.compile(
     r"^\s*(?:[|│╭─\s]*)(?:Commands|COMMANDS|Subcommands)\b"
@@ -531,7 +532,9 @@ class Verifier:
             )
         except OSError, subprocess.SubprocessError:
             return None
-        return (done.stdout or "") + (done.stderr or "")
+        # A piped man page (`git diff --help`) still carries nroff overstrike:
+        # bold is `c\bc` and underline `_\bc`, so `--staged` never matches as text.
+        return OVERSTRIKE_RE.sub("", (done.stdout or "") + (done.stderr or ""))
 
     def help_output(self, argv: list[str], help_flag: str = "--help") -> str | None:
         """One help screen, cached — 148 flag claims share about 23 subjects."""

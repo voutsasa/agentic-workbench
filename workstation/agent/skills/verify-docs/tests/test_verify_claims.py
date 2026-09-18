@@ -447,6 +447,22 @@ class TestAdvertisedSubcommands(unittest.TestCase):
         self.assertLessEqual(len(advertised_subcommands(many)), 6)
 
 
+class TestManPageOverstrike(unittest.TestCase):
+    """`git diff --help` pipes a man page whose bold is `c\\bc` per character."""
+
+    MAN = "".join(f"{c}\b{c}" for c in "--staged") + " is a synonym of --cached.\n"
+
+    def test_a_bold_flag_in_a_man_page_is_found(self):
+        done = mock.Mock(stdout=self.MAN, stderr="")
+        with (
+            mock.patch("verify_claims.shutil.which", return_value="/usr/bin/git"),
+            mock.patch("verify_claims.subprocess.run", return_value=done),
+        ):
+            hit = Verifier(Path(".")).find_flag(["git", "diff"], "--staged")
+        self.assertIsNotNone(hit)
+        self.assertIn("--staged is a synonym", hit[1])
+
+
 # --------------------------------------------------------------------------
 # Manifests, frontmatter, paths, reporting
 # --------------------------------------------------------------------------
