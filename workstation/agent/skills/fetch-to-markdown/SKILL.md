@@ -22,12 +22,27 @@ makes them itself. If the request did not name a destination path, ask for one b
 | A local or fetched PDF / Office document | `docling` — real layout understanding, ahead of pandoc | `docling convert <input> --to md --output <dir>` |
 | A legacy binary `.doc` or `.ppt` | Two-step — neither docling nor pandoc reads the old binary format | see below |
 | **Any server-rendered HTML** — Docusaurus, Sphinx, ReadTheDocs, MkDocs, VitePress, mdBook, Jekyll, a classic blog, hand-rolled | curl → extract the article node → pandoc | see below |
-| A JS-hydrated platform (Mintlify, Fern, Rspress — anything whose raw HTML holds no article text; agentskills.io is one, returning raw component/JSX source under WebFetch) | Playwright → defuddle → pandoc | headless; no browser extension |
+| A JS-hydrated platform (Mintlify, Fern, Rspress — anything whose raw HTML holds no article text) | Playwright → defuddle | headless; see below |
 
 **One route covers every server-rendered page**, because the extractor's selector is an argument.
 Splitting it by generator only invited the question *which of these is Docusaurus* when the answer
 never changed the command. Confirm the text is in the raw HTML — `curl -s <url> | grep -c "<some
 sentence from the page>"` — and if it is, this route works whatever built the page.
+
+### The JS-hydrated route
+
+Render with the snippet in [`playwright/quick_start.md`](../../../cli/playwright/quick_start.md), then
+`defuddle parse - --md --frontmatter < rendered.html > "<dest>.md"`. Confirm the route is needed first
+with the same `curl | grep -c` test as above: agentskills.io, once the example here, now serves its
+text in the raw HTML (2026-09-18).
+
+Two traps, both measured on agentskills.io on 2026-09-18:
+
+- **`wait_until="networkidle"` can time out** on a site that keeps a connection open — `Page.goto:
+  Timeout 30000ms exceeded`. `wait_until="load"` plus a short `wait_for_timeout` rendered it.
+- **defuddle reading stdin cannot resolve relative links** — it never sees the page URL and has no
+  option to take one, so `](/clients)` survives and fails §2's link check. The snippet rewrites every
+  `href` and `src` to its absolute value in the browser before capturing the HTML.
 
 ### The legacy `.doc` / `.ppt` route
 

@@ -181,13 +181,17 @@ To make Copilot read the same user instructions Claude reads, add: (**user**)
 
 ```jsonc
 {
-  "chat.useClaudeMdFile": true,   // reads ~/.claude/CLAUDE.md and CLAUDE.md
-  "chat.useAgentsMdFile": true    // reads AGENTS.md
+  "chat.useClaudeMdFile": true,                                    // reads ~/.claude/CLAUDE.md and CLAUDE.md
+  "chat.useAgentsMdFile": true,                                    // reads AGENTS.md
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true   // reads .github/copilot-instructions.md
 }
 ```
 
-Both default to off. With the first on, this repo's [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md)
-reaches Copilot through the same link route 1 already created — no second file, no copy.
+**All three default to on in VS Code 1.138.0** — `default:!0` in the build's own setting registrations,
+read 2026-09-18. Set them anyway: an explicit value survives a default that changes between releases,
+and the earlier record of this page read the first two as off on 1.137.0. With the first on, this
+repo's [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) reaches Copilot through the same link
+route 1 already created — no second file, no copy.
 
 Related keys: `chat.instructionsFilesLocations` adds directories of `*.instructions.md`;
 `chat.useCustomizationsInParentRepositories` walks up to parent repos.
@@ -235,26 +239,16 @@ Authentication is a GitHub token, resolved `COPILOT_GITHUB_TOKEN`, then `GH_TOKE
 has no configuration of its own. A legacy `gh-copilot` extension may still be installed and its
 `~/.config/gh-copilot/config.yml` is then dead weight; `gh extension list` shows whether it is there.
 
-The CLI also loads standalone skills from `~/.copilot/skills/`, as shown above. **Plugins** are the
-packaging route for distributable skills, agents, hooks, and MCP servers:
-
-```sh
-copilot plugin list
-copilot plugin install <owner>/<repo>          # or <plugin>@<marketplace>, or a git URL
-copilot --plugin-dir <directory>               # load one from a local path, no install
-```
-
-A plugin is laid out `plugin.json` + `skills/<name>/SKILL.md` + `mcp.json`, with agents and hooks
-under `com.github.copilot/`.
+The CLI also loads standalone skills from `~/.copilot/skills/`, as shown above, and that link is this
+workbench's only route. Copilot's plugins (`copilot plugin --help`) are not used here.
 
 ### Verify
 
 ```sh
 copilot --version
-copilot plugin list
 ```
 
-In VS Code, open Chat and confirm the instruction file is listed among the context it loaded.
+Then `/skills` in a `copilot` session should list the linked skills. In VS Code, open Chat and confirm the instruction file is listed among the context it loaded.
 
 ---
 
@@ -271,11 +265,12 @@ Identical to route 3 except for the paths and one Windows-only setting.
 | Workspace | `.vscode\settings.json` |
 
 The settings themselves are the same: `chat.useClaudeMdFile`, `chat.useAgentsMdFile`,
+`github.copilot.chat.codeGeneration.useInstructionFiles`,
 `chat.instructionsFilesLocations`.
 
 ### The CLI
 
-Same layout under `$HOME/.copilot`, same `COPILOT_HOME` override, same plugin commands.
+Same layout under `$HOME/.copilot`, same `COPILOT_HOME` override.
 
 One setting exists only here — **`powershellFlags`**, the flags passed to `pwsh` on startup,
 defaulting to `["-NoProfile", "-NoLogo"]`. Setting it replaces the defaults rather than adding to
@@ -296,15 +291,15 @@ The routes above mix observed fact with vendor documentation. Which is which:
 |---|---|
 | macOS Claude link route, `link_config.py` behaviour, 8 of 8 linked | **observed** on the macOS workstation |
 | Copilot CLI loads `~/.copilot/copilot-instructions.md` | **observed** — listed by Copilot CLI 1.0.85 under `/instructions` help |
-| VS Code user settings path; `chat.useClaudeMdFile` / `useAgentsMdFile` exist and default to off | **observed** — VS Code 1.137.0, bundled `copilot-chat` 0.65.0 |
+| VS Code user settings path; `chat.useClaudeMdFile` / `useAgentsMdFile` exist | **observed** — VS Code 1.137.0, bundled `copilot-chat` 0.65.0 |
+| `chat.useClaudeMdFile`, `chat.useAgentsMdFile`, `github.copilot.chat.codeGeneration.useInstructionFiles` default to on | **observed** — `default:!0` in the VS Code 1.138.0 build, 2026-09-18; that a Chat session then loads the files is not |
 | Skills paths `.github/skills/`, `.agents/skills/`, `.claude/skills/` | **observed** — literal table in the VS Code 1.137.0 build |
-| `~/.copilot/` layout, `COPILOT_HOME`, token precedence, `powershellFlags`, plugin layout | **observed** — `copilot help config`, `copilot help environment`, `copilot plugin --help` on macOS |
+| `~/.copilot/` layout, `COPILOT_HOME`, token precedence, `powershellFlags` | **observed** — `copilot help config`, `copilot help environment` on macOS |
 | `gh copilot` is a launcher | **observed** — `gh copilot --help` |
 | Windows link route, junctions and hardlinks | documented in [`windows.md`](windows.md), last measured on the Windows machine — see [`../../machines/README.md`](../../machines/README.md) |
 | Bedrock steps, IAM actions, model pinning, region order | **vendor documentation**, not executed in this repo |
 | Copilot CLI paths **on Windows** | **not measured** — the CLI states `$HOME/.copilot` and was verified on macOS only |
 | The standalone CLI reads `~/.copilot/skills/` outside a plugin | **observed** on the macOS workstation, Copilot CLI 1.0.63, 2026-09-13 — `/skills` in a session listed the skills `link_config.py --agent copilot` had linked there; see [`../../machines/macos-workstation.md`](../../machines/macos-workstation.md#copilot-cli) |
-| Where `copilot plugin install` puts a plugin | **unresolved** — not stated in the vendor page the CLI links, and no plugin is installed here |
 
 Anything marked *not measured* or *unresolved* should be settled on the machine in question and
 recorded in that machine's file under [`../../machines/`](../../machines/), not here — this file is a

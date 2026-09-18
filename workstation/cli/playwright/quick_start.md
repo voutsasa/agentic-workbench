@@ -13,17 +13,30 @@ Drives a real browser. In this workbench its job is one thing: rendering JS-hydr
 Render the page, then hand it to defuddle — see [`fetch-to-markdown`](../../agent/skills/fetch-to-markdown/SKILL.md) §1.
 
 ```python
-from playwright.sync_api import sync_playwright
+from playwright.sync_api import TimeoutError, sync_playwright
 
 with sync_playwright() as p:
     browser = p.chromium.launch()  # headless by default
     page = browser.new_page()
-    page.goto(url, wait_until="networkidle")
+    try:
+        page.goto(url, wait_until="networkidle")
+    except TimeoutError:  # a site holding a connection open never goes idle
+        page.goto(url, wait_until="load")
+        page.wait_for_timeout(3000)
+    # defuddle reads this from stdin and never sees the URL: make links absolute here
+    page.eval_on_selector_all("a[href]", "els => els.forEach(e => e.setAttribute('href', e.href))")
+    page.eval_on_selector_all("img[src]", "els => els.forEach(e => e.setAttribute('src', e.src))")
     html = page.content()
     browser.close()
 ```
 
-`wait_until="networkidle"` is the part that matters — the default waits for `load`, which fires before hydration and gives you the same empty shell `WebFetch` got.
+Try `networkidle` first — `load` alone can fire before hydration and give you the same empty shell
+`WebFetch` got. On agentskills.io (2026-09-18) `networkidle` timed out after 30 s instead, and `load`
+plus a 3 s wait rendered the page; hence the fallback.
+
+**It runs under the pipx venv's interpreter**, which is where `playwright` is importable:
+`"$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" render.py` (`Scripts\python.exe` on Windows). The project `.venv` does not have it
+unless the project adds it.
 
 ## CLI subcommands
 

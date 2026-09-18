@@ -17,7 +17,7 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 2. `fetch-to-markdown` has two routes proven of five
+### 2. `fetch-to-markdown`: the `.docx` figure route is unproven
 
 Opened 2026-09-13. Server-rendered HTML is proven against rdi.berkeley.edu/llm-agents/f24 — that run
 is what found the `<table>` and relative-link defects the skill now guards against. The raw README
@@ -28,39 +28,44 @@ route was proven on 2026-09-15 by angular-eslint, whose relative links had to be
 |---|---|
 | Server-rendered HTML → extractor → pandoc | **proven** |
 | `github.com/<owner>/<repo>` → raw README | **proven** — angular-eslint, 2026-09-15 |
-| Direct `.pdf` → curl | unproven |
-| PDF / Office → docling | unproven, and the `.docx` figure trap is the one that passes every check while being wrong |
-| JS-hydrated → Playwright → defuddle | unproven |
+| Direct `.pdf` → curl → docling | **proven** — DDD Reference (`SOURCES.md` §1), 2026-09-18: exit 0 in 17 s, every §2 check clean, 2 figures extracted by `clean_md_images.py` |
+| `.docx` → docling | **unproven** — no `.docx` in the register, and the figure trap is the one that passes every check while being wrong |
+| JS-hydrated → Playwright → defuddle | **proven** — agentskills.io, 2026-09-18, after two fixes now in the skill: a `networkidle` timeout fallback, and absolute links before defuddle reads stdin |
 
-**Closes when:** each route has converted one real source and passed §2's checks. The `.docx` case
-needs a file that actually contains DrawingML figures, or it proves nothing.
+Three findings the runs left open:
 
-### 3. The `-t markdown` fallback does not render in Zed
+- **The DDD Reference PDF converts with tab-and-space runs between words** (`Within\t  a\t  single`,
+  9,632 lines with a tab) and its table of contents as a dot-leader table. §2 has no check for either,
+  so the output passes. Untested whether a whitespace normalisation step would be safe for code blocks.
+- **agentskills.io no longer needs the JS route** — its raw HTML now holds the text. The route ran
+  correctly there but has not been shown on a page that *requires* rendering.
+- **The render step is a snippet, not a script.** It lives in `workstation/cli/playwright/quick_start.md`
+  and must run under the pipx venv's interpreter; per *Code over prompt* it belongs in a tested
+  script, which needs a design decision because the skill's scripts are stdlib-only.
 
-Opened 2026-09-13, with the fallback itself.
-
-A page whose tables hold block content converts to pandoc multiline tables, which are plain text but
-not GFM — so Zed's plain preview shows them aligned rather than ruled. That contradicts *Markdown
-deliverables must render in Zed's plain preview* in the global instructions.
-
-It is currently harmless: the fallback only fires on ingested corpus files, which are read as sources
-rather than handed over. **Closes when** either an ingested page has to become a deliverable — at
-which point the answer is probably to split the table rather than to change the writer — or the
-constraint is written down as applying to authored documents only.
+**Closes when:** a real `.docx` with DrawingML figures converts with the figure count matching the
+source; the whitespace finding is either given a §2 check or accepted in writing; and the render step
+has run on a page whose raw HTML holds no article text.
 
 ### 4. `setup-agents` has never run end-to-end
 
 Opened 2026-09-13, with the skill.
 
-What is proven is its parts: `detect.py` ran on the macOS workstation and reported what is there, and
-`link_config.py --agent copilot` and `--project` both reached *N of N linked* here. The flow that joins
-them has not run — the questions in step 2, the change table built from `link_config.py --json` in
-step 3, and either mode of step 4. A table that mislabels a `diverged` destination, or a hand-over
-block missing a flag, would pass every unit test.
+**Run once on 2026-09-18, on the macOS workstation, from a long session rather than a fresh one.**
+Steps 1–3 ran as written: detect, inventory (13 of 13), one round of questions, and the change table
+from `link_config.py --json` (18 of 18 on the real home, so no link change). Step 4 *apply* ran against
+a scratch `--home`, standing in for a new machine: 3 of 18 before, **18 of 18** after `--apply`, and the
+re-check exited 0. Detect also found the live `hooks` key behind `workstation/agent/settings.json`;
+the macOS machine note, which had recorded the two as identical, now records the difference.
 
-**Closes when:** one run of the skill, from a fresh session, goes through all four steps in each mode —
-*apply* on a machine with something missing, *hand over* on one where the printed commands are then
-run as given — and the re-run report reads *N of N linked* both times.
+Still unproven: *hand over* mode with its printed block run as given; *apply* against a real home with
+something missing; and a run from a fresh session. One trap from the run: in zsh, a flag list held in
+one string variable is not word-split, so `link_config.py $F` rejects all the flags — the skill's
+literal commands are unaffected.
+
+**Closes when:** a fresh session runs the skill in *hand over* mode, the printed block is run as given
+and the re-run reads *N of N linked*, and *apply* reaches *N of N linked* on a real home that was
+missing a link.
 
 ### 5. The Copilot and project links are unproven on Windows
 
@@ -79,27 +84,16 @@ recorded in `workstation/machines/windows-ema-pf5n4xe7.md`.
 
 ### 6. VS Code Copilot Chat has not been shown the workbench instructions
 
-Opened 2026-09-13. `chat.useClaudeMdFile` is **not set** in this machine's VS Code user settings
-(`detect.py`), so Chat does not read `~/.claude/CLAUDE.md` here. That the setting exists and defaults
-to off is observed; that turning it on makes Chat load this repo's instructions through the link is
-not.
+Opened 2026-09-13. None of `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and
+`github.copilot.chat.codeGeneration.useInstructionFiles` is set in the macOS workstation's VS Code
+user settings (`detect.py`, and the file read on 2026-09-18). In VS Code 1.138.0 all three default to
+**on** (`default:!0` in the build), which corrects this item's earlier reading of *off*, so Chat
+should already read `~/.claude/CLAUDE.md` — but no Chat session has been seen doing it.
 
-**Closes when:** the user adds `"chat.useClaudeMdFile": true` to
-`%APPDATA%\Code\User\settings.json`, a Chat session lists the instruction file in its loaded context,
-`detect.py` reports `true`, and the machine note records it. The agent does not make the edit —
-settings files are the user's.
-
-### 7. Where `copilot plugin install` puts a plugin is unknown
-
-Opened 2026-09-13, carried from the setup README's *How much of this was measured* table.
-
-Not stated in the vendor page the CLI links, and no plugin is installed on either machine. It only
-matters if skills are ever shipped to Copilot as a plugin instead of the `~/.copilot/skills` link that
-now works — but until then the README's plugin commands describe an install nobody has watched.
-
-**Closes when:** one plugin is installed with `copilot plugin install`, `copilot plugin list` shows it,
-the directory it landed in is found and recorded in the setup README's table — or when the plugin
-commands are removed from the README as a route this workbench does not use.
+**Closes when:** the user adds all three as `true` to
+`~/Library/Application Support/Code/User/settings.json` (on Windows,
+`%APPDATA%\Code\User\settings.json`), a Chat session lists the instruction file in its loaded context,
+and the machine note records both. The agent does not make the edit — settings files are the user's.
 
 ### 8. The running Copilot CLI is not the one its path names
 
@@ -178,28 +172,16 @@ files; `/context` as the first command of Copilot CLI in a clone set up without 
 the System Prompt at run C's size, not run B's; and Antigravity, with the rule set to **Always On**, shows the rule applied to a session —
 each observation recorded in the machine note.
 
-### 11. `verify_claims.py` has four Pyright errors
+### 12. `review`'s Apply mode approve-each step has not run
 
-Opened 2026-09-18, found while fixing the man-page overstrike defect (`7b0daf4`) and left unfixed as
-outside that change. None fails a test or the pre-push gate today.
+Opened 2026-09-18, with `5949ef5`. Narrowed the same day: the review of `workstation/` applied in
+`e9b3263` exercised failing-test-first (step 4) — `test_link_config.py` failed with 2 failures and 1
+error against the unfixed `link_config.py` before the fix — and recording unfixed findings (step 8),
+into this file's items 16 and 17. Approve-each (step 2) did not run: the user answered the review's
+decisions and then said to go ahead with all of it.
 
-| Location | Error | Consequence |
-|---|---|---|
-| `workstation/agent/skills/verify-docs/scripts/verify_claims.py:419-420` | `help_subject` returns `("no-script", [])` against a declared `tuple[list[str], str] \| None` | a sentinel smuggled through the return type; callers must special-case it with nothing checking that they do |
-| same file, L839 and L882 | an exception object passed to `clip(text: str)` | works because `clip` calls `str()`; the annotation is wrong |
-| same file, L1079 | `import certifi` unresolved in this repo's `.venv` | only the TLS-advice path reaches it; unproven whether it degrades cleanly |
-
-**Closes when:** `.venv/bin/pyright workstation/agent/skills/verify-docs/scripts/verify_claims.py`
-reports 0 errors (pyright is not yet in this repo's venv — adding it is the user's install) and the
-verify-docs suite still passes.
-
-### 12. `review`'s Apply mode changes have not run on a real review
-
-Opened 2026-09-18, with `5949ef5`. Approve-each (step 2), failing-test-first (step 4) and recording
-unfixed findings (step 8) exist only as prose; the unit tests cover `repo_check.py`, not the procedure.
-
-**Closes when:** one review in Apply mode on a code target uses approve-each, shows a regression test
-failing before its fix, and records an unapplied finding in that repo's TODO file.
+**Closes when:** one review in Apply mode, with the user asking to approve each finding, offers one
+choice per finding with its confidence and applies only the approved ones.
 
 ### 14. The ruff post-edit hook is unproven on Windows and under `COPILOT_HOME`
 

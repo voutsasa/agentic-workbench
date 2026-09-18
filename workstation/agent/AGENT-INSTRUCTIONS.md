@@ -96,7 +96,7 @@ is in the machine note, not here.
 ## Documents
 
 - Use the `review` skill when I ask for a document or code review. Not when I've asked for a code change — there, run the tests.
-- Markdown deliverables must render in Zed's plain preview: no CSS assets, no render scripts.
+- Markdown deliverables must render in Zed's plain preview: no CSS assets, no render scripts. This binds documents you author or hand over, not ingested corpus files, which are sources — a converted page may keep pandoc's multiline tables.
 - Inline HTML is allowed only where it is the only route to a required feature. Include it, then warn me: viewers that do not process inline HTML, Zed's plain preview among them, show the markup as literal text.
 
 ## Workstation tooling

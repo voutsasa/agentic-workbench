@@ -353,7 +353,7 @@ class TestHelpSubject(unittest.TestCase):
 
     def test_an_interpreter_with_no_script_on_disk_is_declined(self):
         with TempRepo({}) as root:
-            subject, _ = help_subject(
+            subject = help_subject(
                 root, "doc.md", ["python3", "missing.py", "--out"], "--out"
             )
             self.assertEqual("no-script", subject)
@@ -980,6 +980,13 @@ class TestTlsAdvice(unittest.TestCase):
         """Naming python.org or Homebrew is what sent the last diagnosis wrong."""
         text = " ".join(tls_advice()).lower()
         self.assertNotIn("install certificates.command", text)
+
+    def test_it_degrades_cleanly_without_certifi(self):
+        """certifi is optional: its absence is reported, never raised."""
+        with mock.patch.dict(sys.modules, {"certifi": None}):
+            self.assertIn(
+                "certifi is not importable from this interpreter.", tls_advice()
+            )
 
     def test_it_points_at_zshenv_rather_than_zshrc(self):
         text = " ".join(tls_advice())

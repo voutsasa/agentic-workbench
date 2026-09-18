@@ -29,6 +29,7 @@ cannot execute itself.
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import os
 import platform
@@ -46,6 +47,7 @@ from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from fnmatch import fnmatch
 from pathlib import Path
+from typing import Literal
 from urllib.parse import unquote
 
 sys.path.insert(0, str(Path(__file__).resolve().parent))
@@ -405,8 +407,11 @@ def command_on_line(text: str, flag: str) -> list[str] | None:
 
 def help_subject(
     repo_root: Path, doc: str, tokens: list[str], flag: str
-) -> tuple[list[str], str] | None:
-    """The argv prefix to run --help on, plus a human label. None when unsafe."""
+) -> tuple[list[str], str] | Literal["no-script"] | None:
+    """The argv prefix to run --help on, plus a human label. None when unsafe.
+
+    ``"no-script"`` when an interpreter names no script this repo holds.
+    """
     head = tokens[0]
     if head in NEVER_RUN:
         return None
@@ -416,8 +421,8 @@ def help_subject(
                 for _base, candidate in candidate_paths(repo_root, doc, token):
                     if candidate.is_file():
                         return ([head, str(candidate)], f"{head} {Path(token).name}")
-                return ("no-script", [])  # named a script that is not here
-        return ("no-script", [])  # an interpreter with no script
+                return "no-script"  # named a script that is not here
+        return "no-script"  # an interpreter with no script
     # A bare word before the flag is a subcommand: `git diff --stat`.
     flag_at = next(
         (i for i, t in enumerate(tokens) if t == flag or t.startswith(flag + "=")),
@@ -447,7 +452,7 @@ REGISTRY_API = {
 }
 
 
-def clip(text: str, width: int = 110) -> str:
+def clip(text: object, width: int = 110) -> str:
     """One line, bounded — an evidence column is not a place for a help screen."""
     flat = " ".join(str(text).split())
     return flat if len(flat) <= width else flat[: width - 1] + "…"
@@ -728,7 +733,7 @@ class Verifier:
                 f"`{tokens[0]}` would install a package to answer — not run in a gate",
                 UNVERIFIABLE,
             )
-        if subject[0] == "no-script":
+        if subject == "no-script":
             return (
                 "help_text",
                 f"`{tokens[0]}` runs a script this repo does not hold",
@@ -1076,7 +1081,7 @@ def tls_advice() -> list[str]:
             lines.append(f"{label}: {value}  (exists={Path(value).exists()})")
 
     try:
-        import certifi
+        import certifi  # pyright: ignore[reportMissingImports] — optional; absence handled below
 
         lines.append(f"certifi is installed: {certifi.where()}")
     except ImportError:
@@ -1260,6 +1265,7 @@ if __name__ == "__main__":
     # script's own report and some source docs use — reconfigure before the
     # first print rather than relying on PYTHONIOENCODING being set by whoever
     # invokes this (a git hook, in particular, won't have it).
-    sys.stdout.reconfigure(encoding="utf-8")
-    sys.stderr.reconfigure(encoding="utf-8")
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8")
     raise SystemExit(main())
