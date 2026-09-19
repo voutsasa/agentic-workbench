@@ -31,18 +31,24 @@ sentence from the page>"` — and if it is, this route works whatever built the 
 
 ### The JS-hydrated route
 
-Render with the snippet in [`playwright/quick_start.md`](../../../cli/playwright/quick_start.md), then
-`defuddle parse - --md --frontmatter < rendered.html > "<dest>.md"`. Confirm the route is needed first
-with the same `curl | grep -c` test as above: agentskills.io, once the example here, now serves its
-text in the raw HTML (2026-09-18).
+Confirm the route is needed first with the same `curl | grep -c` test as above: agentskills.io, once
+the example here, now serves its text in the raw HTML (2026-09-18). Then:
 
-Two traps, both measured on agentskills.io on 2026-09-18:
+```sh
+"$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" \
+  <skill>/scripts/render_page.py <url> <tmp>/rendered.html
+defuddle parse - --md --frontmatter < <tmp>/rendered.html > "<dest>.md"
+```
+
+**Run `render_page.py` with the pipx venv's interpreter** — it is the one script here that needs
+`playwright`, and exits 2 naming that interpreter when run under any other. It handles the two traps
+measured on agentskills.io on 2026-09-18:
 
 - **`wait_until="networkidle"` can time out** on a site that keeps a connection open — `Page.goto:
-  Timeout 30000ms exceeded`. `wait_until="load"` plus a short `wait_for_timeout` rendered it.
+  Timeout 30000ms exceeded`. The script falls back to `load` plus a settle wait (`--settle-ms`).
 - **defuddle reading stdin cannot resolve relative links** — it never sees the page URL and has no
-  option to take one, so `](/clients)` survives and fails §2's link check. The snippet rewrites every
-  `href` and `src` to its absolute value in the browser before capturing the HTML.
+  option to take one, so `](/clients)` would survive and fail §2's link check. The script rewrites
+  every `href` and `src` to its absolute value in the browser before capturing the HTML.
 
 ### The legacy `.doc` / `.ppt` route
 
@@ -121,7 +127,7 @@ A conversion that exits 0 is not evidence. Run these:
 | Tables are still tables, not run-on text — the usual docling/pandoc failure on complex layouts | read one |
 | No leftover markup noise: nav bars, cookie banners, JSX source, "Edit this page" | `grep -c "<div\|<header\|<span\|<svg\|<style\|<table\|<img" <dest>.md` → **must be 0** |
 | Every link resolves off-site | `grep -oE "\]\(\.{0,2}/?[^):]+\)" <dest>.md` → **must be empty**; a relative target means the URL argument was omitted |
-| PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries |
+| PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries. Runs of tabs and spaces between words, and a table of contents rendered as a dot-leader table, are **accepted** (2026-09-18, DDD Reference): they come from the PDF's own text layer, change no meaning, and are not normalised |
 | **A `.docx` with diagrams: count the figures** | `grep -c "data:image/[a-z]*;base64" <dest>.md` against the source's figure count |
 
 **Any hit from the markup grep is a tag pandoc's gfm writer could not map and fell back to raw HTML
@@ -175,11 +181,13 @@ record and where. Do not edit a register, index or catalogue from inside this sk
 
 ## Scripts
 
-All three are stdlib-only and run under bare `python3` before any venv exists. Tests:
-`python3 -m unittest discover -s <skill>/tests`.
+All but `render_page.py` are stdlib-only and run under bare `python3` before any venv exists;
+`render_page.py` needs `playwright` and runs under the pipx venv's interpreter. Every test is
+stdlib-only — the browser is faked. Tests: `python3 -m unittest discover -s <skill>/tests`.
 
 | Script | Does |
 |---|---|
 | [`scripts/extract_article.py`](scripts/extract_article.py) | One HTML node out of its page chrome, by `tag.class`, `tag#id` or `tag[attr=value]` |
 | [`scripts/add_frontmatter.py`](scripts/add_frontmatter.py) | The corpus frontmatter block onto a converted file — defuddle's metadata where it is installed, the page's own `<title>` and meta tags where it is not |
 | [`scripts/clean_md_images.py`](scripts/clean_md_images.py) | base64 data URIs out to sibling PNGs |
+| [`scripts/render_page.py`](scripts/render_page.py) | A JS-hydrated page's HTML after hydration, with links made absolute, for defuddle |

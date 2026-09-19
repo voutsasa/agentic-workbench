@@ -10,33 +10,20 @@ Drives a real browser. In this workbench its job is one thing: rendering JS-hydr
 
 ## The ingestion route
 
-Render the page, then hand it to defuddle — see [`fetch-to-markdown`](../../agent/skills/fetch-to-markdown/SKILL.md) §1.
+Render the page with the skill's tested script, then hand it to defuddle — see
+[`fetch-to-markdown`](../../agent/skills/fetch-to-markdown/SKILL.md) §1 for the full route:
 
-```python
-from playwright.sync_api import TimeoutError, sync_playwright
-
-with sync_playwright() as p:
-    browser = p.chromium.launch()  # headless by default
-    page = browser.new_page()
-    try:
-        page.goto(url, wait_until="networkidle")
-    except TimeoutError:  # a site holding a connection open never goes idle
-        page.goto(url, wait_until="load")
-        page.wait_for_timeout(3000)
-    # defuddle reads this from stdin and never sees the URL: make links absolute here
-    page.eval_on_selector_all("a[href]", "els => els.forEach(e => e.setAttribute('href', e.href))")
-    page.eval_on_selector_all("img[src]", "els => els.forEach(e => e.setAttribute('src', e.src))")
-    html = page.content()
-    browser.close()
+```sh
+"$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" \
+  workstation/agent/skills/fetch-to-markdown/scripts/render_page.py <url> rendered.html
 ```
 
-Try `networkidle` first — `load` alone can fire before hydration and give you the same empty shell
-`WebFetch` got. On agentskills.io (2026-09-18) `networkidle` timed out after 30 s instead, and `load`
-plus a 3 s wait rendered the page; hence the fallback.
-
-**It runs under the pipx venv's interpreter**, which is where `playwright` is importable:
-`"$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" render.py` (`Scripts\python.exe` on Windows). The project `.venv` does not have it
-unless the project adds it.
+**It runs under the pipx venv's interpreter** (`Scripts\python.exe` in place of `bin/python` on
+Windows), which is where `playwright` is importable; the project `.venv` does not have it unless the
+project adds it. The script waits for `networkidle` — `load` alone can fire before hydration and give
+the same empty shell `WebFetch` got — and falls back to `load` plus a settle wait when a site never
+goes idle, as agentskills.io did on 2026-09-18. It also makes every link absolute, because defuddle
+reading stdin cannot.
 
 ## CLI subcommands
 

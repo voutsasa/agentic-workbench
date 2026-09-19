@@ -1,0 +1,125 @@
+# Weekly evidence-verified documentation audit — the Azure DevOps twin of
+# .github/workflows/verify-docs.yml, for the `emaea` remote, which the GitHub
+# workflow never reaches. Same two passes, same reports, same rule: the pipeline
+# never edits documentation; it opens a pull request a human reviews.
+#
+# One-time setup in Azure DevOps, the user's to do:
+#   1. Pipelines → New pipeline → Azure Repos Git → this repo → Existing YAML file
+#      → /azure-pipelines/verify-docs.yml.
+#   2. Pipeline → Edit → Variables → add ANTHROPIC_API_KEY, "Keep this value secret".
+#   3. Project settings → Repositories → this repo → Security → the pipeline's build
+#      identity, "<project> Build Service (<org>)" (or "Project Collection Build
+#      Service (<org>)" when the job authorization scope is the collection) →
+#      Allow: Contribute, Create branch, Contribute to pull requests.
+
+trigger: none
+pr: none
+
+schedules:
+  - cron: '17 6 * * 1'   # Mondays, 06:17 UTC
+    displayName: Weekly documentation audit
+    branches:
+      include:
+        - main
+    always: true   # run even when nothing changed: external URLs drift on their own
+
+pool:
+  vmImage: ubuntu-latest
+
+jobs:
+  - job: verify
+    timeoutInMinutes: 30
+    steps:
+      - checkout: self
+        fetchDepth: 0              # git-state claims need real history, not a shallow clone
+        persistCredentials: true   # so the git push below authenticates
+
+      # UsePythonVersion has no version-file input and versionSpec is required,
+      # so read .python-version first and hand it over as a variable.
+      - bash: echo "##vso[task.setvariable variable=PYTHON_VERSION]$(tr -d '[:space:]' < .python-version)"
+        displayName: Read .python-version
+
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: $(PYTHON_VERSION)
+
+      - task: UseNode@1
+        inputs:
+          version: '22'
+
+      - bash: npm install -g @anthropic-ai/claude-code
+        displayName: Install Claude Code
+
+      - bash: |
+          mkdir -p ~/.claude/skills
+          cp -R workstation/agent/skills/verify-docs ~/.claude/skills/verify-docs
+        displayName: Install the verify-docs skill
+
+      - bash: python -m unittest discover -s ~/.claude/skills/verify-docs/tests
+        displayName: Check the extractor still works
+
+      # Deterministic first, and --online deliberately — see the GitHub workflow for
+      # why the network tier belongs here and not in the push gate. Never fails the
+      # job: this pipeline reports drift, it does not gate.
+      - bash: |
+          VC=workstation/agent/skills/verify-docs/scripts/verify_claims.py
+          python "$VC" --repo . --online --json > claims.json
+          python "$VC" --repo . --online --report-from claims.json | tee CLAIMS-VERIFICATION.md
+        displayName: Verify claims deterministically
+        continueOnError: true
+
+      - bash: ./scripts/verify-docs.sh
+        displayName: Verify documentation
+        env:
+          # A secret variable is not decrypted into the environment unless mapped.
+          ANTHROPIC_API_KEY: $(ANTHROPIC_API_KEY)
+          VERIFY_DOCS_SETTLED: claims.json
+          # The agent is a disposable VM and verification must invoke `--help` for
+          # arbitrary binaries, which no static allowlist covers.
+          VERIFY_DOCS_BYPASS: '1'
+          VERIFY_DOCS_BUDGET: '10'
+
+      - bash: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain -- DOCS-VERIFICATION.md CLAIMS-VERIFICATION.md)" ]; then
+            echo "No documentation drift found; nothing to open."
+            exit 0
+          fi
+
+          BASE="$(Build.SourceBranchName)"
+          BRANCH="docs/verify-$(date -u +%Y%m%d)"
+          git config user.name  'Azure Pipelines'
+          git config user.email 'azure-pipelines@users.noreply.dev.azure.com'
+          git checkout -b "$BRANCH"
+          git add -- DOCS-VERIFICATION.md CLAIMS-VERIFICATION.md
+          git commit -m 'docs: evidence-verified corrections'
+          git push --force-with-lease -u origin "$BRANCH"
+
+          REFUTED="$(grep -c '| REFUTED |' DOCS-VERIFICATION.md || true)"
+          MECHANICAL="$(grep -c '| REFUTED |' CLAIMS-VERIFICATION.md || true)"
+          BODY="Weekly documentation audit, in two passes.
+
+          CLAIMS-VERIFICATION.md — ${MECHANICAL:-0} refuted. Deterministic, no model:
+          verify_claims.py --online, which checks the external URLs and package
+          registries the pre-push gate deliberately does not. Tool claims come back
+          UNVERIFIABLE because the agent has no workstation toolchain; that is expected.
+
+          DOCS-VERIFICATION.md — ${REFUTED:-0} refuted. The model-driven pass, for claims
+          no single command settles.
+
+          Every row carries the command that was run and its real output. No
+          documentation was edited by this pipeline."
+
+          az extension add --name azure-devops --only-show-errors
+          az devops configure --defaults \
+            organization="$(System.CollectionUri)" project="$(System.TeamProject)"
+          az repos pr create \
+            --repository "$(Build.Repository.Name)" \
+            --source-branch "$BRANCH" \
+            --target-branch "$BASE" \
+            --title 'docs: evidence-verified corrections' \
+            --description "$BODY" \
+            --output none
+        displayName: Open the corrections pull request
+        env:
+          AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)

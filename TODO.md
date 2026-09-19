@@ -32,40 +32,26 @@ route was proven on 2026-09-15 by angular-eslint, whose relative links had to be
 | `.docx` → docling | **unproven** — no `.docx` in the register, and the figure trap is the one that passes every check while being wrong |
 | JS-hydrated → Playwright → defuddle | **proven** — agentskills.io, 2026-09-18, after two fixes now in the skill: a `networkidle` timeout fallback, and absolute links before defuddle reads stdin |
 
-Three findings the runs left open:
-
-- **The DDD Reference PDF converts with tab-and-space runs between words** (`Within\t  a\t  single`,
-  9,632 lines with a tab) and its table of contents as a dot-leader table. §2 has no check for either,
-  so the output passes. Untested whether a whitespace normalisation step would be safe for code blocks.
-- **agentskills.io no longer needs the JS route** — its raw HTML now holds the text. The route ran
-  correctly there but has not been shown on a page that *requires* rendering.
-- **The render step is a snippet, not a script.** It lives in `workstation/cli/playwright/quick_start.md`
-  and must run under the pipx venv's interpreter; per *Code over prompt* it belongs in a tested
-  script, which needs a design decision because the skill's scripts are stdlib-only.
+Settled on 2026-09-19: the render step is now `workstation/agent/skills/fetch-to-markdown/scripts/render_page.py`, with six fake-browser tests,
+and it rendered agentskills.io end to end under the pipx interpreter (0 markup, 0 relative links); the
+PDF's tab-and-space runs and dot-leader contents table are accepted in the skill's §2 table, at the
+user's decision. Still open: agentskills.io no longer *needs* rendering — its raw HTML now holds the
+text — so the route has not been shown on a page that does.
 
 **Closes when:** a real `.docx` with DrawingML figures converts with the figure count matching the
-source; the whitespace finding is either given a §2 check or accepted in writing; and the render step
-has run on a page whose raw HTML holds no article text.
+source, and `render_page.py` has rendered a page whose raw HTML holds no article text.
 
-### 4. `setup-agents` has never run end-to-end
+### 4. `setup-agents` has no *nothing to change* branch
 
-Opened 2026-09-13, with the skill.
+Opened 2026-09-19, when the end-to-end runs that closed the original item 4 (hand over and apply both
+reaching `18 of 18 linked`, the apply run repairing a removed `pdf-deliverable` link — recorded in the
+macOS machine note) showed two fresh sessions on a home needing no change behave differently: one
+skipped steps 2 and 4 on its own judgement, the other ran them. `skills/setup-agents/SKILL.md` asks
+the step 2 questions *always* and step 4 unconditionally, so the first was off-script.
 
-**Run once on 2026-09-18, on the macOS workstation, from a long session rather than a fresh one.**
-Steps 1–3 ran as written: detect, inventory (13 of 13), one round of questions, and the change table
-from `link_config.py --json` (18 of 18 on the real home, so no link change). Step 4 *apply* ran against
-a scratch `--home`, standing in for a new machine: 3 of 18 before, **18 of 18** after `--apply`, and the
-re-check exited 0. Detect also found the live `hooks` key behind `workstation/agent/settings.json`;
-the macOS machine note, which had recorded the two as identical, now records the difference.
-
-Still unproven: *hand over* mode with its printed block run as given; *apply* against a real home with
-something missing; and a run from a fresh session. One trap from the run: in zsh, a flag list held in
-one string variable is not word-split, so `link_config.py $F` rejects all the flags — the skill's
-literal commands are unaffected.
-
-**Closes when:** a fresh session runs the skill in *hand over* mode, the printed block is run as given
-and the re-run reads *N of N linked*, and *apply* reaches *N of N linked* on a real home that was
-missing a link.
+**Closes when:** the user decides whether the skill gains a branch — after step 3, every link
+`linked` and no user steps: show the table, say nothing needs changing, stop — and the decision is
+written into `SKILL.md` or recorded here as declined.
 
 ### 5. The Copilot and project links are unproven on Windows
 
@@ -82,42 +68,16 @@ copilot` reaches *N of N linked* after `--apply`, `/skills` in a `copilot` sessi
 `python skills\setup-agents\scripts\detect.py` reports a VS Code version, and all three results are
 recorded in `workstation/machines/windows-ema-pf5n4xe7.md`.
 
-### 6. VS Code Copilot Chat has not been shown the workbench instructions
+### 9. The Azure DevOps pipeline has never run
 
-Opened 2026-09-13. `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and
-`github.copilot.chat.codeGeneration.useInstructionFiles` are **`true`** in the macOS workstation's
-VS Code user settings since 2026-09-19 — set by the user, confirmed by `detect.py` and a read of the
-file, and recorded in the machine note. In VS Code 1.138.0 all three also default to on
-(`default:!0` in the build), which corrects this item's earlier reading of *off*. What is still unseen
-is a Chat session actually loading `~/.claude/CLAUDE.md`.
-
-**Closes when:** a VS Code Chat session on the macOS workstation lists the instruction file in its
-loaded context, recorded in the machine note. The Windows machine needs the same three keys in
-`%APPDATA%\Code\User\settings.json`; that belongs to item 16's Windows sitting.
-
-### 8. The running Copilot CLI is not the one its path names
-
-Opened 2026-09-13, on the macOS workstation. `readlink -f /opt/homebrew/bin/copilot` resolves to
-`/opt/homebrew/Caskroom/copilot-cli/1.0.24/copilot`, while `copilot --version` reported 1.0.63 that
-day and **1.0.83 on 2026-09-14**, with the path unchanged. Homebrew did not do it: `brew info --cask
---json=v2 copilot-cli` still reports `"installed": "1.0.24"`, and marks the cask `"auto_updates": true`.
-So the CLI updates itself, outside the cask — `autoUpdate` defaults to `true` (`copilot help config`) —
-but where the running version actually lives was never found. Until it is, a `brew upgrade` and the
-CLI's own updater may be managing two copies, and `inventory.py`-style path checks read the wrong one.
-
-**Closes when:** the executable path of the running version — read from `copilot --version` at the
-time, since it moves on its own — is found and quoted in
-`workstation/machines/macos-workstation.md` (its *Copilot CLI* section), together with which of the
-two updaters owns it. The agent records; any upgrade or cleanup is the user's to run.
-
-### 9. No Azure DevOps pipeline exists beside the GitHub one
-
-Opened 2026-09-14. The only pipeline is `.github/workflows/verify-docs.yml`, and it only runs on
-GitHub — while this clone's only remote, `emaea`, is an Azure DevOps repo, so the audit never runs for
-it. Several of its steps have no ADO equivalent as written. The counterparts below were checked against
+Opened 2026-09-14: the only pipeline was `.github/workflows/verify-docs.yml`, which never runs for this
+clone's only remote, `emaea`, an Azure DevOps repo. **Written 2026-09-19** as
+`azure-pipelines/verify-docs.yml`, applying every counterpart below; checked only locally — the YAML
+parses into the ten intended steps, and the pull-request step passes `bash -n`. Its header carries
+the three one-time setup steps in ADO, which are the user's. The counterparts were checked against
 Microsoft Learn on 2026-09-14; none has run yet:
 
-| GitHub-specific | ADO counterpart to prove |
+| GitHub-specific | ADO counterpart, as written |
 |---|---|
 | `actions/checkout` with `fetch-depth: 0` | `checkout: self` with `fetchDepth: 0` (fetches all history) and `persistCredentials: true`, so the later `git push` authenticates |
 | `setup-python` reading `python-version-file: .python-version` | `UsePythonVersion@0` — it has no version-file input and `versionSpec` is required, so a script step must read `.python-version` first |
@@ -126,19 +86,18 @@ Microsoft Learn on 2026-09-14; none has run yet:
 | `gh pr create` with `GITHUB_TOKEN` | `az repos pr create` (the `azure-devops` CLI extension), authenticated by `AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)` |
 | workflow `permissions: contents/pull-requests: write` | on the repo, `<project> Build Service (<org>)` needs *Contribute*, *Create branch* and *Contribute to pull requests* — or `Project Collection Build Service (<org>)` if the job authorization scope is collection |
 
-**Closes when:** an `azure-pipelines/verify-docs.yml` (or agreed path) has run once on an ADO
-project, both reports were produced, and either a pull request was opened or the run logged *No
+**Closes when:** the user has done the header's setup and `azure-pipelines/verify-docs.yml` has run
+once on the ADO project, both reports were produced, and either a pull request was opened or the run logged *No
 documentation drift found* — with the run URL recorded here before the item is deleted.
 
-### 10. `AGENTS.md` has not been seen loading in Claude Code or Antigravity
+### 10. Copilot CLI's single load of `AGENTS.md` is unproven
 
 Opened 2026-09-14, when `CLAUDE.md` became `AGENTS.md` plus one-line `@AGENTS.md` imports.
 
 | Assistant | Route | State |
 |---|---|---|
-| Claude Code | `CLAUDE.md` → `@AGENTS.md` | **unproven in this repo.** The mechanism is observed: in a scratch folder, Claude Code 2.1.270 quoted a marker that existed only in the imported `AGENTS.md` |
+| Claude Code | `CLAUDE.md` → `@AGENTS.md` | **proven 2026-09-19:** `/context` in a fresh session in this repo listed `AGENTS.md` under Memory files. The mechanism was first observed in a scratch folder, where Claude Code 2.1.270 quoted a marker that existed only in the imported `AGENTS.md` |
 | Copilot CLI | reads `AGENTS.md` **and** `CLAUDE.md` | **double load removed 2026-09-16, unproven.** `CLAUDE.md` is now gitignored and written only by `link_config.py --claude-md`, so a Copilot-only clone matches run C below. A clone running both assistants still loads twice, as run B |
-| Antigravity | `.agents/rules/workbench.md` → `@AGENTS.md` | **unproven.** Whether the rule is set to **Always On** and applies, and whether Antigravity also reads `AGENTS.md` natively — its rules page does not mention it |
 
 **Copilot's double load, as measured before `CLAUDE.md` was untracked.** Copilot CLI 1.0.83 on the macOS workstation,
 `/context` as the first command of a fresh session, System Prompt line:
@@ -167,10 +126,10 @@ falls only on clones that use both assistants.
 
 Revisit only if Copilot starts deduplicating imports or Claude Code gains a setting for the file name.
 
-**Closes when:** `/context` in a fresh Claude Code session in this repo lists `AGENTS.md` under Memory
-files; `/context` as the first command of Copilot CLI in a clone set up without `--claude-md` shows
-the System Prompt at run C's size, not run B's; and Antigravity, with the rule set to **Always On**, shows the rule applied to a session —
-each observation recorded in the machine note.
+**Closes when:** `/context` as the first command of Copilot CLI in a clone set up without `--claude-md`
+shows the System Prompt at run C's size, not run B's, recorded in the machine note.
+Antigravity was dropped from this item on 2026-09-19 at the user's decision; its
+`.agents/rules/workbench.md` import is untouched and unverified.
 
 ### 12. `review`'s Apply mode approve-each step has not run
 
@@ -197,16 +156,21 @@ fires in Claude Code (`Write`) and in Copilot CLI (`create`), each leaving a `.p
 **Closes when:** a `.py` edit on the Windows machine is formatted by the hook in each assistant, or the
 hook is documented as POSIX-only; and a Copilot `edit` of an existing file is observed formatted.
 
-### 15. The trigger-based *Design before build* and the subagent rule have not steered a session
+### 15. The subagent rule has not steered a session
 
-Opened 2026-09-18, with the rewrite of principle 5 in `workstation/agent/AGENT-INSTRUCTIONS.md`
-(divergence, effort, impact, plus the mid-course checkpoint) and, the same day, the subagent rule in §
-*Skills and subagents* (spawn without asking only for deterministic or designed-and-approved work, or
-a bounded thinking task). Both load from the next session on; no session has yet run under them.
+Opened 2026-09-18, with the rewrite of principle 5 in `workstation/agent/AGENT-INSTRUCTIONS.md` and
+the subagent rule in § *Skills and subagents*. **Principle 5's triggers were observed on 2026-09-19**
+in a fresh Claude Code session in a scratch repo (`~/tmp/probe-repo`): it fixed a README typo without
+asking, and on *add a git pre-commit hook that runs ruff* it stopped, named the hook as a gate needing
+design approval, and handed over the `uv` scaffolding commands instead of running them.
 
-**Closes when:** one later session is observed proceeding without asking on work that meets no
-trigger and stopping on one that does, and spawning a subagent under the new rule whose result the
-parent re-checks — each case and call recorded here or in the machine note.
+Also seen in that session, twice: a bare one-line request was read as pasted text with "no message of
+your own" and the agent asked before acting — on a read-only lookup, which meets no trigger. The typo
+request between them was acted on. Two samples; not yet a reason to change the instructions.
+
+**Closes when:** a session spawns a subagent under the rule and the parent re-checks its result,
+recorded here or in the machine note. The pasted-text reading is dropped after a month of sessions
+without it, or becomes an instruction change if it recurs.
 
 ### 16. The Windows machine note predates six skills, the hooks key, Copilot and `typst`
 
@@ -221,7 +185,7 @@ the same day and has never been probed there.
 **Closes when:** on the Windows machine, `python workstation\scripts\link_config.py --agent claude
 --agent copilot` and `python workstation\scripts\inventory.py --host ema-pf5n4xe7` are run and their
 output replaces the two tables; the settings table gains the `hooks` row with its measured state; and
-the version comparison is restated against the machine's own earlier measurement or removed.
+the version comparison is restated against the machine's own earlier measurement or removed; and VS Code there has `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and `github.copilot.chat.codeGeneration.useInstructionFiles` set `true` in `%APPDATA%\Code\User\settings.json`, by the user, with `REPLY_CEILING` found in a *Show Chat Debug View* prompt.
 
 ### 17. The 2026-09-18 instruction changes have not steered a session outside this repo
 
@@ -231,14 +195,19 @@ read by Copilot too, the settings rule covers `~/.copilot/settings.json`, the ov
 ordinary edits, and plan mode, effort and model tiers are named. `~/.copilot/copilot-instructions.md`
 was linked on this machine the same day and not yet seen in a Copilot session.
 
+**Claude Code half passed, 2026-09-19**, in a fresh session in `~/tmp/probe-repo`: `/context` listed
+`~/.claude/CLAUDE.md` (5.4k tokens) under Memory files, and asked for the pandoc quick start it ran
+`cat ~/.claude/machine.md`, then `cat` of
+`~/Development/agentic-coding/agentic-workbench/workstation/cli/pandoc/quick_start.md` built from
+the `repo:` field — no search — and answered with `--pdf-engine=typst`.
+
 One review finding was left unapplied, as low confidence: the file carries about thirty bold or
 "never" emphases, which may make current models apply rules too broadly. That is a judgement, not a
 measurement.
 
-**Closes when:** a Claude Code session and a Copilot CLI session, each started in a repo other than
-this one, read a `workstation/cli/<tool>/quick_start.md` through the `repo:` path without searching,
-and `/context` in the Copilot session lists the user-level instructions — both recorded in
-`workstation/machines/macos-workstation.md`. The emphasis finding closes when a session is observed
+**Closes when:** a Copilot CLI session started in a repo other than this one reads a
+`workstation/cli/<tool>/quick_start.md` through the `repo:` path without searching, and its
+`/context` lists the user-level instructions — recorded in `workstation/machines/macos-workstation.md`. The emphasis finding closes when a session is observed
 over-applying a rule because of it (then trim), or after a month of sessions without such a case
 (then drop).
 

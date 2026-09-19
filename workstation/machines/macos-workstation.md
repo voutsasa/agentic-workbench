@@ -106,11 +106,22 @@ quoted above it, so re-run `link_config.py` (read-only, no flag) rather than tru
 The consequence worth knowing: **`workstation/agent/` in this repo is now the live global config**, so
 an edit to `~/.claude/CLAUDE.md` or any of the linked skills writes here and shows up in `git status`.
 
-**The repo's own instructions reach Claude Code through an import — pending in this repo.** Since
+**The global instructions steer a session outside this repo**, observed 2026-09-19 in a fresh Claude
+Code session in the scratch repo `~/tmp/probe-repo`, run by the user: `/context` listed
+`~/.claude/CLAUDE.md` at 5.4k tokens; the pandoc quick start was read by `cat` of the path built from
+`machine.md`'s `repo:` field, with no search; a typo fix went ahead unasked and a pre-commit hook
+request stopped for design. Details in `TODO.md` items 15 and 17.
+
+**The repo's own instructions reach Claude Code through an import — observed in this repo.** Since
 2026-09-14 the root `CLAUDE.md` holds only `@AGENTS.md`. On Claude Code 2.1.270 the mechanism is
 observed in a scratch folder: `claude -p` quoted a marker that existed only in the imported file, while
 the same import placed in `.claude/rules/` did not expand. `/context` in a fresh session in this repo
-has not been run; `TODO.md` item 10 closes on it.
+listed `AGENTS.md` under Memory files on 2026-09-19, run by the user.
+
+**`setup-agents` runs end to end here**, 2026-09-19, each from a fresh Claude Code session run by the
+user. *Hand over*: its printed block, run as given, ended `18 of 18 linked`, exit 0. *Apply*: with
+`~/.claude/skills/pdf-deliverable` removed first, step 3 reported it missing, `--apply` re-created it
+pointing at `workstation/agent/skills/pdf-deliverable`, and the re-check read `18 of 18 linked`.
 
 The pre-push documentation gate **is** installed here, measured 2026-09-13: `.git/hooks/pre-push` is a
 symlink to `../../workstation/agent/skills/review/scripts/pre-push`, and `repo_check` reported
@@ -176,15 +187,21 @@ their observation recorded here rather than a quoted output.
 | Version | 1.0.83, measured 2026-09-14 (1.0.63 the day before) | `copilot --version` |
 | Binary | `/opt/homebrew/bin/copilot` → Caskroom `copilot-cli/1.0.24` | `readlink -f` |
 | This repo's skills at project scope | 2 of 2 linked in `.claude/skills` | `link_config.py --project` |
-| VS Code `chat.useClaudeMdFile`, `chat.useAgentsMdFile`, `github.copilot.chat.codeGeneration.useInstructionFiles` | **`true`**, set explicitly by the user in `~/Library/Application Support/Code/User/settings.json` on 2026-09-19 (VS Code 1.138.0's default is also on); no Chat session has yet been seen loading the instructions | `detect.py` and the file read 2026-09-19; `default:!0` in the build |
+| VS Code `chat.useClaudeMdFile`, `chat.useAgentsMdFile`, `github.copilot.chat.codeGeneration.useInstructionFiles` | **`true`**, set explicitly by the user in `~/Library/Application Support/Code/User/settings.json` on 2026-09-19 (VS Code 1.138.0's default is also on). **Chat loads the global instructions**, 2026-09-19: the user found `REPLY_CEILING`, a string only in `AGENT-INSTRUCTIONS.md`, in a request prompt under *Show Chat Debug View* | `detect.py` and the file read 2026-09-19; `default:!0` in the build |
 | Ruff post-edit hook | **fires**, 2026-09-18: Copilot reported `Create hook_probe_copilot.py +2`; the file read back as the one line `x = [1, 2, 3]` | `link_config.py --hooks --agent copilot --apply`, then `copilot -p … --allow-tool=write --add-dir <repo>` |
 
 **The cask directory and the running version disagree** — the resolved path still names 1.0.24 on
 2026-09-14 while the binary reports 1.0.83, up from 1.0.63 a day earlier. Homebrew did not do it:
 `brew info --cask --json=v2 copilot-cli` reports `"installed": "1.0.24"` and `"auto_updates": true`.
-`autoUpdate` defaults to `true` (`copilot help config`), so the CLI updates itself outside the cask,
-but where it lands was not checked. Read the version from `copilot --version`, never from the
-path.
+`autoUpdate` defaults to `true` (`copilot help config`), so the CLI updates itself outside the cask.
+
+**Where it lands, found 2026-09-19:** the cask's `copilot` is only a launcher. The code that runs is
+`~/Library/Caches/copilot/pkg/darwin-arm64/<version>/index.js`, fetched by the CLI's own updater,
+which owns it — `copilot --version` printed `1.0.86` and that directory's `package.json` reads
+`"version": "1.0.86"`. A fetched version applies at the next launch (`copilot help config`). Old
+versions are not removed: 1.0.61, 1.0.62, 1.0.63, 1.0.83 and 1.0.86 sat there, 750M (`du -sh`).
+`brew upgrade` replaces only the launcher. Read the version from `copilot --version`, never from the
+path; clearing old versions from that cache is the user's call.
 
 #### Instruction loading — `AGENTS.md` is loaded twice
 
