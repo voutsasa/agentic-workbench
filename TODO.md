@@ -84,16 +84,16 @@ recorded in `workstation/machines/windows-ema-pf5n4xe7.md`.
 
 ### 6. VS Code Copilot Chat has not been shown the workbench instructions
 
-Opened 2026-09-13. None of `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and
-`github.copilot.chat.codeGeneration.useInstructionFiles` is set in the macOS workstation's VS Code
-user settings (`detect.py`, and the file read on 2026-09-18). In VS Code 1.138.0 all three default to
-**on** (`default:!0` in the build), which corrects this item's earlier reading of *off*, so Chat
-should already read `~/.claude/CLAUDE.md` — but no Chat session has been seen doing it.
+Opened 2026-09-13. `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and
+`github.copilot.chat.codeGeneration.useInstructionFiles` are **`true`** in the macOS workstation's
+VS Code user settings since 2026-09-19 — set by the user, confirmed by `detect.py` and a read of the
+file, and recorded in the machine note. In VS Code 1.138.0 all three also default to on
+(`default:!0` in the build), which corrects this item's earlier reading of *off*. What is still unseen
+is a Chat session actually loading `~/.claude/CLAUDE.md`.
 
-**Closes when:** the user adds all three as `true` to
-`~/Library/Application Support/Code/User/settings.json` (on Windows,
-`%APPDATA%\Code\User\settings.json`), a Chat session lists the instruction file in its loaded context,
-and the machine note records both. The agent does not make the edit — settings files are the user's.
+**Closes when:** a VS Code Chat session on the macOS workstation lists the instruction file in its
+loaded context, recorded in the machine note. The Windows machine needs the same three keys in
+`%APPDATA%\Code\User\settings.json`; that belongs to item 16's Windows sitting.
 
 ### 8. The running Copilot CLI is not the one its path names
 

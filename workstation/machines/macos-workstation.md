@@ -152,13 +152,13 @@ Until 2026-09-12 it was a symlink into the sibling `sdd-workbench`, which meant 
 landed in that repo's git tree and any `git checkout` there rewrote this machine's settings. The link
 was broken by hand; the agent must not write this file.
 
-Its six keys — `enabledPlugins`, `fastMode`, `hooks`, `model`, `permissions`, `tui` — match
-[`../agent/settings.json`](../agent/settings.json) **except `hooks`**, measured later on 2026-09-18 by
+Its six keys — `enabledPlugins`, `fastMode`, `hooks`, `model`, `permissions`, `tui` — all match
+[`../agent/settings.json`](../agent/settings.json) as of 2026-09-19. On 2026-09-18 `hooks` differed, found by
 `skills/setup-agents/scripts/detect.py` and a `diff` of the two `hooks` values. `hooks` was added by
 the agent earlier that day, on the user's explicit one-off authorisation, the previous file backed up
 first; the repo copy then gained the Windows `.venv/Scripts/python.exe` fallback, and the live
-`PostToolUse` command is the earlier POSIX-only form. It behaves identically here. **Outstanding, the
-user's to merge:** replace the live `command` with the repo's.
+`PostToolUse` command was the earlier POSIX-only form. **Merged by the user on 2026-09-19:** `detect.py`
+then reported no differing keys, and the two `hooks` values compared equal.
 
 **The ruff post-edit hook fires in Claude Code**, 2026-09-18: a `Write` of `import os,sys` /
 `x=[1,2 ,3]` to a `.py` file in this repo read back as `x = [1, 2, 3]`, and Claude Code reported
@@ -176,7 +176,7 @@ their observation recorded here rather than a quoted output.
 | Version | 1.0.83, measured 2026-09-14 (1.0.63 the day before) | `copilot --version` |
 | Binary | `/opt/homebrew/bin/copilot` → Caskroom `copilot-cli/1.0.24` | `readlink -f` |
 | This repo's skills at project scope | 2 of 2 linked in `.claude/skills` | `link_config.py --project` |
-| VS Code `chat.useClaudeMdFile`, `chat.useAgentsMdFile`, `github.copilot.chat.codeGeneration.useInstructionFiles` | not set in `~/Library/Application Support/Code/User/settings.json`, so each takes VS Code 1.138.0's default, **on**; explicit `true` is outstanding, the user's to add | `detect.py`, the file read 2026-09-18, and `default:!0` in the build |
+| VS Code `chat.useClaudeMdFile`, `chat.useAgentsMdFile`, `github.copilot.chat.codeGeneration.useInstructionFiles` | **`true`**, set explicitly by the user in `~/Library/Application Support/Code/User/settings.json` on 2026-09-19 (VS Code 1.138.0's default is also on); no Chat session has yet been seen loading the instructions | `detect.py` and the file read 2026-09-19; `default:!0` in the build |
 | Ruff post-edit hook | **fires**, 2026-09-18: Copilot reported `Create hook_probe_copilot.py +2`; the file read back as the one line `x = [1, 2, 3]` | `link_config.py --hooks --agent copilot --apply`, then `copilot -p … --allow-tool=write --add-dir <repo>` |
 
 **The cask directory and the running version disagree** — the resolved path still names 1.0.24 on
