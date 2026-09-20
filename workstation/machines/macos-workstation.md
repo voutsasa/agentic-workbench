@@ -130,6 +130,9 @@ listed `AGENTS.md` under Memory files on 2026-09-19, run by the user.
 user. *Hand over*: its printed block, run as given, ended `18 of 18 linked`, exit 0. *Apply*: with
 `~/.claude/skills/pdf-deliverable` removed first, step 3 reported it missing, `--apply` re-created it
 pointing at `workstation/agent/skills/pdf-deliverable`, and the re-check read `18 of 18 linked`.
+*Nothing to change*, 2026-09-20 on Claude Code 2.1.278: with every row `linked`, it asked step 2's
+questions, quoted `18 of 18 linked` and reported "Step 4 is skipped — applying would be a no-op",
+going straight to the verify checks.
 
 The pre-push documentation gate **is** installed here, measured 2026-09-13: `.git/hooks/pre-push` is a
 symlink to `../../workstation/agent/skills/review/scripts/pre-push`, and `repo_check` reported

@@ -17,15 +17,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 4. `setup-agents`' *nothing to change* branch has not run
-
-Opened 2026-09-19, when the branch was added to `skills/setup-agents/SKILL.md` at the end of step 3,
-after two fresh sessions on a home needing no change behaved differently (one skipped steps 2 and 4
-unasked, the other ran them).
-
-**Closes when:** a fresh session runs `/setup-agents` on a home needing no change, asks step 2's
-questions, then stops after step 3 without asking *apply or hand over*, quoting `N of N linked`.
-
 ### 5. The Copilot and project links are unproven on Windows
 
 Opened 2026-09-13. `--agent copilot`, `--project` and `detect.py` were measured on macOS only.
