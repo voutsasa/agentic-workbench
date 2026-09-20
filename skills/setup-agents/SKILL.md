@@ -108,6 +108,13 @@ writes into this repo.
 
 Present one table: `# | change | path | who runs it | status now`.
 
+**Nothing to change — stop here.** When every link row reads `linked` and every user step's *status
+now* is already done — detect lists no differing settings keys, the provider matches the answer, VS
+Code's flag is `true` where it was asked for, and the inventory has nothing `absent` — skip step 4.
+Say that nothing needs changing, quote the `N of N linked` line, and give the *Verify* checks below.
+Do not ask *apply or hand over*: both would run a no-op. Step 2's questions are still asked, because
+the answers decide what step 3 checks.
+
 ## 4. Apply, or hand over
 
 Ask: *should I apply the link changes, or give you the commands to run?* Say in the question that the

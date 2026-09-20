@@ -41,17 +41,14 @@ text — so the route has not been shown on a page that does.
 **Closes when:** a real `.docx` with DrawingML figures converts with the figure count matching the
 source, and `render_page.py` has rendered a page whose raw HTML holds no article text.
 
-### 4. `setup-agents` has no *nothing to change* branch
+### 4. `setup-agents`' *nothing to change* branch has not run
 
-Opened 2026-09-19, when the end-to-end runs that closed the original item 4 (hand over and apply both
-reaching `18 of 18 linked`, the apply run repairing a removed `pdf-deliverable` link — recorded in the
-macOS machine note) showed two fresh sessions on a home needing no change behave differently: one
-skipped steps 2 and 4 on its own judgement, the other ran them. `skills/setup-agents/SKILL.md` asks
-the step 2 questions *always* and step 4 unconditionally, so the first was off-script.
+Opened 2026-09-19, when the branch was added to `skills/setup-agents/SKILL.md` at the end of step 3,
+after two fresh sessions on a home needing no change behaved differently (one skipped steps 2 and 4
+unasked, the other ran them).
 
-**Closes when:** the user decides whether the skill gains a branch — after step 3, every link
-`linked` and no user steps: show the table, say nothing needs changing, stop — and the decision is
-written into `SKILL.md` or recorded here as declined.
+**Closes when:** a fresh session runs `/setup-agents` on a home needing no change, asks step 2's
+questions, then stops after step 3 without asking *apply or hand over*, quoting `N of N linked`.
 
 ### 5. The Copilot and project links are unproven on Windows
 
