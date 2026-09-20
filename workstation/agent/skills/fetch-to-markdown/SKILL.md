@@ -31,8 +31,10 @@ sentence from the page>"` — and if it is, this route works whatever built the 
 
 ### The JS-hydrated route
 
-Confirm the route is needed first with the same `curl | grep -c` test as above: agentskills.io, once
-the example here, now serves its text in the raw HTML (2026-09-18). Then:
+Confirm the route is needed first with the same `curl | grep -c` test as above — most doc sites
+server-render, and agentskills.io, once the example here, now does too (2026-09-18). The register's
+one hydrated page is `retirejs.github.io/retire.js/`: 206 words in the raw HTML, **15,121 rendered**,
+because its vulnerability list is built client-side. Then:
 
 ```sh
 "$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" \
@@ -49,6 +51,16 @@ measured on agentskills.io on 2026-09-18:
 - **defuddle reading stdin cannot resolve relative links** — it never sees the page URL and has no
   option to take one, so `](/clients)` would survive and fail §2's link check. The script rewrites
   every `href` and `src` to its absolute value in the browser before capturing the HTML.
+
+**A raw `<table>` in defuddle's output is the §2 table case**, and the remedy below applies to the
+rendered HTML: feed `<tmp>/rendered.html` to `extract_article.py` with the article's selector and
+convert with `pandoc -t markdown`. On retire.js (`section#main_content`, 2026-09-20) defuddle alone
+gave 15,137 words with one raw `<table>`; the extractor plus pandoc gave 37,297 words, markup 0,
+every advisory link intact.
+
+**A 404 in a JS app looks exactly like a hydrated page** to the `curl | grep -c` test — both have no
+text in the raw HTML. Check the rendered `<title>` before trusting the conversion: *"Page Not Found"*
+is what two candidate URLs turned out to be on 2026-09-20.
 
 ### The legacy `.doc` / `.ppt` route
 
@@ -128,15 +140,31 @@ A conversion that exits 0 is not evidence. Run these:
 | No leftover markup noise: nav bars, cookie banners, JSX source, "Edit this page" | `grep -c "<div\|<header\|<span\|<svg\|<style\|<table\|<img" <dest>.md` → **must be 0** |
 | Every link resolves off-site | `grep -oE "\]\(\.{0,2}/?[^):]+\)" <dest>.md` → **must be empty**; a relative target means the URL argument was omitted |
 | PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries. Runs of tabs and spaces between words, and a table of contents rendered as a dot-leader table, are **accepted** (2026-09-18, DDD Reference): they come from the PDF's own text layer, change no meaning, and are not normalised |
-| **A `.docx` with diagrams: count the figures** | `grep -c "data:image/[a-z]*;base64" <dest>.md` against the source's figure count |
+| **A `.docx` with diagrams: count the figures** | `grep -c "data:image/[a-z]*;base64" <dest>.md` against the source's *picture* count, `unzip -p <file>.docx word/document.xml \| grep -c "<pic:pic"`. Charts and shapes are counted differently — see below |
 
 **Any hit from the markup grep is a tag pandoc's gfm writer could not map and fell back to raw HTML
 for** — the same failure mode as the base64-icon and hash-link cases `extract_article.py` exists to
 strip.
 
-The `.docx` case is the one that passes every other check while being wrong: **docling drops every
-DrawingML figure at exit 0 when `soffice` does not resolve on `PATH`**, so headings and tables come
-through perfectly and the images are simply gone. The only signal is one `WARNING` line. Put
+**The `.docx` figure rule, measured on docling 2.115.0, 2026-09-20.** Three source files, each
+converted twice — with `soffice` on `PATH` and with it removed — gave byte-identical output both
+times, so **on this version the LibreOffice round-trip plays no part in a `.docx` conversion** and
+there is no `WARNING` to watch for. What each kind of figure becomes:
+
+| In the source | In the markdown |
+|---|---|
+| `<w:drawing>` holding `pic:pic` (an embedded picture) | a base64 image, read straight from `word/media/` — pixel-identical to the source (`magick compare -metric AE` → 0) |
+| A chart (`c:chart`, a `word/charts/chart*.xml` part) | **its data as a pipe table**, plus `<!-- 🖼️❌ Image not available … -->` where the picture would be. `--image-export-mode embedded` does not change this |
+| A shape (`wps:wsp`), including grouped shapes | **its text as paragraphs**; the shape itself is not rendered |
+
+So the figure count check compares base64 images against the source's *picture* count, not every
+`<w:drawing>`: `unzip -p <file>.docx word/document.xml | grep -o "<pic:pic" | wc -l`. Count the other
+two kinds separately — `grep -o "<c:chart" | wc -l` against the tables and the placeholder comments,
+and `grep -o "<wps:wsp" | wc -l` against the loose paragraphs. **`grep -c` is wrong here** and
+silently answers 1: `word/document.xml` is a single line, so it counts lines, not tags. Evidence: `chartex.docx` (Apache POI test data,
+8 drawings = 6 charts + 2 pictures) gave 2 images, 4 placeholders and the chart data as tables;
+`shapes-with-text.docx` (11 shapes) gave every shape's text and 1 image; a two-picture document gave
+2 of 2. Put
 LibreOffice's `program` directory on `PATH` for that one conversion — each figure is a separate
 headless round-trip, roughly 100× the conversion time — and do not set `DOCLING_LIBREOFFICE_CMD`,
 which docling names in the warning but never reads.

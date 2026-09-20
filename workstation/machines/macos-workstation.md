@@ -110,7 +110,15 @@ an edit to `~/.claude/CLAUDE.md` or any of the linked skills writes here and sho
 Code session in the scratch repo `~/tmp/probe-repo`, run by the user: `/context` listed
 `~/.claude/CLAUDE.md` at 5.4k tokens; the pandoc quick start was read by `cat` of the path built from
 `machine.md`'s `repo:` field, with no search; a typo fix went ahead unasked and a pre-commit hook
-request stopped for design. Details in `TODO.md` items 15 and 17.
+request stopped for design. Details in `TODO.md` item 15.
+
+**Copilot CLI resolves the same path the same way**, 2026-09-19 in the scratch clone `~/tmp/wb-probe`,
+Copilot CLI 1.0.86 on `claude-sonnet-4.6`: asked the same question it reasoned *"I need to find the
+agentic-workbench repo first — let me check the machine note"*, ran `cat ~/.claude/machine.md`, then
+read `~/Development/agentic-coding/agentic-workbench/workstation/cli/pandoc/quick_start.md` — the real
+clone, not the copy beside it in the probe — and answered with `--pdf-engine=typst`. Its `/context`
+showed System Prompt 15.1k with `AGENTS.md` and the linked `~/.copilot/copilot-instructions.md`,
+against 12.8k measured for `AGENTS.md` alone before that file was linked.
 
 **The repo's own instructions reach Claude Code through an import — observed in this repo.** Since
 2026-09-14 the root `CLAUDE.md` holds only `@AGENTS.md`. On Claude Code 2.1.270 the mechanism is
@@ -218,13 +226,29 @@ in the repo root, System Prompt line quoted as displayed.
 One copy is C − A = 3.5k; B − A = 6.9k is two. System Tools (10.0k) and MCP Tools (667) were identical
 in all three runs. `~/.copilot/copilot-instructions.md` does not exist and
 `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` is unset, so nothing user-level is in the difference. The duplicate
-is accepted, and the routes that would remove it are weighed in `TODO.md` item 10.
+is accepted, and the routes that would remove it were weighed in `TODO.md` item 10.
+
+**Re-measured 2026-09-19 on Copilot CLI 1.0.86** (`claude-sonnet-4.6`), in the scratch clone
+`~/tmp/wb-probe` with `~/.copilot/copilot-instructions.md` linked, `/context` first in each session.
+System Tools (9.6k) and MCP Tools (1.8k) were identical in all three, and differ from the 2026-09-14
+build, which is why the baseline was taken again rather than reused:
+
+| Run | Setup | System Prompt |
+|---|---|---|
+| A | `copilot --no-custom-instructions` | 8.6k |
+| C | `AGENTS.md` + the linked user instructions, no `CLAUDE.md` | 15.1k |
+| B | the same plus `CLAUDE.md` holding `@AGENTS.md` | 17.2k |
+
+C − A = 6.5k for one copy of each file, against 6.0k of text (`AGENTS.md` 7,721 chars ≈ 1.9k,
+`AGENT-INSTRUCTIONS.md` 16,281 ≈ 4.1k). B − C = 2.1k, one more copy of `AGENTS.md`: **Copilot still
+does not deduplicate the one-line import**, so a clone set up without `--claude-md` loads the repo
+instructions once, as the route intends.
 
 **`~/.copilot/copilot-instructions.md` has been linked since 2026-09-18.** Before that,
 `link_config.py --agent claude --agent copilot` reported it `missing` (`14 of 15 linked`, exit 1), so
 Copilot CLI on this machine ran without the global instructions. `--apply` that day reported
-`relinked` and `15 of 15 linked`. It adds one user-level copy to the System Prompt figures above,
-which were measured without it; a fresh `/context` has not been run since.
+`relinked` and `15 of 15 linked`. It adds one user-level copy to the 2026-09-14 System Prompt figures,
+which were measured without it — the 2026-09-19 table above includes it.
 
 Run C leaves `CLAUDE.md` renamed until it is moved back. On 2026-09-14 it was not, and the pre-push
 gate refused with `repo_check: ERROR — cannot read …/CLAUDE.md`, which is how it was found.

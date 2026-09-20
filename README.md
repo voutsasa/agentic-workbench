@@ -74,6 +74,7 @@ workstation/              	this machine's setup — serves the repo, never a del
   agent/                  	agent config + global skills, symlinked into ~/.claude/.   
   machines/               	one file per machine — measured state, not policy.   
   scripts/                	the inventory probe and the ~/.claude link checker.   
+  validation/             	steps and fixtures that prove a machine works.   
 
 scripts/                  	headless verify-docs runner.   
 .github/workflows/        	weekly documentation audit — dormant on Azure DevOps.   

@@ -17,30 +17,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 2. `fetch-to-markdown`: the `.docx` figure route is unproven
-
-Opened 2026-09-13. Server-rendered HTML is proven against rdi.berkeley.edu/llm-agents/f24 — that run
-is what found the `<table>` and relative-link defects the skill now guards against. The raw README
-route was proven on 2026-09-15 by angular-eslint, whose relative links had to be resolved against
-`blob/main/` before the link check passed.
-
-| Route | State |
-|---|---|
-| Server-rendered HTML → extractor → pandoc | **proven** |
-| `github.com/<owner>/<repo>` → raw README | **proven** — angular-eslint, 2026-09-15 |
-| Direct `.pdf` → curl → docling | **proven** — DDD Reference (`SOURCES.md` §1), 2026-09-18: exit 0 in 17 s, every §2 check clean, 2 figures extracted by `clean_md_images.py` |
-| `.docx` → docling | **unproven** — no `.docx` in the register, and the figure trap is the one that passes every check while being wrong |
-| JS-hydrated → Playwright → defuddle | **proven** — agentskills.io, 2026-09-18, after two fixes now in the skill: a `networkidle` timeout fallback, and absolute links before defuddle reads stdin |
-
-Settled on 2026-09-19: the render step is now `workstation/agent/skills/fetch-to-markdown/scripts/render_page.py`, with six fake-browser tests,
-and it rendered agentskills.io end to end under the pipx interpreter (0 markup, 0 relative links); the
-PDF's tab-and-space runs and dot-leader contents table are accepted in the skill's §2 table, at the
-user's decision. Still open: agentskills.io no longer *needs* rendering — its raw HTML now holds the
-text — so the route has not been shown on a page that does.
-
-**Closes when:** a real `.docx` with DrawingML figures converts with the figure count matching the
-source, and `render_page.py` has rendered a page whose raw HTML holds no article text.
-
 ### 4. `setup-agents`' *nothing to change* branch has not run
 
 Opened 2026-09-19, when the branch was added to `skills/setup-agents/SKILL.md` at the end of step 3,
@@ -60,10 +36,11 @@ Opened 2026-09-13. `--agent copilot`, `--project` and `detect.py` were measured 
 | `--agent copilot` lands in `$HOME\.copilot\skills` and `copilot` loads it | the setup README marks Copilot CLI paths on Windows **not measured** |
 | `detect.py` finds VS Code through `APPDATA` and probes `code` | on Windows `code` resolves to a `.cmd` shim, which the version probe runs directly |
 
-**Closes when:** on the Windows machine, `python workstation\scripts\link_config.py --project --agent
-copilot` reaches *N of N linked* after `--apply`, `/skills` in a `copilot` session lists the skills,
-`python skills\setup-agents\scripts\detect.py` reports a VS Code version, and all three results are
-recorded in `workstation/machines/windows-ema-pf5n4xe7.md`.
+**Closes when:** [`workstation/validation/windows.md`](workstation/validation/windows.md) sections
+A–E have been run on that machine — they carry these checks and the rest of the sitting — with the
+results recorded in `workstation/machines/windows-ema-pf5n4xe7.md`. That file was written from the
+macOS steps and has never run, so correct it from the run rather than trusting it; its two *Unknown on
+Windows* notes are the parts most likely to be wrong.
 
 ### 9. The Azure DevOps pipeline has never run
 
@@ -86,47 +63,6 @@ Microsoft Learn on 2026-09-14; none has run yet:
 **Closes when:** the user has done the header's setup and `azure-pipelines/verify-docs.yml` has run
 once on the ADO project, both reports were produced, and either a pull request was opened or the run logged *No
 documentation drift found* — with the run URL recorded here before the item is deleted.
-
-### 10. Copilot CLI's single load of `AGENTS.md` is unproven
-
-Opened 2026-09-14, when `CLAUDE.md` became `AGENTS.md` plus one-line `@AGENTS.md` imports.
-
-| Assistant | Route | State |
-|---|---|---|
-| Claude Code | `CLAUDE.md` → `@AGENTS.md` | **proven 2026-09-19:** `/context` in a fresh session in this repo listed `AGENTS.md` under Memory files. The mechanism was first observed in a scratch folder, where Claude Code 2.1.270 quoted a marker that existed only in the imported `AGENTS.md` |
-| Copilot CLI | reads `AGENTS.md` **and** `CLAUDE.md` | **double load removed 2026-09-16, unproven.** `CLAUDE.md` is now gitignored and written only by `link_config.py --claude-md`, so a Copilot-only clone matches run C below. A clone running both assistants still loads twice, as run B |
-
-**Copilot's double load, as measured before `CLAUDE.md` was untracked.** Copilot CLI 1.0.83 on the macOS workstation,
-`/context` as the first command of a fresh session, System Prompt line:
-
-| Run | Setup | System Prompt |
-|---|---|---|
-| A | `copilot --no-custom-instructions` | 9.3k |
-| B | `AGENTS.md` + `CLAUDE.md` importing it | 16.2k |
-| C | `AGENTS.md` only (`CLAUDE.md` moved aside) | 12.8k |
-
-One copy is C − A = 3.5k; B − A = 6.9k is two. Copilot's docs dedupe "identical" instruction files, and
-a one-line import is not identical. The duplicate is identical text, so it cannot conflict, and costs
-3.5k of a 1M context. It was first accepted, because every route below that would remove it was
-checked and is worse. The route taken instead is **not tracking `CLAUDE.md` at all**: each clone
-writes it with `link_config.py --claude-md --apply` only when Claude Code runs there, so the cost
-falls only on clones that use both assistants.
-
-| Route | Why not |
-|---|---|
-| `ln -s AGENTS.md CLAUDE.md` | the Windows clone has `core.symlinks=false` (`workstation/machines/windows-ema-pf5n4xe7.md`), so it checks out as a text file |
-| Import from `.claude/rules/agents.md` | the rule loads but its `@AGENTS.md` does not expand — scratch test, Claude Code 2.1.270 — and `.gitignore` excludes `.claude/` |
-| Import from a committed `CLAUDE.local.md` | it expands, but Anthropic documents the file as personal and gitignored, so it would collide with anyone's own notes |
-| A Claude Code setting naming `AGENTS.md` | none exists; the memory page says "Claude Code reads `CLAUDE.md`, not `AGENTS.md`" |
-| `SessionStart` hook printing `AGENTS.md` | hook output is capped at 10,000 characters and `AGENTS.md` is 12,264 |
-| `--append-system-prompt-file AGENTS.md` | a per-launch flag, so every launch has to remember it |
-
-Revisit only if Copilot starts deduplicating imports or Claude Code gains a setting for the file name.
-
-**Closes when:** `/context` as the first command of Copilot CLI in a clone set up without `--claude-md`
-shows the System Prompt at run C's size, not run B's, recorded in the machine note.
-Antigravity was dropped from this item on 2026-09-19 at the user's decision; its
-`.agents/rules/workbench.md` import is untouched and unverified.
 
 ### 12. `review`'s Apply mode approve-each step has not run
 
@@ -184,29 +120,18 @@ the same day and has never been probed there.
 output replaces the two tables; the settings table gains the `hooks` row with its measured state; and
 the version comparison is restated against the machine's own earlier measurement or removed; and VS Code there has `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and `github.copilot.chat.codeGeneration.useInstructionFiles` set `true` in `%APPDATA%\Code\User\settings.json`, by the user, with `REPLY_CEILING` found in a *Show Chat Debug View* prompt.
 
-### 17. The 2026-09-18 instruction changes have not steered a session outside this repo
+### 17. The emphasis in `AGENT-INSTRUCTIONS.md` may be over-applied
 
-Opened 2026-09-18, from the review of `workstation/agent/AGENT-INSTRUCTIONS.md`. New that day:
-`workstation/…` paths resolve against the machine note's `repo:` field, `~/.claude/machine.md` is
-read by Copilot too, the settings rule covers `~/.copilot/settings.json`, the overwrite gate excludes
-ordinary edits, and plan mode, effort and model tiers are named. `~/.copilot/copilot-instructions.md`
-was linked on this machine the same day and not yet seen in a Copilot session.
+Opened 2026-09-18, from the review of `workstation/agent/AGENT-INSTRUCTIONS.md`, as the unapplied
+low-confidence finding: the file carries about thirty bold or "never" emphases, which may make
+current models apply rules too broadly. That is a judgement, not a measurement.
 
-**Claude Code half passed, 2026-09-19**, in a fresh session in `~/tmp/probe-repo`: `/context` listed
-`~/.claude/CLAUDE.md` (5.4k tokens) under Memory files, and asked for the pandoc quick start it ran
-`cat ~/.claude/machine.md`, then `cat` of
-`~/Development/agentic-coding/agentic-workbench/workstation/cli/pandoc/quick_start.md` built from
-the `repo:` field — no search — and answered with `--pdf-engine=typst`.
+The rest of that item closed on 2026-09-19: both assistants resolved a `workstation/…` path through
+the machine note's `repo:` field from outside this repo, without searching — recorded in
+`workstation/machines/macos-workstation.md`.
 
-One review finding was left unapplied, as low confidence: the file carries about thirty bold or
-"never" emphases, which may make current models apply rules too broadly. That is a judgement, not a
-measurement.
-
-**Closes when:** a Copilot CLI session started in a repo other than this one reads a
-`workstation/cli/<tool>/quick_start.md` through the `repo:` path without searching, and its
-`/context` lists the user-level instructions — recorded in `workstation/machines/macos-workstation.md`. The emphasis finding closes when a session is observed
-over-applying a rule because of it (then trim), or after a month of sessions without such a case
-(then drop).
+**Closes when:** a session is observed over-applying a rule because of the emphasis (then trim), or
+after a month of sessions without such a case (then drop).
 
 ## Closed
 

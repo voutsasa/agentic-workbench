@@ -53,3 +53,8 @@ CLAUDE.md
 # as the second layout the ruff hook's registration probes; a venv has one layout
 # or the other, so on any given machine one of the two cannot exist.
 .venv/Scripts/python.exe
+
+# Scratch outputs in the validation steps: /tmp/v.md, /tmp/val/, /tmp/r.html and
+# the rest are what those commands *create* when someone runs them. A validation
+# step whose output already existed would be proving nothing.
+/tmp/**
