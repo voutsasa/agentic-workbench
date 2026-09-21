@@ -38,6 +38,7 @@ import shutil
 import ssl
 import subprocess
 import sys
+import threading
 import tomllib
 import urllib.error
 import urllib.parse
@@ -607,7 +608,10 @@ class Verifier:
         self.flag_exemptions = flag_exemptions
         self.manifests = ManifestIndex(repo_root)
         self._help: dict[tuple[str, ...], str | None] = {}
+        self._help_locks: dict[tuple[str, ...], threading.Lock] = {}
         self._version: dict[str, str | None] = {}
+        self._version_locks: dict[str, threading.Lock] = {}
+        self._cache_guard = threading.Lock()
 
     # -- process plumbing. shell=False everywhere, on purpose.
 
@@ -640,14 +644,28 @@ class Verifier:
     def help_output(self, argv: list[str], help_flag: str = "--help") -> str | None:
         """One help screen, cached — 148 flag claims share about 23 subjects."""
         key = (*argv, help_flag)
-        if key not in self._help:
-            self._help[key] = self._run([*argv, help_flag], HELP_TIMEOUT)
-        return self._help[key]
+        with self._cache_guard:
+            lock = self._help_locks.setdefault(key, threading.Lock())
+        with lock:
+            with self._cache_guard:
+                if key in self._help:
+                    return self._help[key]
+            output = self._run([*argv, help_flag], HELP_TIMEOUT)
+            with self._cache_guard:
+                self._help[key] = output
+            return output
 
     def version_text(self, binary: str) -> str | None:
-        if binary not in self._version:
-            self._version[binary] = self._run([binary, "--version"], VERSION_TIMEOUT)
-        return self._version[binary]
+        with self._cache_guard:
+            lock = self._version_locks.setdefault(binary, threading.Lock())
+        with lock:
+            with self._cache_guard:
+                if binary in self._version:
+                    return self._version[binary]
+            output = self._run([binary, "--version"], VERSION_TIMEOUT)
+            with self._cache_guard:
+                self._version[binary] = output
+            return output
 
     # -- one method per claim kind
 
@@ -768,24 +786,29 @@ class Verifier:
     def find_flag(self, argv: list[str], flag: str) -> tuple[str, str] | None:
         """Search a bounded help ladder for `flag`. Returns (label, evidence line).
 
-        Three rungs, cheapest first. `--help` is not universal: `git diff --help`
-        opens a man page and lists nothing, while `git diff -h` prints the flags;
-        tesseract hides `--psm` behind `--help-extra`. Then, and only if the flag
-        is still missing, the subcommands the tool itself advertises.
+        Three rungs, cheapest first. `--help` is not universal, and Git for
+        Windows opens it in a browser, so Git is restricted to side-effect-free
+        `-h`. Other tools also try `--help-extra`, where tesseract keeps `--psm`.
+        Then, and only if the flag is still missing, advertised subcommands.
         """
         if flag in ("--version", "-V", "-v"):
             text = self._run([*argv, flag], VERSION_TIMEOUT)
             if text and text.strip():
                 return (f"{argv[0]} {flag}", clip(text.splitlines()[0], 80))
         negated = bracket_negation_re(flag)
-        for help_flag in HELP_FLAGS:
+        is_git = Path(argv[0]).name.lower() in {"git", "git.exe"}
+        help_flags = ("-h",) if is_git else HELP_FLAGS
+        for help_flag in help_flags:
             line = flag_line(self.help_output(argv, help_flag), flag, negated)
             if line:
                 label = " ".join(Path(a).name for a in argv)
                 return (f"{label} {help_flag}", clip(line, 80))
-        top = self.help_output(argv, "--help") or ""
+        subcommand_help = "-h" if is_git else "--help"
+        top = self.help_output(argv, help_flags[0]) or ""
         for sub in advertised_subcommands(top):
-            line = flag_line(self.help_output([*argv, sub], "--help"), flag, negated)
+            line = flag_line(
+                self.help_output([*argv, sub], subcommand_help), flag, negated
+            )
             if line:
                 label = " ".join(Path(a).name for a in argv)
                 return (f"{label} {sub} --help", clip(line, 80))

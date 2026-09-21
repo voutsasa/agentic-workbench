@@ -19,7 +19,9 @@ import os
 import shutil
 import sys
 import tempfile
+import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import ClassVar
 from unittest import mock
@@ -455,19 +457,56 @@ class TestAdvertisedSubcommands(unittest.TestCase):
 
 
 class TestManPageOverstrike(unittest.TestCase):
-    """`git diff --help` pipes a man page whose bold is `c\\bc` per character."""
+    """A piped man page may bold text as `c\\bc` per character."""
 
     MAN = "".join(f"{c}\b{c}" for c in "--staged") + " is a synonym of --cached.\n"
 
     def test_a_bold_flag_in_a_man_page_is_found(self):
         done = mock.Mock(stdout=self.MAN, stderr="")
         with (
-            mock.patch("verify_claims.shutil.which", return_value="/usr/bin/git"),
+            mock.patch("verify_claims.shutil.which", return_value="/usr/bin/tool"),
             mock.patch("verify_claims.subprocess.run", return_value=done),
         ):
-            hit = Verifier(Path(".")).find_flag(["git", "diff"], "--staged")
+            hit = Verifier(Path(".")).find_flag(["tool"], "--staged")
         self.assertIsNotNone(hit)
         self.assertIn("--staged is a synonym", hit[1])
+
+
+class TestSafeConcurrentHelp(unittest.TestCase):
+    def test_git_never_invokes_browser_oriented_long_help(self):
+        done = mock.Mock(stdout="usage: git diff [--stat]\n", stderr="")
+        run = mock.Mock(return_value=done)
+        with (
+            mock.patch("verify_claims.shutil.which", return_value="/usr/bin/git"),
+            mock.patch("verify_claims.subprocess.run", run),
+        ):
+            hit = Verifier(Path(".")).find_flag(["git", "diff"], "--stat")
+        self.assertIsNotNone(hit)
+        self.assertEqual(run.call_args.args[0], ["git", "diff", "-h"])
+        self.assertNotIn("--help", run.call_args.args[0])
+
+    def test_concurrent_requests_execute_one_help_probe(self):
+        verifier = Verifier(Path("."))
+        calls = 0
+
+        def slow_run(_argv, _timeout):
+            nonlocal calls
+            calls += 1
+            time.sleep(0.05)
+            return "usage"
+
+        with (
+            mock.patch.object(verifier, "_run", side_effect=slow_run),
+            ThreadPoolExecutor(max_workers=8) as pool,
+        ):
+            outputs = list(
+                pool.map(
+                    lambda _: verifier.help_output(["git", "diff"], "-h"),
+                    range(8),
+                )
+            )
+        self.assertEqual(outputs, ["usage"] * 8)
+        self.assertEqual(calls, 1)
 
 
 class TestBracketNegationInHelp(unittest.TestCase):

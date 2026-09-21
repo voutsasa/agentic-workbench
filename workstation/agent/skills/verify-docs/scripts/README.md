@@ -132,12 +132,13 @@ one tool routinely mentions another. Two rules keep attributions honest:
 ## Finding the flag a document names
 
 `--help` is not universal, so the verifier climbs a bounded ladder before
-refuting anything: `--help`, then `-h` (`git diff --help` opens a man page and
-lists nothing, while `git diff -h` prints the flags), then `--help-extra` (where
-tesseract keeps `--psm`), then the subcommands the tool advertises in its own
-help — capped at six, and only those it actually names. That last rung is what
-finds `--from` under `docling convert` after docling moved its options down a
-level.
+refuting anything: `--help`, then `-h`, then `--help-extra` (where tesseract
+keeps `--psm`), then the subcommands the tool advertises in its own help —
+capped at six, and only those it actually names. Git is the exception:
+`git <subcommand> --help` opens HTML documentation on Git for Windows, so the
+gate uses only side-effect-free `-h` for Git and relies on `.verify-flags-allow`
+for working flags omitted there. That last subcommand rung is what finds
+`--from` under `docling convert` after docling moved its options down a level.
 
 On each rung the flag is matched plainly first, then in git's optional-negation
 bracket form: `git status -h` prints `--[no-]porcelain[=<version>]`, and a
@@ -183,9 +184,10 @@ not is a defect to fix.
 ## Exempting a flag: `.verify-flags-allow`
 
 A sibling file, same repo-local reasoning, different question. `--staged` is a
-working synonym of `git diff --cached`, but `git diff -h` never prints the string
-and the full `git diff --help` is a man page — so no rung of the ladder can reach
-it, and the verifier refuses a push over a command that works.
+working synonym of `git diff --cached`, but side-effect-free `git diff -h` never
+prints the string. The gate deliberately does not open the full HTML help, so no
+rung of the ladder can reach it and the verifier would otherwise refuse a push
+over a command that works.
 
 One `<command> <flag>` per line, `#` for comments:
 
