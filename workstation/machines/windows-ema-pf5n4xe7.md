@@ -231,24 +231,25 @@ containing its target path. Nothing in the repo relies on one.
 
 ## Claude Code config — installed
 
-**6 of 6 linked**, applied 26 August 2026 by
-[`../scripts/link_config.py`](../scripts/link_config.py) `--apply --force`, which then exited 0:
+**15 of 15 linked**, applied 21 September 2026 by
+`python workstation\scripts\link_config.py --agent claude --agent copilot --apply --force`, which then
+exited 0. `--force` was needed: `CLAUDE.md`, `machine.md` and `copilot/copilot-instructions.md` all read
+`diverged` first — triaged by diffing each against its repo source before forcing, per *the two
+hardlinks sever constantly* below; all three carried only stale text the repo had since superseded,
+nothing live-only, so the overwrite was safe.
 
 | Artefact | Kind | Status |
 |---|---|---|
-| `skills/review` | junction | linked |
-| `skills/python-quality` | junction | linked |
-| `skills/verify-docs` | junction | linked |
-| `skills/fix-findings` | junction | linked |
-| `CLAUDE.md` | hardlink | linked |
-| `machine.md` | hardlink | linked |
+| `skills/review`, `skills/python-quality`, `skills/verify-docs`, `skills/fix-findings`, `skills/pdf-deliverable`, `skills/fetch-to-markdown` | dir | linked |
+| `copilot/skills/review`, `copilot/skills/python-quality`, `copilot/skills/verify-docs`, `copilot/skills/fix-findings`, `copilot/skills/pdf-deliverable`, `copilot/skills/fetch-to-markdown` | dir | linked |
+| `CLAUDE.md` | file | linked |
+| `copilot/copilot-instructions.md` | file | linked |
+| `machine.md` | file | linked |
 | `settings.json` | — | excluded by design; merged by hand — see below |
 
-Re-check with `python workstation/scripts/link_config.py`. Do not edit this table by hand.
-
-Confirmed independently of the script, because a report is not evidence: `os.path.samefile` returns
-`True` for both hardlinks and each shows `st_nlink=2`; the four junctions resolve to real `SKILL.md`
-files; and a session started afterwards offered all four skills.
+Re-check with `python workstation/scripts/link_config.py --agent claude --agent copilot`. Do not edit
+this table by hand. The script now reports skill links as `dir`, not `junction` — unverified whether
+that is a wording change or a mechanism change; not re-tested independently this round.
 
 `--force` was needed because `CLAUDE.md` read `diverged` — the live copy was a plain edited file, not a
 link. That was safe only because the drift had already been triaged: of its 14 live-only lines, 12 were
@@ -316,6 +317,7 @@ Bedrock on this machine for compliance reasons**, so that block stays where it i
 | `tui` | `"fullscreen"` | top level | matches | merged |
 | `fastMode` | `true` | top level | matches | merged |
 | `env.ANTHROPIC_MODEL` | `eu.anthropic.claude-opus-5` | inside `env` | `eu.anthropic.claude-sonnet-5` | **outstanding** |
+| `hooks` | `SessionStart` + `PostToolUse` blocks from [`../agent/settings.json`](../agent/settings.json) | top level | present, measured 21 September 2026: `SessionStart` runs `powershell-tool-prompt.ps1`; `PostToolUse` (matcher `Edit\|Write`) tries `.venv/bin/python` then `.venv/Scripts/python.exe` before `ruff_on_edit.py`, `exit 0` if neither exists | merged |
 
 `env` survived the merge intact — all five members present, `CLAUDE_CODE_USE_BEDROCK=1`,
 `ANTHROPIC_SMALL_FAST_MODEL=eu.anthropic.claude-haiku-4-5` — which was the thing at risk. Top-level
@@ -331,16 +333,18 @@ for that reason.
 
 ## CLI toolchain
 
-Probed on `EMA-PF5N4XE7` (Windows 10.0.26200, Python 3.14.7) by
-[`../scripts/inventory.py`](../scripts/inventory.py) on 14 September 2026.
+Probed on `ema-pf5n4xe7` (Windows 10.0.26200, Python 3.14.7) by
+[`../scripts/inventory.py`](../scripts/inventory.py) on 21 September 2026.
 
-**9 of 12 usable.**
+**12 of 13 usable.** `defuddle`, `tesseract` and `weasyprint` are now installed — cleared since the 14
+September probe, which had all three absent; `typst` is probed here for the first time, added to the
+toolchain the same day as this run.
 
 | Command | Product | Status | Version | Detail |
 |---|---|---|---|---|
 | `d2` | D2 (Terrastruct) | installed | 0.9.0 | — |
 | `dbml2sql`, `sql2dbml`, `db2dbml` | DBML CLI | installed | 9.0.0 | — |
-| `defuddle` | Defuddle | absent | — | not on PATH |
+| `defuddle` | Defuddle | installed | 0.19.4 | — |
 | `docling` | Docling | installed | 2.122.0 | — |
 | `magick` | ImageMagick | installed | 7.1.2-31 | — |
 | `mmdc` | Mermaid CLI | installed | 11.16.0 | — |
@@ -348,8 +352,9 @@ Probed on `EMA-PF5N4XE7` (Windows 10.0.26200, Python 3.14.7) by
 | `plantuml` | PlantUML | installed | 1.2026.8 | — |
 | `playwright` | Playwright | installed | 1.61.0 | — |
 | `sem` | Sem (Ataraxy Labs) | installed | 0.13.0 | — |
-| `tesseract` | Tesseract OCR | absent | — | not on PATH |
-| `weasyprint` | WeasyPrint | absent | — | not on PATH |
+| `tesseract` | Tesseract OCR | installed | 5.5.3.20260724 | — |
+| `typst` | Typst | absent | — | not on PATH |
+| `weasyprint` | WeasyPrint | installed | 69.0 | — |
 
 Regenerate with `python workstation/scripts/inventory.py`. Do not edit the table by hand.
 
@@ -433,14 +438,15 @@ for the reason in *`PATH` differs between the agent and the user* above. Use `$e
 
 ### Two installs are behind their recorded version
 
-Found by the probe above, and left alone deliberately —
+Found by the 14 September probe, left alone deliberately —
 [the version-currency rule](../cli/README.md#version-currency--raise-it-dont-fix-it) says raise it,
-don't fix it, because an upgrade can change output format part-way through a piece of work.
+don't fix it, because an upgrade can change output format part-way through a piece of work. The 21
+September probe shows no change on this machine since then:
 
-| Command | Installed here | `install.md` recorded | Route to upgrade |
+| Command | Installed here (14 Sep) | Installed here (21 Sep) | Route to upgrade |
 |---|---|---|---|
-| `sem` | 0.13.0 | 0.22.1 (2026-08-24) | see [`../cli/sem-cli/install.md`](../cli/sem-cli/install.md) |
-| `dbml2sql` | 9.0.0 | 10.1.1 (2026-08-20) | `npm install -g @dbml/cli@latest` |
+| `sem` | 0.13.0 | 0.13.0 — unchanged | see [`../cli/sem-cli/install.md`](../cli/sem-cli/install.md) |
+| `dbml2sql` | 9.0.0 | 9.0.0 — unchanged | `npm install -g @dbml/cli@latest` |
 
 These are the user's call. Nothing here is a hold, so nothing is recorded as one.
 
@@ -448,11 +454,22 @@ These are the user's call. Nothing here is a hold, so nothing is recorded as one
 
 Deliberate gaps, so they are not rediscovered as faults:
 
-- `defuddle`, `tesseract`, `weasyprint` — never installed here.
+- `typst` — not on `PATH` here as of the 21 September 2026 probe; needed for `pandoc --pdf-engine=typst`
+  (validation section B). Not yet installed, not yet a hold.
 - **LibreOffice is installed but deliberately off `PATH`** — see the docling section above. Not a gap.
 
-Resolved 26 August 2026 and no longer gaps: `~/.claude/machine.md`, the four skills, and the `pre-push`
-hook are all in place per *Claude Code config* above; `docling` is unblocked.
+Resolved 26 August 2026 and no longer gaps: `~/.claude/machine.md`, the six skills for both agents, and
+the `pre-push` hook are all in place per *Claude Code config* above; `docling` is unblocked. **Resolved
+by 21 September 2026 and no longer gaps:** `defuddle`, `tesseract` and `weasyprint` — all three read
+`absent` on 14 September and `installed` on 21 September; no route was recorded here, so how each was
+installed is unknown.
+
+### VS Code has never been launched here
+
+Checked 21 September 2026: `code.cmd` resolves (`~\scoop\apps\vscode\current\bin\code.cmd`), but
+`%APPDATA%\Code` does not exist at all — no `User\settings.json`, so the three keys `chat.useClaudeMdFile`,
+`chat.useAgentsMdFile` and `github.copilot.chat.codeGeneration.useInstructionFiles` cannot be set until
+VS Code is launched at least once to create its profile. The user's to do, not a config defect.
 
 **Still outstanding, and the user's to do:** one key — `env.ANTHROPIC_MODEL`, per *`settings.json` is not
 drift* above. The four top-level keys are merged. Plus one interactive restart, to prove the

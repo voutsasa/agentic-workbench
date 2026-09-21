@@ -96,20 +96,22 @@ request between them was acted on. Two samples; not yet a reason to change the i
 recorded here or in the machine note. The pasted-text reading is dropped after a month of sessions
 without it, or becomes an instruction change if it recurs.
 
-### 16. The Windows machine note predates six skills, the hooks key, Copilot and `typst`
+### 16. VS Code has never been launched on the Windows machine
 
-Opened 2026-09-18, from the review of `workstation/`. `windows-ema-pf5n4xe7.md` § *Claude Code config*
-records four skills and *6 of 6 linked*, while `link_config.py`'s `SKILLS` tuple now holds six and
-`machine.md` is now linked for Copilot too. Its settings table has no row for the `hooks` key in
-`workstation/agent/settings.json`, and its live `env` still carries the deprecated
-`ANTHROPIC_SMALL_FAST_MODEL`. The *Two installs are behind* table compares against a version
-"recorded" in `install.md`, which `install.md` no longer carries. `typst` was added to the toolchain
-the same day and has never been probed there.
+Opened 2026-09-18, narrowed 2026-09-21. `windows-ema-pf5n4xe7.md` was rewritten this session from a
+live `link_config.py --agent claude --agent copilot --apply --force` (15 of 15 linked — three files
+were `diverged`, triaged by diff, then forced) and `inventory.py --host ema-pf5n4xe7` (12 of 13 usable;
+`defuddle`, `tesseract`, `weasyprint` cleared since 14 September, `typst` now probed and absent). The
+settings table gained the `hooks` row, read from the live `~/.claude/settings.json`, and the
+`sem`/`dbml2sql` version table now compares 14 Sep against 21 Sep on this machine instead of against
+`install.md`.
 
-**Closes when:** on the Windows machine, `python workstation\scripts\link_config.py --agent claude
---agent copilot` and `python workstation\scripts\inventory.py --host ema-pf5n4xe7` are run and their
-output replaces the two tables; the settings table gains the `hooks` row with its measured state; and
-the version comparison is restated against the machine's own earlier measurement or removed; and VS Code there has `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and `github.copilot.chat.codeGeneration.useInstructionFiles` set `true` in `%APPDATA%\Code\User\settings.json`, by the user, with `REPLY_CEILING` found in a *Show Chat Debug View* prompt.
+Left open: `%APPDATA%\Code` does not exist on this machine at all — `code.cmd` resolves but VS Code has
+never been run, so `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and
+`github.copilot.chat.codeGeneration.useInstructionFiles` cannot be set yet.
+
+**Closes when:** VS Code is launched once on this machine (by the user), the three keys are set `true`
+in `%APPDATA%\Code\User\settings.json`, and `REPLY_CEILING` is found in a *Show Chat Debug View* prompt.
 
 ### 17. The emphasis in `AGENT-INSTRUCTIONS.md` may be over-applied
 
