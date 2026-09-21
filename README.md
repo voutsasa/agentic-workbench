@@ -4,7 +4,7 @@ Enables engineers to set up their workstation and work in an agent-enabled envir
 
 **Before you start**, the workstation needs three things this repo does not install:
 
-- **Required — Git, Python3, `uv`, Node.js/npm, and an AI coding assistant, installed and signed in.** The skills here are instructions an assistant carries out, so without one they do nothing. Claude Code and GitHub Copilot CLI both load them. `setup-agents` configures an assistant you already have; it does not install one. Git gets the clone; Python runs the workstation scripts; `uv` creates every project venv, which the global instructions require for any Python beyond those bootstrap scripts; Node.js/npm supplies the Node-based toolchain components.
+- **Required — Git, Python3, `uv`, Node.js/npm, and an AI coding assistant, externally provisioned.** The skills here are instructions an assistant carries out, so without one they do nothing. Claude Code and GitHub Copilot CLI both load them. `get-workstation-status` reports their presence and versions; it does not install or authenticate them. Git gets the clone; Python runs the workstation scripts; `uv` creates every project venv, which the global instructions require for any Python beyond those bootstrap scripts; Node.js/npm supplies the Node-based toolchain components.
 - **Recommended — a package manager for the toolchain.** The install routes in [`workstation/cli/`](workstation/cli/README.md) assume Homebrew on macOS and Scoop on Windows, with `pipx` or `npm` for tools published to Python or Node registries. winget is noted where a tool offers it. A package manager keeps every tool installable and upgradable with one command, instead of by hand.
 
 ## Install
@@ -36,6 +36,7 @@ Repo skills serve this workbench; global skills work in any repo. The authoritat
 
 | Skill | Scope | What it does |
 |---|---|---|
+| [`get-workstation-status`](skills/get-workstation-status/SKILL.md) | repo | Checks machine-specific prerequisites and workstation tools, reports versions, and gives recorded corrective actions. |
 | [`setup-agents`](skills/setup-agents/SKILL.md) | repo | Assesses the workstation toolchain and sets up an engineer's AI coding assistants, confirming each choice, then applying shared instructions and skills or handing over commands. |
 | [`ingest-source`](skills/ingest-source/SKILL.md) | repo | Adds a registered source to the knowledge base, filed under a predictable name and recorded in the catalogue for traceability. |
 | [`fetch-to-markdown`](workstation/agent/skills/fetch-to-markdown/SKILL.md) | global | Converts web pages, PDFs or Office documents to clean markdown, routing each to the right tool and quality-checking the result. |
@@ -62,17 +63,19 @@ docs/                     	the corpus — what the workbench reads.
 
 skills/                   	this repo's own skills — what the workbench does.   
   README.md               	the repo-local vs. global line, and how to load these.   
+  get-workstation-status/ 	checks machine prerequisites and workstation tools.
   ingest-source/          	turns one register entry into a corpus file.   
   setup-agents/           	detects the machine's AI assistants and links the config for them.   
 
 workstation/              	this machine's setup — serves the repo, never a deliverable.   
   README.md               	what each subfolder below is for.   
+  dependencies.toml      	common external dependencies and readiness requirements.
   cli/README.md           	the CLI toolchain index.   
   cli/<tool>/             	per-tool CLI guidance         — authored files in git.   
   mcp/README.md           	the MCP server index.   
   mcp/<server>/           	per-server MCP guidance       — authored files in git.   
   agent/                  	agent config + global skills, symlinked into ~/.claude/.   
-  machines/               	one file per machine — measured state, not policy.   
+  machines/               	per-machine measured state and readiness profiles.
   scripts/                	the inventory probe and the ~/.claude link checker.   
   validation/             	steps and fixtures that prove a machine works.   
 

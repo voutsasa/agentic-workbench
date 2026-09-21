@@ -12,6 +12,7 @@ called on Windows and inside an activated venv; **on macOS outside a venv it is 
 | Script | Job |
 |---|---|
 | [`inventory.py`](inventory.py) | Probe this machine for the CLI toolchain and print the inventory table for [`../machines/`](../machines/) |
+| [`status.py`](status.py) | Check the resolved machine's prerequisite profile and CLI toolchain, then report corrective actions |
 | [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude`, and its skills in `~/.copilot/skills` |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
@@ -63,6 +64,19 @@ three commands missing does not report as installed.
   The script deliberately cannot upgrade anything.
 - `--timeout` defaults to 120s because `plantuml` and `mmdc` start a JVM and a Node runtime, and
   Docling can take longer to initialise. A timeout reports `error`, not `absent`.
+
+## `status.py`
+
+```
+python workstation/scripts/status.py
+python workstation/scripts/status.py --json
+python workstation/scripts/status.py --machine macos-workstation
+```
+
+Resolves the same machine note as `link_config.py`, loads common requirements from
+`../dependencies.toml`, applies its `<machine>.prerequisites.toml` companion's overrides, and combines
+those dependency probes with `inventory.py`. It exits non-zero only when a required dependency fails.
+Authentication is deliberately not probed.
 
 ## `link_config.py`
 

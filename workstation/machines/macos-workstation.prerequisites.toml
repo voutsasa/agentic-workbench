@@ -1,0 +1,10 @@
+schema_version = 1
+machine = "macos-workstation"
+platform = "macOS"
+
+[overrides.python]
+commands = ["python3"]
+
+[overrides.package-manager]
+product = "Homebrew"
+commands = ["brew"]

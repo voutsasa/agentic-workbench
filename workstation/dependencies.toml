@@ -1,0 +1,60 @@
+schema_version = 1
+
+[[dependencies]]
+id = "git"
+product = "Git"
+commands = ["git"]
+required = true
+provisioning = "external"
+corrective_action = "Out of scope: provision Git externally and expose `git` on PATH."
+
+[[dependencies]]
+id = "python"
+product = "Python"
+commands = ["python3"]
+probe = "python-runtime"
+minimum_version = "3.14"
+required = true
+provisioning = "external"
+corrective_action = "Out of scope: provision compatible Python externally and run this check with that interpreter."
+
+[[dependencies]]
+id = "node"
+product = "Node.js"
+commands = ["node"]
+required = true
+provisioning = "external"
+corrective_action = "Out of scope: provision Node.js externally and expose `node` on PATH."
+
+[[dependencies]]
+id = "npm"
+product = "npm"
+commands = ["npm"]
+required = true
+provisioning = "external"
+corrective_action = "Out of scope: provision npm with Node.js and expose `npm` on PATH."
+
+[[dependencies]]
+id = "dependency-manager"
+product = "uv"
+commands = ["uv"]
+required = true
+provisioning = "external"
+corrective_action = "Out of scope: provision uv externally and expose `uv` on PATH."
+
+[[dependencies]]
+id = "ai-assistant"
+product = "AI coding assistant"
+commands = ["claude", "copilot", "code", "gemini", "codex", "cursor", "opencode", "aider"]
+mode = "any"
+required = true
+provisioning = "external"
+corrective_action = "Out of scope: provision at least one supported AI coding assistant externally."
+
+[[dependencies]]
+id = "package-manager"
+product = "Platform package manager"
+commands = []
+required = false
+provisioning = "external"
+corrective_action = "Out of scope: provision the selected platform package manager externally."

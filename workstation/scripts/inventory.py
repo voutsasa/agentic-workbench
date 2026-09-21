@@ -43,7 +43,7 @@ ERROR = "error"  # ran, but produced no usable version output
 # Worst-wins ordering, for a tool that ships more than one command.
 SEVERITY = {INSTALLED: 0, ERROR: 1, BLOCKED: 2, ABSENT: 3}
 
-VERSION_RE = re.compile(r"\d+(?:\.\d+)+[\w.+-]*")
+VERSION_RE = re.compile(r"\d+(?:\.\d+)+(?:[.+-][\w-]+)*")
 
 
 @dataclass

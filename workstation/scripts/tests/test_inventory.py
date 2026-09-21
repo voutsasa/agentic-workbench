@@ -138,6 +138,9 @@ class ExtractVersionTests(unittest.TestCase):
     def test_no_version_returns_empty(self):
         self.assertEqual(extract_version("command not recognised"), "")
 
+    def test_trailing_punctuation_is_not_part_of_version(self):
+        self.assertEqual(extract_version("Copilot CLI 1.0.87.\n"), "1.0.87")
+
 
 class FirstLineTests(unittest.TestCase):
     def test_skips_blank_lines(self):

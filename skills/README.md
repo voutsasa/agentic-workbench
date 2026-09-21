@@ -18,6 +18,7 @@ half of `ingest-source`, and takes its destination path from the caller.
 
 | Skill | What it does |
 |---|---|
+| [`get-workstation-status/`](get-workstation-status/) | Probe this machine's prerequisites and CLI tools, report versions, and give recorded corrective actions |
 | [`ingest-source/`](ingest-source/) | Pull one `SOURCES.md` entry into the corpus: resolve the destination, delegate the conversion to the global `fetch-to-markdown`, record |
 | [`setup-agents/`](setup-agents/) | Detect the machine and its AI assistants, ask what to set up, describe the changes, then apply the links or hand over the commands |
 

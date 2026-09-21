@@ -1,7 +1,9 @@
 # Machines
 
-One file per machine this workbench runs on. Each records **state**: what is true of that box right
-now, and nothing else.
+Each machine has a Markdown state note and a TOML readiness profile. The note records **state**: what
+is true of that box right now. Common requirements live in [`../dependencies.toml`](../dependencies.toml);
+the `<machine>.prerequisites.toml` companion overrides only what differs on that box, such as command
+names, version floors, or its chosen package manager.
 
 ## Why this folder exists
 
@@ -14,7 +16,9 @@ answer. The split is by **lifetime**, not by platform:
 |---|---|---|---|
 | **Policy** — how the agent should work | [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) | every machine, every platform | no |
 | **Route** — how to install or link something | [`../cli/<tool>/install.md`](../cli/), [`../agent/setup/`](../agent/setup/) | per platform, machine-independent | slowly, one tool at a time |
-| **State** — what is present, and what is broken | **here** | one box | constantly |
+| **Common readiness** — shared dependencies, defaults, corrective text | [`../dependencies.toml`](../dependencies.toml) | every machine | when shared requirements change |
+| **Machine readiness overrides** — command names, version floors, package-manager choice | **`<machine>.prerequisites.toml` here** | one box | when that machine's requirements differ |
+| **State** — what is present, and what is broken | **`<machine>.md` here** | one box | constantly |
 
 The test for which file a fact belongs in: *would this still be true on the other machine?* If yes it
 is policy or route. If no it belongs here.
@@ -26,10 +30,10 @@ stale), and why a machine's tool table is measured by `../scripts/inventory.py` 
 
 ## Files
 
-| Machine | Platform | Repo path | Inventory verified |
-|---|---|---|---|
-| [`windows-ema-pf5n4xe7.md`](windows-ema-pf5n4xe7.md) | Windows 11 (build 26200) | `C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench` | 21 September 2026 |
-| [`macos-workstation.md`](macos-workstation.md) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 18 September 2026 |
+| Machine | Prerequisites | Platform | Repo path | Inventory verified |
+|---|---|---|---|---|
+| [`windows-ema-pf5n4xe7.md`](windows-ema-pf5n4xe7.md) | [`windows-ema-pf5n4xe7.prerequisites.toml`](windows-ema-pf5n4xe7.prerequisites.toml) | Windows 11 (build 26200) | `C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench` | 21 September 2026 |
+| [`macos-workstation.md`](macos-workstation.md) | [`macos-workstation.prerequisites.toml`](macos-workstation.prerequisites.toml) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 18 September 2026 |
 
 The filename is `<platform>-<id>.md`, lowercased. The id is usually the hostname —
 `workstation/scripts/inventory.py --json` prints that form under `suggested_id` — but it does
@@ -51,7 +55,12 @@ without it falls back to the only file for the platform.
    content here — a tool that is absent costs one install, a tool that fails *silently* costs a
    session.
 4. Add a row to the table above.
-5. Follow the matching [`../agent/setup/`](../agent/setup/) file to put the config in place.
+5. Add `<machine>.prerequisites.toml`, recording only values that differ from
+   [`../dependencies.toml`](../dependencies.toml), normally Python's command and the platform package
+   manager. Any shared dependency uses `provisioning = "external"`; this workbench detects it but
+   does not provide its installation route.
+6. Run `<python> workstation/scripts/status.py --machine <id>` and resolve required failures.
+7. Follow the matching [`../agent/setup/`](../agent/setup/) file to put the config in place.
 
 A new **platform** additionally needs one `setup/<platform>.md` and a third row in each
 `install.md` platform table. Write those when a machine exists — a dozen guessed `apt` package names
