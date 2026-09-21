@@ -17,27 +17,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 21. The `pre-push` gate is not installed on `ema-pf5n4xe7`
-
-Opened 2026-09-21, found while pushing this session's four commits. `.git/hooks/` in this clone holds
-only the fourteen `.sample` files git ships, so **every push from this machine runs no gate**. The
-machine note had claimed the hook was installed as a copy, verified 26 August; that claim is now
-corrected in place.
-
-The push itself is not unchecked work — `repo_check.py`, all seven `.pre-push-tests` suites and both
-`ruff` commands were run by hand and passed. But the gate that makes that automatic is absent, and the
-hook would have **refused** that push: one of the three refuted claims of item 19, now closed below, was
-in `workstation/agent/skills/review/SKILL.md`, which the push touched.
-
-Installing it is the user's — it changes their local git state, and it must be a copy rather than a link
-because git will not run a hook through a junction:
-
-```powershell
-Copy-Item workstation\agent\skills\review\scripts\pre-push .git\hooks\pre-push -Force
-```
-
-**Closes when:** the hook is in place and has been observed running on a real push from this machine.
-
 ### 20. The corpus is near-empty on this machine — 1 of 76 entries ingested
 
 Opened 2026-09-21, measured rather than estimated: `repo_check.py --corpus` reported **0 of 76** and
@@ -125,6 +104,21 @@ the machine note's `repo:` field from outside this repo, without searching — r
 after a month of sessions without such a case (then drop).
 
 ## Closed
+
+### 21. The `pre-push` gate was recorded as not installed, and it is
+
+Opened and closed 2026-09-21 — **the item was wrong, not the machine.** It claimed `.git/hooks/` held only
+git's fourteen `.sample` files, so that every push from `ema-pf5n4xe7` ran no gate, and the machine note
+was edited to match.
+
+Refuted on the next push. `git push origin main` for `0249fc6` printed the hook's own `No claim was
+refuted.` above git's `b4ce085..0249fc6  main -> main`; `Test-Path .git\hooks\pre-push` returns `True`;
+the file is 10,389 bytes, dated 15 September, and SHA-256 identical to the tracked
+`review/scripts/pre-push`, whose last commit is `46fbd34` of that day. Installed, current, and executing.
+
+The machine note is corrected in place, with the observed push as its evidence rather than a file listing.
+The install command it carried stays there for a clone that needs it; the re-copy-after-a-pull warning
+stays too, since a copy is what a hook has to be on Windows.
 
 ### 22. A flag exemption applied without anything saying so
 

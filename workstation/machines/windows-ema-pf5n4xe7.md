@@ -299,18 +299,21 @@ refuses when the two have drifted, which is the case above: the severed copy hel
 repo held the new. There, confirm the stale side carries nothing unique — `Compare-Object` showed 44
 lines only in the severed copy, all of them text the edit had replaced — and then use `--force`.
 
-### The `pre-push` gate is **not** installed here — checked 21 September 2026
+### The `pre-push` gate is installed, as a copy — observed running 21 September 2026
 
-This section read *installed, as a copy, verified 26 August 2026*. It is not true of this working tree:
-`.git/hooks/` holds the fourteen `.sample` files git ships and nothing else, so **pushes from this clone
-run no gate at all**. The four commits pushed on 21 September went through unchecked by the hook — the
-gate's three parts were run by hand instead, and passed. Recorded as [`../../TODO.md`](../../TODO.md)
-item 21.
+Observed on a real push, which is stronger than the file check either way: the push of `0249fc6` printed
+the hook's own `No claim was refuted.` before git's `b4ce085..0249fc6  main -> main`. `.git/hooks/pre-push`
+is 10,389 bytes, dated 15 September, and **SHA-256 identical** to the tracked
+[`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push), whose last commit is
+`46fbd34` of the same day — so the copy is current, not stale.
 
-When it is installed it must be a **plain copy** of
-[`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push), not a link — git
-will not run a hook through a junction. The 26 August check found the copy executing via its own shebang
-with 0 CR bytes, so the mechanism works here; only the file is missing.
+**A mid-session edit to this section claimed the opposite and was wrong.** It said `.git/hooks/` held only
+git's fourteen `.sample` files, and [`../../TODO.md`](../../TODO.md) item 21 was opened on that basis; both
+are corrected, the item closed. Whatever the earlier check looked at, `Test-Path .git\hooks\pre-push`
+returns `True` in this working tree and the hook demonstrably executes.
+
+It must be a **plain copy**, not a link — git will not run a hook through a junction. The 26 August check
+found the copy executing via its own shebang with 0 CR bytes.
 
 Because it is a copy, **re-copy it after pulling a change to the hook.** Nothing detects that for you:
 
@@ -491,7 +494,9 @@ the command now reads `Scripts/python.exe` when `os.name == "nt"`. Re-verified: 
 `.../playwright/Scripts/python.exe`. The fetch-to-markdown suite (78 tests) still passes.
 
 **E. The repo's own gates.** `repo_check.py`: all enabled checks passed. Every `.pre-push-tests` suite
-passed — **all seven of them**: 149, 34, 78, 19, 134, 141 and 17 tests, 572 in total. The largest,
+passed — **all seven of them**: 149, 34, 78, 19, 134, 156 and 17 tests, 587 in total. The 156 is
+`verify-docs/tests`, which stood at 141 before this session's fifteen new tests for the two flag gaps and
+the exemption notice. The largest,
 `workstation/scripts/tests`, was omitted from the first record of this run and is the one holding
 `test_readme_skills.py`, `test_python_version.py` and `test_link_config.py`. The 134 is
 `review/tests`, which stood at 106 before this session's `register` check added 28. The last, 17, is
