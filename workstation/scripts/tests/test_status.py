@@ -167,7 +167,14 @@ class CorrectiveActionTests(unittest.TestCase):
 
     def test_render_does_not_repeat_optional(self) -> None:
         row = status.StatusRow(
-            "Typst", "workstation tool", "absent", "—", "", "install", False, "workbench"
+            "Typst",
+            "workstation tool",
+            "absent",
+            "—",
+            "",
+            "install",
+            False,
+            "workbench",
         )
         report = {
             "overall": "READY WITH ACTIONS",
