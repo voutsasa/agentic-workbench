@@ -6,7 +6,7 @@ updated: 2026-08-01
 
 # tesseract — quick start
 
-OCR: text out of images and scanned pages. Reach for it only when a document has **no text layer** — for scanned PDFs, `docling --ocr` is the better route because it keeps layout and table structure, which raw tesseract discards.
+OCR: text out of images and scanned pages. Reach for it only when a document has **no text layer** — for scanned PDFs, `docling convert --ocr` is the better route because it keeps layout and table structure, which raw tesseract discards.
 
 ## Extract text
 

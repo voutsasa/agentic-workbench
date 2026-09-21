@@ -391,7 +391,7 @@ same readability test that diagnosed it:
 | `[IO.File]::ReadAllBytes(…\.local\bin\docling.exe)` | reads — 46,080 bytes |
 | Same call on `docling-tools.exe` | reads — 46,080 bytes |
 | `docling --version` | `Docling version: 2.122.0`, on `cpython-312 (3.12.10)` |
-| `docling --to md` on a 132 KB `.docx` | converted in 3.45 s |
+| `docling convert --to md` on a 132 KB `.docx` | converted in 3.45 s |
 
 pipx runs it from `C:\Users\voutsas\AppData\Local\pipx\pipx\venvs`, not the `~\.local\pipx\venvs` path
 the original diagnosis probed. **Ingestion of PDF and Office formats is no longer blocked here.** The
@@ -521,11 +521,15 @@ Relevance`, server-rendered route, all four quality checks passed, ledger now **
 are [`../../TODO.md`](../../TODO.md) item 20.
 
 The uncleared rows need the verifier taught git's bracket syntax and its synonym pairs, which is a
-change to `verify_claims.py` rather than to any document. A third gap surfaced while clearing these and
-is worse: two docling flag claims in this file's own docling section get **different verdicts depending
-on whether the run is scoped to one file or covers the repo**, because `docling` takes ~20 seconds to
-answer `--help` at all and answers with a 21-line top-level summary that names no subcommand flag. All
-three are [`../../TODO.md`](../../TODO.md) item 19; the gate is red until they clear.
+change to `verify_claims.py` rather than to any document — [`../../TODO.md`](../../TODO.md) item 19. The
+gate is red until they clear.
+
+Two docling claims in this file's own docling section looked like a third, worse gap: they returned
+**different verdicts depending on whether the run was scoped to one file or covered the repo**. They were
+not a verifier defect. The probe timeout was 20 seconds while `docling` takes 17s to answer `--version`
+and 20s to answer `--help` here, so the verdict turned on machine load — now 120s — and this file wrote
+`docling --to md` for what is really a `docling convert` flag, which the verifier was right to refuse.
+Both fixed; the scoped run over this file now reports **0 refuted**.
 
 ## Not yet installed
 

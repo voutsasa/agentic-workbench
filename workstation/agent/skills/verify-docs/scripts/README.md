@@ -34,6 +34,13 @@ The split is the reason this can gate a push at all. A pre-push hook that fetche
 179 URLs fails when GitHub has a bad minute, and a gate that fails for reasons
 unrelated to the change is one people learn to bypass.
 
+**A subprocess probe waits 120 seconds** (`HELP_TIMEOUT`, `VERSION_TIMEOUT`), which is
+deliberately far more than any tool needs. A timeout is indistinguishable from *the tool
+printed no help*, so a slow binary turns a true claim into a refuted one: at the former
+20-second limit, `docling` — 17s for `--version`, 20s for `--help` on Windows — gave the
+same claim different verdicts from one run to the next. The ceiling is only ever paid by a
+tool that is actually hung, and each binary is probed once per run and cached.
+
 ### Verdicts and exit codes
 
 | Verdict | Meaning | Effect |

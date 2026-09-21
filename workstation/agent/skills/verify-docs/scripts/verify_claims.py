@@ -81,8 +81,15 @@ EXIT_ERROR = 2
 OFFLINE_KINDS = (PATH, CLI_FLAG, CLI_INVOCATION, VERSION)
 ONLINE_KINDS = (URL, INSTALL)
 
-HELP_TIMEOUT = 20
-VERSION_TIMEOUT = 20
+# Generous on purpose. A timeout here is indistinguishable from "the tool
+# printed no help", so a slow tool is reported as a refuted claim about a
+# perfectly good flag. Measured on Windows 2026-09-21: `docling --version` takes
+# 17s and `docling --help` 20s, right on the old 20s limit — which is why the
+# same claim came back REFUTED or UNVERIFIABLE depending on machine load.
+# The cost of the higher ceiling is paid only by a tool that is genuinely hung,
+# and each binary is probed once per run and cached.
+HELP_TIMEOUT = 120
+VERSION_TIMEOUT = 120
 HTTP_TIMEOUT = 10
 
 # A token the document never meant literally. Verifying it proves nothing.

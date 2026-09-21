@@ -39,36 +39,42 @@ Copy-Item workstation\agent\skills\review\scripts\pre-push .git\hooks\pre-push -
 **Closes when:** the hook is in place and has been observed running on a real push from this machine —
 which, until item 19 clears, means observing it refuse one.
 
-### 19. `verify_claims.py` refuses a push over three verifier gaps
+### 19. `verify_claims.py` refuses a push over two git flag claims
 
 Opened 2026-09-21, from the repo review. `verify_claims.py --repo .` exits 1 with **3 refuted** out of
 ~1,310 claims extracted, down from 10 refuted once four path globs went into `.verify-claims-allow`. Only
 the refuted count is quoted: the verified and unverifiable totals move with every edit to any tracked
-markdown, including this file. The remaining rows are three distinct verifier gaps, each proved here to
-be the checker's fault rather than a document's:
+markdown, including this file.
 
-The two git rows are described rather than quoted below, deliberately: writing either command in
-backticks here makes this file assert the same claim and adds two more refuted rows to the count. It did,
-earlier in the same session — the count was 5 until these cells were rewritten in prose. That is itself
-evidence of how narrow the gap is.
+The rows are described rather than quoted below, deliberately: writing either command in backticks here
+makes this file assert the same claim and adds two more refuted rows to the count. It did, earlier in the
+same session — the count was 5 until these cells were rewritten in prose. That is itself evidence of how
+narrow the gap is.
 
 | Row | Where | Probe run here | Why the verifier says REFUTED |
 |---|---|---|---|
-| the porcelain flag of git's status subcommand (×2) | `workstation/agent/AGENT-INSTRUCTIONS.md:86`, and the machine note's section E | abbreviated help prints it in optional-negation bracket form, with an optional version argument; the plain flag exits 0 | it substring-searches the help for the flag spelled plainly, which the bracket form breaks |
-| the staged flag of git's diff subcommand (×2) | `AGENT-INSTRUCTIONS.md:87`, `workstation/agent/skills/review/SKILL.md:134` | genuinely absent from abbreviated help, which documents only its cached synonym; the flag itself exits 0 | no amount of help parsing finds it — a synonym needs a tier that runs the flag instead of reading about it |
-| two docling flags (`windows-ema-pf5n4xe7.md:372`, `:373`) | **verdict is not stable between runs** — the full-repo run calls them `UNVERIFIABLE`, a run scoped to that file calls them `REFUTED` | `docling --version` answers correctly but takes 17s; `docling --help` takes 20s and returns 21 lines naming neither flag, because both belong to the `convert` subcommand | two faults compounding: the probe is racing a ~20s startup, so a timeout reads as "prints no help", and it searches the top-level help for a subcommand's flag |
+| the porcelain flag of git's status subcommand (×1) | `workstation/agent/AGENT-INSTRUCTIONS.md:86` | abbreviated help prints it in optional-negation bracket form, with an optional version argument; the plain flag exits 0 | it substring-searches the help for the flag spelled plainly, which the bracket form breaks |
+| the staged flag of git's diff subcommand (×2) | `AGENT-INSTRUCTIONS.md:87`, `workstation/agent/skills/review/SKILL.md:134` | genuinely absent from abbreviated help, which documents only its cached synonym; the flag itself exits 0 | no amount of help parsing finds it — a synonym needs either a tier that runs the flag instead of reading about it, or an exemption of the kind `.verify-claims-allow` gives a path |
 
-That third row is the worst of the three: a gate whose verdict depends on how it was invoked cannot be
-trusted in either direction, and it is the reason the refuted count moved between runs in this session.
+**A third gap was claimed here and was not one.** Two docling flag claims were getting different verdicts
+depending on whether the run was scoped to one file or covered the repo, which was read as a verifier
+defect. It was two defects of this repo's own making, both now fixed: the probe timeout was 20 seconds
+while `docling` takes 17s to answer `--version` and 20s to answer `--help`, so the verdict turned on
+machine load (`HELP_TIMEOUT` and `VERSION_TIMEOUT` are now 120s); and two documents wrote a
+`docling convert` flag as though it were a bare `docling` flag, which the verifier was right to refuse
+(`windows-ema-pf5n4xe7.md:394`, and line 9 of
+[`workstation/cli/tesseract/quick_start.md`](workstation/cli/tesseract/quick_start.md) — both
+corrected). The
+verifier already probes a subcommand's own help when the line names the subcommand —
+`verify_claims.py:749-764` — so there was nothing to build.
 
 This is not cosmetic. The pre-push hook scopes `verify_claims.py` to the markdown in the push, so a push
-touching any of those three files is refused until the rows clear. `.verify-claims-allow` cannot reach
+touching either of those two files is refused until the rows clear. `.verify-claims-allow` cannot reach
 them: it exempts *paths*, and these are `help_text` claims.
 
-**Closes when:** `verify_claims.py` handles git's optional-negation bracket syntax, reports a flag
-absent from abbreviated help as `UNVERIFIABLE` rather than `REFUTED` unless the command actually
-rejects it, probes a subcommand's own help for a subcommand flag, and gives the same verdict scoped as
-unscoped — with unit tests for each, and a full-repo run reaching `No claim was refuted`.
+**Closes when:** `verify_claims.py` matches a flag that help prints in optional-negation bracket form,
+the synonym case has a decided route (a flag-claim exemption list, or a tier that runs the flag) and that
+route is implemented, each with unit tests, and a full-repo run reaches `No claim was refuted`.
 
 ### 20. The corpus is near-empty on this machine — 1 of 76 entries ingested
 
