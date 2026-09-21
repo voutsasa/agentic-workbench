@@ -81,27 +81,25 @@ exception: they run under bare `python3` before any venv exists. See
 
 ## Claude Code config
 
-`python3 workstation/scripts/link_config.py --apply`, 2026-09-13. Do not edit this table by hand.
+**15 of 15 linked**, reported 2026-09-22 by
+`python3 workstation/scripts/link_config.py --agent claude --agent copilot`, exit 0; every link is a
+symlink into this repo. `--project` reports the repo's own skills separately, **3 of 3 linked** — the
+two runs together are the `18 of 18` that `setup-agents` quotes below.
 
 | Artefact | Kind | Status |
 |---|---|---|
-| `skills/review` | symlink | linked |
-| `skills/python-quality` | symlink | linked |
-| `skills/verify-docs` | symlink | linked |
-| `skills/fix-findings` | symlink | linked |
-| `skills/pdf-deliverable` | symlink | linked |
-| `skills/fetch-to-markdown` | symlink | linked |
-| `CLAUDE.md` | symlink | linked |
-| `machine.md` | symlink | linked |
+| `skills/review`, `skills/python-quality`, `skills/verify-docs`, `skills/fix-findings`, `skills/pdf-deliverable`, `skills/fetch-to-markdown` | dir | linked |
+| `copilot/skills/review`, `copilot/skills/python-quality`, `copilot/skills/verify-docs`, `copilot/skills/fix-findings`, `copilot/skills/pdf-deliverable`, `copilot/skills/fetch-to-markdown` | dir | linked |
+| `CLAUDE.md` | file | linked |
+| `copilot/copilot-instructions.md` | file | linked |
+| `machine.md` | file | linked |
+| `project/skills/get-workstation-status`, `project/skills/ingest-source`, `project/skills/setup-agents` | dir | linked (`--project`) |
 
-**8 of 8 linked, and all eight resolve into this repo.** Until 2026-09-12 they resolved into
-`sdd-workbench`, the sibling this repo was split from: `CLAUDE.md` and the four skills of the day were
-linked there and `machine.md` was absent. `--apply --force` was needed for that move, because a
-destination pointing at the sibling reads as `occupied`, not `detached`. The rollback is the same
-command run from `sdd-workbench`.
+Re-check with the same commands, which write nothing. Do not edit this table by hand.
 
-`pdf-deliverable` and `fetch-to-markdown` joined later — the table is only as current as the run
-quoted above it, so re-run `link_config.py` (read-only, no flag) rather than trusting the row count.
+Until 2026-09-12 the links resolved into `sdd-workbench`, the sibling this repo was split from.
+`--apply --force` was needed for that move, because a destination pointing at the sibling reads as
+`occupied`, not `detached`. The rollback is the same command run from `sdd-workbench`.
 
 The consequence worth knowing: **`workstation/agent/` in this repo is now the live global config**, so
 an edit to `~/.claude/CLAUDE.md` or any of the linked skills writes here and shows up in `git status`.
@@ -195,9 +193,9 @@ their observation recorded here rather than a quoted output.
 
 | What | State | How known |
 |---|---|---|
-| Version | 1.0.83, measured 2026-09-14 (1.0.63 the day before) | `copilot --version` |
+| Version | 1.0.86, measured 2026-09-22 (1.0.63 on 2026-09-13, 1.0.83 on 2026-09-14) | `copilot --version` |
 | Binary | `/opt/homebrew/bin/copilot` → Caskroom `copilot-cli/1.0.24` | `readlink -f` |
-| This repo's skills at project scope | 2 of 2 linked in `.claude/skills` | `link_config.py --project` |
+| This repo's skills at project scope | 3 of 3 linked in `.claude/skills`, 2026-09-22 | `link_config.py --project` |
 | VS Code `chat.useClaudeMdFile`, `chat.useAgentsMdFile`, `github.copilot.chat.codeGeneration.useInstructionFiles` | **`true`**, set explicitly by the user in `~/Library/Application Support/Code/User/settings.json` on 2026-09-19 (VS Code 1.138.0's default is also on). **Chat loads the global instructions**, 2026-09-19: the user found `REPLY_CEILING`, a string only in `AGENT-INSTRUCTIONS.md`, in a request prompt under *Show Chat Debug View* | `detect.py` and the file read 2026-09-19; `default:!0` in the build |
 | Ruff post-edit hook | **fires**, 2026-09-18: Copilot reported `Create hook_probe_copilot.py +2`; the file read back as the one line `x = [1, 2, 3]` | `link_config.py --hooks --agent copilot --apply`, then `copilot -p … --allow-tool=write --add-dir <repo>` |
 

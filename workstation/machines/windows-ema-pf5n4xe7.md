@@ -249,7 +249,7 @@ config, not repo config — a fresh clone here needs it again.
 **15 of 15 linked**, applied 21 September 2026 by
 `python workstation\scripts\link_config.py --agent claude --agent copilot --apply --force`, which then
 exited 0. `--force` was needed: `CLAUDE.md`, `machine.md` and `copilot/copilot-instructions.md` all read
-`diverged` first — triaged by diffing each against its repo source before forcing, per *the two
+`diverged` first — triaged by diffing each against its repo source before forcing, per *the three
 hardlinks sever constantly* below; all three carried only stale text the repo had since superseded,
 nothing live-only, so the overwrite was safe.
 
@@ -263,19 +263,22 @@ nothing live-only, so the overwrite was safe.
 | `settings.json` | — | excluded by design; merged by hand — see below |
 
 Re-check with `python workstation/scripts/link_config.py --agent claude --agent copilot`. Do not edit
-this table by hand. The script now reports skill links as `dir`, not `junction` — unverified whether
-that is a wording change or a mechanism change; not re-tested independently this round.
+this table by hand. `Kind` says what the source is, not how it is linked — `dir` if the source is a
+directory, else `file` (`link_config.py`, the `kind =` line in its report); on Windows a `dir` is still a
+junction and a `file` a hardlink, per the module's link-creation docstring.
 
-`--force` was needed because `CLAUDE.md` read `diverged` — the live copy was a plain edited file, not a
-link. That was safe only because the drift had already been triaged: of its 14 live-only lines, 12 were
+**The first `--force`, on 26 August 2026**, was the same situation with more at stake: `CLAUDE.md` read
+`diverged` because the live copy was a plain edited file, not a link. That was safe only because the
+drift had already been triaged: of its 14 live-only lines, 12 were
 superseded by expanded versions in the repo copy, and the remaining two were macOS facts rescued into
 [`macos-workstation.md`](macos-workstation.md) first. The pre-`--force` file was kept as
 `~/.claude/CLAUDE.md.bak`. **Do not reach for `--force` without doing that triage** — the script compares
 bytes and cannot know whether it happened.
 
-### The two hardlinks sever constantly — assume they are broken
+### The three hardlinks sever constantly — assume they are broken
 
-Only `CLAUDE.md` and `machine.md` are at risk; the four junctions survive everything. **Two causes, and
+Only the file links are at risk — `CLAUDE.md`, `machine.md` and `copilot/copilot-instructions.md`; the
+twelve skill junctions survive everything. **Two causes, and
 the second fires on ordinary work:**
 
 **Git operations.** These links were made while the repo sat on `workstation-multi-machine`. Git replaces
