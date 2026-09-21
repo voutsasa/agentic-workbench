@@ -2,7 +2,7 @@
 
 Enables engineers to set up their workstation and work in an agent-enabled environment: AI coding assistants configured consistently, on a toolchain that is known to work.
 
-**Before you start**, the workstation needs three things this repo does not install:
+**Before you start**, the workstation needs two things this repo does not install:
 
 - **Required — Git, Python3, `uv`, Node.js/npm, and an AI coding assistant, externally provisioned.** The skills here are instructions an assistant carries out, so without one they do nothing. Claude Code and GitHub Copilot CLI both load them. `get-workstation-status` reports their presence and versions; it does not install or authenticate them. Git gets the clone; Python runs the workstation scripts; `uv` creates every project venv, which the global instructions require for any Python beyond those bootstrap scripts; Node.js/npm supplies the Node-based toolchain components.
 - **Recommended — a package manager for the toolchain.** The install routes in [`workstation/cli/`](workstation/cli/README.md) assume Homebrew on macOS and Scoop on Windows, with `pipx` or `npm` for tools published to Python or Node registries. winget is noted where a tool offers it. A package manager keeps every tool installable and upgradable with one command, instead of by hand.
@@ -76,7 +76,7 @@ workstation/              	this machine's setup — serves the repo, never a del
   mcp/<server>/           	per-server MCP guidance       — authored files in git.   
   agent/                  	agent config + global skills, symlinked into ~/.claude/.   
   machines/               	per-machine measured state and readiness profiles.
-  scripts/                	the inventory probe and the ~/.claude link checker.   
+  scripts/                	the inventory probe, the readiness report and the ~/.claude link checker.   
   validation/             	steps and fixtures that prove a machine works.   
 
 scripts/                  	headless verify-docs runner.   
@@ -114,7 +114,7 @@ What the workbench runs on — the machines, not an architecture.
 | [`workstation/cli/`](workstation/cli/README.md) | The CLI toolchain. One folder per tool: authored `install.md` and `quick_start.md`, plus an ingested `reference.md`. Read `quick_start.md` before invoking a tool you haven't used this session. |
 | [`workstation/mcp/`](workstation/mcp/README.md) | Third-party MCP servers. One folder per server: authored `setup.md` plus an ingested `reference.md`. |
 | [`workstation/machines/`](workstation/machines/README.md) | One file per machine: paths, shell, which tools actually run, what is broken. **The only place a machine-specific fact belongs.** |
-| [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `link_config.py` reports or repairs the `~/.claude` links and, with `--agent copilot`, the global instruction and skill links under `~/.copilot`. Both are read-only unless told otherwise. |
+| [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `status.py` reports whether the machine meets its prerequisites; `link_config.py` reports or repairs the `~/.claude` links and, with `--agent copilot`, the global instruction and skill links under `~/.copilot`. All three are read-only unless told otherwise. |
 | `workstation/agent/` | Claude Code configuration, **linked into `~/.claude/`** so it is versioned rather than scattered across a home directory. See below. |
 
 **The split is by lifetime, not by platform** — policy, route and machine state live in different
@@ -141,7 +141,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 | Path | Role |
 |---|---|
 | [`skills/README.md`](skills/README.md) | Index of this repo's own skills, the line dividing them from the global ones in `workstation/agent/skills/`, and the per-clone links that make them load — Claude Code and Copilot discover `.claude/skills/`, not `skills/`. |
-| `pyproject.toml` | Project metadata. No runtime dependencies; the `dev` dependency group supplies `pytest` and `ruff` for repository quality checks. |
+| `pyproject.toml` | Project metadata. No runtime dependencies; the `dev` dependency group supplies `pytest`, `ruff` and `pyright` for repository quality checks. |
 | `.python-version` | Pins the interpreter for `uv` — currently 3.14. |
 | `.verify-claims-allow` | Path claims the documentation gate is to leave alone, one glob per line with a reason above each. Repo-local on purpose: the pre-push hook is shared by every repo that links it, so exemptions must not travel with it. |
 | `.verify-flags-allow` | Its sibling for flag claims, one `<command> <flag>` per line: a flag that works but that no help text documents, such as `git diff --staged`. It only ever downgrades a refutation. |

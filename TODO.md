@@ -17,6 +17,17 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 23. `status.py`'s Python row never probes the command it names
+
+Opened 2026-09-21 from the repo review; left unapplied as a decision. For `probe = "python-runtime"`,
+`status.py:88-97` marks `commands[0]` installed from the running interpreter (`sys.executable`), so the
+`python3`/`python` override in each `*.prerequisites.toml` changes only the label — on macOS the row reads
+`python3: …/.venv/bin/python`. That is deliberate (`test_python_runtime_uses_active_interpreter_not_path`),
+so which is right is a judgement: probe the command on PATH (the bootstrap scripts' interpreter), or keep
+the active interpreter and label the evidence honestly as such.
+
+**Closes when:** the user picks one, and a test that failed against the old behaviour passes.
+
 ### 20. The corpus is near-empty on this machine — 1 of 76 entries ingested
 
 Opened 2026-09-21, measured rather than estimated: `repo_check.py --corpus` reported **0 of 76** and
@@ -43,8 +54,8 @@ target here and that target is met.
 ### 9. The Azure DevOps pipeline has never run
 
 Opened 2026-09-14: the only pipeline was `.github/workflows/verify-docs.yml`, which never runs for this
-clone's only remote — `origin`, `https://euemadev@dev.azure.com/euemadev/EA/_git/agentic-workbench`, an
-Azure DevOps repo (it was recorded here as named `emaea`; `git remote -v` on 2026-09-21 says `origin`). **Written 2026-09-19** as
+repo's only remote, `https://euemadev@dev.azure.com/euemadev/EA/_git/agentic-workbench`, an
+Azure DevOps repo. The remote's *name* differs per clone — see each machine note. **Written 2026-09-19** as
 `azure-pipelines/verify-docs.yml`, applying every counterpart below; checked only locally — the YAML
 parses into the ten intended steps, and the pull-request step passes `bash -n`. Its header carries
 the three one-time setup steps in ADO, which are the user's. The counterparts were checked against
