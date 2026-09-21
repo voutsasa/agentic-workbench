@@ -150,7 +150,7 @@ above; applying does not replace it.
 | `scripts/repo_check.py` | Deterministic documentation gate — links, bare repo paths, terminology, frontmatter, and a source register against its catalogue, over the tracked markdown, exiting non-zero on violations. No model, no network, a second or two. Run it by hand, or let the pre-push hook run it. |
 | `scripts/repo_check.py --corpus` | The register's ingestion ledger: which entries have an ingested file and which do not. **Not** part of the gate — the corpus is gitignored, so a fresh clone has none and nothing is wrong. The preflight for an ingestion run. |
 | `scripts/checks.toml` | The rules it enforces. Tune this file, not the script. |
-| `scripts/pre-push` | Git hook wrapper; symlinked into `.git/hooks/pre-push`. |
+| `scripts/pre-push` | Git hook wrapper; symlinked into `.git/hooks/pre-push` — **on Windows it must be copied, not linked**, or the push runs ungated with nothing to show it. `scripts/README.md` § *The pre-push hook* has both routes. |
 | `tests/test_repo_check.py` | 123 tests. `python3 -m unittest discover -s tests` — stdlib only. |
 | `tests/test_pre_push.py` | 11 tests over the hook itself, same command. |
 

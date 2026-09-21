@@ -96,6 +96,15 @@ Copy-Item (Join-Path $Root "workstation\agent\skills\review\scripts\pre-push") `
 A plain copy is safe **on a clone made after [`.gitattributes`](../../../.gitattributes) landed**, which
 pins `eol=lf` on `pre-push` so it checks out with LF and `#!/usr/bin/env bash` resolves.
 
+Being a copy, it carries the cost the macOS symlink route avoids: **re-run that command after any pull
+that changes the hook**, because nothing detects the divergence. And confirm it is there rather than
+assuming — `.git/hooks/` is not tracked, so a fresh clone has only git's `.sample` files and every push
+from it is ungated and silent about it:
+
+```powershell
+Test-Path .git\hooks\pre-push
+```
+
 **On an older working tree it is not, and `git check-attr` will not tell you.** `eol=lf` is applied when
 a file is *written* to the working tree, never retroactively, so a file checked out before the attribute
 existed keeps its CRLF while `check-attr` cheerfully reports `eol: lf`. Ask about the working tree
