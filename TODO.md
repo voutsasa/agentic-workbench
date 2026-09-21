@@ -82,23 +82,6 @@ request between them was acted on. Two samples; not yet a reason to change the i
 recorded here or in the machine note. The pasted-text reading is dropped after a month of sessions
 without it, or becomes an instruction change if it recurs.
 
-### 16. VS Code has never been launched on the Windows machine
-
-Opened 2026-09-18, narrowed 2026-09-21. `windows-ema-pf5n4xe7.md` was rewritten this session from a
-live `link_config.py --agent claude --agent copilot --apply --force` (15 of 15 linked — three files
-were `diverged`, triaged by diff, then forced) and `inventory.py --host ema-pf5n4xe7` (12 of 13 usable;
-`defuddle`, `tesseract`, `weasyprint` cleared since 14 September, `typst` now probed and absent). The
-settings table gained the `hooks` row, read from the live `~/.claude/settings.json`, and the
-`sem`/`dbml2sql` version table now compares 14 Sep against 21 Sep on this machine instead of against
-`install.md`.
-
-Left open: `%APPDATA%\Code` does not exist on this machine at all — `code.cmd` resolves but VS Code has
-never been run, so `chat.useClaudeMdFile`, `chat.useAgentsMdFile` and
-`github.copilot.chat.codeGeneration.useInstructionFiles` cannot be set yet.
-
-**Closes when:** VS Code is launched once on this machine (by the user), the three keys are set `true`
-in `%APPDATA%\Code\User\settings.json`, and `REPLY_CEILING` is found in a *Show Chat Debug View* prompt.
-
 ### 17. The emphasis in `AGENT-INSTRUCTIONS.md` may be over-applied
 
 Opened 2026-09-18, from the review of `workstation/agent/AGENT-INSTRUCTIONS.md`, as the unapplied
@@ -131,3 +114,20 @@ for the patch-body format (`ruff_on_edit.py`), with two new unit tests. Verified
 instructed) resulted in a file on disk reading `import sys` / `def g():` / `return sys.argv` with
 correct PEP8 blank lines — output only ruff's formatter would produce from that patch, not the model.
 17/17 unit tests pass.
+
+### 16. VS Code has never been launched on the Windows machine
+
+Opened 2026-09-18, narrowed 2026-09-21, closed 2026-09-21. `windows-ema-pf5n4xe7.md` was rewritten this
+session from a live `link_config.py --agent claude --agent copilot --apply --force` (15 of 15 linked —
+three files were `diverged`, triaged by diff, then forced) and `inventory.py --host ema-pf5n4xe7` (12 of
+13 usable; `defuddle`, `tesseract`, `weasyprint` cleared since 14 September, `typst` now probed and
+absent). The settings table gained the `hooks` row, read from the live `~/.claude/settings.json`, and
+the `sem`/`dbml2sql` version table now compares 14 Sep against 21 Sep on this machine instead of
+against `install.md`.
+
+VS Code was launched (`code .`, by the user). `%APPDATA%\Code\User\settings.json` came up with all
+three keys already `true` — `chat.useClaudeMdFile`, `chat.useAgentsMdFile`,
+`github.copilot.chat.codeGeneration.useInstructionFiles`. The user opened *Show Chat Debug View* and
+found `REPLY_CEILING` inside the `copilot-instructions.md` attachment of an actual request payload —
+both `AGENTS.md` and `~/.copilot/copilot-instructions.md` are loaded as separate attachments, content
+current with this session's relink.
