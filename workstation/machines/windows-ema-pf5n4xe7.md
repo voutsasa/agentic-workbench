@@ -303,9 +303,17 @@ lines only in the severed copy, all of them text the edit had replaced — and t
 
 Observed on a real push, which is stronger than the file check either way: the push of `0249fc6` printed
 the hook's own `No claim was refuted.` before git's `b4ce085..0249fc6  main -> main`. `.git/hooks/pre-push`
-is 10,389 bytes, dated 15 September, and **SHA-256 identical** to the tracked
-[`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push), whose last commit is
-`46fbd34` of the same day — so the copy is current, not stale.
+is 10,389 bytes, dated 15 September, and was **SHA-256 identical** to the tracked
+[`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push) as of `46fbd34`.
+
+**The copy is now one change behind**, because the same session retired the hook's parse of
+`.verify-claims-allow`. Nothing detects that for you, and the stale copy still works — it passes the globs
+as `--allow`, which the verifier accepts and reports under that source instead of under the file. Re-copy
+to line them up:
+
+```powershell
+Copy-Item workstation\agent\skills\review\scripts\pre-push .git\hooks\pre-push -Force
+```
 
 **A mid-session edit to this section claimed the opposite and was wrong.** It said `.git/hooks/` held only
 git's fourteen `.sample` files, and [`../../TODO.md`](../../TODO.md) item 21 was opened on that basis; both
@@ -494,9 +502,9 @@ the command now reads `Scripts/python.exe` when `os.name == "nt"`. Re-verified: 
 `.../playwright/Scripts/python.exe`. The fetch-to-markdown suite (78 tests) still passes.
 
 **E. The repo's own gates.** `repo_check.py`: all enabled checks passed. Every `.pre-push-tests` suite
-passed — **all seven of them**: 149, 34, 78, 19, 134, 156 and 17 tests, 587 in total. The 156 is
-`verify-docs/tests`, which stood at 141 before this session's fifteen new tests for the two flag gaps and
-the exemption notice. The largest,
+passed — **all seven of them**: 149, 34, 78, 19, 134, 160 and 17 tests, 591 in total. The 160 is
+`verify-docs/tests`, which stood at 141 before this session's nineteen new tests for the two flag gaps,
+the exemption notice and the evidence wording. The largest,
 `workstation/scripts/tests`, was omitted from the first record of this run and is the one holding
 `test_readme_skills.py`, `test_python_version.py` and `test_link_config.py`. The 134 is
 `review/tests`, which stood at 106 before this session's `register` check added 28. The last, 17, is

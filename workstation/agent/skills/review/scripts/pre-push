@@ -27,6 +27,7 @@
 #
 # Escape hatches, in order of preference:
 #   edit .verify-claims-allow      — exempt a path that is meant not to exist
+#   edit .verify-flags-allow       — exempt a flag no help text documents
 #   SKIP_VERIFY_CLAIMS=1 git push  — skip the claim verifier, keep the rest
 #   SKIP_PRE_PUSH_TESTS=1 git push — skip the unit tests, keep the rest
 #   SKIP_REPO_CHECK=1 git push     — skip every check in this hook
@@ -155,30 +156,12 @@ if [ ! -f "$VERIFIER" ]; then
   exit 0            # the verifier is optional; repo_check has already passed
 fi
 
-# Path exemptions come from the repo being pushed, never from this file. This
-# hook lives in the globally symlinked skills tree, so one copy of it serves
-# every repo that links it; a glob hard-coded here would silently exempt paths
-# in unrelated repos. Absent the file, no globs apply — nothing is inherited.
-ALLOW_FILE="$REPO_ROOT/.verify-claims-allow"
-allow_args=()
-allow_globs=()
-if [ -f "$ALLOW_FILE" ]; then
-  while IFS= read -r glob || [ -n "$glob" ]; do
-    glob="${glob%%#*}"                                  # drop trailing comments
-    glob="${glob#"${glob%%[![:space:]]*}"}"             # trim leading space
-    glob="${glob%"${glob##*[![:space:]]}"}"             # trim trailing space
-    if [ -n "$glob" ]; then
-      allow_globs+=("$glob")
-      allow_args+=(--allow "$glob")
-    fi
-  done < "$ALLOW_FILE"
-fi
-
-# Say what is being exempted. An exemption nobody sees is one nobody revisits.
-if [ "${#allow_globs[@]}" -gt 0 ]; then
-  echo "pre-push: ${#allow_globs[@]} path exemption(s) from .verify-claims-allow:" >&2
-  printf '          %s\n' "${allow_globs[@]}" >&2
-fi
+# Exemptions are not this hook's business. `.verify-claims-allow` and
+# `.verify-flags-allow` are read by the verifier itself, from the repo it is
+# given — this hook used to parse the first of them and pass each glob back as
+# `--allow`, which was a second parser of one file format and a second place to
+# state the policy. It announces what it waived, so the report and the notice
+# cannot disagree. `--no-allow-file` there is what ignores them; nothing here.
 
 # git feeds the hook "<local ref> <local sha> <remote ref> <remote sha>" per ref.
 # A remote sha of all zeros means the branch is new there, so compare against the
@@ -222,7 +205,7 @@ if [ "${#files[@]}" -eq 0 ]; then
   exit 0
 fi
 
-python3 "$VERIFIER" --repo "$REPO_ROOT" ${allow_args[@]+"${allow_args[@]}"} --files "${files[@]}"
+python3 "$VERIFIER" --repo "$REPO_ROOT" --files "${files[@]}"
 status=$?
 
 case "$status" in

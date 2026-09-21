@@ -31,6 +31,7 @@ from dataclasses import asdict
 
 from extract_claims import Claim
 from verify_claims import (
+    ALLOW_FILE_NAME,
     FLAG_ALLOW_FILE_NAME,
     REFUTED,
     UNVERIFIABLE,
@@ -575,29 +576,58 @@ class TestFlagExemptions(unittest.TestCase):
 class TestExemptionNotice(unittest.TestCase):
     """An exemption nobody sees is one nobody revisits.
 
-    The pre-push hook echoes the path globs it read; the flag file is read by
-    this script, so this script is what says it is in force. Printed by the
-    object that made the decision, so the notice cannot disagree with it.
+    Both allow files are read here, so this is what says they are in force —
+    the pre-push hook no longer echoes the path globs, having stopped parsing
+    them. Printed by the code that applies them, so the notice cannot disagree
+    with the run. One block per *source*, because a glob passed as `--allow`
+    reported under the repo's file name would be exactly that kind of drift.
     """
 
-    def test_no_exemptions_says_nothing(self):
-        self.assertEqual("", exemption_notice(frozenset()))
+    def test_nothing_exempt_says_nothing(self):
+        self.assertEqual("", exemption_notice({}))
+        self.assertEqual("", exemption_notice({ALLOW_FILE_NAME: [], "--allow": []}))
 
-    def test_the_notice_names_the_file_the_count_and_the_pair(self):
-        notice = exemption_notice(frozenset({("git diff", "--staged")}))
-        self.assertIn(FLAG_ALLOW_FILE_NAME, notice)
-        self.assertIn("1 flag exemption", notice)
-        self.assertIn("git diff --staged", notice)
+    def test_path_globs_are_listed_under_the_file_that_declared_them(self):
+        notice = exemption_notice({ALLOW_FILE_NAME: ["docs/landing-zone/**"]})
+        self.assertIn(ALLOW_FILE_NAME, notice)
+        self.assertIn("1 exemption", notice)
+        self.assertIn("docs/landing-zone/**", notice)
 
-    def test_pairs_are_sorted_so_the_line_is_reproducible(self):
-        pairs = frozenset({("git diff", "--staged"), ("docling convert", "--to")})
-        body = exemption_notice(pairs).splitlines()[1:]
+    def test_a_cli_glob_is_not_attributed_to_the_file(self):
+        notice = exemption_notice(
+            {ALLOW_FILE_NAME: ["a/**"], "--allow": ["b/**"]}
+        ).splitlines()
         self.assertEqual(
-            ["docling convert --to", "git diff --staged"], [ln.strip() for ln in body]
+            [
+                f"verify_claims: 1 exemption(s) from {ALLOW_FILE_NAME}:",
+                "a/**",
+                "verify_claims: 1 exemption(s) from --allow:",
+                "b/**",
+            ],
+            [line.strip() for line in notice],
         )
 
-    def test_main_prints_the_notice_on_stderr(self):
+    def test_both_files_appear_in_one_notice(self):
+        notice = exemption_notice(
+            {
+                ALLOW_FILE_NAME: ["docs/landing-zone/**"],
+                FLAG_ALLOW_FILE_NAME: ["git diff --staged"],
+            }
+        )
+        self.assertIn(ALLOW_FILE_NAME, notice)
+        self.assertIn(FLAG_ALLOW_FILE_NAME, notice)
+        self.assertIn("git diff --staged", notice)
+
+    def test_entries_are_sorted_and_deduplicated(self):
+        notice = exemption_notice({ALLOW_FILE_NAME: ["b/**", "a/**", "b/**"]})
+        self.assertEqual(
+            [f"verify_claims: 2 exemption(s) from {ALLOW_FILE_NAME}:", "a/**", "b/**"],
+            [line.strip() for line in notice.splitlines()],
+        )
+
+    def test_main_prints_both_blocks_on_stderr(self):
         files = {
+            ALLOW_FILE_NAME: "docs/gone/**\n",
             FLAG_ALLOW_FILE_NAME: "git diff --staged\n",
             "doc.md": "```sh\ngit diff --staged --stat\n```\n",
         }
@@ -616,8 +646,26 @@ class TestExemptionNotice(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()),
             ):
                 main(["--repo", str(root), "--files", "doc.md"])
-            self.assertIn(FLAG_ALLOW_FILE_NAME, err.getvalue())
-            self.assertIn("git diff --staged", err.getvalue())
+            printed = err.getvalue()
+            self.assertIn(ALLOW_FILE_NAME, printed)
+            self.assertIn("docs/gone/**", printed)
+            self.assertIn(FLAG_ALLOW_FILE_NAME, printed)
+            self.assertIn("git diff --staged", printed)
+
+    def test_no_allow_file_silences_the_notice(self):
+        files = {
+            ALLOW_FILE_NAME: "docs/gone/**\n",
+            FLAG_ALLOW_FILE_NAME: "git diff --staged\n",
+            "doc.md": "x\n",
+        }
+        with TempRepo(files) as root:
+            err = io.StringIO()
+            with (
+                contextlib.redirect_stderr(err),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                main(["--repo", str(root), "--files", "doc.md", "--no-allow-file"])
+            self.assertNotIn(ALLOW_FILE_NAME, err.getvalue())
 
 
 # --------------------------------------------------------------------------
@@ -832,6 +880,24 @@ class TestPathVerdicts(unittest.TestCase):
                 )[2],
             )
 
+    def test_the_evidence_does_not_attribute_a_file_glob_to_a_flag(self):
+        """Globs arrive flattened, so the evidence cannot name one source.
+
+        `--allow` and `.verify-claims-allow` both fill `allow_globs`, and by the
+        time a path is judged there is nothing left to say which put it there.
+        Naming the flag is right one time in two — the same misattribution the
+        exemption notice exists to prevent, so the evidence stays source-neutral.
+        """
+        for globs in ((".github/**",), ("**/*.yml",)):
+            with self.subTest(globs=globs):
+                with TempRepo({"doc.md": "writes .github/x.yml\n"}) as root:
+                    _n, evidence, verdict = Verifier(
+                        root, allow_globs=globs
+                    ).verify_path(claim("path", ".github/x.yml"))
+                self.assertEqual(UNVERIFIABLE, verdict)
+                self.assertNotIn("--allow", evidence)
+                self.assertIn("allow glob", evidence)
+
     def test_a_posix_path_is_not_refuted_on_windows(self):
         with TempRepo({"doc.md": "x\n"}) as root:
             with mock.patch("verify_claims.platform.system", return_value="Windows"):
@@ -957,7 +1023,10 @@ class TestAllowFile(unittest.TestCase):
                 claim("path", ".github/workflows/c.yml", file="s.md")
             )
             self.assertEqual(UNVERIFIABLE, verdict)
-            self.assertIn("--allow", evidence)
+            # This glob came from the file, not the flag; the evidence names
+            # neither. See TestPathVerdicts for why that wording is deliberate.
+            self.assertIn("allow glob", evidence)
+            self.assertNotIn("--allow", evidence)
 
     def test_a_path_outside_the_globs_is_still_refuted(self):
         with TempRepo(

@@ -43,6 +43,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from collections import Counter
+from collections.abc import Sequence
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import asdict, dataclass
 from fnmatch import fnmatch
@@ -216,19 +217,28 @@ def read_flag_allow_file(repo_root: Path) -> frozenset[tuple[str, str]]:
     return frozenset(pairs)
 
 
-def exemption_notice(exemptions: frozenset[tuple[str, str]]) -> str:
-    """The flag exemptions in force, for stderr. Empty when there are none.
+def exemption_notice(sources: dict[str, Sequence[str]]) -> str:
+    """Every exemption in force, one block per source. Empty when there are none.
 
-    An exemption nobody sees is one nobody revisits. The pre-push hook echoes the
-    path globs it reads itself; this file is read here, so this is what says it is
-    in force — printed by the code that applies it, so the notice cannot drift
-    from the decision. Sorted, so two runs of the same repo print the same line.
+    An exemption nobody sees is one nobody revisits. Both allow files are read
+    here, so this is what says they are in force — printed by the code that
+    applies them, so the notice cannot drift from what the run did. The pre-push
+    hook used to echo the path globs from its own parse of the file; it no longer
+    parses it, precisely so that one piece of code owns the policy.
+
+    Keyed by source rather than flattened, because a glob passed as `--allow`
+    reported under the repo's file name would be the same drift in miniature.
+    Entries are sorted and deduplicated, so two runs of one repo print the same
+    lines and a glob given twice is announced once.
     """
-    if not exemptions:
-        return ""
-    pairs = sorted(f"{command} {flag}" for command, flag in exemptions)
-    head = f"verify_claims: {len(pairs)} flag exemption(s) from {FLAG_ALLOW_FILE_NAME}:"
-    return "\n".join([head, *(f"{'':15}{pair}" for pair in pairs)])
+    blocks: list[str] = []
+    for source, entries in sources.items():
+        items = sorted(set(entries))
+        if not items:
+            continue
+        blocks.append(f"verify_claims: {len(items)} exemption(s) from {source}:")
+        blocks.extend(f"{'':15}{item}" for item in items)
+    return "\n".join(blocks)
 
 
 def flag_line(
@@ -681,7 +691,11 @@ class Verifier:
                 UNVERIFIABLE,
             )
         if any(fnmatch(token, pattern) for pattern in self.allow_globs):
-            return ("filesystem", "exempt by --allow", UNVERIFIABLE)
+            # Source-neutral on purpose: `--allow` and ALLOW_FILE_NAME both fill
+            # allow_globs and arrive here flattened, so naming either one would be
+            # wrong half the time. The notice printed before the run says which
+            # file or flag declared what.
+            return ("filesystem", "exempt by an allow glob", UNVERIFIABLE)
 
         if token.startswith(("./", "../")) and claim.line in fenced_lines(
             self.repo_root, claim.file
@@ -708,7 +722,7 @@ class Verifier:
             for candidate_name in candidate_names
             for pattern in self.allow_globs
         ):
-            return ("filesystem", "exempt by --allow", UNVERIFIABLE)
+            return ("filesystem", "exempt by an allow glob", UNVERIFIABLE)
         # A POSIX path on Windows skips the existence check, so the verdict does not
         # depend on the host: `/dev/null` exists on a POSIX box, never on Windows.
         posix_on_windows = token.startswith("/") and platform.system() == "Windows"
@@ -1312,15 +1326,22 @@ def main(argv: list[str] | None = None) -> int:
                 file=sys.stderr,
             )
             return EXIT_ERROR
-        globs = list(args.allow)
+        file_globs: list[str] = []
         exemptions: frozenset[tuple[str, str]] = frozenset()
         if not args.no_allow_file:
-            globs += read_allow_file(repo)
+            file_globs = read_allow_file(repo)
             exemptions = read_flag_allow_file(repo)
+        globs = [*args.allow, *file_globs]
         # Before the run, not after: a full sweep takes minutes, and the reader
         # should know what is being waived while it is happening. `--quiet` and
         # `--json` are consumed by scripts, so they stay clean.
-        notice = exemption_notice(exemptions)
+        notice = exemption_notice(
+            {
+                ALLOW_FILE_NAME: file_globs,
+                "--allow": args.allow,
+                FLAG_ALLOW_FILE_NAME: [f"{c} {f}" for c, f in exemptions],
+            }
+        )
         if notice and not (args.quiet or args.json):
             print(notice, file=sys.stderr)
         results = run(

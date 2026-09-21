@@ -9,7 +9,7 @@ reaches a shell — verifiers are built from structured fields and run with
 | `extract_claims.py` | Finds candidate claims and *proposes* a command for each. Decides nothing. |
 | `verify_claims.py` | Executes a verifier per claim and returns a verdict. Exits non-zero on any `REFUTED`. |
 | `../tests/test_extract_claims.py` | 35 tests. `python3 -m unittest discover -s tests` from the skill root. |
-| `../tests/test_verify_claims.py` | 106 tests, including both regression classes below. |
+| `../tests/test_verify_claims.py` | 125 tests, including both regression classes below. |
 
 ## verify_claims.py
 
@@ -211,17 +211,33 @@ Three properties keep it honest:
 Only exempt a flag that **works** but that no help text documents. A flag the tool
 does not have is a defect in the document.
 
-Every run says what it is waiving, before it starts:
+## Saying what a run is waiving
+
+Every run announces both files before it starts, one block per source:
 
 ```
-verify_claims: 1 flag exemption(s) from .verify-flags-allow:
+verify_claims: 2 exemption(s) from .verify-claims-allow:
+               .agents/skills/**
+               docs/landing-zone/**
+verify_claims: 1 exemption(s) from .verify-flags-allow:
                git diff --staged
 ```
 
+The counts are this repo's shape, not its current totals — it has more path globs
+than the two shown.
+
 On stderr, so it does not enter a report; suppressed by `--quiet` and `--json`,
-which scripts read. The notice comes from the code that applies the exemption, so
-it cannot drift from what the run actually did — which is why the pre-push hook
-does not print this one itself the way it prints the path globs.
+which scripts read; silent under `--no-allow-file`, which waives nothing.
+
+**Keyed by source, not flattened.** A glob given as `--allow` gets its own block,
+because reporting it under the repo's file name would be a small lie of exactly
+the kind this notice exists to prevent.
+
+The pre-push hook used to parse `.verify-claims-allow` itself and pass each glob
+back as `--allow`, and printed its own count. It no longer does either: one piece
+of code reads the policy, applies it, and announces it, so the report and the
+notice cannot disagree. The hook keeps *scope* — which markdown is in the push —
+and this script owns exemptions end to end.
 
 ### Two refutations that are meant to stand
 

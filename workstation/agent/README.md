@@ -280,12 +280,15 @@ From the 2026-07-30 usage report, when `WORKING_PRACTICES.md` was folded into `C
   in this globally symlinked tree, reached by every repo that links it, so a glob written
   into it would silently exempt paths in unrelated repos. They go in `.verify-claims-allow`
   at the root of the repo being pushed: tracked, visible in a diff, inherited by nothing.
-  No file means no globs, and the hook prints the exemptions in force before it runs.
-  `.verify-flags-allow` beside it does the same for a flag that works but that no help text
-  documents — `git diff --staged`, a synonym `git diff -h` never prints — kept separate
-  because the first file is pinned to paths *meant* not to exist. `verify_claims.py` reads and
-  echoes that one itself rather than the hook doing it, so the notice comes from the code that
-  applies the exemption and cannot drift from what the run did.
+  No file means no globs. `.verify-flags-allow` beside it does the same for a flag that works
+  but that no help text documents — `git diff --staged`, a synonym `git diff -h` never
+  prints — kept separate because the first file is pinned to paths *meant* not to exist.
+- **One component owns the exemptions — 2026-09-21.** `verify_claims.py` reads both files,
+  applies them, and prints what it waived; the hook reads neither. It used to parse the path
+  file and pass each glob back as `--allow`, and print its own count — a second parser of one
+  format, and a second place the policy was stated. The notice now comes from the code that
+  applies it, so it cannot drift from what the run did. The hook keeps *scope*: which markdown
+  is in the push, which suites to run, and propagating the exit code.
 - **`fix-findings` defers rather than restates — 2026-08-23.** It used to carry its own
   shorter procedure, and both of its differences from `review`'s Apply mode were defects:
   it said to apply *all* findings, dropping the rule that judgement calls are escalated

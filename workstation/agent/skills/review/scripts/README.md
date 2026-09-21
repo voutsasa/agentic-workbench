@@ -168,9 +168,10 @@ Exemptions and test directories all come from the repo being pushed —
 `.verify-claims-allow` for paths, `.verify-flags-allow` for flags, `.pre-push-tests` for
 suites — never from the hook. The hook is shared
 by every repo that links it, so a glob or directory written into it would apply to
-unrelated repos. It reads the first and prints those globs before it runs; the flag
-file is read and echoed by `verify_claims.py` itself, so that notice comes from the
-code that applies it and cannot drift from what the run did. See
+unrelated repos. It reads only `.pre-push-tests`: both allow files are read, applied and
+announced by `verify_claims.py`, so that notice comes from the code that applies them and
+cannot drift from what the run did. This hook used to parse the path file too and pass each
+glob back as `--allow` — a second parser of one format, retired for that reason. See
 [`../../verify-docs/scripts/README.md`](../../verify-docs/scripts/README.md).
 
 A suite that itself invokes the hook — `tests/test_pre_push.py` does — would run the
