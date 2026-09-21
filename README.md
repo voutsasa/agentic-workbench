@@ -146,6 +146,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 | `.verify-claims-allow` | Path claims the documentation gate is to leave alone, one glob per line with a reason above each. Repo-local on purpose: the pre-push hook is shared by every repo that links it, so exemptions must not travel with it. |
 | `.verify-flags-allow` | Its sibling for flag claims, one `<command> <flag>` per line: a flag that works but that no help text documents, such as `git diff --staged`. It only ever downgrades a refutation. |
 | `.pre-push-tests` | Unit-test directories the pre-push hook runs before a push, one per line. Repo-local for the same reason. |
+| `.pre-push-ruff` | Its presence makes the pre-push hook run `ruff check` and `ruff format --check`. Repo-local for the same reason. |
 | `.gitignore` | Excludes the ingested corpus, the per-clone `.claude/` and `CLAUDE.md`, `.venv/`, `.DS_Store`, and Python build artefacts. |
 | `.github/workflows/verify-docs.yml` | Weekly documentation audit on GitHub Actions, opening a pull request with the reports. **Dormant:** the repo is hosted on Azure DevOps, where it does not run — its port is the next row. |
 | `azure-pipelines/verify-docs.yml` | The same weekly audit for Azure DevOps, opening a pull request with `az repos pr create`. Its header lists the one-time setup in ADO. **Written, not yet run** — [`TODO.md`](TODO.md) #9. |

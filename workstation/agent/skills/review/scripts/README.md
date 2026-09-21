@@ -9,7 +9,7 @@ nothing to install, and **no model is called from here**.
 | `checks.toml` | The rules it enforces — glossary terms, header schema, scope. Tune this, not the script. |
 | `pre-push` | Git hook wrapper around `repo_check.py`, the repo's own unit tests, **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/` — **copied, not linked, on Windows**, see below. |
 | `../tests/test_repo_check.py` | `python3 -m unittest discover -s tests` from the skill root. 123 tests, no network. |
-| `../tests/test_pre_push.py` | 11 tests over the hook itself, same command. It invokes the hook, so the hook skips step 2 when `PRE_PUSH_IN_TESTS=1`. |
+| `../tests/test_pre_push.py` | 15 tests over the hook itself, same command. It invokes the hook, so the hook skips step 3 when `PRE_PUSH_IN_TESTS=1`. |
 
 ## repo_check.py
 
@@ -151,24 +151,27 @@ re-copied whenever the hook changes. The command, the `eol=lf` trap that decides
 even executes, and the check for it are in
 [`../../../setup/windows.md`](../../../setup/windows.md#the-pre-push-gate) § *The pre-push gate*.
 
-The hook runs three checks in order, and stops at the first refusal:
+The hook runs four checks in order, and stops at the first refusal:
 
 1. `repo_check.py` over the whole repo, unconditionally. At a second and a half there is
    nothing to optimise around.
-2. **The repo's own unit tests**, one `python -m unittest discover` per directory named in
+2. **`ruff check` and `ruff format --check`**, only when the repo has a `.pre-push-ruff`
+   file at its root, run as `python -m ruff` on the same interpreter as step 3. Both run
+   before the verdict, so one push shows every violation. `SKIP_RUFF=1` skips only this step.
+3. **The repo's own unit tests**, one `python -m unittest discover` per directory named in
    `.pre-push-tests`, on the repo's `.venv` interpreter when it has one and `python3`
    otherwise. No file, no tests. A named directory that does not exist, or holds no tests,
    refuses the push rather than passing it.
-3. `verify_claims.py` over **only the markdown in this push**, worked out from the refs
+4. `verify_claims.py` over **only the markdown in this push**, worked out from the refs
    git feeds the hook on stdin. Scoped that way it is under a second; the whole repo
    varies by corpus and toolchain, because it executes `--help` for every documented tool. A claim you did
    not touch is a claim you did not break.
 
 Exemptions and test directories all come from the repo being pushed —
 `.verify-claims-allow` for paths, `.verify-flags-allow` for flags, `.pre-push-tests` for
-suites — never from the hook. The hook is shared
+suites, `.pre-push-ruff` for lint — never from the hook. The hook is shared
 by every repo that links it, so a glob or directory written into it would apply to
-unrelated repos. It reads only `.pre-push-tests`: both allow files are read, applied and
+unrelated repos. It reads only `.pre-push-tests` and the presence of `.pre-push-ruff`: both allow files are read, applied and
 announced by `verify_claims.py`, so that notice comes from the code that applies them and
 cannot drift from what the run did. This hook used to parse the path file too and pass each
 glob back as `--allow` — a second parser of one format, retired for that reason. See
@@ -176,7 +179,7 @@ glob back as `--allow` — a second parser of one format, retired for that reaso
 
 A suite that itself invokes the hook — `tests/test_pre_push.py` does — would run the
 suites again from inside them. The hook sets `PRE_PUSH_IN_TESTS=1` for the tests it
-starts and skips step 2 when it finds that set.
+starts and skips step 3 when it finds that set.
 
 ### Running it by hand
 

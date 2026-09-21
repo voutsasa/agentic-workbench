@@ -2,8 +2,8 @@
 
     python3 -m unittest discover -s tests
 
-Two things are covered here: the invocation guard, and the unit-test step driven
-by ``.pre-push-tests``. What the checkers do once invoked is covered by
+Three things are covered here: the invocation guard, the ruff step opted into by
+``.pre-push-ruff``, and the unit-test step driven by ``.pre-push-tests``. What the checkers do once invoked is covered by
 test_repo_check.py and by the verifier's own suite; this file exists for the
 behaviour that lives only in the shell script.
 
@@ -159,11 +159,12 @@ HOOK_ENV_FLAGS = (
     "SKIP_VERIFY_CLAIMS",
     "SKIP_PRE_PUSH_TESTS",
     "PRE_PUSH_IN_TESTS",
+    "SKIP_RUFF",
 )
 
 
-class UnitTestStepTests(unittest.TestCase):
-    """The step that runs the directories named in ``.pre-push-tests``."""
+class HookRepoCase(unittest.TestCase):
+    """A throwaway git repo with a passing stub checker and no verifier."""
 
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
@@ -196,6 +197,10 @@ class UnitTestStepTests(unittest.TestCase):
             timeout=TIMEOUT_S,
             check=False,
         )
+
+
+class UnitTestStepTests(HookRepoCase):
+    """The step that runs the directories named in ``.pre-push-tests``."""
 
     def test_no_file_runs_no_tests(self) -> None:
         self.write_suite("suite", FAILING_SUITE)
@@ -247,6 +252,62 @@ class UnitTestStepTests(unittest.TestCase):
         result = self.run_hook(PRE_PUSH_IN_TESTS="1")
         self.assertEqual(result.returncode, 0)
         self.assertNotIn("unit tests in", result.stderr)
+
+
+#: Stands in for ruff: the hook runs ``<python> -m ruff``, and a ``ruff``
+#: package at the repo root is found first. It logs each call and exits with
+#: the code in its RUFF_STUB_EXIT variable.
+RUFF_STUB = """import os
+import sys
+from pathlib import Path
+
+with Path("ruff-calls.log").open("a", encoding="utf-8") as log:
+    log.write(" ".join(sys.argv[1:]) + "\\n")
+sys.exit(int(os.environ.get("RUFF_STUB_EXIT", "0")))
+"""
+
+
+class RuffStepTests(HookRepoCase):
+    """The ruff step, opted into per repo by a ``.pre-push-ruff`` file."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        stub = self.root / "ruff"
+        stub.mkdir()
+        (stub / "__init__.py").write_text("", encoding="utf-8")
+        (stub / "__main__.py").write_text(RUFF_STUB, encoding="utf-8")
+
+    def opt_in(self) -> None:
+        (self.root / ".pre-push-ruff").write_text("", encoding="utf-8")
+
+    def calls(self) -> list[str]:
+        log = self.root / "ruff-calls.log"
+        return log.read_text(encoding="utf-8").splitlines() if log.exists() else []
+
+    def test_no_file_runs_no_ruff(self) -> None:
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls(), [])
+
+    def test_opted_in_runs_lint_and_format_check(self) -> None:
+        self.opt_in()
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls(), ["check .", "format --check ."])
+
+    def test_ruff_failure_refuses_the_push(self) -> None:
+        self.opt_in()
+        result = self.run_hook(RUFF_STUB_EXIT="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("ruff", result.stderr)
+        self.assertIn("SKIP_RUFF=1", result.stderr)
+
+    def test_skip_flag_skips_only_ruff(self) -> None:
+        self.opt_in()
+        result = self.run_hook(SKIP_RUFF="1", RUFF_STUB_EXIT="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("SKIP_RUFF=1", result.stderr)
+        self.assertEqual(self.calls(), [])
 
 
 if __name__ == "__main__":

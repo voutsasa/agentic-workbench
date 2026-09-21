@@ -1,0 +1,5 @@
+# Presence of this file opts this repo into the pre-push hook's ruff step:
+# `ruff check .` and `ruff format --check .`, on the repo's .venv interpreter.
+# The content is ignored. Repo-local for the same reason as .pre-push-tests: the
+# hook is shared by every repo that links it, and a repo that never asked for
+# lint must not start refusing pushes. Skip once with SKIP_RUFF=1 git push.
