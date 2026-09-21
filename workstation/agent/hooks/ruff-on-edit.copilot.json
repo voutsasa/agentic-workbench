@@ -4,7 +4,7 @@
     "postToolUse": [
       {
         "type": "command",
-        "matcher": "edit|create",
+        "matcher": "edit|create|apply_patch",
         "bash": "for p in \"$PWD/.venv/bin/python\" \"$PWD/.venv/Scripts/python.exe\"; do [ -x \"$p\" ] && exec \"$p\" \"${COPILOT_HOME:-$HOME/.copilot}/hooks/ruff_on_edit.py\"; done; exit 0",
         "timeoutSec": 30
       }

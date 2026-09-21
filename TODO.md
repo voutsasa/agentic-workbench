@@ -66,20 +66,6 @@ decisions and then said to go ahead with all of it.
 **Closes when:** one review in Apply mode, with the user asking to approve each finding, offers one
 choice per finding with its confidence and applies only the approved ones.
 
-### 14. The ruff post-edit hook is unproven on Windows and under `COPILOT_HOME`
-
-Opened 2026-09-18, with `workstation/agent/hooks/ruff_on_edit.py`. Proven on macOS the same day: it
-fires in Claude Code (`Write`) and in Copilot CLI (`create`), each leaving a `.py` file ruff-formatted
-— both runs recorded in `workstation/machines/macos-workstation.md`. Still unproven:
-
-| Unproven | Why it could differ |
-|---|---|
-| Windows | both registrations are `bash` with `.venv/bin/python`; Copilot's `powershell` field is not set, and a Windows venv has `Scripts\python.exe` |
-| Copilot's `edit` tool | only `create` was observed; `edit` is assumed to carry the path under the same key |
-
-**Closes when:** a `.py` edit on the Windows machine is formatted by the hook in each assistant, or the
-hook is documented as POSIX-only; and a Copilot `edit` of an existing file is observed formatted.
-
 ### 15. The subagent rule has not steered a session
 
 Opened 2026-09-18, with the rewrite of principle 5 in `workstation/agent/AGENT-INSTRUCTIONS.md` and
@@ -128,5 +114,20 @@ after a month of sessions without such a case (then drop).
 
 ## Closed
 
-Nothing yet. An item moves here with the evidence that closed it, or is deleted outright; a list of
-things that turned out fine is not worth carrying.
+### 14. The ruff post-edit hook — Windows and Copilot's `apply_patch`
+
+Opened 2026-09-18. Closed 2026-09-21 on `ema-pf5n4xe7`. Claude Code: a `Write` of an unformatted `.py`
+file was reformatted by the hook (`import os` removed, spacing normalized) — the `.venv/Scripts/python.exe`
+branch of the registration works as written; no change needed.
+
+Copilot CLI: found broken, not just unproven. Debug logs (`--log-level debug`) showed Copilot edits an
+*existing* file via a tool named `apply_patch`, not `edit` — the registered matcher `"edit|create"`
+never matched it, and `apply_patch`'s `toolArgs` is a raw patch body
+(`*** Update File: <path>`), not JSON, so `edited_path()`'s `json.loads` failed and returned `None`
+before a matcher fix would even have mattered. Fixed both: the matcher now reads
+`"edit|create|apply_patch"` (`ruff-on-edit.copilot.json`), and `edited_path()` gained a regex fallback
+for the patch-body format (`ruff_on_edit.py`), with two new unit tests. Verified end to end: a captured
+`apply_patch` call carrying `import   sys` / `def g( ):` / `return   sys.argv` (bad spacing, as
+instructed) resulted in a file on disk reading `import sys` / `def g():` / `return sys.argv` with
+correct PEP8 blank lines — output only ruff's formatter would produce from that patch, not the model.
+17/17 unit tests pass.

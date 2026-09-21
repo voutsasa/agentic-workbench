@@ -35,6 +35,13 @@ class TestRegistrations(unittest.TestCase):
         self.assertIn(".venv/bin/python", command)
         self.assertIn(".venv/Scripts/python.exe", command)
 
+    def test_copilot_registration_matches_apply_patch(self):
+        registration = json.loads(
+            (self.hooks / "ruff-on-edit.copilot.json").read_text()
+        )
+        matcher = registration["hooks"]["postToolUse"][0]["matcher"]
+        self.assertIn("apply_patch", matcher.split("|"))
+
 
 class TestEditedPath(unittest.TestCase):
     def test_claude_payload(self):
@@ -58,6 +65,18 @@ class TestEditedPath(unittest.TestCase):
         self.assertIsNone(hook.edited_path({"tool_input": {"command": "ls"}}))
         self.assertIsNone(hook.edited_path({"toolArgs": "not json"}))
         self.assertIsNone(hook.edited_path({}))
+
+    def test_copilot_apply_patch_update(self):
+        patch = (
+            "*** Begin Patch\n*** Update File: a.py\n@@\n-x=1\n+x = 1\n*** End Patch\n"
+        )
+        payload = {"toolArgs": patch, "cwd": "/repo"}
+        self.assertEqual(hook.edited_path(payload), Path("/repo/a.py"))
+
+    def test_copilot_apply_patch_add(self):
+        patch = "*** Begin Patch\n*** Add File: a.py\n+x = 1\n*** End Patch\n"
+        payload = {"toolArgs": patch, "cwd": "/repo"}
+        self.assertEqual(hook.edited_path(payload), Path("/repo/a.py"))
 
 
 class TestMain(unittest.TestCase):
