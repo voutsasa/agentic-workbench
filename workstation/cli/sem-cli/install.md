@@ -5,8 +5,7 @@ product: Sem (Ataraxy Labs)
 verified: 2026-08-24
 ---
 
-# sem-cli
- — install
+# sem-cli — install
 
 Binary: `sem`. Product: Sem (Ataraxy Labs).
 

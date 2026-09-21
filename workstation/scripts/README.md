@@ -15,7 +15,7 @@ called on Windows and inside an activated venv; **on macOS outside a venv it is 
 | [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude`, and its skills in `~/.copilot/skills` |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
-`../agent/skills/*/tests/`. Two test no script here: `test_readme_skills.py` fails when the skill
+`../agent/skills/*/tests/`. Two of them test no script in this folder: `test_readme_skills.py` fails when the skill
 table in the root `README.md` stops matching `link_config.py`'s `SKILLS` tuple and the `skills/`
 folders, and `test_python_version.py` fails when `.python-version` stops satisfying
 `requires-python` in `pyproject.toml`. The pre-push hook runs this folder on every push, because the root `.pre-push-tests`

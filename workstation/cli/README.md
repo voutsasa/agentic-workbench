@@ -90,12 +90,12 @@ Each row is named by the **command you type**, which is often not the package na
 | `magick` | ImageMagick | [`magick/`](magick/) |
 | `defuddle` | Defuddle | [`defuddle/`](defuddle/) |
 | `tesseract` | Tesseract OCR | [`tesseract/`](tesseract/) |
-| `sem` | Sem | [`sem-cli/`](sem-cli/) |
+| `sem` | Sem (Ataraxy Labs) | [`sem-cli/`](sem-cli/) |
 | `weasyprint` | WeasyPrint | [`weasyprint/`](weasyprint/) |
 | `dbml2sql` / `sql2dbml` / `db2dbml` | DBML CLI | [`dbml-cli/`](dbml-cli/) |
 | `plantuml` | PlantUML | [`plantuml-cli/`](plantuml-cli/) |
 | `mmdc` | Mermaid CLI | [`mermaid-cli/`](mermaid-cli/) |
-| `d2` | D2 | [`d2-cli/`](d2-cli/) |
+| `d2` | D2 (Terrastruct) | [`d2-cli/`](d2-cli/) |
 | `typst` | Typst | [`typst/`](typst/) |
 
 ## Do not cross ecosystems by name

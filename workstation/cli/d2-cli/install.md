@@ -22,9 +22,10 @@ here — and acting on it is the user's call either way.
 
 PNG output needs `librsvg` as well — `brew install librsvg` — because d2's own raster path is broken. See [quick_start.md](quick_start.md).
 
-On Windows the `librsvg` dependency is **unverified**. `magick` here is scoop's build, not brew's, so
-the MSVG-renderer failure that forces the `rsvg-convert` hop on macOS may not apply. Test before
-assuming either way.
+On Windows the `librsvg` dependency **does not apply to the `magick` hop**, tested 21 September 2026:
+scoop's ImageMagick build converts an SVG carrying text directly, with no `rsvg-convert` on `PATH` —
+the evidence is in [`../magick/quick_start.md`](../magick/quick_start.md) § *SVG input*. d2's own raster
+path is a separate question and is still untested here.
 
 ## Traps
 

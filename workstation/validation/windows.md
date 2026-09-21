@@ -4,9 +4,8 @@ The same five sections as [`macos.md`](macos.md), in PowerShell 7. Section lette
 note can cite *validation C* whichever box ran it. Record results in that machine's file under
 [`../machines/`](../machines/README.md), not here.
 
-**None of this has been run on a Windows machine yet.** The commands are the documented Windows
-equivalents of the macOS ones, which have all been run; where a step's Windows behaviour is genuinely
-unknown, it says so. Correct this file from the first real run rather than trusting it.
+Where a step's Windows behaviour is genuinely unknown, it says so. Correct this file from the run
+rather than trusting it.
 
 `$Root` below is the clone, the `repo:` field of `~/.claude/machine.md`. `<pipx-python>` is that
 venv's `Scripts\python.exe`, from `pipx environment --value PIPX_LOCAL_VENVS`.
@@ -78,8 +77,9 @@ Get-Content $env:TEMP\r.html -Raw | defuddle parse - --md --frontmatter | Measur
 title that is the real page. Re-measure the row in
 [`fixtures/hydrated-pages.md`](fixtures/hydrated-pages.md) first; rows go stale.
 
-**Unknown on Windows:** whether `render_page.py`'s exit-2 message names the right interpreter path —
-it prints `sys.executable`, so it should, but the pipx layout differs (`Scripts\python.exe`).
+`render_page.py`'s exit-2 message must name the pipx interpreter, as on macOS. It prints
+`sys.executable`, and the Windows pipx layout ends `Scripts\python.exe` rather than `bin/python` — a
+difference the message has to carry, not assume away.
 
 ## E. The repo's own gates
 

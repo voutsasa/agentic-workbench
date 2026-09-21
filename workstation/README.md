@@ -17,7 +17,7 @@ What this workbench **runs on**, as opposed to what it reads. `docs/` is the cor
 
 `cli/` and `mcp/` are two halves of one register section — *Cross-cutting aspects → 2. Workstation tooling* in [`SOURCES.md`](../SOURCES.md). They are split because the file contract differs, not because the purpose does. [`skills/ingest-source/references/workstation-tooling.md`](../skills/ingest-source/references/workstation-tooling.md) covers both: §A for CLI tools, §B for MCP servers.
 
-## Three rules that apply across the tree
+## Four rules that apply across the tree
 
 **The user installs; these files record** — see [`AGENTS.md`](../AGENTS.md#the-user-installs-the-agent-records). A recorded route means the route is *known*, not that the tool is live here.
 
