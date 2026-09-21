@@ -8,7 +8,8 @@ nothing to install, and **no model is called from here**.
 | `repo_check.py` | Deterministic documentation gate. Exits non-zero on any violation. |
 | `checks.toml` | The rules it enforces — glossary terms, header schema, scope. Tune this, not the script. |
 | `pre-push` | Git hook wrapper around `repo_check.py`, the repo's own unit tests, **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/`. |
-| `../tests/test_repo_check.py` | `python3 -m unittest discover -s tests` from the skill root. 92 tests, no network. |
+| `../tests/test_repo_check.py` | `python3 -m unittest discover -s tests` from the skill root. 123 tests, no network. |
+| `../tests/test_pre_push.py` | 11 tests over the hook itself, same command. It invokes the hook, so the hook skips step 2 when `PRE_PUSH_IN_TESTS=1`. |
 
 ## repo_check.py
 
@@ -16,9 +17,10 @@ nothing to install, and **no model is called from here**.
 python3 repo_check.py                 # check the repo containing this script
 python3 repo_check.py --json          # machine-readable violations
 python3 repo_check.py --list-files    # what is in scope, then stop
+python3 repo_check.py --corpus        # register ingestion ledger, then stop
 ```
 
-Four checks, each toggled in `checks.toml`:
+Five checks, each toggled in `checks.toml`:
 
 1. **`links`** — every relative markdown link, image and reference definition resolves to
    a file on disk. Percent escapes are decoded (`Non-functional%20requirements.md` is a
@@ -45,6 +47,32 @@ Four checks, each toggled in `checks.toml`:
    documents, and `skills/*/SKILL.md`. A file matching no schema is not checked, so a
    family opts **in** by being named and there is no exemption list to keep in sync.
    On by default, like every other check — see below.
+5. **`register`** — a source register and its one-line catalogue stay entry-for-entry
+   identical, in the same order, on the same URLs, and every entry is exactly one bracket
+   link to one ingested file. Both halves are list comparisons, which is why they are code
+   here rather than prose a reader re-executes. Opt-in by **file presence**: a repo with no
+   `checks.register.sources` on disk is not checked, the same mechanism `metadata_header`
+   uses, and the reason this config is safe to link from a repo that has no register.
+   Destination *existence* is not part of it — see `--corpus` below.
+
+### The ingestion ledger — `--corpus`
+
+```bash
+python3 repo_check.py --corpus         # how many entries are ingested, and which are not
+python3 repo_check.py --corpus --json  # one row per entry, for a batch to resume from
+```
+
+Deliberately **not** part of the gate, and the one place in this script where an absent
+file is not a defect. The corpus is gitignored and rebuilt from the register on request, so
+a fresh clone has none and nothing is wrong; failing a push on that would punish the one
+checkout where the repo is clean. Run it by hand as the preflight for an ingestion run, and
+as the progress ledger a batch resumes from. Exit `1` when anything is missing, so a script
+can branch on it without parsing the report.
+
+Destinations come from `checks.register`, not from the script: `default_destination` with
+each of `extensions` tried, overridden per `[[checks.register.destinations]]` subsection.
+`{name}` is the bracket text with `: ` rewritten as ` - `, the one filename transform the
+invariant defines.
 
 ### Exit codes
 
@@ -85,7 +113,7 @@ doing nothing: claim verification lives in its own script, not in this one.
 |---|---|---|---|
 | Question | is the prose internally consistent? | is each claim still true? | what should be done about it? |
 | Method | reads the files | executes a verifier per claim | reads the evidence |
-| Runtime | **~0.065s** over 47 files | scoped runs are typically sub-second; full runs vary by corpus and toolchain | minutes |
+| Runtime | **~1.4s** over 68 files, interpreter start included | scoped runs are typically sub-second; full runs vary by corpus and toolchain | minutes |
 | Cost | none | none | tokens |
 | Fits | every push | every push, scoped to the change | on demand, or CI |
 
@@ -118,8 +146,8 @@ silently and never reaches a fresh clone.
 
 The hook runs three checks in order, and stops at the first refusal:
 
-1. `repo_check.py` over the whole repo, unconditionally. At 0.065s there is nothing to
-   optimise around.
+1. `repo_check.py` over the whole repo, unconditionally. At a second and a half there is
+   nothing to optimise around.
 2. **The repo's own unit tests**, one `python -m unittest discover` per directory named in
    `.pre-push-tests`, on the repo's `.venv` interpreter when it has one and `python3`
    otherwise. No file, no tests. A named directory that does not exist, or holds no tests,
@@ -148,7 +176,7 @@ starts and skips step 2 when it finds that set.
 git passes the hook two arguments and the ref list on stdin; a hand run supplies neither.
 Check 3 has nothing to scope itself to, so the hook runs checks 1 and 2, prints **`verify_claims.py
 did NOT run`**, and exits 0 — `repo_check: all enabled checks passed` alone is not evidence
-of a full pass. For check 2 by hand:
+of a full pass. For check 3 by hand:
 
 ```bash
 python3 ../../verify-docs/scripts/verify_claims.py --repo .

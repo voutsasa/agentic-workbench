@@ -1,13 +1,23 @@
 #!/usr/bin/env python3
 """Deterministic documentation gate for a markdown repo.
 
-Four checks, all of them plain file operations — no model, no network, no cost:
+Five checks, all of them plain file operations — no model, no network, no cost:
 
   links           — every relative markdown link resolves to a file on disk
   bare_paths      — repo paths written as prose rather than as a link resolve too
   terminology     — house glossary, with per-rule carve-outs
   metadata_header — required frontmatter fields, per document family, with the
                     values validated rather than merely present
+  register        — a source register and its catalogue stay entry-for-entry
+                    identical, and every entry is one bracket link to one
+                    destination. Skipped in a repo that has no register, so the
+                    shared config stays safe to link from anywhere.
+
+`--corpus` is the register's other half, deliberately NOT part of the gate: it
+reports which destination files are actually on disk. The ingested corpus is
+gitignored, so a fresh clone has none and nothing is wrong — failing a push on
+that would punish the one checkout where the repo is clean. Run it by hand as
+the preflight for an ingestion run.
 
 Deliberately NOT here: "does this document contradict the code?". That needs a
 command executed per claim, and the `verify-docs` skill already does it properly
@@ -474,11 +484,290 @@ def check_metadata_header(
     return violations
 
 
+# --------------------------------------------------------------------------- #
+# register
+# --------------------------------------------------------------------------- #
+
+# A register entry is a bullet carrying a bracket link with an http(s) target.
+# That is the definition, not a heuristic: a gap placeholder carries no link and
+# an italic *see also* cross-reference carries no link either, so neither can be
+# mistaken for an entry, and the invariant stays one bracket link to one file.
+REGISTER_BULLET = re.compile(r"^\s*[*+-]\s+\S")
+REGISTER_LINK = re.compile(r"\[([^\]]+)\]\(\s*(https?://[^)\s]+?)\s*\)")
+SEE_ALSO = re.compile(r"^\s*[*_]see also:", re.IGNORECASE)
+HEADING = re.compile(r"^(#{1,6})\s+(.*?)\s*#*$")
+
+# The depth at which a heading names a destination subsection rather than a
+# layer. `#### CLI tools` routes; `## 4. Technical architecture` does not.
+SUBSECTION_DEPTH = 4
+
+
+def register_filename(name: str) -> str:
+    """An entry's title as it is written on disk.
+
+    One transform, from the ingestion invariant: `: ` — the colon *and* the
+    space after it — becomes ` - `, because a colon is not a legal filename
+    character on Windows. A colon with no space after it is part of the title
+    (`C:Drive`) and is left alone.
+    """
+    return name.replace(": ", " - ")
+
+
+def parse_register_entries(text: str) -> list[dict]:
+    """Every entry in a register or catalogue, in document order.
+
+    Fenced code is skipped — an example bullet in a snippet is not an entry.
+    `section` is the innermost subsection heading, or None under a layer.
+    """
+    entries: list[dict] = []
+    section: str | None = None
+    for lineno, line in prose_lines(text, keep_code=True):
+        heading = HEADING.match(line)
+        if heading:
+            depth = len(heading.group(1))
+            section = heading.group(2) if depth >= SUBSECTION_DEPTH else None
+            continue
+        if not REGISTER_BULLET.match(line):
+            continue
+        links = REGISTER_LINK.findall(line)
+        if not links:
+            continue
+        name, url = links[0]
+        entries.append(
+            {
+                "name": name.strip(),
+                "url": url,
+                "section": section,
+                "line": lineno,
+                "links": len(links),
+            }
+        )
+    return entries
+
+
+def register_destinations(entry: dict, settings: dict) -> list[str]:
+    """Where this entry's ingested file is allowed to be, most likely first.
+
+    One route per subsection rule, else the default with each extension tried —
+    a layer source lands as `.md` or `.pdf` depending on what the source is.
+    """
+    name = register_filename(entry["name"])
+    for rule in settings.get("destinations", []):
+        if rule.get("section") == entry.get("section"):
+            return [rule["path"].format(name=name)]
+    template = settings.get("default_destination", "docs/landing-zone/{name}")
+    base = template.format(name=name)
+    return [base + ext for ext in settings.get("extensions", [".md"])]
+
+
+def _register_shape(rel: str, entries: list[dict], text: str) -> list[dict]:
+    """The one-to-one rules, inside the register itself."""
+    violations = []
+    seen: dict[str, int] = {}
+    for entry in entries:
+        if entry["links"] > 1:
+            violations.append(
+                {
+                    "check": "register",
+                    "file": rel,
+                    "line": entry["line"],
+                    "detail": f"entry carries {entry['links']} bracket links; an "
+                    "entry is one bracket link to one ingested file",
+                    "evidence": entry["name"],
+                }
+            )
+        if "/" in entry["name"] or "\\" in entry["name"]:
+            violations.append(
+                {
+                    "check": "register",
+                    "file": rel,
+                    "line": entry["line"],
+                    "detail": f"entry name {entry['name']!r} holds a path separator, "
+                    "so its destination would fall outside the destination folder",
+                    "evidence": entry["name"],
+                }
+            )
+        first = seen.get(entry["name"])
+        if first is not None:
+            violations.append(
+                {
+                    "check": "register",
+                    "file": rel,
+                    "line": entry["line"],
+                    "detail": f"{entry['name']!r} appears more than once (first at "
+                    f"line {first}); one canonical entry per source",
+                    "evidence": entry["name"],
+                }
+            )
+        else:
+            seen[entry["name"]] = entry["line"]
+
+    # A cross-reference with a link would be a second canonical entry for a
+    # source that already has one, which is exactly what the italic form avoids.
+    for lineno, line in prose_lines(text, keep_code=True):
+        if SEE_ALSO.match(line) and REGISTER_LINK.search(line):
+            violations.append(
+                {
+                    "check": "register",
+                    "file": rel,
+                    "line": lineno,
+                    "detail": "a *see also* cross-reference carries a bracket link, "
+                    "which makes it a second entry for a source that already has one",
+                    "evidence": line.strip()[:200],
+                }
+            )
+    return violations
+
+
+def _register_mirror(
+    catalogue_rel: str, entries: list[dict], catalogue: list[dict]
+) -> list[dict]:
+    """The catalogue mirrors the register entry-for-entry, order included."""
+    violations = []
+    source_names = [e["name"] for e in entries]
+    catalogue_names = [e["name"] for e in catalogue]
+
+    for name in source_names:
+        if name not in catalogue_names:
+            violations.append(
+                {
+                    "check": "register",
+                    "file": catalogue_rel,
+                    "line": 1,
+                    "detail": f"{name!r} is in the register but has no catalogue line",
+                    "evidence": "the two stay entry-for-entry identical",
+                }
+            )
+    for entry in catalogue:
+        if entry["name"] not in source_names:
+            violations.append(
+                {
+                    "check": "register",
+                    "file": catalogue_rel,
+                    "line": entry["line"],
+                    "detail": f"{entry['name']!r} is in the catalogue but not in the "
+                    "register, which is the source of truth",
+                    "evidence": entry["name"],
+                }
+            )
+
+    by_name = {e["name"]: e for e in entries}
+    for entry in catalogue:
+        twin = by_name.get(entry["name"])
+        if twin and twin["url"] != entry["url"]:
+            violations.append(
+                {
+                    "check": "register",
+                    "file": catalogue_rel,
+                    "line": entry["line"],
+                    "detail": f"URL for {entry['name']!r} differs from the register: "
+                    f"{entry['url']} vs {twin['url']}",
+                    "evidence": entry["url"],
+                }
+            )
+
+    # Order is only meaningful once both hold the same entries; reporting it
+    # alongside a missing line would be one fault counted twice.
+    if (
+        sorted(source_names) == sorted(catalogue_names)
+        and source_names != catalogue_names
+    ):
+        first = next(
+            i for i, (a, b) in enumerate(zip(source_names, catalogue_names)) if a != b
+        )
+        violations.append(
+            {
+                "check": "register",
+                "file": catalogue_rel,
+                "line": catalogue[first]["line"],
+                "detail": "catalogue order diverges from the register at entry "
+                f"{first + 1}: {catalogue_names[first]!r} where the register has "
+                f"{source_names[first]!r}",
+                "evidence": "one line per entry, in the same order as the register",
+            }
+        )
+    return violations
+
+
+def check_register(repo_root: Path, files: list[str], config: dict) -> list[dict]:
+    """A source register's internal rules, and its catalogue's fidelity to it.
+
+    `files` is unused: this check reads two named documents rather than sweeping
+    the tree. A repo with no register at the configured path is not checked at
+    all — checks.toml lives in the globally linked skills tree, so one copy of it
+    serves every repo that links the hook, and a rule naming SOURCES.md must not
+    fire in a repo that has never had one.
+
+    Destination files are NOT checked here. See `corpus_ledger` and --corpus.
+    """
+    settings = config["checks"]["register"]
+    sources_rel = settings.get("sources", "SOURCES.md")
+    sources_path = repo_root / sources_rel
+    if not sources_path.exists():
+        return []
+
+    text = read_text(sources_path)
+    entries = parse_register_entries(text)
+    violations = _register_shape(sources_rel, entries, text)
+
+    catalogue_rel = settings.get("catalogue")
+    if not catalogue_rel:
+        return violations
+    catalogue_path = repo_root / catalogue_rel
+    if not catalogue_path.exists():
+        violations.append(
+            {
+                "check": "register",
+                "file": sources_rel,
+                "line": 1,
+                "detail": f"the register's catalogue is missing: {catalogue_rel}",
+                "evidence": f"{len(entries)} entries have nowhere to be summarised",
+            }
+        )
+        return violations
+
+    violations.extend(
+        _register_mirror(
+            catalogue_rel, entries, parse_register_entries(read_text(catalogue_path))
+        )
+    )
+    return violations
+
+
+def corpus_ledger(repo_root: Path, config: dict) -> list[dict]:
+    """One row per register entry: where its ingested file should be, and if it is.
+
+    This is the ingestion invariant measured rather than asserted — the preflight
+    and the progress ledger for an ingestion run, in register order.
+    """
+    settings = config.get("checks", {}).get("register", {})
+    sources_path = repo_root / settings.get("sources", "SOURCES.md")
+    if not sources_path.exists():
+        return []
+
+    rows = []
+    for entry in parse_register_entries(read_text(sources_path)):
+        candidates = register_destinations(entry, settings)
+        found = next((c for c in candidates if (repo_root / c).exists()), None)
+        rows.append(
+            {
+                "name": entry["name"],
+                "section": entry["section"],
+                "line": entry["line"],
+                "candidates": candidates,
+                "found": found,
+                "present": found is not None,
+            }
+        )
+    return rows
+
+
 CHECKS = {
     "links": check_links,
     "bare_paths": check_bare_paths,
     "terminology": check_terminology,
     "metadata_header": check_metadata_header,
+    "register": check_register,
 }
 
 
@@ -520,6 +809,23 @@ def format_report(violations: list[dict]) -> str:
     return "\n".join(lines).rstrip()
 
 
+def format_ledger(rows: list[dict]) -> str:
+    present = [r for r in rows if r["present"]]
+    missing = [r for r in rows if not r["present"]]
+    lines = [f"corpus: {len(present)} of {len(rows)} entries ingested"]
+    if missing:
+        lines += ["", f"missing ({len(missing)}) — SOURCES.md line, then destination:"]
+        lines += [
+            f"  {r['line']:>4}  {r['name']} -> {r['candidates'][0]}" for r in missing
+        ]
+        lines += [
+            "",
+            "Absent is not broken: the corpus is gitignored and rebuilt from",
+            "SOURCES.md on request. Run these through the ingest-source skill.",
+        ]
+    return "\n".join(lines)
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
     parser.add_argument(
@@ -533,11 +839,31 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--list-files", action="store_true", help="print the files in scope and stop"
     )
+    parser.add_argument(
+        "--corpus",
+        action="store_true",
+        help="report which register entries have an ingested file, and stop "
+        "(not part of the gate — the corpus is gitignored)",
+    )
     args = parser.parse_args(argv)
 
     try:
         repo_root = args.repo_root or _git_root(Path(__file__).resolve().parent)
         config = load_config(args.config)
+
+        if args.corpus:
+            rows = corpus_ledger(repo_root, config)
+            if not rows:
+                raise CheckError(
+                    "no source register found — checks.register.sources names "
+                    f"{config.get('checks', {}).get('register', {}).get('sources', 'SOURCES.md')!r}, "
+                    "which does not exist here"
+                )
+            if args.json:
+                print(json.dumps({"corpus": rows}, indent=2))
+            else:
+                print(format_ledger(rows))
+            return EXIT_VIOLATIONS if any(not r["present"] for r in rows) else EXIT_OK
 
         active = enabled_checks(config)
         if not active:

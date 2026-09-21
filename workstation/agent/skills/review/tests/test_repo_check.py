@@ -609,6 +609,304 @@ class TestCheckMetadataHeader(unittest.TestCase):
             repo_check.check_metadata_header(repo.root, ["a.md"], cfg)
 
 
+REGISTER_CFG = {
+    "enabled": True,
+    "sources": "SOURCES.md",
+    "catalogue": "SOURCE_CATALOGUE.md",
+    "default_destination": "docs/landing-zone/{name}",
+    "extensions": [".md", ".pdf"],
+    "destinations": [
+        {"section": "CLI tools", "path": "workstation/cli/{name}/reference.md"},
+        {"section": "MCP servers", "path": "workstation/mcp/{name}/reference.md"},
+    ],
+}
+
+# Two layer entries, one CLI tool, one MCP server — the four destination routes
+# the invariant defines, in the heading structure SOURCES.md actually uses.
+SOURCES_OK = """\
+# Register
+
+## 1. Business domain
+
+* [DDD Reference](https://example.com/ddd.pdf)
+
+*See also:* Something Else — a cross-reference, not an entry (§2).
+
+**Gaps — not yet sourced**
+
+- A gap bullet carries no link and is not an entry
+
+## Cross-cutting aspects
+
+### 2. Workstation tooling
+
+#### CLI tools
+
+* [pandoc](https://pandoc.org/)
+
+#### MCP servers
+
+* [drawio-mcp](https://example.com/drawio)
+"""
+
+CATALOGUE_OK = """\
+# Catalogue
+
+## 1. Business domain
+
+* [DDD Reference](https://example.com/ddd.pdf) — Condensed DDD reference.
+
+## Cross-cutting aspects
+
+### 2. Workstation tooling
+
+#### CLI tools
+
+* [pandoc](https://pandoc.org/) — Converts any document format to any other.
+
+#### MCP servers
+
+* [drawio-mcp](https://example.com/drawio) — Drives draw.io from an MCP client.
+"""
+
+
+def _register_cfg(**overrides) -> dict:
+    cfg = _cfg()
+    register = dict(REGISTER_CFG)
+    register.update(overrides)
+    cfg["checks"]["register"] = register
+    return cfg
+
+
+def _register_repo(sources: str = SOURCES_OK, catalogue: str = CATALOGUE_OK, **extra):
+    files = {"SOURCES.md": sources, "SOURCE_CATALOGUE.md": catalogue}
+    files.update(extra)
+    return TempRepo(files)
+
+
+class TestRegisterFilename(unittest.TestCase):
+    """The one transform in the invariant: `: ` in a title is ` - ` on disk."""
+
+    def test_colon_space_becomes_dash(self):
+        self.assertEqual(
+            repo_check.register_filename("Clean Architecture: The Book"),
+            "Clean Architecture - The Book",
+        )
+
+    def test_every_colon_space_is_rewritten(self):
+        self.assertEqual(repo_check.register_filename("A: B: C"), "A - B - C")
+
+    def test_bare_colon_without_a_space_is_left_alone(self):
+        """AGENTS.md names `: ` — the colon AND the space — not every colon."""
+        self.assertEqual(repo_check.register_filename("C:Drive"), "C:Drive")
+
+    def test_plain_title_is_unchanged(self):
+        self.assertEqual(repo_check.register_filename("pandoc"), "pandoc")
+
+
+class TestParseRegisterEntries(unittest.TestCase):
+    def test_entries_carry_name_url_section_and_line(self):
+        entries = repo_check.parse_register_entries(SOURCES_OK)
+        self.assertEqual(
+            [(e["name"], e["section"]) for e in entries],
+            [
+                ("DDD Reference", None),
+                ("pandoc", "CLI tools"),
+                ("drawio-mcp", "MCP servers"),
+            ],
+        )
+        self.assertEqual(entries[0]["url"], "https://example.com/ddd.pdf")
+        self.assertEqual(entries[0]["line"], 5)
+
+    def test_see_also_lines_are_not_entries(self):
+        self.assertNotIn(
+            "Something Else",
+            [e["name"] for e in repo_check.parse_register_entries(SOURCES_OK)],
+        )
+
+    def test_gap_bullets_are_not_entries(self):
+        """A gap has no link, so it cannot be mistaken for an entry."""
+        self.assertEqual(len(repo_check.parse_register_entries(SOURCES_OK)), 3)
+
+    def test_a_subsection_is_cleared_by_the_next_higher_heading(self):
+        text = "#### CLI tools\n\n* [a](https://a.test)\n\n## Next\n\n* [b](https://b.test)\n"
+        self.assertEqual(
+            [e["section"] for e in repo_check.parse_register_entries(text)],
+            ["CLI tools", None],
+        )
+
+    def test_links_inside_fenced_code_are_not_entries(self):
+        text = "```\n* [fake](https://fake.test)\n```\n\n* [real](https://real.test)\n"
+        self.assertEqual(
+            [e["name"] for e in repo_check.parse_register_entries(text)], ["real"]
+        )
+
+
+class TestRegisterDestination(unittest.TestCase):
+    def test_layer_entry_lands_in_the_landing_zone(self):
+        self.assertEqual(
+            repo_check.register_destinations(
+                {"name": "DDD Reference", "section": None}, REGISTER_CFG
+            ),
+            [
+                "docs/landing-zone/DDD Reference.md",
+                "docs/landing-zone/DDD Reference.pdf",
+            ],
+        )
+
+    def test_cli_tool_lands_beside_its_authored_guidance(self):
+        self.assertEqual(
+            repo_check.register_destinations(
+                {"name": "pandoc", "section": "CLI tools"}, REGISTER_CFG
+            ),
+            ["workstation/cli/pandoc/reference.md"],
+        )
+
+    def test_mcp_server_lands_in_the_other_tree(self):
+        self.assertEqual(
+            repo_check.register_destinations(
+                {"name": "drawio-mcp", "section": "MCP servers"}, REGISTER_CFG
+            ),
+            ["workstation/mcp/drawio-mcp/reference.md"],
+        )
+
+    def test_the_filename_transform_is_applied_to_the_destination(self):
+        self.assertEqual(
+            repo_check.register_destinations(
+                {"name": "Spec: A Guide", "section": None}, REGISTER_CFG
+            )[0],
+            "docs/landing-zone/Spec - A Guide.md",
+        )
+
+
+class TestCheckRegister(unittest.TestCase):
+    def _run(self, **kw):
+        cfg = kw.pop("cfg", None) or _register_cfg()
+        with _register_repo(**kw) as repo:
+            return repo_check.check_register(repo.root, ["SOURCES.md"], cfg)
+
+    def test_a_mirrored_pair_is_clean(self):
+        self.assertEqual(self._run(), [])
+
+    def test_a_repo_without_a_register_is_not_checked(self):
+        """checks.toml is shared by every repo that links this skill."""
+        with TempRepo({"README.md": "hi\n"}) as repo:
+            self.assertEqual(
+                repo_check.check_register(repo.root, ["README.md"], _register_cfg()), []
+            )
+
+    def test_an_entry_missing_from_the_catalogue_is_a_violation(self):
+        catalogue = CATALOGUE_OK.replace(
+            "* [pandoc](https://pandoc.org/) — Converts any document format to any other.\n",
+            "",
+        )
+        (violation,) = self._run(catalogue=catalogue)
+        self.assertEqual(violation["check"], "register")
+        self.assertEqual(violation["file"], "SOURCE_CATALOGUE.md")
+        self.assertIn("pandoc", violation["detail"])
+
+    def test_an_entry_only_in_the_catalogue_is_a_violation(self):
+        catalogue = (
+            CATALOGUE_OK + "* [ghost](https://ghost.test) — Not in the register.\n"
+        )
+        (violation,) = self._run(catalogue=catalogue)
+        self.assertIn("ghost", violation["detail"])
+
+    def test_order_divergence_is_a_violation(self):
+        """Same entries, wrong sequence — the catalogue mirrors order too."""
+        sources = "## L\n\n* [a](https://a.test)\n* [b](https://b.test)\n"
+        catalogue = "## L\n\n* [b](https://b.test) — B.\n* [a](https://a.test) — A.\n"
+        with TempRepo(
+            {"SOURCES.md": sources, "SOURCE_CATALOGUE.md": catalogue}
+        ) as repo:
+            violations = repo_check.check_register(
+                repo.root, ["SOURCES.md"], _register_cfg()
+            )
+        self.assertTrue(any("order" in v["detail"] for v in violations), violations)
+
+    def test_url_drift_between_the_pair_is_a_violation(self):
+        catalogue = CATALOGUE_OK.replace(
+            "https://pandoc.org/", "https://pandoc.example/"
+        )
+        (violation,) = self._run(catalogue=catalogue)
+        self.assertIn("URL", violation["detail"])
+
+    def test_two_links_on_one_entry_break_the_one_to_one_rule(self):
+        sources = SOURCES_OK.replace(
+            "* [pandoc](https://pandoc.org/)",
+            "* [pandoc](https://pandoc.org/) and [typst](https://typst.app/)",
+        )
+        violations = self._run(sources=sources)
+        self.assertTrue(
+            any("one bracket link" in v["detail"] for v in violations), violations
+        )
+
+    def test_a_see_also_line_with_a_link_is_a_second_entry(self):
+        sources = SOURCES_OK.replace(
+            "*See also:* Something Else — a cross-reference, not an entry (§2).",
+            "*See also:* [Something Else](https://else.test) (§2).",
+        )
+        violations = self._run(sources=sources)
+        self.assertTrue(
+            any("see also" in v["detail"].lower() for v in violations), violations
+        )
+
+    def test_a_duplicated_entry_name_is_a_violation(self):
+        sources = SOURCES_OK.replace(
+            "* [drawio-mcp](https://example.com/drawio)",
+            "* [pandoc](https://example.com/drawio)",
+        )
+        violations = self._run(sources=sources)
+        self.assertTrue(any("more than once" in v["detail"] for v in violations))
+
+    def test_a_separator_in_an_entry_name_is_a_violation(self):
+        """`a/b` would silently write outside the destination folder."""
+        sources = SOURCES_OK.replace("* [pandoc]", "* [pan/doc]")
+        catalogue = CATALOGUE_OK.replace("* [pandoc]", "* [pan/doc]")
+        violations = self._run(sources=sources, catalogue=catalogue)
+        self.assertTrue(any("separator" in v["detail"] for v in violations), violations)
+
+    def test_an_absent_destination_file_is_not_a_gate_violation(self):
+        """The corpus is gitignored; a fresh clone has none and is not broken."""
+        self.assertEqual(self._run(), [])
+
+
+class TestCorpusLedger(unittest.TestCase):
+    def test_present_and_missing_are_both_reported(self):
+        with _register_repo(
+            **{
+                "docs/landing-zone/DDD Reference.md": "x\n",
+                "workstation/cli/pandoc/reference.md": "x\n",
+            }
+        ) as repo:
+            rows = repo_check.corpus_ledger(repo.root, _register_cfg())
+        self.assertEqual(
+            [(r["name"], r["present"]) for r in rows],
+            [("DDD Reference", True), ("pandoc", True), ("drawio-mcp", False)],
+        )
+
+    def test_a_pdf_satisfies_a_landing_zone_entry(self):
+        with _register_repo(**{"docs/landing-zone/DDD Reference.pdf": "x\n"}) as repo:
+            rows = repo_check.corpus_ledger(repo.root, _register_cfg())
+        self.assertTrue(rows[0]["present"])
+        self.assertEqual(rows[0]["found"], "docs/landing-zone/DDD Reference.pdf")
+
+    def test_a_missing_row_names_every_candidate_path(self):
+        with _register_repo() as repo:
+            rows = repo_check.corpus_ledger(repo.root, _register_cfg())
+        self.assertEqual(
+            rows[0]["candidates"],
+            [
+                "docs/landing-zone/DDD Reference.md",
+                "docs/landing-zone/DDD Reference.pdf",
+            ],
+        )
+
+    def test_no_register_means_an_empty_ledger(self):
+        with TempRepo({"README.md": "hi\n"}) as repo:
+            self.assertEqual(repo_check.corpus_ledger(repo.root, _register_cfg()), [])
+
+
 class TestRunChecks(unittest.TestCase):
     def test_unimplemented_check_raises_rather_than_passing_silently(self):
         """readme_claims belongs to verify-docs; enabling it here must not no-op."""
@@ -799,11 +1097,11 @@ class TestConfigAndExitCodes(unittest.TestCase):
         self.assertNotIn("version_observed", names)
         self.assertNotIn("status", names)
 
-    def test_shipped_config_has_the_four_deterministic_checks(self):
+    def test_shipped_config_has_the_five_deterministic_checks(self):
         cfg = repo_check.load_config(repo_check.DEFAULT_CONFIG)
         self.assertEqual(
             sorted(cfg["checks"]),
-            ["bare_paths", "links", "metadata_header", "terminology"],
+            ["bare_paths", "links", "metadata_header", "register", "terminology"],
         )
 
     def test_every_shipped_check_is_implemented(self):
