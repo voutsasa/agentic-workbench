@@ -498,21 +498,20 @@ passed — **all seven of them**: 149, 34, 78, 19, 134, 141 and 17 tests, 572 in
 `workstation/agent/hooks/tests`, expanded this session by item 14's fix. `ruff check .` and
 `ruff format --check .` both clean across the repo (98 files).
 
-`verify_claims.py --repo .` (offline tier) **exits 1**, and did so on every run of this section. First
-run: 661 verified, 609 unverifiable, 6 refuted. Final run, after this session's fixes and after four path
-globs were added to `.verify-claims-allow`: **3 refuted**, against roughly 1,310 claims extracted — the
-verified and unverifiable totals shift with every markdown edit, so only the refuted count is
-worth recording. Every refuted
-row, on every run, is a verifier false positive rather than a doc bug, but they are *not* harmless: the
-pre-push hook scopes this script to the markdown in the push, so a push touching one of those files is
-refused until the row is cleared.
+`verify_claims.py --repo .` (offline tier) exited 1 on every run of this section until the last. First
+run: 661 verified, 609 unverifiable, 6 refuted. After this session's document fixes and four path globs in
+`.verify-claims-allow`: 3 refuted. After the two checker fixes below: **0 refuted, exit 0**, against
+roughly 1,320 claims extracted — the verified and unverifiable totals shift with every markdown edit, so
+only the refuted count is worth recording. Every refuted row, on every run, was a verifier false positive
+rather than a doc bug, and they were *not* harmless: the pre-push hook scopes this script to the markdown
+in the push, so a push touching one of those files was refused until the row cleared.
 
 | Refuted claim | Why it is not a doc bug | Cleared? |
 |---|---|---|
 | the POSIX and Windows venv interpreter paths (×2) | each line already names the other layout in the same sentence; a venv has one or the other, so one of the pair cannot exist on any given machine | yes — four globs in `.verify-claims-allow`, which is what that file is for |
 | VS Code's workspace settings path (`agent/setup/README.md:178`, and this file quoting it) | a scope table row saying where VS Code *can* put workspace settings in whichever repo you open, not a claim that this repo has one | yes — same route |
-| the `--porcelain` flag, on `git status` (×1, `AGENT-INSTRUCTIONS.md:86`) | probed here: it **is** in that command's `-h` output, written `--[no-]porcelain[=<version>]`, so a plain substring search for the flag misses it | no — a help-text claim, which a path allowlist cannot reach |
-| the `--staged` flag, on `git diff` (×2, `AGENT-INSTRUCTIONS.md:87` and `review/SKILL.md:134`) | probed here: genuinely absent from `-h`, which documents only the synonym `--cached`; the flag itself works and exits 0 | no — same reason |
+| the `--porcelain` flag, on `git status` (×1, `AGENT-INSTRUCTIONS.md:86`) | probed here: it **is** in that command's `-h` output, written `--[no-]porcelain[=<version>]`, so a plain substring search for the flag misses it | yes — the verifier now matches that bracket form on every rung of the help ladder |
+| the `--staged` flag, on `git diff` (×2, `AGENT-INSTRUCTIONS.md:87` and `review/SKILL.md:134`) | probed here: genuinely absent from `-h`, which documents only the synonym `--cached`; the flag itself works and exits 0 | yes — one entry in the new `.verify-flags-allow`, which exempts a flag that works but that no help text prints |
 
 `repo_check.py --corpus`, the new ingestion ledger, reported **0 of 76 entries ingested** on this machine
 with `docs/landing-zone/` absent entirely — expected on a clone, since the corpus is gitignored, but
@@ -520,9 +519,10 @@ unrecorded until now. One entry was then ingested end to end to prove the route 
 Relevance`, server-rendered route, all four quality checks passed, ledger now **1 of 76**. The other 75
 are [`../../TODO.md`](../../TODO.md) item 20.
 
-The uncleared rows need the verifier taught git's bracket syntax and its synonym pairs, which is a
-change to `verify_claims.py` rather than to any document — [`../../TODO.md`](../../TODO.md) item 19. The
-gate is red until they clear.
+Both remaining rows needed a change to `verify_claims.py` rather than to any document, and got one in this
+session: bracket-form matching for the first, and a repo-local flag-exemption file for the synonym. The
+gate is green here — [`../../TODO.md`](../../TODO.md) item 19, now closed, carries the detail and the
+eleven unit tests.
 
 Two docling claims in this file's own docling section looked like a third, worse gap: they returned
 **different verdicts depending on whether the run was scoped to one file or covered the repo**. They were
