@@ -8,7 +8,8 @@ description: Check whether this machine has the workbench prerequisites and CLI 
 Run the deterministic workstation report. It loads common requirements from
 `workstation/dependencies.toml`, applies this machine's
 `workstation/machines/<machine>.prerequisites.toml` overrides, probes every dependency, and then
-probes every tool registered by `workstation/cli/*/install.md`.
+probes every tool whose install route is registered under
+[`workstation/cli/`](../../workstation/cli/).
 
 Use the repository `.venv` interpreter when it exists; otherwise use the documented bootstrap
 interpreter (`python` on Windows, `python3` on macOS):
