@@ -20,7 +20,7 @@ python3 verify_claims.py --repo . --kind version       # one claim kind
 python3 verify_claims.py --repo . --online             # add URLs and registries
 python3 verify_claims.py --repo . --strict             # UNVERIFIABLE fails too
 python3 verify_claims.py --repo . --json               # machine-readable
-python3 verify_claims.py --repo . --no-allow-file      # ignore .verify-claims-allow
+python3 verify_claims.py --repo . --no-allow-file      # ignore both allow files
 ```
 
 ### The two tiers
@@ -139,6 +139,13 @@ help — capped at six, and only those it actually names. That last rung is what
 finds `--from` under `docling convert` after docling moved its options down a
 level.
 
+On each rung the flag is matched plainly first, then in git's optional-negation
+bracket form: `git status -h` prints `--[no-]porcelain[=<version>]`, and a
+substring search for `--porcelain` misses a flag that plainly exists and exits 0.
+Only that one form is tolerated, and only for the flag's own stem — `--porcelain`
+and `--no-porcelain` both match that line, `--porcelainish` does not — so a flag
+absent in every form is still refuted.
+
 `npx` and its siblings are never run: answering the question would install a
 package, and a push gate must not change the machine.
 
@@ -164,11 +171,45 @@ repos. Keeping globs here means they show up in a diff, apply to one repo, and
 are inherited by nothing. No file means no globs.
 
 `verify_claims.py` reads it by default; `--allow GLOB` adds to it, and
-`--no-allow-file` ignores it. Running with `--no-allow-file` is the way to see
-what the exemptions are actually hiding — on this repo, 0 refuted becomes 2.
+`--no-allow-file` ignores it — along with `.verify-flags-allow` below. Running
+with `--no-allow-file` is the way to see what the exemptions are actually hiding.
+The number it uncovers is not worth writing down here: most of the globs cover the
+gitignored corpus, so it tracks how much of `SOURCES.md` this machine has ingested
+rather than anything about the checker.
 
 Only exempt a path that is meant not to exist. A path that should exist and does
 not is a defect to fix.
+
+## Exempting a flag: `.verify-flags-allow`
+
+A sibling file, same repo-local reasoning, different question. `--staged` is a
+working synonym of `git diff --cached`, but `git diff -h` never prints the string
+and the full `git diff --help` is a man page — so no rung of the ladder can reach
+it, and the verifier refuses a push over a command that works.
+
+One `<command> <flag>` per line, `#` for comments:
+
+```text
+# A working synonym of --cached that no abbreviated help prints.
+git diff --staged
+```
+
+It is deliberately not part of `.verify-claims-allow`: that file is pinned to
+paths *meant not to exist here* ([`AGENTS.md`](../../../../../AGENTS.md)
+§ *Invariants*), and a flag that exists and works is the opposite case.
+
+Three properties keep it honest:
+
+- **Bound to the whole command.** `git diff --staged` exempts nothing under
+  `git log`. The key is the same help subject the verifier resolved, so a
+  subcommand's exemption never travels.
+- **It only downgrades a refutation.** The check is the last rung, after every
+  probe. A flag the help does document stays `VERIFIED`, listed or not.
+- **A line naming no flag exempts nothing**, so a typo fails closed rather than
+  silencing a command's whole surface.
+
+Only exempt a flag that **works** but that no help text documents. A flag the tool
+does not have is a defect in the document.
 
 ### Two refutations that are meant to stand
 
@@ -200,6 +241,7 @@ you did not touch is a claim you did not break; run the full sweep on demand.
 
 ```bash
 # edit .verify-claims-allow     # exempt a path that is meant not to exist
+# edit .verify-flags-allow      # exempt a flag no help text documents
 SKIP_VERIFY_CLAIMS=1 git push   # skip claim verification, keep repo_check
 SKIP_REPO_CHECK=1 git push      # skip both checks in this hook
 git push --no-verify            # skip every hook in the repository

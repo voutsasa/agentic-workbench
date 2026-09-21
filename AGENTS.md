@@ -43,7 +43,7 @@ What each file and folder is: [`README.md`](README.md) — § *Layout*, then the
 
 **Repo mechanics**
 
-- `.verify-claims-allow` lists only paths *meant* not to exist here, each with a reason. A path that should exist and does not is a defect to fix, never an entry. It and `.pre-push-tests` stay repo-local: the pre-push hook is shared across repos.
+- `.verify-claims-allow` lists only paths *meant* not to exist here, each with a reason. A path that should exist and does not is a defect to fix, never an entry. `.verify-flags-allow` is its sibling for flag claims and stays separate for exactly that reason — it lists only a flag that *works* but that no help text documents, and a flag the tool lacks is a defect in the document. Both, and `.pre-push-tests`, stay repo-local: the pre-push hook is shared across repos.
 
 ## The layer model
 

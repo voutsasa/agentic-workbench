@@ -29,6 +29,7 @@ from dataclasses import asdict
 
 from extract_claims import Claim
 from verify_claims import (
+    FLAG_ALLOW_FILE_NAME,
     REFUTED,
     UNVERIFIABLE,
     VERIFIED,
@@ -45,6 +46,7 @@ from verify_claims import (
     help_subject,
     parse_frontmatter,
     read_allow_file,
+    read_flag_allow_file,
     root_is_known,
     source_line,
     tls_advice,
@@ -461,6 +463,109 @@ class TestManPageOverstrike(unittest.TestCase):
             hit = Verifier(Path(".")).find_flag(["git", "diff"], "--staged")
         self.assertIsNotNone(hit)
         self.assertIn("--staged is a synonym", hit[1])
+
+
+class TestBracketNegationInHelp(unittest.TestCase):
+    """git prints an optional negation inline: `--[no-]porcelain[=<version>]`.
+
+    A substring search for the flag as documented misses that line, so the gate
+    refuted `git status --porcelain` — a flag its own help screen carries.
+    """
+
+    HELP: ClassVar[str] = (
+        "usage: git status [<options>]\n"
+        "    -s, --short           show status concisely\n"
+        "    --[no-]porcelain[=<version>]\n"
+        "                          machine-readable output\n"
+    )
+
+    def _find(self, flag: str, help_text: str | None = None):
+        done = mock.Mock(stdout=help_text if help_text is not None else self.HELP)
+        done.stderr = ""
+        with (
+            mock.patch("verify_claims.shutil.which", return_value="/usr/bin/git"),
+            mock.patch("verify_claims.subprocess.run", return_value=done),
+        ):
+            return Verifier(Path(".")).find_flag(["git", "status"], flag)
+
+    def test_a_flag_printed_in_bracket_form_is_found(self):
+        hit = self._find("--porcelain")
+        self.assertIsNotNone(hit)
+        self.assertIn("[no-]porcelain", hit[1])
+
+    def test_the_negated_spelling_matches_the_same_line(self):
+        self.assertIsNotNone(self._find("--no-porcelain"))
+
+    def test_a_plainly_printed_flag_is_unaffected(self):
+        hit = self._find("--short")
+        self.assertIsNotNone(hit)
+        self.assertIn("--short", hit[1])
+
+    def test_a_flag_absent_in_every_form_still_misses(self):
+        self.assertIsNone(self._find("--invented"))
+
+    def test_the_bracket_form_does_not_match_a_neighbouring_flag(self):
+        self.assertIsNone(self._find("--porcelainish"))
+
+
+class TestFlagExemptions(unittest.TestCase):
+    """`.verify-flags-allow` — the synonym case help cannot settle.
+
+    `git diff -h` documents `--cached` and never mentions `--staged`, which
+    works and exits 0. No help parsing finds it, so the repo exempts the pair
+    explicitly rather than the checker guessing or the class losing its teeth.
+    """
+
+    HELP: ClassVar[str] = "    --cached              compare against the index\n"
+    PAGE: ClassVar[str] = "```sh\ngit diff --staged --stat\n```\n"
+
+    def _verdict(self, exemptions):
+        done = mock.Mock(stdout=self.HELP)
+        done.stderr = ""
+        with (
+            TempRepo({"doc.md": self.PAGE}) as root,
+            mock.patch("verify_claims.shutil.which", return_value="/usr/bin/git"),
+            mock.patch("verify_claims.subprocess.run", return_value=done),
+        ):
+            return Verifier(root, flag_exemptions=exemptions).verify_cli_flag(
+                claim("cli_flag", "git supports --staged", line=2)
+            )
+
+    def test_an_unlisted_flag_is_still_refuted(self):
+        _name, _evidence, verdict = self._verdict(frozenset())
+        self.assertEqual(REFUTED, verdict)
+
+    def test_an_exempt_pair_is_unverifiable_and_says_why(self):
+        _name, evidence, verdict = self._verdict(frozenset({("git diff", "--staged")}))
+        self.assertEqual(UNVERIFIABLE, verdict)
+        self.assertIn(FLAG_ALLOW_FILE_NAME, evidence)
+
+    def test_the_exemption_is_bound_to_the_whole_command(self):
+        _name, _evidence, verdict = self._verdict(frozenset({("git log", "--staged")}))
+        self.assertEqual(
+            REFUTED, verdict, "another subcommand's exemption must not travel"
+        )
+
+    def test_the_file_yields_command_flag_pairs(self):
+        text = (
+            "# documented only under its --cached synonym\n"
+            "git diff --staged\n"
+            "\n"
+            "docling convert --to  # subcommand flag\n"
+        )
+        with TempRepo({FLAG_ALLOW_FILE_NAME: text}) as root:
+            self.assertEqual(
+                {("git diff", "--staged"), ("docling convert", "--to")},
+                read_flag_allow_file(root),
+            )
+
+    def test_no_file_means_no_exemptions(self):
+        with TempRepo({"doc.md": "x\n"}) as root:
+            self.assertEqual(frozenset(), read_flag_allow_file(root))
+
+    def test_a_line_without_a_flag_is_ignored(self):
+        with TempRepo({FLAG_ALLOW_FILE_NAME: "git diff\n"}) as root:
+            self.assertEqual(frozenset(), read_flag_allow_file(root))
 
 
 # --------------------------------------------------------------------------

@@ -102,6 +102,7 @@ WINDOWS_VENV_ALTERNATIVE_RE = re.compile(
 )
 
 ALLOW_FILE_NAME = ".verify-claims-allow"
+FLAG_ALLOW_FILE_NAME = ".verify-flags-allow"
 
 FRONTMATTER_RE = re.compile(r"\A---\r?\n(.*?)\r?\n---\r?\n", re.DOTALL)
 # `v0.8.1-HEAD`, `1.2026.6`, `69.0`. Anchored so `3.10` in prose is not a version.
@@ -187,6 +188,64 @@ def read_allow_file(repo_root: Path) -> list[str]:
         if glob:
             globs.append(glob)
     return globs
+
+
+def read_flag_allow_file(repo_root: Path) -> frozenset[tuple[str, str]]:
+    """Flag claims the repo declares unverifiable, as `<command> <flag>` per line.
+
+    The case this exists for cannot be settled by reading help: `git diff -h`
+    documents `--cached` and never mentions `--staged`, which works and exits 0.
+    Refuting it is wrong and downgrading every absent flag to UNVERIFIABLE would
+    blunt the whole class, so the exemption is declared once, in the repo, where
+    a reviewer sees it in a diff — never inferred by the checker.
+
+    Repo-local for the same reason as `ALLOW_FILE_NAME`: the hook is shared, so
+    an exemption written into it would travel to unrelated repos. A line with no
+    flag on it exempts nothing, so a typo fails closed.
+    """
+    target = repo_root / FLAG_ALLOW_FILE_NAME
+    if not target.is_file():
+        return frozenset()
+    pairs: set[tuple[str, str]] = set()
+    for line in target.read_text(encoding="utf-8", errors="replace").splitlines():
+        tokens = line.split("#", 1)[0].split()
+        flags = [t for t in tokens if t.startswith("-")]
+        command = [t for t in tokens if not t.startswith("-")]
+        if len(flags) == 1 and command:
+            pairs.add((" ".join(command), flags[0]))
+    return frozenset(pairs)
+
+
+def flag_line(
+    help_text: str | None, flag: str, negated: re.Pattern[str] | None
+) -> str | None:
+    """The help line documenting `flag`, plainly or in git's bracket form."""
+    if not help_text:
+        return None
+    if flag in help_text:
+        return next((ln.strip() for ln in help_text.splitlines() if flag in ln), flag)
+    if negated:
+        return next(
+            (ln.strip() for ln in help_text.splitlines() if negated.search(ln)), None
+        )
+    return None
+
+
+def bracket_negation_re(flag: str) -> re.Pattern[str] | None:
+    """`--porcelain` as help may actually print it: `--[no-]porcelain[=<version>]`.
+
+    git writes the optional negation *inside* the flag, so a substring search
+    for the flag as documented misses the line that documents it. Only that one
+    form is tolerated — a trailing `[=<version>]` needs nothing, since the plain
+    search already matches it — and a flag absent in every form still refutes.
+    """
+    if not flag.startswith("--") or len(flag) <= 2:
+        return None
+    name = flag[2:]
+    stem = name.removeprefix("no-")
+    if not stem:
+        return None
+    return re.compile(rf"--\[no-\]{re.escape(stem)}\b")
 
 
 def root_is_known(repo_root: Path, doc: str, token: str) -> bool:
@@ -511,11 +570,16 @@ class Verifier:
     """Runs one mechanical check per claim, caching the expensive subprocesses."""
 
     def __init__(
-        self, repo_root: Path, online: bool = False, allow_globs: tuple[str, ...] = ()
+        self,
+        repo_root: Path,
+        online: bool = False,
+        allow_globs: tuple[str, ...] = (),
+        flag_exemptions: frozenset[tuple[str, str]] = frozenset(),
     ) -> None:
         self.repo_root = repo_root
         self.online = online
         self.allow_globs = allow_globs
+        self.flag_exemptions = flag_exemptions
         self.manifests = ManifestIndex(repo_root)
         self._help: dict[tuple[str, ...], str | None] = {}
         self._version: dict[str, str | None] = {}
@@ -684,21 +748,16 @@ class Verifier:
             text = self._run([*argv, flag], VERSION_TIMEOUT)
             if text and text.strip():
                 return (f"{argv[0]} {flag}", clip(text.splitlines()[0], 80))
+        negated = bracket_negation_re(flag)
         for help_flag in HELP_FLAGS:
-            text = self.help_output(argv, help_flag)
-            if text and flag in text:
-                line = next(
-                    (ln.strip() for ln in text.splitlines() if flag in ln), flag
-                )
+            line = flag_line(self.help_output(argv, help_flag), flag, negated)
+            if line:
                 label = " ".join(Path(a).name for a in argv)
                 return (f"{label} {help_flag}", clip(line, 80))
         top = self.help_output(argv, "--help") or ""
         for sub in advertised_subcommands(top):
-            text = self.help_output([*argv, sub], "--help")
-            if text and flag in text:
-                line = next(
-                    (ln.strip() for ln in text.splitlines() if flag in ln), flag
-                )
+            line = flag_line(self.help_output([*argv, sub], "--help"), flag, negated)
+            if line:
                 label = " ".join(Path(a).name for a in argv)
                 return (f"{label} {sub} --help", clip(line, 80))
         return None
@@ -746,7 +805,7 @@ class Verifier:
                 f"`{tokens[0]}` runs a script this repo does not hold",
                 UNVERIFIABLE,
             )
-        argv, _label = subject
+        argv, label = subject
         if PLACEHOLDER_RE.search(argv[0]):
             return ("help_text", f"`{argv[0]}` is a placeholder", UNVERIFIABLE)
 
@@ -772,6 +831,16 @@ class Verifier:
             return (
                 "help_text",
                 f"{flag} is not {binary}'s; the subject was inferred from prose, not an invocation",
+                UNVERIFIABLE,
+            )
+        # Last rung, and only ever downgrades a refutation: the repo has declared
+        # this exact command-and-flag pair unanswerable from help text. It never
+        # reaches a claim the probes confirmed, and it is bound to the command, so
+        # an exemption for one subcommand does not travel to another.
+        if (label, flag) in self.flag_exemptions:
+            return (
+                "help_text",
+                f"`{label} {flag}` is listed in {FLAG_ALLOW_FILE_NAME}",
                 UNVERIFIABLE,
             )
         return (
@@ -981,6 +1050,7 @@ def run(
     claims: list[Claim],
     online: bool = False,
     allow_globs: tuple[str, ...] = (),
+    flag_exemptions: frozenset[tuple[str, str]] = frozenset(),
     workers: int = 8,
 ) -> list[Result]:
     """Verify every claim. Order, and therefore the report, is independent of workers.
@@ -991,7 +1061,12 @@ def run(
     order — gives byte-identical output at any worker count. `--workers 1` runs
     it sequentially when a reproduction needs to be exact.
     """
-    verifier = Verifier(repo_root, online=online, allow_globs=allow_globs)
+    verifier = Verifier(
+        repo_root,
+        online=online,
+        allow_globs=allow_globs,
+        flag_exemptions=flag_exemptions,
+    )
     if workers <= 1:
         return [verifier.verify(claim) for claim in claims]
     with ThreadPoolExecutor(max_workers=workers) as pool:
@@ -1169,7 +1244,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--no-allow-file",
         action="store_true",
-        help=f"ignore the repo's {ALLOW_FILE_NAME}",
+        help=f"ignore the repo's {ALLOW_FILE_NAME} and {FLAG_ALLOW_FILE_NAME}",
     )
     parser.add_argument("--json", action="store_true", help="machine-readable results")
     parser.add_argument(
@@ -1223,13 +1298,16 @@ def main(argv: list[str] | None = None) -> int:
             )
             return EXIT_ERROR
         globs = list(args.allow)
+        exemptions: frozenset[tuple[str, str]] = frozenset()
         if not args.no_allow_file:
             globs += read_allow_file(repo)
+            exemptions = read_flag_allow_file(repo)
         results = run(
             repo,
             claims,
             online=args.online,
             allow_globs=tuple(dict.fromkeys(globs)),
+            flag_exemptions=exemptions,
             workers=args.workers,
         )
     except (OSError, subprocess.SubprocessError, ValueError) as error:

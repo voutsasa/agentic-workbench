@@ -141,6 +141,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 | `pyproject.toml` | Project metadata. No runtime dependencies; the `dev` dependency group supplies `pytest` and `ruff` for repository quality checks. |
 | `.python-version` | Pins the interpreter for `uv` — currently 3.14. |
 | `.verify-claims-allow` | Path claims the documentation gate is to leave alone, one glob per line with a reason above each. Repo-local on purpose: the pre-push hook is shared by every repo that links it, so exemptions must not travel with it. |
+| `.verify-flags-allow` | Its sibling for flag claims, one `<command> <flag>` per line: a flag that works but that no help text documents, such as `git diff --staged`. It only ever downgrades a refutation. |
 | `.pre-push-tests` | Unit-test directories the pre-push hook runs before a push, one per line. Repo-local for the same reason. |
 | `.gitignore` | Excludes the ingested corpus, the per-clone `.claude/` and `CLAUDE.md`, `.venv/`, `.DS_Store`, and Python build artefacts. |
 | `.github/workflows/verify-docs.yml` | Weekly documentation audit on GitHub Actions, opening a pull request with the reports. **Dormant:** the repo is hosted on Azure DevOps, where it does not run — its port is the next row. |

@@ -164,10 +164,12 @@ The hook runs three checks in order, and stops at the first refusal:
    varies by corpus and toolchain, because it executes `--help` for every documented tool. A claim you did
    not touch is a claim you did not break.
 
-Path exemptions and test directories both come from the repo being pushed —
-`.verify-claims-allow` and `.pre-push-tests` — never from the hook. The hook is shared
+Exemptions and test directories all come from the repo being pushed —
+`.verify-claims-allow` for paths, `.verify-flags-allow` for flags, `.pre-push-tests` for
+suites — never from the hook. The hook is shared
 by every repo that links it, so a glob or directory written into it would apply to
-unrelated repos; the hook prints the exemptions in force before it runs. See
+unrelated repos. It reads the first and prints those globs before it runs; the flag
+file is read by `verify_claims.py` itself and is not echoed here. See
 [`../../verify-docs/scripts/README.md`](../../verify-docs/scripts/README.md).
 
 A suite that itself invokes the hook — `tests/test_pre_push.py` does — would run the

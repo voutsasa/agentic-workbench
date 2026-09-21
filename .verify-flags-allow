@@ -1,0 +1,24 @@
+# Flag claims exempt from verify_claims.py, one `<command> <flag>` per line.
+#
+# Sibling of .verify-claims-allow, and repo-local for the same reason: the
+# pre-push hook lives in the globally symlinked skills tree, so an exemption
+# written into the hook would silently apply to unrelated repos. It is a separate
+# file because that one is pinned to *paths meant not to exist here*
+# (AGENTS.md § Repo mechanics), and a flag that exists and works is the opposite
+# case. No file means no exemptions; nothing is inherited.
+#
+# Only add a flag that **works** but that no help text documents — a synonym or
+# an undocumented alias. A flag the tool does not have is a defect in the
+# document, to fix rather than exempt. The exemption is bound to the whole
+# command, so `git diff --staged` does not exempt `git log --staged`, and it only
+# ever downgrades a refutation: a flag the probes confirm stays VERIFIED.
+#
+# A line naming no flag exempts nothing, so a typo fails closed.
+
+# `--staged` is a working synonym of `--cached`: `git diff --staged --stat` exits
+# 0 on git 2.55.0.windows.5, while `git diff -h` names only `--cached` and never
+# prints the string `--staged` at all. The full `git diff --help` is a man or HTML
+# page, which prints nothing to stdout on Windows, so no help parsing reaches the
+# synonym. Covers AGENT-INSTRUCTIONS.md:87 and skills/review/SKILL.md:134, both of
+# which give the command a reviewer runs.
+git diff --staged
