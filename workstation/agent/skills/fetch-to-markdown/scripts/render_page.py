@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 """Render a JS-hydrated page with headless Chromium and save its HTML.
 
-The first half of the JS-hydrated route; defuddle is the second:
+The first half of the JS-hydrated route; defuddle is the second. The pipx venv's
+interpreter is `bin/python` on POSIX, `Scripts\\python.exe` on Windows:
 
     "$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" \\
         render_page.py <url> <tmp>/rendered.html
@@ -28,6 +29,7 @@ Usage: render_page.py <url> <out.html> [--settle-ms N]
 from __future__ import annotations
 
 import argparse
+import os
 import sys
 from collections.abc import Callable
 from pathlib import Path
@@ -37,10 +39,14 @@ ABSOLUTE_HREF = "els => els.forEach(e => e.setAttribute('href', e.href))"
 ABSOLUTE_SRC = "els => els.forEach(e => e.setAttribute('src', e.src))"
 DEFAULT_SETTLE_MS = 3000
 
+#: The pipx venv's interpreter, relative to PIPX_LOCAL_VENVS/playwright — POSIX
+#: and Windows venvs lay out Scripts/bin differently.
+_PIPX_PYTHON = "Scripts/python.exe" if os.name == "nt" else "bin/python"
+
 MISSING = (
     "render_page: playwright is not importable from {python}.\n"
     "Run this script with the pipx venv's interpreter:\n"
-    '  "$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" '
+    f'  "$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/{_PIPX_PYTHON}" '
     "render_page.py <url> <out.html>\n"
 )
 

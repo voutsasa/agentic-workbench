@@ -17,21 +17,18 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 5. The Copilot and project links are unproven on Windows
+### 18. Playwright's Chromium browser binary is missing on Windows
 
-Opened 2026-09-13. `--agent copilot`, `--project` and `detect.py` were measured on macOS only.
+Opened 2026-09-21, found while closing item 5. `render_page.py` (the JS-hydrated half of
+`fetch-to-markdown`) imports `playwright` fine through the pipx venv, but
+`BrowserType.launch` fails: `chrome-headless-shell.exe` is not under
+`~\AppData\Local\ms-playwright\`. The pip package is installed; nobody has run `playwright install`
+here to download browser binaries.
 
-| Unproven | Why it could differ |
-|---|---|
-| `--project` creates a junction per repo skill in `.claude\skills` | the macOS run made symlinks; the junction branch of `make_link` has only run for `~/.claude` |
-| `--agent copilot` lands in `$HOME\.copilot\skills` and `copilot` loads it | the setup README marks Copilot CLI paths on Windows **not measured** |
-| `detect.py` finds VS Code through `APPDATA` and probes `code` | on Windows `code` resolves to a `.cmd` shim, which the version probe runs directly |
-
-**Closes when:** [`workstation/validation/windows.md`](workstation/validation/windows.md) sections
-A–E have been run on that machine — they carry these checks and the rest of the sitting — with the
-results recorded in `workstation/machines/windows-ema-pf5n4xe7.md`. That file was written from the
-macOS steps and has never run, so correct it from the run rather than trusting it; its two *Unknown on
-Windows* notes are the parts most likely to be wrong.
+**Closes when:** the user runs
+`& "C:\Users\voutsas\AppData\Local\pipx\pipx\venvs\playwright\Scripts\python.exe" -m playwright install chromium`
+and `render_page.py` on a real JS-hydrated page (e.g. `retirejs.github.io/retire.js/`) writes non-empty
+HTML that `defuddle` turns into a rendered word count in the thousands, against the ~200-word raw fetch.
 
 ### 9. The Azure DevOps pipeline has never run
 
@@ -96,6 +93,22 @@ the machine note's `repo:` field from outside this repo, without searching — r
 after a month of sessions without such a case (then drop).
 
 ## Closed
+
+### 5. The Copilot and project links were unproven on Windows
+
+Opened 2026-09-13. Closed 2026-09-21. All three rows directly exercised on `ema-pf5n4xe7`:
+`link_config.py --project --claude-md --agent claude --agent copilot --apply --force` linked
+`project/skills/ingest-source` and `project/skills/setup-agents` as directory junctions in
+`.claude\skills` (2 of 2) and `project/CLAUDE.md`; Copilot's global skills and
+`~/.copilot/copilot-instructions.md` are 8 of 8 linked, and Copilot CLI was observed actually loading
+that file (its own responses started following `AGENTS.md`'s `Claim | Command + output | Status`
+convention unprompted, and VS Code's Chat Debug View showed it as a request attachment); `detect.py`
+run directly found VS Code via `~\scoop\apps\vscode\current\bin\code.CMD`, version 1.138.0, resolving
+the `.cmd` shim correctly. Sections A–E of `workstation/validation/windows.md` all ran, with results in
+`workstation/machines/windows-ema-pf5n4xe7.md`. Its two *Unknown on Windows* notes: `render_page.py`'s
+exit-2 interpreter naming is now confirmed correct (and a real bug found and fixed alongside it, see
+item 14's sibling fix in `render_page.py`); docling's byte-identity with macOS's output is still
+unchecked — no macOS copy exists to diff against, and nobody has committed to producing one.
 
 ### 14. The ruff post-edit hook — Windows and Copilot's `apply_patch`
 

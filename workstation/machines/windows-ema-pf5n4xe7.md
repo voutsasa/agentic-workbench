@@ -450,12 +450,49 @@ September probe shows no change on this machine since then:
 
 These are the user's call. Nothing here is a hold, so nothing is recorded as one.
 
+## Validation (`../validation/windows.md`)
+
+Run 21 September 2026. Sections A and B are the relink and inventory probe above. C–E:
+
+**C. Document conversion.** `docling convert` on both fixtures matched the macOS-documented result
+exactly: `chartex.docx` gave 2 base64 images, 4 `Image not available` placeholders, and its chart data
+as pipe tables; `shapes-with-text.docx` gave all five shapes' text. Byte-identity with macOS's output
+is still unchecked — no macOS copy was diffed against.
+
+**D. The JS-hydrated route.** The raw fetch (`curl` + `defuddle`) measured 206 words on
+`retirejs.github.io/retire.js/` — "low hundreds," as expected. The rendered half is blocked: see
+*Nobody has run `playwright install` here to download browser binaries* above. The other open question — whether
+`render_page.py`'s exit-2 message names the right interpreter — is settled, and it uncovered a real bug:
+the `python=` part is correct (`sys.executable`, dynamic), but the suggested fix-it command was
+hardcoded POSIX (`/playwright/bin/python`) and would have failed if pasted verbatim on Windows. Fixed in
+[`../agent/skills/fetch-to-markdown/scripts/render_page.py`](../agent/skills/fetch-to-markdown/scripts/render_page.py):
+the command now reads `Scripts/python.exe` when `os.name == "nt"`. Re-verified: the message now prints
+`.../playwright/Scripts/python.exe`. The fetch-to-markdown suite (78 tests) still passes.
+
+**E. The repo's own gates.** `repo_check.py`: all enabled checks passed. `verify_claims.py --repo .`
+(offline tier): 661 verified, 609 unverifiable (mostly network-tier URLs and machine-state paths,
+expected), 6 refuted — and all six are verifier false positives, not doc bugs, confirmed by reading
+each claim's context:
+
+| Claim | Why it is not a real bug |
+|---|---|
+| `git supports --porcelain`, `--staged` (×2) | this git build's `-h` output is abbreviated and uses `--[no-]porcelain[=<version>]` bracket syntax — `git status --porcelain` and `git diff --staged` both exit 0 in practice |
+| `.venv/bin/python` (×2, `agent/README.md:49`, this file's settings table) | both lines already name the Windows path in the same sentence — the verifier's POSIX/Windows pairing heuristic missed this phrasing |
+| `.vscode/settings.json` (`agent/setup/README.md:178`) | a scope-reference table row documenting where VS Code *can* put workspace settings, not a claim that this repo has one |
+
+Every `.pre-push-tests` suite passed (34, 78, 19, 106, 141, 17 tests — the last is
+`workstation/agent/hooks/tests`, expanded to 17 this session by item 14's fix). `ruff check .` and
+`ruff format --check .` both clean across the repo.
+
 ## Not yet installed
 
 Deliberate gaps, so they are not rediscovered as faults:
 
 - `typst` — not on `PATH` here as of the 21 September 2026 probe; needed for `pandoc --pdf-engine=typst`
   (validation section B). Not yet installed, not yet a hold.
+- Playwright's Chromium browser binary — the pip package is installed here, but nobody has run
+  `playwright install` to download browser binaries. See below. Blocks validation section D's rendered
+  half.
 - **LibreOffice is installed but deliberately off `PATH`** — see the docling section above. Not a gap.
 
 Resolved 26 August 2026 and no longer gaps: `~/.claude/machine.md`, the six skills for both agents, and
@@ -464,12 +501,27 @@ by 21 September 2026 and no longer gaps:** `defuddle`, `tesseract` and `weasypri
 `absent` on 14 September and `installed` on 21 September; no route was recorded here, so how each was
 installed is unknown.
 
-### VS Code has never been launched here
+### VS Code — launched, and it loads the global instructions
 
-Checked 21 September 2026: `code.cmd` resolves (`~\scoop\apps\vscode\current\bin\code.cmd`), but
-`%APPDATA%\Code` does not exist at all — no `User\settings.json`, so the three keys `chat.useClaudeMdFile`,
-`chat.useAgentsMdFile` and `github.copilot.chat.codeGeneration.useInstructionFiles` cannot be set until
-VS Code is launched at least once to create its profile. The user's to do, not a config defect.
+`code.cmd` resolves (`~\scoop\apps\vscode\current\bin\code.cmd`). Launched 21 September 2026 by the
+user (`code .`), which created `%APPDATA%\Code\User\settings.json` holding all three keys `true`:
+`chat.useClaudeMdFile`, `chat.useAgentsMdFile`, `github.copilot.chat.codeGeneration.useInstructionFiles`
+— confirmed by reading the file directly. Confirmed loaded, not just configured: *Show Chat Debug View*
+on a real request showed `AGENTS.md` and `~/.copilot/copilot-instructions.md` as two separate attachments,
+and `REPLY_CEILING` — a string that exists only in those instruction files — inside the
+`copilot-instructions.md` one.
+
+### Nobody has run `playwright install` here to download browser binaries
+
+Checked 21 September 2026, running `render_page.py` (the JS-hydrated fetch route) through the pipx
+venv's interpreter: `playwright.sync_api` imports fine, but
+`BrowserType.launch` fails — `chrome-headless-shell.exe` is not at
+`~\AppData\Local\ms-playwright\chromium_headless_shell-1228\...`. The pip package is installed; the
+browser binaries it needs are not. **The user's to run:**
+
+```powershell
+& "C:\Users\voutsas\AppData\Local\pipx\pipx\venvs\playwright\Scripts\python.exe" -m playwright install chromium
+```
 
 **Still outstanding, and the user's to do:** one key — `env.ANTHROPIC_MODEL`, per *`settings.json` is not
 drift* above. The four top-level keys are merged. Plus one interactive restart, to prove the
