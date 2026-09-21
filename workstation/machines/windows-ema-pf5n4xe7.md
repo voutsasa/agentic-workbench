@@ -306,13 +306,12 @@ the hook's own `No claim was refuted.` before git's `b4ce085..0249fc6  main -> m
 is 10,389 bytes, dated 15 September, and was **SHA-256 identical** to the tracked
 [`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push) as of `46fbd34`.
 
-**The copy is now one change behind**, because the same session retired the hook's parse of
-`.verify-claims-allow`. Nothing detects that for you, and the stale copy still works — it passes the globs
-as `--allow`, which the verifier accepts and reports under that source instead of under the file. Re-copy
-to line them up:
+**The copy is behind the tracked hook** — at least the retired `.verify-claims-allow` parse and the
+ruff step added on 2026-09-21. **Pending, not yet run here:** replace it with the shim, once, which ends the
+re-copying for good (see [`../agent/setup/windows.md`](../agent/setup/windows.md#the-pre-push-gate)):
 
 ```powershell
-Copy-Item workstation\agent\skills\review\scripts\pre-push .git\hooks\pre-push -Force
+Copy-Item workstation\agent\skills\review\scripts\pre-push.windows .git\hooks\pre-push -Force
 ```
 
 **A mid-session edit to this section claimed the opposite and was wrong.** It said `.git/hooks/` held only
@@ -322,12 +321,6 @@ returns `True` in this working tree and the hook demonstrably executes.
 
 It must be a **plain copy**, not a link — git will not run a hook through a junction. The 26 August check
 found the copy executing via its own shebang with 0 CR bytes.
-
-Because it is a copy, **re-copy it after pulling a change to the hook.** Nothing detects that for you:
-
-```powershell
-Copy-Item workstation\agent\skills\review\scripts\pre-push .git\hooks\pre-push -Force
-```
 
 ### `settings.json` is not drift
 

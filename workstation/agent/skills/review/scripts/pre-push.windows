@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+#
+# Windows stand-in for .git/hooks/pre-push. Copy it once:
+#
+#   Copy-Item workstation\agent\skills\review\scripts\pre-push.windows .git\hooks\pre-push -Force
+#
+# git will not run a hook through a junction, and a hardlink is severed by the
+# next editor save, so on Windows the hook has to be a copy. A copy of the hook
+# itself goes stale on the first pull that changes it; this file only runs the
+# tracked hook from the working tree, so pulls reach it with nothing to re-copy.
+# Arguments and git's ref list on stdin pass through `exec` unchanged.
+
+HOOK="$(git rev-parse --show-toplevel)/workstation/agent/skills/review/scripts/pre-push"
+
+if [ ! -f "$HOOK" ]; then
+  echo "pre-push: tracked hook not found at $HOOK." >&2
+  echo "          Refusing rather than pushing ungated. Bypass with git push --no-verify" >&2
+  exit 1
+fi
+
+exec bash "$HOOK" "$@"

@@ -17,6 +17,16 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 24. The Windows pre-push shim has not run on Windows
+
+Opened 2026-09-21. `workstation/agent/skills/review/scripts/pre-push.windows` replaces the copied hook on
+Windows; its 4 tests pass on macOS, and on macOS it runs the real hook end to end. `ema-pf5n4xe7` still has
+the old copy of the hook itself.
+
+**Closes when:** on `ema-pf5n4xe7`, `Copy-Item workstation\agent\skills\review\scripts\pre-push.windows
+.git\hooks\pre-push -Force` has run, `git ls-files --eol` shows `w/lf` for both files, and a `git push`
+prints the hook's `pre-push: ruff check and ruff format --check` line — recorded in the machine note.
+
 ### 20. The corpus is near-empty on this machine — 1 of 76 entries ingested
 
 Opened 2026-09-21, measured rather than estimated: `repo_check.py --corpus` reported **0 of 76** and

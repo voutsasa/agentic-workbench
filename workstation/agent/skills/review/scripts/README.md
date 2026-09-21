@@ -7,9 +7,10 @@ nothing to install, and **no model is called from here**.
 |---|---|
 | `repo_check.py` | Deterministic documentation gate. Exits non-zero on any violation. |
 | `checks.toml` | The rules it enforces — glossary terms, header schema, scope. Tune this, not the script. |
-| `pre-push` | Git hook wrapper around `repo_check.py`, the repo's own unit tests, **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/` — **copied, not linked, on Windows**, see below. |
+| `pre-push` | Git hook wrapper around `repo_check.py`, the repo's own unit tests, **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/` — **on Windows `pre-push.windows` is copied there instead**, see below. |
+| `pre-push.windows` | Windows shim: runs the tracked `pre-push` from the working tree, so its one-time copy never goes stale. |
 | `../tests/test_repo_check.py` | `python3 -m unittest discover -s tests` from the skill root. 123 tests, no network. |
-| `../tests/test_pre_push.py` | 15 tests over the hook itself, same command. It invokes the hook, so the hook skips step 3 when `PRE_PUSH_IN_TESTS=1`. |
+| `../tests/test_pre_push.py` | 19 tests over the hook and the Windows shim, same command. It invokes the hook, so the hook skips step 3 when `PRE_PUSH_IN_TESTS=1`. |
 
 ## repo_check.py
 
@@ -146,8 +147,8 @@ silently and never reaches a fresh clone.
 
 **On Windows that command fails silently and the push runs ungated.** With
 `core.symlinks=false`, `ln` writes a text file holding the target path, and git will not run a
-hook through a junction either, so the hook must be a `Copy-Item` — which then has to be
-re-copied whenever the hook changes. The command, the `eol=lf` trap that decides whether the copy
+hook through a junction either, so the hook must be a `Copy-Item`. What is copied is
+`pre-push.windows`, a shim that runs the tracked hook, so pulls reach it without a re-copy. The command, the `eol=lf` trap that decides whether the copy
 even executes, and the check for it are in
 [`../../../setup/windows.md`](../../../setup/windows.md#the-pre-push-gate) § *The pre-push gate*.
 

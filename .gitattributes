@@ -5,7 +5,8 @@
 #
 #   - `pre-push` gets a CRLF after `#!/usr/bin/env bash`, and git refuses the
 #     hook with "bad interpreter". This is the fix referred to in
-#     `workstation/agent/setup/windows.md`.
+#     `workstation/agent/setup/windows.md`. `pre-push.windows`, the shim
+#     copied into .git/hooks there, needs the same rule.
 #   - Python scripts show every line as modified when the same file is edited
 #     on another machine, which buries real diffs.
 #
@@ -16,5 +17,6 @@
 # would also rewrite the markdown corpus, which nothing here needs.
 
 pre-push  text eol=lf
+pre-push.windows  text eol=lf
 *.sh      text eol=lf
 *.py      text eol=lf

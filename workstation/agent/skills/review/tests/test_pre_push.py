@@ -310,5 +310,71 @@ class RuffStepTests(HookRepoCase):
         self.assertEqual(self.calls(), [])
 
 
+SHIM = HOOK.with_name("pre-push.windows")
+
+#: Stands in for the tracked hook: records its arguments and stdin, then exits
+#: with the code in HOOK_STUB_EXIT.
+HOOK_STUB = """#!/usr/bin/env bash
+printf '%s\\n' "$@" > args.log
+cat > stdin.log
+exit "${HOOK_STUB_EXIT:-0}"
+"""
+
+
+class WindowsShimTests(unittest.TestCase):
+    """The shim copied once into .git/hooks on Windows, in place of the hook."""
+
+    def setUp(self) -> None:
+        self._tmp = tempfile.TemporaryDirectory()
+        self.addCleanup(self._tmp.cleanup)
+        self.root = Path(self._tmp.name)
+        subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        self.tracked = self.root / "workstation/agent/skills/review/scripts/pre-push"
+
+    def run_shim(self, stdin: str = "", **env: str) -> subprocess.CompletedProcess:
+        if BASH is None:
+            raise RuntimeError("bash is required to test the pre-push shim")
+        return subprocess.run(
+            [BASH, str(SHIM), "origin", "https://example.invalid/repo"],
+            cwd=self.root,
+            env={**os.environ, **env},
+            input=stdin,
+            capture_output=True,
+            text=True,
+            timeout=TIMEOUT_S,
+            check=False,
+        )
+
+    def write_stub(self) -> None:
+        self.tracked.parent.mkdir(parents=True)
+        self.tracked.write_text(HOOK_STUB, encoding="utf-8")
+
+    def test_shim_is_lf_only(self) -> None:
+        """A CRLF shim fails with `bad interpreter` before it runs anything."""
+        self.assertNotIn(b"\r\n", SHIM.read_bytes())
+
+    def test_passes_arguments_and_ref_list_through(self) -> None:
+        self.write_stub()
+        refs = "refs/heads/main abc refs/heads/main def\n"
+        result = self.run_shim(stdin=refs)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            (self.root / "args.log").read_text(encoding="utf-8").splitlines(),
+            ["origin", "https://example.invalid/repo"],
+        )
+        self.assertEqual((self.root / "stdin.log").read_text(encoding="utf-8"), refs)
+
+    def test_hook_refusal_refuses_the_push(self) -> None:
+        self.write_stub()
+        result = self.run_shim(HOOK_STUB_EXIT="1")
+        self.assertEqual(result.returncode, 1)
+
+    def test_missing_hook_refuses_rather_than_passing(self) -> None:
+        result = self.run_shim()
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("not found", result.stderr)
+        self.assertIn("--no-verify", result.stderr)
+
+
 if __name__ == "__main__":
     unittest.main()

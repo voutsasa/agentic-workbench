@@ -86,20 +86,23 @@ Being a hardlink, this one is subject to the severance trap below.
 ## The pre-push gate
 
 **The hook cannot be linked** — git will not run a hook through a junction, and a hardlink to it is
-severed by the next editor save. Copy it instead:
+severed by the next editor save. So copy the shim, `pre-push.windows`, which does nothing but run the
+tracked `pre-push` from the working tree:
 
 ```powershell
-Copy-Item (Join-Path $Root "workstation\agent\skills\review\scripts\pre-push") `
+Copy-Item (Join-Path $Root "workstation\agent\skills\review\scripts\pre-push.windows") `
           (Join-Path $Root ".git\hooks\pre-push") -Force
 ```
 
-A plain copy is safe **on a clone made after [`.gitattributes`](../../../.gitattributes) landed**, which
-pins `eol=lf` on `pre-push` so it checks out with LF and `#!/usr/bin/env bash` resolves.
+**Copy it once.** A pull that changes the hook reaches it through the shim, so there is nothing to
+re-copy — unlike a copy of the hook itself, which went stale on the first such pull. If the tracked hook
+is missing, the shim refuses the push rather than letting it through ungated.
 
-Being a copy, it carries the cost the macOS symlink route avoids: **re-run that command after any pull
-that changes the hook**, because nothing detects the divergence. And confirm it is there rather than
-assuming — `.git/hooks/` is not tracked, so a fresh clone has only git's `.sample` files and every push
-from it is ungated and silent about it:
+A plain copy is safe **on a clone made after [`.gitattributes`](../../../.gitattributes) landed**, which
+pins `eol=lf` on `pre-push` and `pre-push.windows` so both check out with LF and bash can read them.
+
+Confirm it is there rather than assuming — `.git/hooks/` is not tracked, so a fresh clone has only git's
+`.sample` files and every push from it is ungated and silent about it:
 
 ```powershell
 Test-Path .git\hooks\pre-push
@@ -111,7 +114,7 @@ existed keeps its CRLF while `check-attr` cheerfully reports `eol: lf`. Ask abou
 instead:
 
 ```powershell
-git ls-files --eol workstation/agent/skills/review/scripts/pre-push
+git ls-files --eol workstation/agent/skills/review/scripts/pre-push workstation/agent/skills/review/scripts/pre-push.windows
 ```
 
 `i/lf w/lf` is correct. **`i/lf w/crlf` means the hook will fail** with
@@ -122,14 +125,12 @@ $f = "workstation\agent\skills\review\scripts\pre-push"
 Remove-Item $f -Force; git checkout -- $f
 ```
 
-Nothing is lost — the index already holds LF, which is why the file shows as unmodified throughout. Then
-re-copy the hook. To catch every affected file at once, not just this one:
+Nothing is lost — the index already holds LF, which is why the file shows as unmodified throughout. If
+it was the shim, copy it again. To catch every affected file at once, not just this one:
 
 ```powershell
 git ls-files --eol | Select-String "w/crlf" | Where-Object { $_ -match "eol=lf" }
 ```
-
-Because it is a copy, **re-run it after pulling a change to the hook.** Nothing detects that for you.
 
 ## Windows traps
 
