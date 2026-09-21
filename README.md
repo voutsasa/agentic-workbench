@@ -9,7 +9,28 @@ Enables engineers to set up their workstation and work in an agent-enabled envir
 
 ## Install
 
-A fresh clone loads nothing on its own: the repo skills and Claude Code's `CLAUDE.md` are per-clone and gitignored. Run one command from the repo root before the first session. Use `python3` on macOS and `python` on Windows. The script is stdlib-only, so no venv is needed yet.
+A fresh clone loads nothing on its own: the venv, the pre-push hook, the repo skills and Claude Code's `CLAUDE.md` are all per-clone and gitignored. Run these from the repo root before the first session. Use `python3` on macOS and `python` on Windows; the scripts are stdlib-only, so they run before a venv exists.
+
+**1. Create the venv and install the development tools.** `uv sync` creates `.venv` on the Python pinned by `.python-version` (fetching it if missing) and installs the `dev` group — `pytest`, `ruff`, `pyright` — from `uv.lock`. The pre-push hook runs ruff and the test suites on this venv.
+
+```sh
+uv sync
+```
+
+**2. Install the pre-push gate.** It is per-clone, so a fresh clone pushes unchecked until it is in place.
+
+| Platform | Run |
+|---|---|
+| macOS | `ln -sfn ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push` |
+| Windows | copy the shim, as in [`workstation/agent/setup/windows.md` § *The pre-push gate*](workstation/agent/setup/windows.md#the-pre-push-gate) |
+
+**3. Check the workstation.** The report lists every prerequisite and CLI tool with its status, version and the command that fixes it, and names the skills each tool serves. It installs nothing and exits non-zero only when a required prerequisite fails. On a machine with no note in `workstation/machines/` yet, first follow [*Adding a machine*](workstation/machines/README.md#adding-a-machine).
+
+```sh
+python3 workstation/scripts/status.py
+```
+
+**4. Load the skills and instructions.**
 
 | You use | Run | It puts in place |
 |---|---|---|

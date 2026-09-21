@@ -2,6 +2,7 @@
 tool: weasyprint
 command: weasyprint
 product: WeasyPrint
+used_by: pdf-deliverable
 verified: 2026-08-20
 ---
 

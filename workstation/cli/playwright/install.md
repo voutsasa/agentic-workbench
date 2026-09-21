@@ -2,6 +2,7 @@
 tool: playwright
 command: playwright
 product: Playwright
+used_by: fetch-to-markdown
 verified: 2026-08-20
 ---
 

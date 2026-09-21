@@ -2,6 +2,7 @@
 tool: pandoc
 command: pandoc
 product: Pandoc
+used_by: fetch-to-markdown, pdf-deliverable
 verified: 2026-08-20
 ---
 

@@ -80,6 +80,11 @@ The Python row reports the interpreter running the script when the repo has a `.
 probes the profile's Python command on `PATH` — the one the bootstrap scripts run on before a venv exists.
 Authentication is deliberately not probed.
 
+A tool's *Requirement* cell names the skills that need it, read from the optional `used_by` key
+(comma-separated skill names) in its `install.md` frontmatter — so a missing tool says which skills it
+disables. A tool without the key serves no skill directly. `tests/test_status.py` fails when a
+`used_by` name has no `SKILL.md` under `skills/` or `workstation/agent/skills/`.
+
 ## `link_config.py`
 
 ```

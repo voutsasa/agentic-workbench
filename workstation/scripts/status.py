@@ -163,11 +163,22 @@ def platform_install_command(install_file: Path, platform: str) -> str:
     return match.group("command") if match else ""
 
 
+def used_by(install_file: Path) -> list[str]:
+    """Return the skills named by an install.md's ``used_by`` frontmatter."""
+    frontmatter = inventory.parse_frontmatter(install_file.read_text(encoding="utf-8"))
+    return [
+        name.strip()
+        for name in frontmatter.get("used_by", "").split(",")
+        if name.strip()
+    ]
+
+
 def tool_row(
     result: inventory.ToolResult, repo: Path, cli_dir: Path, platform: str
 ) -> StatusRow:
     install_file = cli_dir / result.folder / "install.md"
     command = platform_install_command(install_file, platform)
+    skills = used_by(install_file)
     if result.status == inventory.INSTALLED:
         action = "—"
     elif result.status == inventory.ABSENT and command:
@@ -183,7 +194,8 @@ def tool_row(
     )
     return StatusRow(
         capability=result.product,
-        requirement="workstation tool",
+        requirement="workstation tool"
+        + (f" for {', '.join(skills)}" if skills else ""),
         status=result.status,
         version=result.version or "—",
         evidence=evidence or "version probe succeeded",

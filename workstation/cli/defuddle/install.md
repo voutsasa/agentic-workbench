@@ -2,6 +2,7 @@
 tool: defuddle
 command: defuddle
 product: Defuddle
+used_by: fetch-to-markdown
 verified: 2026-08-20
 ---
 

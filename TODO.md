@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-21
+updated: 2026-09-22
 verified: never
 ---
 
@@ -16,6 +16,16 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 25. The README *Install* steps have not run on Windows
+
+Opened 2026-09-22. `README.md` § *Install* gained `uv sync`, the pre-push gate and `status.py` as steps
+1–3; on macOS they ran end to end on a fresh clone (`uv sync` installed `pytest` and `ruff`, `status.py`
+reported `READY`). Step 2 on Windows is item 24.
+
+**Closes when:** on `ema-pf5n4xe7`, a fresh clone runs `uv sync`, then
+`python workstation\scripts\status.py` exits 0 with a Requirement cell reading `workstation tool for
+fetch-to-markdown, pdf-deliverable` on the Pandoc row — recorded in the machine note.
 
 ### 24. The Windows pre-push shim has not run on Windows
 

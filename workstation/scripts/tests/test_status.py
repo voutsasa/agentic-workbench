@@ -220,6 +220,36 @@ class CorrectiveActionTests(unittest.TestCase):
                 "scoop install x",
             )
 
+    def tool_row_for(self, frontmatter: str) -> status.StatusRow:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            cli_dir = repo / "workstation" / "cli"
+            (cli_dir / "x").mkdir(parents=True)
+            (cli_dir / "x" / "install.md").write_text(
+                f"---\ntool: x\n{frontmatter}---\n", encoding="utf-8"
+            )
+            result = inventory.ToolResult("x", "X", inventory.INSTALLED, "1.0")
+            return status.tool_row(result, repo, cli_dir, "macOS")
+
+    def test_tool_row_names_the_skills_that_use_it(self) -> None:
+        row = self.tool_row_for("used_by: fetch-to-markdown, pdf-deliverable\n")
+        self.assertEqual(
+            row.requirement, "workstation tool for fetch-to-markdown, pdf-deliverable"
+        )
+
+    def test_tool_row_without_used_by_is_plain(self) -> None:
+        self.assertEqual(self.tool_row_for("").requirement, "workstation tool")
+
+    def test_every_used_by_names_a_real_skill(self) -> None:
+        repo = Path(__file__).resolve().parents[3]
+        skill_dirs = (repo / "skills", repo / "workstation" / "agent" / "skills")
+        for install in sorted((repo / "workstation" / "cli").glob("*/install.md")):
+            for skill in status.used_by(install):
+                with self.subTest(install=install.parent.name, skill=skill):
+                    self.assertTrue(
+                        any((d / skill / "SKILL.md").is_file() for d in skill_dirs)
+                    )
+
     def test_required_failure_makes_machine_not_ready(self) -> None:
         rows = [
             status.StatusRow(

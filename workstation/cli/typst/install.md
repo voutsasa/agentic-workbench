@@ -2,6 +2,7 @@
 tool: typst
 command: typst
 product: Typst
+used_by: pdf-deliverable
 verified: 2026-09-18
 ---
 
