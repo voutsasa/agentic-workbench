@@ -457,7 +457,7 @@ def check_metadata_header(
             continue
 
         fields, error = parse_frontmatter(read_text(repo_root / rel))
-        if error:
+        if error or fields is None:
             violations.append(
                 {
                     "check": "metadata_header",
@@ -827,7 +827,7 @@ def format_ledger(rows: list[dict]) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.split("\n")[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").split("\n")[0])
     parser.add_argument(
         "--repo-root",
         type=Path,

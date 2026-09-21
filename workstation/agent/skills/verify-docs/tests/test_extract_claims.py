@@ -37,7 +37,9 @@ class TestInstallClaim(unittest.TestCase):
         )
 
     def test_npm_global_flag_is_not_the_package(self):
-        pkg, registry, present = install_claim("npm install -g @mermaid-js/mermaid-cli")
+        claim = install_claim("npm install -g @mermaid-js/mermaid-cli")
+        assert claim is not None
+        pkg, registry, present = claim
         self.assertEqual(pkg, "@mermaid-js/mermaid-cli")
         self.assertEqual(registry, "npm view @mermaid-js/mermaid-cli version")
         # `command -v @mermaid-js/mermaid-cli` would be meaningless: the package
@@ -45,9 +47,9 @@ class TestInstallClaim(unittest.TestCase):
         self.assertEqual(present, "npm ls -g --depth=0 @mermaid-js/mermaid-cli")
 
     def test_uv_tool_install_uses_pypi(self):
-        self.assertEqual(
-            install_claim("uv tool install docling")[1], "pip index versions docling"
-        )
+        claim = install_claim("uv tool install docling")
+        assert claim is not None
+        self.assertEqual(claim[1], "pip index versions docling")
 
     def test_non_install_command_returns_none(self):
         self.assertIsNone(install_claim("pandoc input.md -o out.pdf"))

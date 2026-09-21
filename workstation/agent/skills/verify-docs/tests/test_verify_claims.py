@@ -326,22 +326,27 @@ class TestSimilarLookingSubjects(unittest.TestCase):
 # --------------------------------------------------------------------------
 
 
+def subject(*args):
+    """`help_subject`, for the cases where it must find one."""
+    found = help_subject(*args)
+    assert found is not None
+    return found
+
+
 class TestHelpSubject(unittest.TestCase):
     def test_a_subcommand_carries_the_flag(self):
-        argv, label = help_subject(
+        argv, label = subject(
             Path("/repo"), "doc.md", ["git", "diff", "--stat"], "--stat"
         )
         self.assertEqual(["git", "diff"], argv)
         self.assertEqual("git diff", label)
 
     def test_a_bare_binary_keeps_its_own_flag(self):
-        argv, _ = help_subject(
-            Path("/repo"), "doc.md", ["pandoc", "--wrap=none"], "--wrap"
-        )
+        argv, _ = subject(Path("/repo"), "doc.md", ["pandoc", "--wrap=none"], "--wrap")
         self.assertEqual(["pandoc"], argv)
 
     def test_a_path_argument_is_not_mistaken_for_a_subcommand(self):
-        argv, _ = help_subject(
+        argv, _ = subject(
             Path("/repo"), "doc.md", ["magick", "in.png", "--resize"], "--resize"
         )
         self.assertEqual(["magick"], argv)
@@ -350,7 +355,7 @@ class TestHelpSubject(unittest.TestCase):
         with TempRepo(
             {"scripts/extract_claims.py": "#!/usr/bin/env python3\n"}
         ) as root:
-            argv, label = help_subject(
+            argv, label = subject(
                 root,
                 "doc.md",
                 ["python3", "scripts/extract_claims.py", "--out"],
@@ -468,7 +473,7 @@ class TestManPageOverstrike(unittest.TestCase):
             mock.patch("verify_claims.subprocess.run", return_value=done),
         ):
             hit = Verifier(Path(".")).find_flag(["tool"], "--staged")
-        self.assertIsNotNone(hit)
+        assert hit is not None
         self.assertIn("--staged is a synonym", hit[1])
 
 
@@ -534,7 +539,7 @@ class TestBracketNegationInHelp(unittest.TestCase):
 
     def test_a_flag_printed_in_bracket_form_is_found(self):
         hit = self._find("--porcelain")
-        self.assertIsNotNone(hit)
+        assert hit is not None
         self.assertIn("[no-]porcelain", hit[1])
 
     def test_the_negated_spelling_matches_the_same_line(self):
@@ -542,7 +547,7 @@ class TestBracketNegationInHelp(unittest.TestCase):
 
     def test_a_plainly_printed_flag_is_unaffected(self):
         hit = self._find("--short")
-        self.assertIsNotNone(hit)
+        assert hit is not None
         self.assertIn("--short", hit[1])
 
     def test_a_flag_absent_in_every_form_still_misses(self):
@@ -726,7 +731,7 @@ class TestManifestIndex(unittest.TestCase):
             {"pyproject.toml": '[project]\nname = "x"\nrequires-python = ">=3.14"\n'}
         ) as root:
             found = ManifestIndex(root).lookup("python")
-            self.assertIsNotNone(found)
+            assert found is not None
             self.assertEqual("3.14", found[0])
 
     def test_package_json_version_is_indexed(self):
@@ -1138,7 +1143,9 @@ class TestTransportFailure(unittest.TestCase):
         rows = self.urls(
             20, "unreachable: <urlopen error [SSL: CERTIFICATE_VERIFY_FAILED]>"
         )
-        self.assertIn("transport", transport_failure(rows))
+        failure = transport_failure(rows)
+        assert failure is not None
+        self.assertIn("transport", failure)
 
     def test_varied_failures_are_the_web_not_the_tier(self):
         rows = self.urls(10, "unreachable: timed out") + self.urls(

@@ -28,3 +28,25 @@ dev = [
 # enabling E402 flags nothing today; it is on to catch the ordinary case — an
 # import placed after real code — in anything added later.
 extend-select = ["E402"]
+
+[tool.pyright]
+# The scripts are run as files, not installed as packages, and each test adds its
+# script directory to sys.path before importing it. These paths tell pyright the
+# same thing, so those imports resolve.
+extraPaths = [
+    "skills/setup-agents/scripts",
+    "workstation/scripts",
+    "workstation/agent/skills/fetch-to-markdown/scripts",
+    "workstation/agent/skills/python-quality/scripts",
+    "workstation/agent/skills/review/scripts",
+    "workstation/agent/skills/verify-docs/scripts",
+]
+# Setting `exclude` replaces pyright's defaults, so they are restated first. The
+# python-quality templates are copied into other projects and import packages
+# that exist only there.
+exclude = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/.*",
+    "workstation/agent/skills/python-quality/templates",
+]

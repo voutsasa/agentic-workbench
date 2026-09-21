@@ -278,15 +278,16 @@ def render(report: dict) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--repo", type=Path, default=REPO_ROOT)
     parser.add_argument("--machine", help="machine id or machine-note filename")
     parser.add_argument("--json", action="store_true")
     parser.add_argument("--timeout", type=int, default=inventory.DEFAULT_TIMEOUT)
     args = parser.parse_args(argv)
 
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8")
     try:
         report = collect(args.repo, args.machine, args.timeout)
     except (OSError, TypeError, ValueError, tomllib.TOMLDecodeError) as exc:

@@ -41,6 +41,7 @@ import os
 import socket
 import subprocess
 import sys
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -182,7 +183,9 @@ def machine_file(
 
 
 def copilot_home(
-    home: Path, environ: dict[str, str] | None = None, default_home: Path | None = None
+    home: Path,
+    environ: Mapping[str, str] | None = None,
+    default_home: Path | None = None,
 ) -> Path:
     """Where Copilot keeps its user config: ``$COPILOT_HOME``, else ``<home>/.copilot``.
 
@@ -502,7 +505,7 @@ def render(report: Report) -> str:
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument(
         "--repo",
         type=Path,
@@ -570,8 +573,9 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
 
     # The table uses em-dashes, and a Windows console defaults to cp1252.
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8")
 
     # No target named at all means Claude, as it always has; `--project` and
     # `--claude-md` are each a complete request and touch the repo only.

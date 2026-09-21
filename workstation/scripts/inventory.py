@@ -270,7 +270,7 @@ def render_markdown(
 
 
 def main(argv: list[str] | None = None) -> int:
-    parser = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     default_cli = Path(__file__).resolve().parents[1] / "cli"
     parser.add_argument(
         "--cli-dir",
@@ -298,8 +298,9 @@ def main(argv: list[str] | None = None) -> int:
     # The table contains em-dashes, and a Windows console defaults to cp1252,
     # which turns them into replacement characters on the way out. Redirecting
     # to a file inherits the same codec, so this has to be set here.
-    if hasattr(sys.stdout, "reconfigure"):
-        sys.stdout.reconfigure(encoding="utf-8")
+    reconfigure = getattr(sys.stdout, "reconfigure", None)
+    if reconfigure is not None:
+        reconfigure(encoding="utf-8")
 
     if not args.cli_dir.is_dir():
         parser.error(f"no such directory: {args.cli_dir}")

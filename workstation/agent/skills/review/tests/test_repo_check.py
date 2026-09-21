@@ -440,11 +440,13 @@ class TestParseFrontmatter(unittest.TestCase):
     def test_missing_header_is_reported(self):
         fields, err = repo_check.parse_frontmatter("# Title\n")
         self.assertIsNone(fields)
+        assert err is not None
         self.assertIn("no YAML frontmatter", err)
 
     def test_unclosed_header_is_reported(self):
         fields, err = repo_check.parse_frontmatter("---\ntool: a\n")
         self.assertIsNone(fields)
+        assert err is not None
         self.assertIn("never closed", err)
 
     def test_pairs_are_parsed_and_quotes_stripped(self):
@@ -458,6 +460,7 @@ class TestParseFrontmatter(unittest.TestCase):
         fields, _ = repo_check.parse_frontmatter(
             "---\nrole: Register: the truth\n---\n"
         )
+        assert fields is not None
         self.assertEqual(fields["role"], "Register: the truth")
 
     def test_body_is_not_parsed_as_fields(self):
@@ -481,6 +484,7 @@ class TestSchemaFor(unittest.TestCase):
         got = repo_check.schema_for(
             "workstation/cli/<tool>/install.md", self._schemas()
         )
+        assert got is not None
         self.assertEqual(got["name"], "install")
 
     def test_unmatched_path_returns_none(self):
@@ -492,7 +496,9 @@ class TestSchemaFor(unittest.TestCase):
             {"name": "first", "paths": ["a/*.md"]},
             {"name": "second", "paths": ["a/b.md"]},
         ]
-        self.assertEqual(repo_check.schema_for("a/b.md", schemas)["name"], "first")
+        got = repo_check.schema_for("a/b.md", schemas)
+        assert got is not None
+        self.assertEqual(got["name"], "first")
 
 
 class TestValidateFields(unittest.TestCase):
