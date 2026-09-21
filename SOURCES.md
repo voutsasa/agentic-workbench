@@ -108,6 +108,7 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 #### Testing
 
 * [PyTest](https://docs.pytest.org/en/stable/)
+
 #### Quality gates
 
 ##### Python

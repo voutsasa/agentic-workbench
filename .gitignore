@@ -20,7 +20,7 @@ wheels/
 # OS specific
 **/.DS_Store
 
-# Untracted sources
+# Untracked sources
 **/docs/landing-zone
 
 # Ingested tool pages under the CLI guidance tree — authored install.md and

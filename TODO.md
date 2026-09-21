@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-18
+updated: 2026-09-21
 verified: never
 ---
 
@@ -16,6 +16,60 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 19. `verify_claims.py` refuses a push over three verifier gaps
+
+Opened 2026-09-21, from the repo review. `verify_claims.py --repo .` exits 1 with **3 refuted** out of
+~1,310 claims extracted, down from 10 refuted once four path globs went into `.verify-claims-allow`. Only
+the refuted count is quoted: the verified and unverifiable totals move with every edit to any tracked
+markdown, including this file. The remaining rows are three distinct verifier gaps, each proved here to
+be the checker's fault rather than a document's:
+
+The two git rows are described rather than quoted below, deliberately: writing either command in
+backticks here makes this file assert the same claim and adds two more refuted rows to the count. It did,
+earlier in the same session — the count was 5 until these cells were rewritten in prose. That is itself
+evidence of how narrow the gap is.
+
+| Row | Where | Probe run here | Why the verifier says REFUTED |
+|---|---|---|---|
+| the porcelain flag of git's status subcommand (×2) | `workstation/agent/AGENT-INSTRUCTIONS.md:86`, and the machine note's section E | abbreviated help prints it in optional-negation bracket form, with an optional version argument; the plain flag exits 0 | it substring-searches the help for the flag spelled plainly, which the bracket form breaks |
+| the staged flag of git's diff subcommand (×2) | `AGENT-INSTRUCTIONS.md:87`, `workstation/agent/skills/review/SKILL.md:134` | genuinely absent from abbreviated help, which documents only its cached synonym; the flag itself exits 0 | no amount of help parsing finds it — a synonym needs a tier that runs the flag instead of reading about it |
+| two docling flags (`windows-ema-pf5n4xe7.md:372`, `:373`) | **verdict is not stable between runs** — the full-repo run calls them `UNVERIFIABLE`, a run scoped to that file calls them `REFUTED` | `docling --version` answers correctly but takes 17s; `docling --help` takes 20s and returns 21 lines naming neither flag, because both belong to the `convert` subcommand | two faults compounding: the probe is racing a ~20s startup, so a timeout reads as "prints no help", and it searches the top-level help for a subcommand's flag |
+
+That third row is the worst of the three: a gate whose verdict depends on how it was invoked cannot be
+trusted in either direction, and it is the reason the refuted count moved between runs in this session.
+
+This is not cosmetic. The pre-push hook scopes `verify_claims.py` to the markdown in the push, so a push
+touching any of those three files is refused until the rows clear. `.verify-claims-allow` cannot reach
+them: it exempts *paths*, and these are `help_text` claims.
+
+**Closes when:** `verify_claims.py` handles git's optional-negation bracket syntax, reports a flag
+absent from abbreviated help as `UNVERIFIABLE` rather than `REFUTED` unless the command actually
+rejects it, probes a subcommand's own help for a subcommand flag, and gives the same verdict scoped as
+unscoped — with unit tests for each, and a full-repo run reaching `No claim was refuted`.
+
+### 20. The corpus is near-empty on this machine — 1 of 76 entries ingested
+
+Opened 2026-09-21, measured rather than estimated: `repo_check.py --corpus` reported **0 of 76** and
+`docs/landing-zone/` did not exist at all. Nothing had recorded that state, while
+[`README.md`](README.md) advertises the ingestion pipeline as a core capability. Absent is not broken —
+the corpus is gitignored and rebuilt from [`SOURCES.md`](SOURCES.md) on request — but it being
+unrecorded was.
+
+The "delta" here is the whole register, so this is a full ingestion run, not a top-up. The preflight and
+the progress ledger a batch resumes from now exist as `repo_check.py --corpus --json`, one row per entry
+with its resolved destination.
+
+**One source has been ingested end to end to validate the route before the set**, per *start small*:
+`SOLID Relevance` (§2, a server-rendered Jekyll blog post) through the
+server-rendered route — curl, `extract_article.py` on the `div.blog-post` node, `pandoc -f html -t gfm`,
+`add_frontmatter.py`. All four quality checks passed on this machine: markup-noise count 0, no relative
+link targets, headings and the blockquote intact, and the file ends on the post's own last paragraph.
+The ledger moved to **1 of 76**. The remaining 75 are a deliberate long operation, the user's to
+schedule.
+
+**Closes when:** `repo_check.py --corpus` reports every entry present, or the user records a smaller
+target here and that target is met.
 
 ### 9. The Azure DevOps pipeline has never run
 

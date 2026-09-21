@@ -5,7 +5,7 @@ os_version: 10.0.26200
 shell: PowerShell 7.6.5
 python: 3.14.7
 repo: C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench
-verified: 2026-09-14
+verified: 2026-09-21
 ---
 
 # Windows 11 — `EMA-PF5N4XE7`
@@ -460,8 +460,8 @@ as pipe tables; `shapes-with-text.docx` gave all five shapes' text. Byte-identit
 is still unchecked — no macOS copy was diffed against.
 
 **D. The JS-hydrated route.** The raw fetch (`curl` + `defuddle`) measured 206 words on
-`retirejs.github.io/retire.js/` — "low hundreds," as expected. The rendered half is blocked: see
-*Nobody has run `playwright install` here to download browser binaries* above. The other open question — whether
+`retirejs.github.io/retire.js/` — "low hundreds," as expected. The rendered half was blocked when this
+section first ran and is now closed: see *Playwright's browser binaries are now installed* below. The other open question — whether
 `render_page.py`'s exit-2 message names the right interpreter — is settled, and it uncovered a real bug:
 the `python=` part is correct (`sys.executable`, dynamic), but the suggested fix-it command was
 hardcoded POSIX (`/playwright/bin/python`) and would have failed if pasted verbatim on Windows. Fixed in
@@ -469,20 +469,42 @@ hardcoded POSIX (`/playwright/bin/python`) and would have failed if pasted verba
 the command now reads `Scripts/python.exe` when `os.name == "nt"`. Re-verified: the message now prints
 `.../playwright/Scripts/python.exe`. The fetch-to-markdown suite (78 tests) still passes.
 
-**E. The repo's own gates.** `repo_check.py`: all enabled checks passed. `verify_claims.py --repo .`
-(offline tier): 661 verified, 609 unverifiable (mostly network-tier URLs and machine-state paths,
-expected), 6 refuted — and all six are verifier false positives, not doc bugs, confirmed by reading
-each claim's context:
+**E. The repo's own gates.** `repo_check.py`: all enabled checks passed. Every `.pre-push-tests` suite
+passed — **all seven of them**: 149, 34, 78, 19, 134, 141 and 17 tests, 572 in total. The largest,
+`workstation/scripts/tests`, was omitted from the first record of this run and is the one holding
+`test_readme_skills.py`, `test_python_version.py` and `test_link_config.py`. The 134 is
+`review/tests`, which stood at 106 before this session's `register` check added 28. The last, 17, is
+`workstation/agent/hooks/tests`, expanded this session by item 14's fix. `ruff check .` and
+`ruff format --check .` both clean across the repo (98 files).
 
-| Claim | Why it is not a real bug |
-|---|---|
-| `git supports --porcelain`, `--staged` (×2) | this git build's `-h` output is abbreviated and uses `--[no-]porcelain[=<version>]` bracket syntax — `git status --porcelain` and `git diff --staged` both exit 0 in practice |
-| `.venv/bin/python` (×2, `agent/README.md:49`, this file's settings table) | both lines already name the Windows path in the same sentence — the verifier's POSIX/Windows pairing heuristic missed this phrasing |
-| `.vscode/settings.json` (`agent/setup/README.md:178`) | a scope-reference table row documenting where VS Code *can* put workspace settings, not a claim that this repo has one |
+`verify_claims.py --repo .` (offline tier) **exits 1**, and did so on every run of this section. First
+run: 661 verified, 609 unverifiable, 6 refuted. Final run, after this session's fixes and after four path
+globs were added to `.verify-claims-allow`: **3 refuted**, against roughly 1,310 claims extracted — the
+verified and unverifiable totals shift with every markdown edit, so only the refuted count is
+worth recording. Every refuted
+row, on every run, is a verifier false positive rather than a doc bug, but they are *not* harmless: the
+pre-push hook scopes this script to the markdown in the push, so a push touching one of those files is
+refused until the row is cleared.
 
-Every `.pre-push-tests` suite passed (34, 78, 19, 106, 141, 17 tests — the last is
-`workstation/agent/hooks/tests`, expanded to 17 this session by item 14's fix). `ruff check .` and
-`ruff format --check .` both clean across the repo.
+| Refuted claim | Why it is not a doc bug | Cleared? |
+|---|---|---|
+| the POSIX and Windows venv interpreter paths (×2) | each line already names the other layout in the same sentence; a venv has one or the other, so one of the pair cannot exist on any given machine | yes — four globs in `.verify-claims-allow`, which is what that file is for |
+| VS Code's workspace settings path (`agent/setup/README.md:178`, and this file quoting it) | a scope table row saying where VS Code *can* put workspace settings in whichever repo you open, not a claim that this repo has one | yes — same route |
+| the `--porcelain` flag, on `git status` (×1, `AGENT-INSTRUCTIONS.md:86`) | probed here: it **is** in that command's `-h` output, written `--[no-]porcelain[=<version>]`, so a plain substring search for the flag misses it | no — a help-text claim, which a path allowlist cannot reach |
+| the `--staged` flag, on `git diff` (×2, `AGENT-INSTRUCTIONS.md:87` and `review/SKILL.md:134`) | probed here: genuinely absent from `-h`, which documents only the synonym `--cached`; the flag itself works and exits 0 | no — same reason |
+
+`repo_check.py --corpus`, the new ingestion ledger, reported **0 of 76 entries ingested** on this machine
+with `docs/landing-zone/` absent entirely — expected on a clone, since the corpus is gitignored, but
+unrecorded until now. One entry was then ingested end to end to prove the route runs here: `SOLID
+Relevance`, server-rendered route, all four quality checks passed, ledger now **1 of 76**. The other 75
+are [`../../TODO.md`](../../TODO.md) item 20.
+
+The uncleared rows need the verifier taught git's bracket syntax and its synonym pairs, which is a
+change to `verify_claims.py` rather than to any document. A third gap surfaced while clearing these and
+is worse: two docling flag claims in this file's own docling section get **different verdicts depending
+on whether the run is scoped to one file or covers the repo**, because `docling` takes ~20 seconds to
+answer `--help` at all and answers with a 21-line top-level summary that names no subcommand flag. All
+three are [`../../TODO.md`](../../TODO.md) item 19; the gate is red until they clear.
 
 ## Not yet installed
 

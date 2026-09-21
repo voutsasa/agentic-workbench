@@ -28,7 +28,7 @@ stale), and why a machine's tool table is measured by `../scripts/inventory.py` 
 
 | Machine | Platform | Repo path | Inventory verified |
 |---|---|---|---|
-| [`windows-ema-pf5n4xe7.md`](windows-ema-pf5n4xe7.md) | Windows 11 (build 26200) | `C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench` | 14 September 2026 |
+| [`windows-ema-pf5n4xe7.md`](windows-ema-pf5n4xe7.md) | Windows 11 (build 26200) | `C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench` | 21 September 2026 |
 | [`macos-workstation.md`](macos-workstation.md) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 18 September 2026 |
 
 The filename is `<platform>-<id>.md`, lowercased. The id is usually the hostname —
