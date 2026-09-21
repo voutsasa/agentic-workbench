@@ -198,7 +198,7 @@ invocation to run through the project's venv, so this table is the gate on any `
 | Piece | State | Note |
 |---|---|---|
 | `.python-version` | present, tracked | `3.14` — so there is nothing to ask about |
-| `pyproject.toml` | present, tracked | `requires-python = ">=3.14"`, `dependencies = []` |
+| `pyproject.toml` | present, tracked | `requires-python = ">=3.12"`, `dependencies = []` |
 | `.venv` | **present** | use `.venv\Scripts\python.exe` |
 | `uv` | 0.11.25 | `…\scoop\apps\python314\current\Scripts\uv.exe` |
 | Global interpreter | 3.14.7 | `…\scoop\apps\python314\current\python.exe` — **not to be used** |

@@ -58,7 +58,7 @@ Inside an activated `.venv` both names work.
 | What | State | Detail |
 |---|---|---|
 | `.python-version` | present | `3.14` |
-| `pyproject.toml` | present | `requires-python = ">=3.14"`, `dependencies = []`, tooling in `[dependency-groups] dev` |
+| `pyproject.toml` | present | `requires-python = ">=3.12"`, `dependencies = []`, tooling in `[dependency-groups] dev` |
 | `.venv` | **present** | 3.14.6 |
 | `uv` | 0.12.15 | `/opt/homebrew/bin/uv` |
 | `pytest`, `ruff` in the venv | **present** | since 2026-09-13; `.venv/bin/pytest --version`, `.venv/bin/ruff --version` |
