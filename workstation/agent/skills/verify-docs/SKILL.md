@@ -171,4 +171,6 @@ worth a human on the other end of a pull request.
 | script | purpose |
 | --- | --- |
 | `scripts/extract_claims.py` | phase 1 — markdown to JSONL claims manifest |
-| `tests/test_extract_claims.py` | `python3 -m unittest discover -s tests` — stdlib only, no dependencies |
+| `scripts/verify_claims.py` | phase 2 — one mechanical verifier per claim, a verdict each. Exits non-zero on any `REFUTED`, which is what makes it usable in the pre-push hook. |
+| `tests/test_extract_claims.py` | 35 tests. `python3 -m unittest discover -s tests` — stdlib only, no dependencies |
+| `tests/test_verify_claims.py` | 106 tests, same command |

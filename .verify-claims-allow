@@ -28,6 +28,11 @@ workstation/mcp/*/reference.md
 # agent/setup/README.md as what Copilot reads in whichever repo you point it at.
 .github/copilot-instructions.md
 .github/skills/**
+# Same category: agent/setup/README.md tabulates where VS Code *can* put
+# workspace settings in whichever repo you open. This repo has no workspace
+# settings and wants none — its config is global, per that file's own scope
+# table — so the path is meant not to exist here.
+.vscode/settings.json
 # Named narrowly: this repo now owns .agents/rules/workbench.md (Antigravity's
 # route to AGENTS.md), and `.agents/**` would exempt that from checking too.
 .agents/skills/**
@@ -49,10 +54,18 @@ CLAUDE.md
 # thing to avoid does not assert that it exists here.
 .claude/**
 
-# The Windows venv interpreter. agent/README.md names it beside .venv/bin/python
-# as the second layout the ruff hook's registration probes; a venv has one layout
-# or the other, so on any given machine one of the two cannot exist.
+# The two venv interpreter layouts. agent/README.md and the validation routes
+# name both, because the ruff hook's registration probes for whichever is there;
+# a venv has one layout or the other, so on any given machine exactly one of the
+# pair cannot exist. Exempting only the Windows one meant the gate refused a push
+# from Windows for the POSIX path and from macOS for the Windows path — the same
+# category as the `~/…` paths the checker already exempts: machine state, not
+# repo truth. Both are written without the leading `.venv/`, too, where the prose
+# names the interpreter rather than the path.
 .venv/Scripts/python.exe
+.venv/bin/python
+Scripts/python.exe
+bin/python
 
 # Scratch outputs in the validation steps: /tmp/v.md, /tmp/val/, /tmp/r.html and
 # the rest are what those commands *create* when someone runs them. A validation

@@ -9,7 +9,7 @@ reaches a shell — verifiers are built from structured fields and run with
 | `extract_claims.py` | Finds candidate claims and *proposes* a command for each. Decides nothing. |
 | `verify_claims.py` | Executes a verifier per claim and returns a verdict. Exits non-zero on any `REFUTED`. |
 | `../tests/test_extract_claims.py` | 35 tests. `python3 -m unittest discover -s tests` from the skill root. |
-| `../tests/test_verify_claims.py` | 66 tests, including both regression classes below. |
+| `../tests/test_verify_claims.py` | 106 tests, including both regression classes below. |
 
 ## verify_claims.py
 
