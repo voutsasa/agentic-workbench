@@ -79,20 +79,29 @@ def probe_prerequisite(
     timeout: int,
     runtime_version: str | None = None,
     runtime_path: str | None = None,
+    venv: bool = True,
 ) -> StatusRow:
+    """Probe one dependency.
+
+    A ``python-runtime`` entry reports the interpreter running this script when
+    the repo has a ``.venv`` — that is the one the workbench's Python runs on.
+    Without one, the bootstrap scripts run on whatever the named command
+    resolves to, so that command is probed on PATH like any other.
+    """
     commands = entry.get("commands", [])
     mode = entry.get("mode", "all")
     if not commands or mode not in {"all", "any"}:
         raise ValueError(f"invalid prerequisite {entry.get('id', '<unknown>')}")
 
-    if entry.get("probe") == "python-runtime":
+    if entry.get("probe") == "python-runtime" and venv:
+        path = runtime_path or sys.executable
         probes = [
             inventory.Probe(
                 commands[0],
                 inventory.INSTALLED,
                 version=runtime_version or platform_mod.python_version(),
-                path=runtime_path or sys.executable,
-                detail=runtime_path or sys.executable,
+                path=path,
+                detail=f"running interpreter {path}",
             )
         ]
     else:
@@ -210,7 +219,10 @@ def collect(
     common = load_toml(dependencies_path, "dependencies")
     profile = load_toml(profile_path)
     dependencies = merge_dependencies(common, profile)
-    prerequisites = [probe_prerequisite(entry, timeout) for entry in dependencies]
+    venv = (repo / ".venv").is_dir()
+    prerequisites = [
+        probe_prerequisite(entry, timeout, venv=venv) for entry in dependencies
+    ]
     cli_dir = repo / "workstation" / "cli"
     tools = inventory.run_inventory(inventory.discover_tools(cli_dir), timeout=timeout)
     tool_rows = [

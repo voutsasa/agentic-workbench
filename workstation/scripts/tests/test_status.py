@@ -71,6 +71,18 @@ class ProfileTests(unittest.TestCase):
             status.merge_dependencies(common, {"overrides": {"node": {}}})
 
 
+PYTHON_RUNTIME = {
+    "id": "python",
+    "product": "Python",
+    "commands": ["python"],
+    "probe": "python-runtime",
+    "minimum_version": "3.14",
+    "required": True,
+    "provisioning": "external",
+    "corrective_action": "upgrade",
+}
+
+
 class PrerequisiteProbeTests(unittest.TestCase):
     @mock.patch("status.inventory.probe_command")
     def test_any_mode_accepts_one_installed_assistant(self, probe: mock.Mock) -> None:
@@ -113,25 +125,84 @@ class PrerequisiteProbeTests(unittest.TestCase):
         self.assertEqual(row.status, "outdated")
         self.assertEqual(row.corrective_action, "upgrade")
 
-    def test_python_runtime_uses_active_interpreter_not_path(self) -> None:
+    @mock.patch("status.inventory.probe_command")
+    def test_python_runtime_with_venv_reports_running_interpreter(
+        self, probe: mock.Mock
+    ) -> None:
         row = status.probe_prerequisite(
-            {
-                "id": "python",
-                "product": "Python",
-                "commands": ["python"],
-                "probe": "python-runtime",
-                "minimum_version": "3.14",
-                "required": True,
-                "provisioning": "external",
-                "corrective_action": "upgrade",
-            },
+            PYTHON_RUNTIME,
             timeout=1,
             runtime_version="3.14.7",
             runtime_path=r"C:\repo\.venv\Scripts\python.exe",
+            venv=True,
         )
+        probe.assert_not_called()
         self.assertEqual(row.status, inventory.INSTALLED)
         self.assertEqual(row.version, "python 3.14.7")
-        self.assertIn(".venv", row.evidence)
+        self.assertIn(r"running interpreter C:\repo\.venv", row.evidence)
+
+    @mock.patch("status.inventory.probe_command")
+    def test_python_runtime_without_venv_probes_path(self, probe: mock.Mock) -> None:
+        probe.return_value = inventory.Probe(
+            "python",
+            inventory.INSTALLED,
+            version="3.12.4",
+            path="/usr/bin/python",
+            detail="Python 3.12.4",
+        )
+        row = status.probe_prerequisite(
+            PYTHON_RUNTIME,
+            timeout=1,
+            runtime_version="3.14.7",
+            runtime_path="/repo/.venv/bin/python",
+            venv=False,
+        )
+        probe.assert_called_once_with("python", "--version", timeout=1)
+        self.assertEqual(row.version, "python 3.12.4")
+        self.assertEqual(row.status, "outdated")
+        self.assertNotIn(".venv", row.evidence)
+
+    @mock.patch("status.inventory.probe_command")
+    def test_python_runtime_without_venv_reports_absent_command(
+        self, probe: mock.Mock
+    ) -> None:
+        probe.return_value = inventory.Probe(
+            "python", inventory.ABSENT, detail="not on PATH"
+        )
+        row = status.probe_prerequisite(PYTHON_RUNTIME, timeout=1, venv=False)
+        self.assertEqual(row.status, "absent")
+
+
+class CollectVenvTests(unittest.TestCase):
+    """`collect` decides from the repo whether a .venv exists."""
+
+    def run_collect(self, repo: Path) -> mock.Mock:
+        common = {"dependencies": [{"id": "python"}]}
+        profile = {"machine": "m", "platform": "macOS"}
+        with (
+            mock.patch("status.link_config.machine_file", return_value=repo / "m.md"),
+            mock.patch("status.load_toml", side_effect=[common, profile]),
+            mock.patch("status.inventory.run_inventory", return_value=[]),
+            mock.patch("status.inventory.discover_tools", return_value=[]),
+            mock.patch("status.probe_prerequisite") as probe,
+        ):
+            probe.return_value = status.StatusRow(
+                "Python", "", "installed", "", "", "—", True, "external"
+            )
+            status.collect(repo)
+        return probe
+
+    def test_repo_with_venv(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            (repo / ".venv").mkdir()
+            probe = self.run_collect(repo)
+        self.assertIs(probe.call_args.kwargs["venv"], True)
+
+    def test_repo_without_venv(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            probe = self.run_collect(Path(directory))
+        self.assertIs(probe.call_args.kwargs["venv"], False)
 
 
 class CorrectiveActionTests(unittest.TestCase):

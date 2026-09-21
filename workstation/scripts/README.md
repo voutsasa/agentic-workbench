@@ -76,6 +76,8 @@ python workstation/scripts/status.py --machine macos-workstation
 Resolves the same machine note as `link_config.py`, loads common requirements from
 `../dependencies.toml`, applies its `<machine>.prerequisites.toml` companion's overrides, and combines
 those dependency probes with `inventory.py`. It exits non-zero only when a required dependency fails.
+The Python row reports the interpreter running the script when the repo has a `.venv`, and otherwise
+probes the profile's Python command on `PATH` — the one the bootstrap scripts run on before a venv exists.
 Authentication is deliberately not probed.
 
 ## `link_config.py`
