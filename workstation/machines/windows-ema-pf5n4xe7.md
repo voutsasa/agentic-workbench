@@ -490,16 +490,13 @@ Deliberate gaps, so they are not rediscovered as faults:
 
 - `typst` — not on `PATH` here as of the 21 September 2026 probe; needed for `pandoc --pdf-engine=typst`
   (validation section B). Not yet installed, not yet a hold.
-- Playwright's Chromium browser binary — the pip package is installed here, but nobody has run
-  `playwright install` to download browser binaries. See below. Blocks validation section D's rendered
-  half.
 - **LibreOffice is installed but deliberately off `PATH`** — see the docling section above. Not a gap.
 
 Resolved 26 August 2026 and no longer gaps: `~/.claude/machine.md`, the six skills for both agents, and
 the `pre-push` hook are all in place per *Claude Code config* above; `docling` is unblocked. **Resolved
 by 21 September 2026 and no longer gaps:** `defuddle`, `tesseract` and `weasyprint` — all three read
 `absent` on 14 September and `installed` on 21 September; no route was recorded here, so how each was
-installed is unknown.
+installed is unknown. **Resolved the same day:** Playwright's Chromium browser binary, per below.
 
 ### VS Code — launched, and it loads the global instructions
 
@@ -511,17 +508,21 @@ on a real request showed `AGENTS.md` and `~/.copilot/copilot-instructions.md` as
 and `REPLY_CEILING` — a string that exists only in those instruction files — inside the
 `copilot-instructions.md` one.
 
-### Nobody has run `playwright install` here to download browser binaries
+### Playwright's browser binaries are now installed
 
 Checked 21 September 2026, running `render_page.py` (the JS-hydrated fetch route) through the pipx
-venv's interpreter: `playwright.sync_api` imports fine, but
-`BrowserType.launch` fails — `chrome-headless-shell.exe` is not at
-`~\AppData\Local\ms-playwright\chromium_headless_shell-1228\...`. The pip package is installed; the
-browser binaries it needs are not. **The user's to run:**
+venv's interpreter: `BrowserType.launch` failed — `chrome-headless-shell.exe` was missing from
+`~\AppData\Local\ms-playwright\`. The pip package was installed; the browser binaries were not. Fixed
+the same day, by the user:
 
 ```powershell
 & "C:\Users\voutsas\AppData\Local\pipx\pipx\venvs\playwright\Scripts\python.exe" -m playwright install chromium
 ```
+
+Re-verified end to end afterward: `render_page.py` on `retirejs.github.io/retire.js/` wrote 224 KB of
+rendered HTML; `defuddle parse --md --frontmatter` on it gave a 15,137-word body (`word_count: 17260` in
+its own frontmatter count) against the 206-word raw fetch, with `title: "Retire.js"` — the real page
+title. Validation section D is now fully closed, not just the raw half.
 
 **Still outstanding, and the user's to do:** one key — `env.ANTHROPIC_MODEL`, per *`settings.json` is not
 drift* above. The four top-level keys are merged. Plus one interactive restart, to prove the

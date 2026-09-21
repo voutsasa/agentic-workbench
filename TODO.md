@@ -17,19 +17,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 18. Playwright's Chromium browser binary is missing on Windows
-
-Opened 2026-09-21, found while closing item 5. `render_page.py` (the JS-hydrated half of
-`fetch-to-markdown`) imports `playwright` fine through the pipx venv, but
-`BrowserType.launch` fails: `chrome-headless-shell.exe` is not under
-`~\AppData\Local\ms-playwright\`. The pip package is installed; nobody has run `playwright install`
-here to download browser binaries.
-
-**Closes when:** the user runs
-`& "C:\Users\voutsas\AppData\Local\pipx\pipx\venvs\playwright\Scripts\python.exe" -m playwright install chromium`
-and `render_page.py` on a real JS-hydrated page (e.g. `retirejs.github.io/retire.js/`) writes non-empty
-HTML that `defuddle` turns into a rendered word count in the thousands, against the ~200-word raw fetch.
-
 ### 9. The Azure DevOps pipeline has never run
 
 Opened 2026-09-14: the only pipeline was `.github/workflows/verify-docs.yml`, which never runs for this
@@ -109,6 +96,16 @@ the `.cmd` shim correctly. Sections A–E of `workstation/validation/windows.md`
 exit-2 interpreter naming is now confirmed correct (and a real bug found and fixed alongside it, see
 item 14's sibling fix in `render_page.py`); docling's byte-identity with macOS's output is still
 unchecked — no macOS copy exists to diff against, and nobody has committed to producing one.
+
+### 18. Playwright's Chromium browser binary was missing on Windows
+
+Opened 2026-09-21, found while closing item 5. Closed the same day. `render_page.py` imported
+`playwright` fine through the pipx venv, but `BrowserType.launch` failed — `chrome-headless-shell.exe`
+was missing under `~\AppData\Local\ms-playwright\`. Fixed by the user:
+`& "C:\Users\voutsas\AppData\Local\pipx\pipx\venvs\playwright\Scripts\python.exe" -m playwright install
+chromium`. Re-verified end to end: `render_page.py` on `retirejs.github.io/retire.js/` wrote 224 KB of
+rendered HTML; `defuddle` turned it into a 15,137-word body against the 206-word raw fetch, with the
+real page title `"Retire.js"`. Validation section D is now fully closed.
 
 ### 14. The ruff post-edit hook — Windows and Copilot's `apply_patch`
 
