@@ -211,6 +211,18 @@ Three properties keep it honest:
 Only exempt a flag that **works** but that no help text documents. A flag the tool
 does not have is a defect in the document.
 
+Every run says what it is waiving, before it starts:
+
+```
+verify_claims: 1 flag exemption(s) from .verify-flags-allow:
+               git diff --staged
+```
+
+On stderr, so it does not enter a report; suppressed by `--quiet` and `--json`,
+which scripts read. The notice comes from the code that applies the exemption, so
+it cannot drift from what the run actually did — which is why the pre-push hook
+does not print this one itself the way it prints the path globs.
+
 ### Two refutations that are meant to stand
 
 `--online` reports two, both in documentation warning *against* a command:

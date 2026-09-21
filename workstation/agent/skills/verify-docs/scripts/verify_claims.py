@@ -216,6 +216,21 @@ def read_flag_allow_file(repo_root: Path) -> frozenset[tuple[str, str]]:
     return frozenset(pairs)
 
 
+def exemption_notice(exemptions: frozenset[tuple[str, str]]) -> str:
+    """The flag exemptions in force, for stderr. Empty when there are none.
+
+    An exemption nobody sees is one nobody revisits. The pre-push hook echoes the
+    path globs it reads itself; this file is read here, so this is what says it is
+    in force — printed by the code that applies it, so the notice cannot drift
+    from the decision. Sorted, so two runs of the same repo print the same line.
+    """
+    if not exemptions:
+        return ""
+    pairs = sorted(f"{command} {flag}" for command, flag in exemptions)
+    head = f"verify_claims: {len(pairs)} flag exemption(s) from {FLAG_ALLOW_FILE_NAME}:"
+    return "\n".join([head, *(f"{'':15}{pair}" for pair in pairs)])
+
+
 def flag_line(
     help_text: str | None, flag: str, negated: re.Pattern[str] | None
 ) -> str | None:
@@ -1302,6 +1317,12 @@ def main(argv: list[str] | None = None) -> int:
         if not args.no_allow_file:
             globs += read_allow_file(repo)
             exemptions = read_flag_allow_file(repo)
+        # Before the run, not after: a full sweep takes minutes, and the reader
+        # should know what is being waived while it is happening. `--quiet` and
+        # `--json` are consumed by scripts, so they stay clean.
+        notice = exemption_notice(exemptions)
+        if notice and not (args.quiet or args.json):
+            print(notice, file=sys.stderr)
         results = run(
             repo,
             claims,

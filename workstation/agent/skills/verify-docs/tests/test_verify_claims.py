@@ -12,6 +12,8 @@ one until someone follows the documentation and it does not work:
     when two tools in the same document look alike.
 """
 
+import contextlib
+import io
 import json
 import os
 import shutil
@@ -41,9 +43,11 @@ from verify_claims import (
     clip,
     collect_claims,
     command_on_line,
+    exemption_notice,
     format_report,
     frontmatter_version_claims,
     help_subject,
+    main,
     parse_frontmatter,
     read_allow_file,
     read_flag_allow_file,
@@ -566,6 +570,54 @@ class TestFlagExemptions(unittest.TestCase):
     def test_a_line_without_a_flag_is_ignored(self):
         with TempRepo({FLAG_ALLOW_FILE_NAME: "git diff\n"}) as root:
             self.assertEqual(frozenset(), read_flag_allow_file(root))
+
+
+class TestExemptionNotice(unittest.TestCase):
+    """An exemption nobody sees is one nobody revisits.
+
+    The pre-push hook echoes the path globs it read; the flag file is read by
+    this script, so this script is what says it is in force. Printed by the
+    object that made the decision, so the notice cannot disagree with it.
+    """
+
+    def test_no_exemptions_says_nothing(self):
+        self.assertEqual("", exemption_notice(frozenset()))
+
+    def test_the_notice_names_the_file_the_count_and_the_pair(self):
+        notice = exemption_notice(frozenset({("git diff", "--staged")}))
+        self.assertIn(FLAG_ALLOW_FILE_NAME, notice)
+        self.assertIn("1 flag exemption", notice)
+        self.assertIn("git diff --staged", notice)
+
+    def test_pairs_are_sorted_so_the_line_is_reproducible(self):
+        pairs = frozenset({("git diff", "--staged"), ("docling convert", "--to")})
+        body = exemption_notice(pairs).splitlines()[1:]
+        self.assertEqual(
+            ["docling convert --to", "git diff --staged"], [ln.strip() for ln in body]
+        )
+
+    def test_main_prints_the_notice_on_stderr(self):
+        files = {
+            FLAG_ALLOW_FILE_NAME: "git diff --staged\n",
+            "doc.md": "```sh\ngit diff --staged --stat\n```\n",
+        }
+        with TempRepo(files) as root:
+            err = io.StringIO()
+            with (
+                contextlib.redirect_stderr(err),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                main(["--repo", str(root), "--files", "doc.md", "--quiet"])
+            self.assertEqual("", err.getvalue(), "--quiet prints counts only")
+
+            err = io.StringIO()
+            with (
+                contextlib.redirect_stderr(err),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                main(["--repo", str(root), "--files", "doc.md"])
+            self.assertIn(FLAG_ALLOW_FILE_NAME, err.getvalue())
+            self.assertIn("git diff --staged", err.getvalue())
 
 
 # --------------------------------------------------------------------------

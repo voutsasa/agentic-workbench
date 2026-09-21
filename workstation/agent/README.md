@@ -283,7 +283,9 @@ From the 2026-07-30 usage report, when `WORKING_PRACTICES.md` was folded into `C
   No file means no globs, and the hook prints the exemptions in force before it runs.
   `.verify-flags-allow` beside it does the same for a flag that works but that no help text
   documents — `git diff --staged`, a synonym `git diff -h` never prints — kept separate
-  because the first file is pinned to paths *meant* not to exist.
+  because the first file is pinned to paths *meant* not to exist. `verify_claims.py` reads and
+  echoes that one itself rather than the hook doing it, so the notice comes from the code that
+  applies the exemption and cannot drift from what the run did.
 - **`fix-findings` defers rather than restates — 2026-08-23.** It used to carry its own
   shorter procedure, and both of its differences from `review`'s Apply mode were defects:
   it said to apply *all* findings, dropping the rule that judgement calls are escalated

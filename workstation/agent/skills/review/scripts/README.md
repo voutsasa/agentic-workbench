@@ -169,7 +169,8 @@ Exemptions and test directories all come from the repo being pushed —
 suites — never from the hook. The hook is shared
 by every repo that links it, so a glob or directory written into it would apply to
 unrelated repos. It reads the first and prints those globs before it runs; the flag
-file is read by `verify_claims.py` itself and is not echoed here. See
+file is read and echoed by `verify_claims.py` itself, so that notice comes from the
+code that applies it and cannot drift from what the run did. See
 [`../../verify-docs/scripts/README.md`](../../verify-docs/scripts/README.md).
 
 A suite that itself invokes the hook — `tests/test_pre_push.py` does — would run the
