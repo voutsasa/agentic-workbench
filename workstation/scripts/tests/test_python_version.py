@@ -2,7 +2,9 @@
 
 uv reads the first to pick the interpreter and enforces the second when it
 resolves, so a mismatch shows up as a venv that cannot be created — on the next
-clone, not in the commit that caused it. Standard library only.
+clone, not in the commit that caused it. `workstation/dependencies.toml`'s
+Python `minimum_version` must equal that floor too, or `status.py` reports a
+supported interpreter as NOT READY. Standard library only.
 """
 
 from __future__ import annotations
@@ -86,6 +88,20 @@ class TestThisRepo(unittest.TestCase):
         self.assertTrue(
             satisfies(pinned, spec),
             f".python-version {pinned} does not satisfy requires-python {spec!r}",
+        )
+
+    def test_status_floor_matches_requires_python(self) -> None:
+        """`status.py` must not call a supported interpreter NOT READY."""
+        with (REPO / "pyproject.toml").open("rb") as handle:
+            spec = tomllib.load(handle)["project"]["requires-python"]
+        with (REPO / "workstation" / "dependencies.toml").open("rb") as handle:
+            deps = tomllib.load(handle)["dependencies"]
+        floor = next(d for d in deps if d["id"] == "python")["minimum_version"]
+        self.assertEqual(
+            f">={floor}",
+            spec.replace(" ", ""),
+            f"dependencies.toml python minimum {floor} disagrees with "
+            f"requires-python {spec!r}",
         )
 
 

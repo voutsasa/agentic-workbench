@@ -9,7 +9,8 @@
 # The workstation scripts' own tests, and test_readme_skills.py, which fails when
 # README.md's skill table stops matching link_config.py's SKILLS tuple and the
 # skills/ folders, and test_python_version.py, which fails when .python-version
-# stops satisfying requires-python in pyproject.toml.
+# stops satisfying requires-python in pyproject.toml, or when status.py's Python
+# floor in workstation/dependencies.toml stops matching it.
 workstation/scripts/tests
 
 # The skills' own suites — this repo's and the global ones it versions. review's

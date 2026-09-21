@@ -31,7 +31,8 @@ The report has three overall states:
 
 ## Boundaries
 
-- Report versions from the probes; enforce only minimums recorded in the machine profile.
+- Report versions from the probes; enforce only minimums recorded in `workstation/dependencies.toml`
+  or the machine profile's overrides.
 - Give corrective actions exactly as reported. Tool installation commands come from the matching
   platform row in each tool's `install.md`.
 - Git, Python, Node.js/npm, the package manager, dependency manager, and AI assistants are common
