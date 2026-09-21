@@ -17,6 +17,28 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 21. The `pre-push` gate is not installed on `ema-pf5n4xe7`
+
+Opened 2026-09-21, found while pushing this session's four commits. `.git/hooks/` in this clone holds
+only the fourteen `.sample` files git ships, so **every push from this machine runs no gate**. The
+machine note had claimed the hook was installed as a copy, verified 26 August; that claim is now
+corrected in place.
+
+The push itself is not unchecked work — `repo_check.py`, all seven `.pre-push-tests` suites and both
+`ruff` commands were run by hand and passed. But the gate that makes that automatic is absent, and the
+hook would have **refused** this push: item 19's three refuted claims include one in
+`workstation/agent/skills/review/SKILL.md`, which was in it.
+
+Installing it is the user's — it changes their local git state, and it must be a copy rather than a link
+because git will not run a hook through a junction:
+
+```powershell
+Copy-Item workstation\agent\skills\review\scripts\pre-push .git\hooks\pre-push -Force
+```
+
+**Closes when:** the hook is in place and has been observed running on a real push from this machine —
+which, until item 19 clears, means observing it refuse one.
+
 ### 19. `verify_claims.py` refuses a push over three verifier gaps
 
 Opened 2026-09-21, from the repo review. `verify_claims.py --repo .` exits 1 with **3 refuted** out of
@@ -74,7 +96,8 @@ target here and that target is met.
 ### 9. The Azure DevOps pipeline has never run
 
 Opened 2026-09-14: the only pipeline was `.github/workflows/verify-docs.yml`, which never runs for this
-clone's only remote, `emaea`, an Azure DevOps repo. **Written 2026-09-19** as
+clone's only remote — `origin`, `https://euemadev@dev.azure.com/euemadev/EA/_git/agentic-workbench`, an
+Azure DevOps repo (it was recorded here as named `emaea`; `git remote -v` on 2026-09-21 says `origin`). **Written 2026-09-19** as
 `azure-pipelines/verify-docs.yml`, applying every counterpart below; checked only locally — the YAML
 parses into the ten intended steps, and the pull-request step passes `bash -n`. Its header carries
 the three one-time setup steps in ADO, which are the user's. The counterparts were checked against

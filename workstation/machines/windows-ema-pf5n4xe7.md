@@ -229,6 +229,21 @@ nothing because the index already holds LF.
 Because `core.symlinks=false`, a symlink committed to this repo would check out here as a text file
 containing its target path. Nothing in the repo relies on one.
 
+### The Azure DevOps remote needs `credential.useHttpPath`
+
+The remote is `origin`, `https://euemadev@dev.azure.com/euemadev/EA/_git/agentic-workbench`. Without
+that setting, every fetch and push prints `fatal: Cannot determine the organization name for this
+'dev.azure.com' remote URL` — **after** the transfer, so a push that printed it had already succeeded,
+which is what makes it easy to misread as a failure. Having the org as the URL's user, which this remote
+already does, is not enough for the credential helper. Set once, by the user, on 21 September 2026:
+
+```powershell
+git config credential.useHttpPath true
+```
+
+`git fetch` and `git ls-remote origin refs/heads/main` then both run silent, exit 0. This is local
+config, not repo config — a fresh clone here needs it again.
+
 ## Claude Code config — installed
 
 **15 of 15 linked**, applied 21 September 2026 by
@@ -284,12 +299,18 @@ refuses when the two have drifted, which is the case above: the severed copy hel
 repo held the new. There, confirm the stale side carries nothing unique — `Compare-Object` showed 44
 lines only in the severed copy, all of them text the edit had replaced — and then use `--force`.
 
-### The `pre-push` gate is installed, as a copy
+### The `pre-push` gate is **not** installed here — checked 21 September 2026
 
-`.git/hooks/pre-push` is a **plain copy** of
+This section read *installed, as a copy, verified 26 August 2026*. It is not true of this working tree:
+`.git/hooks/` holds the fourteen `.sample` files git ships and nothing else, so **pushes from this clone
+run no gate at all**. The four commits pushed on 21 September went through unchecked by the hook — the
+gate's three parts were run by hand instead, and passed. Recorded as [`../../TODO.md`](../../TODO.md)
+item 21.
+
+When it is installed it must be a **plain copy** of
 [`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push), not a link — git
-will not run a hook through a junction. Verified 26 August 2026 to execute via its own shebang, with 0 CR
-bytes in the copy.
+will not run a hook through a junction. The 26 August check found the copy executing via its own shebang
+with 0 CR bytes, so the mechanism works here; only the file is missing.
 
 Because it is a copy, **re-copy it after pulling a change to the hook.** Nothing detects that for you:
 
