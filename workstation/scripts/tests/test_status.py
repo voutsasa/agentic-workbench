@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import contextlib
+import io
 import sys
 import tempfile
 import unittest
+from datetime import date
 from pathlib import Path
 from unittest import mock
 
@@ -172,6 +175,52 @@ class PrerequisiteProbeTests(unittest.TestCase):
         row = status.probe_prerequisite(PYTHON_RUNTIME, timeout=1, venv=False)
         self.assertEqual(row.status, "absent")
 
+    @mock.patch("status.inventory.probe_all_versions")
+    def test_all_versions_labels_the_active_one_and_sorts_the_rest(
+        self, probe_all: mock.Mock
+    ) -> None:
+        probe_all.return_value = [
+            inventory.Probe("python", inventory.INSTALLED, version="3.12.10"),
+            inventory.Probe("python", inventory.INSTALLED, version="3.14.7"),
+            inventory.Probe("python", inventory.INSTALLED, version="3.13.15"),
+        ]
+        row = status.probe_prerequisite(
+            {**PYTHON_RUNTIME, "all_versions": True},
+            timeout=1,
+            runtime_version="3.14.7",
+            runtime_path=r"C:\repo\.venv\Scripts\python.exe",
+            venv=True,
+        )
+        self.assertEqual(row.version, "3.14.7 (active), 3.13.15, 3.12.10")
+        probe_all.assert_called_once_with("python", timeout=1)
+
+    @mock.patch("status.inventory.probe_all_versions")
+    def test_all_versions_without_the_flag_is_not_probed(
+        self, probe_all: mock.Mock
+    ) -> None:
+        status.probe_prerequisite(
+            PYTHON_RUNTIME,
+            timeout=1,
+            runtime_version="3.14.7",
+            runtime_path=r"C:\repo\.venv\Scripts\python.exe",
+            venv=True,
+        )
+        probe_all.assert_not_called()
+
+    @mock.patch("status.inventory.probe_all_versions")
+    def test_no_extra_versions_found_keeps_the_single_version(
+        self, probe_all: mock.Mock
+    ) -> None:
+        probe_all.return_value = []
+        row = status.probe_prerequisite(
+            {**PYTHON_RUNTIME, "all_versions": True},
+            timeout=1,
+            runtime_version="3.14.7",
+            runtime_path=r"C:\repo\.venv\Scripts\python.exe",
+            venv=True,
+        )
+        self.assertEqual(row.version, "python 3.14.7")
+
 
 class CollectVenvTests(unittest.TestCase):
     """`collect` decides from the repo whether a .venv exists."""
@@ -287,3 +336,83 @@ class CorrectiveActionTests(unittest.TestCase):
         rendered = status.render(report)
         self.assertIn("workstation tool (optional)", rendered)
         self.assertNotIn("optional workstation tool (optional)", rendered)
+
+
+class RenderCsvTests(unittest.TestCase):
+    def test_header_and_row_match_the_markdown_columns(self) -> None:
+        row = status.StatusRow(
+            "Typst",
+            "workstation tool, has a comma",
+            "absent",
+            "—",
+            "note",
+            "install",
+            False,
+            "workbench",
+        )
+        report = {
+            "overall": "READY WITH ACTIONS",
+            "profile": "profile.toml",
+            "dependencies": "dependencies.toml",
+            "prerequisites": [],
+            "tools": [row.__dict__],
+        }
+        lines = status.render_csv(report).splitlines()
+        self.assertEqual(
+            lines[0],
+            "Capability,Requirement,Status,Version,Evidence,Corrective action",
+        )
+        self.assertIn('"workstation tool, has a comma (optional)"', lines[1])
+
+
+class ReportFilenameTests(unittest.TestCase):
+    def test_extension_matches_the_active_format(self) -> None:
+        today = date(2026, 9, 22)
+        self.assertEqual(
+            status.report_filename("md", today), "workstation-status-20260922.md"
+        )
+        self.assertEqual(
+            status.report_filename("json", today), "workstation-status-20260922.json"
+        )
+        self.assertEqual(
+            status.report_filename("csv", today), "workstation-status-20260922.csv"
+        )
+
+
+class MainPersistTests(unittest.TestCase):
+    def test_persist_writes_the_rendered_report_and_prints_its_path(self) -> None:
+        report = {
+            "overall": "READY",
+            "profile": "profile.toml",
+            "dependencies": "dependencies.toml",
+            "prerequisites": [],
+            "tools": [],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            with (
+                mock.patch("status.collect", return_value=report),
+                contextlib.redirect_stdout(io.StringIO()) as out,
+            ):
+                exit_code = status.main(["--repo", str(repo), "--persist"])
+            written = repo / status.report_filename("md")
+            self.assertEqual(exit_code, 0)
+            self.assertTrue(written.is_file())
+            self.assertIn(f"Report written to {written}", out.getvalue())
+
+    def test_without_persist_writes_nothing(self) -> None:
+        report = {
+            "overall": "READY",
+            "profile": "profile.toml",
+            "dependencies": "dependencies.toml",
+            "prerequisites": [],
+            "tools": [],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            with (
+                mock.patch("status.collect", return_value=report),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                status.main(["--repo", str(repo)])
+            self.assertEqual(list(repo.glob("workstation-status-*")), [])

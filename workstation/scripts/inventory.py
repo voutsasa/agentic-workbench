@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 import platform
 import re
 import shutil
@@ -136,6 +137,54 @@ def first_line(output: str) -> str:
     return ""
 
 
+def _run_probe(
+    command_label: str,
+    resolved: str,
+    version_flag: str,
+    timeout: int,
+    run,
+) -> Probe:
+    """Run ``resolved``'s version flag and classify the result.
+
+    Shared by ``probe_command`` (one name, resolved via ``which``) and
+    ``probe_all_versions`` (every matching path found on ``PATH``).
+    """
+    try:
+        completed = run(
+            [resolved, version_flag],
+            capture_output=True,
+            text=True,
+            timeout=timeout,
+        )
+    except subprocess.TimeoutExpired:
+        return Probe(
+            command_label, ERROR, path=resolved, detail=f"no response in {timeout}s"
+        )
+    except OSError as exc:
+        # PermissionError is an OSError. A binary that resolves on PATH but
+        # cannot be launched is the signature of an endpoint-security
+        # quarantine, not of a bad install.
+        return Probe(
+            command_label,
+            BLOCKED,
+            path=resolved,
+            detail=f"{type(exc).__name__}: {exc}",
+        )
+
+    output = (completed.stdout or "") + (completed.stderr or "")
+    version = extract_version(output)
+    if version:
+        return Probe(
+            command_label,
+            INSTALLED,
+            version=version,
+            path=resolved,
+            detail=first_line(output),
+        )
+    detail = first_line(output) or f"exit {completed.returncode}, no version output"
+    return Probe(command_label, ERROR, path=resolved, detail=detail)
+
+
 def probe_command(
     command: str,
     version_flag: str = DEFAULT_VERSION_FLAG,
@@ -151,35 +200,63 @@ def probe_command(
     resolved = which(command)
     if resolved is None:
         return Probe(command=command, status=ABSENT, detail="not on PATH")
-    try:
-        completed = run(
-            [resolved, version_flag],
-            capture_output=True,
-            text=True,
-            timeout=timeout,
-        )
-    except subprocess.TimeoutExpired:
-        return Probe(command, ERROR, path=resolved, detail=f"no response in {timeout}s")
-    except OSError as exc:
-        # PermissionError is an OSError. A binary that resolves on PATH but
-        # cannot be launched is the signature of an endpoint-security
-        # quarantine, not of a bad install.
-        return Probe(
-            command, BLOCKED, path=resolved, detail=f"{type(exc).__name__}: {exc}"
-        )
+    return _run_probe(command, resolved, version_flag, timeout, run)
 
-    output = (completed.stdout or "") + (completed.stderr or "")
-    version = extract_version(output)
-    if version:
-        return Probe(
-            command,
-            INSTALLED,
-            version=version,
-            path=resolved,
-            detail=first_line(output),
-        )
-    detail = first_line(output) or f"exit {completed.returncode}, no version output"
-    return Probe(command, ERROR, path=resolved, detail=detail)
+
+def discover_on_path(pattern: re.Pattern, environ: dict | None = None) -> list[Path]:
+    """Return every unique executable on ``PATH`` whose name matches ``pattern``.
+
+    Resolves each match so the same binary reachable through two ``PATH``
+    entries (a shim and its target, say) is reported once. ``environ`` is
+    injectable for tests.
+    """
+    path_value = (environ if environ is not None else os.environ).get("PATH", "")
+    seen: set[Path] = set()
+    found: list[Path] = []
+    for directory in path_value.split(os.pathsep):
+        if not directory:
+            continue
+        directory_path = Path(directory)
+        try:
+            entries = list(directory_path.iterdir())
+        except OSError:
+            continue
+        for candidate in entries:
+            if not pattern.match(candidate.name):
+                continue
+            try:
+                if not candidate.is_file():
+                    continue
+                resolved = candidate.resolve()
+            except OSError:
+                continue
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            found.append(resolved)
+    return found
+
+
+def probe_all_versions(
+    stem: str,
+    version_flag: str = DEFAULT_VERSION_FLAG,
+    timeout: int = DEFAULT_TIMEOUT,
+    run=subprocess.run,
+    environ: dict | None = None,
+) -> list[Probe]:
+    """Probe every installed version of ``stem`` found anywhere on ``PATH``.
+
+    Matches ``stem`` itself, ``stem`` plus a trailing version number
+    (``python3``, ``python3.12``), and the Windows executable/shim suffixes
+    (``.exe``, ``.cmd``, ``.ps1``) — not e.g. ``pythonw`` or ``npm-cli.js``.
+    """
+    name_pattern = re.compile(
+        rf"^{re.escape(stem)}(\d+(\.\d+)?)?(\.exe|\.cmd|\.ps1)?$", re.IGNORECASE
+    )
+    return [
+        _run_probe(stem, str(path), version_flag, timeout, run)
+        for path in discover_on_path(name_pattern, environ=environ)
+    ]
 
 
 def roll_up(tool: Tool, probes: list[Probe]) -> ToolResult:

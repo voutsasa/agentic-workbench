@@ -4,12 +4,15 @@
 from __future__ import annotations
 
 import argparse
+import csv
+import io
 import json
 import platform as platform_mod
 import re
 import sys
 import tomllib
 from dataclasses import asdict, dataclass
+from datetime import date, datetime
 from pathlib import Path
 
 import inventory
@@ -139,6 +142,24 @@ def probe_prerequisite(
         if minimum
         else ("one of " if mode == "any" else "") + ", ".join(commands)
     )
+
+    if entry.get("all_versions"):
+        stem = re.sub(r"\d+(\.\d+)*$", "", commands[0])
+        active_version = installed[0].version if installed else ""
+        distinct = sorted(
+            {
+                probe.version
+                for probe in inventory.probe_all_versions(stem, timeout=timeout)
+                if probe.status == inventory.INSTALLED and probe.version
+            },
+            key=version_key,
+            reverse=True,
+        )
+        if distinct:
+            version = ", ".join(
+                f"{v} (active)" if v == active_version else v for v in distinct
+            )
+
     return StatusRow(
         capability=entry["product"],
         requirement=requirement,
@@ -255,6 +276,32 @@ def escape(value: str) -> str:
     return value.replace("|", r"\|").replace("\n", " ")
 
 
+HEADERS = (
+    "Capability",
+    "Requirement",
+    "Status",
+    "Version",
+    "Evidence",
+    "Corrective action",
+)
+
+
+def row_values(row: dict) -> tuple[str, str, str, str, str, str]:
+    """The six report columns for one row, requirement folded with its qualifiers."""
+    qualifiers = ["required" if row["required"] else "optional"]
+    if row["provisioning"] == "external":
+        qualifiers.append("external provisioning")
+    requirement = f"{row['requirement']} ({'; '.join(qualifiers)})"
+    return (
+        row["capability"],
+        requirement,
+        row["status"],
+        row["version"],
+        row["evidence"],
+        row["corrective_action"],
+    )
+
+
 def render(report: dict) -> str:
     rows = report["prerequisites"] + report["tools"]
     lines = [
@@ -263,38 +310,44 @@ def render(report: dict) -> str:
         f"Machine profile: `{report['profile']}`",
         f"Common dependencies: `{report['dependencies']}`",
         "",
-        "| Capability | Requirement | Status | Version | Evidence | Corrective action |",
-        "|---|---|---|---|---|---|",
+        "| " + " | ".join(HEADERS) + " |",
+        "|" + "---|" * len(HEADERS),
     ]
     for row in rows:
-        qualifiers = ["required" if row["required"] else "optional"]
-        if row["provisioning"] == "external":
-            qualifiers.append("external provisioning")
-        requirement = f"{row['requirement']} ({'; '.join(qualifiers)})"
         lines.append(
-            "| "
-            + " | ".join(
-                escape(value)
-                for value in (
-                    row["capability"],
-                    requirement,
-                    row["status"],
-                    row["version"],
-                    row["evidence"],
-                    row["corrective_action"],
-                )
-            )
-            + " |"
+            "| " + " | ".join(escape(value) for value in row_values(row)) + " |"
         )
     return "\n".join(lines)
+
+
+def render_csv(report: dict) -> str:
+    rows = report["prerequisites"] + report["tools"]
+    buffer = io.StringIO()
+    writer = csv.writer(buffer)
+    writer.writerow(HEADERS)
+    for row in rows:
+        writer.writerow(row_values(row))
+    return buffer.getvalue()
+
+
+def report_filename(format_: str, today: date | None = None) -> str:
+    extension = {"json": "json", "csv": "csv"}.get(format_, "md")
+    return f"workstation-status-{(today or datetime.now().astimezone().date()):%Y%m%d}.{extension}"
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument("--repo", type=Path, default=REPO_ROOT)
     parser.add_argument("--machine", help="machine id or machine-note filename")
-    parser.add_argument("--json", action="store_true")
+    formats = parser.add_mutually_exclusive_group()
+    formats.add_argument("--json", action="store_true")
+    formats.add_argument("--csv", action="store_true")
     parser.add_argument("--timeout", type=int, default=inventory.DEFAULT_TIMEOUT)
+    parser.add_argument(
+        "--persist",
+        action="store_true",
+        help="also write the report to workstation-status-YYYYMMDD.<ext> under --repo",
+    )
     args = parser.parse_args(argv)
 
     reconfigure = getattr(sys.stdout, "reconfigure", None)
@@ -304,7 +357,20 @@ def main(argv: list[str] | None = None) -> int:
         report = collect(args.repo, args.machine, args.timeout)
     except (OSError, TypeError, ValueError, tomllib.TOMLDecodeError) as exc:
         parser.error(str(exc))
-    print(json.dumps(report, indent=2) if args.json else render(report))
+
+    format_ = "json" if args.json else "csv" if args.csv else "md"
+    rendered = {
+        "json": lambda: json.dumps(report, indent=2),
+        "csv": lambda: render_csv(report),
+        "md": lambda: render(report),
+    }[format_]()
+    print(rendered)
+
+    if args.persist:
+        destination = args.repo / report_filename(format_)
+        destination.write_text(rendered, encoding="utf-8")
+        print(f"Report written to {destination}")
+
     return 0 if report["overall"] != "NOT READY" else 1
 
 

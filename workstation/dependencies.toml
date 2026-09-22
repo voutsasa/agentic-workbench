@@ -16,6 +16,7 @@ probe = "python-runtime"
 minimum_version = "3.12"
 required = true
 provisioning = "external"
+all_versions = true
 corrective_action = "Out of scope: provision compatible Python externally and run this check with that interpreter."
 
 [[dependencies]]
@@ -24,6 +25,7 @@ product = "Node.js"
 commands = ["node"]
 required = true
 provisioning = "external"
+all_versions = true
 corrective_action = "Out of scope: provision Node.js externally and expose `node` on PATH."
 
 [[dependencies]]
@@ -32,6 +34,7 @@ product = "npm"
 commands = ["npm"]
 required = true
 provisioning = "external"
+all_versions = true
 corrective_action = "Out of scope: provision npm with Node.js and expose `npm` on PATH."
 
 [[dependencies]]

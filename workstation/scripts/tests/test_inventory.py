@@ -7,6 +7,8 @@ Run from the repo root::
 
 from __future__ import annotations
 
+import os
+import re
 import subprocess
 import sys
 import tempfile
@@ -23,10 +25,12 @@ from inventory import (
     INSTALLED,
     Probe,
     Tool,
+    discover_on_path,
     discover_tools,
     extract_version,
     first_line,
     parse_frontmatter,
+    probe_all_versions,
     probe_command,
     render_markdown,
     roll_up,
@@ -232,6 +236,69 @@ class ProbeCommandTests(unittest.TestCase):
             "plantuml", "-version", which=lambda _: "/bin/plantuml", run=capture
         )
         self.assertEqual(seen["argv"], ["/bin/plantuml", "-version"])
+
+
+class DiscoverOnPathTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.addCleanup(self._tmp.cleanup)
+
+    def make(self, relative: str) -> Path:
+        path = self.root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("", encoding="utf-8")
+        return path
+
+    def test_matches_stem_and_versioned_names_only(self):
+        self.make("a/python.exe")
+        self.make("a/python3.12.exe")
+        self.make("a/pythonw.exe")
+        self.make("a/python3-config")
+        pattern = re.compile(r"^python(\d+(\.\d+)?)?(\.exe)?$", re.IGNORECASE)
+        found = discover_on_path(pattern, environ={"PATH": str(self.root / "a")})
+        self.assertEqual(
+            sorted(p.name for p in found), ["python.exe", "python3.12.exe"]
+        )
+
+    def test_dedupes_the_same_resolved_path_from_two_path_entries(self):
+        self.make("real/python.exe")
+        pattern = re.compile(r"^python(\.exe)?$", re.IGNORECASE)
+        path_value = os.pathsep.join([str(self.root / "real"), str(self.root / "real")])
+        found = discover_on_path(pattern, environ={"PATH": path_value})
+        self.assertEqual(len(found), 1)
+
+    def test_missing_path_entry_is_skipped(self):
+        pattern = re.compile(r"^python(\.exe)?$", re.IGNORECASE)
+        found = discover_on_path(
+            pattern, environ={"PATH": str(self.root / "does-not-exist")}
+        )
+        self.assertEqual(found, [])
+
+    def test_empty_path_is_skipped(self):
+        pattern = re.compile(r"^python(\.exe)?$", re.IGNORECASE)
+        found = discover_on_path(pattern, environ={"PATH": ""})
+        self.assertEqual(found, [])
+
+
+class ProbeAllVersionsTests(unittest.TestCase):
+    def setUp(self):
+        self._tmp = tempfile.TemporaryDirectory()
+        self.root = Path(self._tmp.name)
+        self.addCleanup(self._tmp.cleanup)
+        (self.root / "python.exe").write_text("", encoding="utf-8")
+        (self.root / "python3.12.exe").write_text("", encoding="utf-8")
+
+    def test_probes_every_match_and_reports_its_own_version(self):
+        versions = {"python.exe": "3.14.7", "python3.12.exe": "3.12.10"}
+
+        def run(argv, **_kwargs):
+            return completed(stdout=f"Python {versions[Path(argv[0]).name]}\n")
+
+        probes = probe_all_versions("python", run=run, environ={"PATH": str(self.root)})
+        found = {Path(p.path).name: p.version for p in probes}
+        self.assertEqual(found, versions)
+        self.assertTrue(all(p.status == INSTALLED for p in probes))
 
 
 class RollUpTests(unittest.TestCase):
