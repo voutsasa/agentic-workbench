@@ -165,6 +165,10 @@ git ls-files --eol | Select-String "w/crlf" | Where-Object { $_ -match "eol=lf" 
 
   Junctions are immune, so the skill directories never need it. `settings.json` is exempt because it is
   never linked — edit that one in `~/.claude/` only.
+- **A `machine.md` reported `diverged` after a repo doc update is usually pure staleness, not a
+  conflicting edit.** Diff it against the repo source first; if the only differences trace to the repo
+  side, `Copy-Item <repo path> ~/.claude/machine.md -Force` is safe. Still diff before copying —
+  `link_config.py` cannot tell repo drift apart from a local note you added, so it skips either way.
 - **Assume every configured file hardlink is broken and check.** The default Claude route has
   `CLAUDE.md` and `machine.md`; adding Copilot adds `~/.copilot/copilot-instructions.md`. Between git
   operations and atomic saves, they detach during routine work rather than exceptionally. This is why
