@@ -254,6 +254,57 @@ class CollectVenvTests(unittest.TestCase):
         self.assertIs(probe.call_args.kwargs["venv"], False)
 
 
+class ProgressTests(unittest.TestCase):
+    """`collect(progress=True)` prints one counted line per dependency and tool."""
+
+    def run_collect(self, repo: Path, progress: bool) -> str:
+        common = {
+            "dependencies": [
+                {"id": "a", "product": "A"},
+                {"id": "b", "product": "B"},
+            ]
+        }
+        profile = {"machine": "m", "platform": "macOS"}
+        tool = inventory.Tool("pandoc", "Pandoc", ["pandoc"])
+        with (
+            mock.patch("status.link_config.machine_file", return_value=repo / "m.md"),
+            mock.patch("status.load_toml", side_effect=[common, profile]),
+            mock.patch("status.inventory.discover_tools", return_value=[tool]),
+            mock.patch("status.inventory.probe_command") as probe_command,
+            mock.patch("status.probe_prerequisite") as probe,
+            mock.patch("status.tool_row") as tool_row,
+            contextlib.redirect_stderr(io.StringIO()) as err,
+        ):
+            probe_command.return_value = inventory.Probe(
+                "pandoc", inventory.INSTALLED, version="3.10.2"
+            )
+            probe.return_value = status.StatusRow(
+                "A", "", "installed", "", "", "—", True, "external"
+            )
+            tool_row.return_value = status.StatusRow(
+                "Pandoc", "", "installed", "", "", "—", False, "workbench"
+            )
+            status.collect(repo, progress=progress)
+        return err.getvalue()
+
+    def test_progress_true_prints_one_counted_line_per_item(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = self.run_collect(Path(directory), progress=True)
+        self.assertEqual(
+            output.splitlines(),
+            [
+                "[1/3] Probing A...",
+                "[2/3] Probing B...",
+                "[3/3] Probing Pandoc...",
+            ],
+        )
+
+    def test_progress_false_prints_nothing(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            output = self.run_collect(Path(directory), progress=False)
+        self.assertEqual(output, "")
+
+
 class CorrectiveActionTests(unittest.TestCase):
     def test_reads_platform_command_from_install_table(self) -> None:
         with tempfile.TemporaryDirectory() as directory:
@@ -416,3 +467,28 @@ class MainPersistTests(unittest.TestCase):
             ):
                 status.main(["--repo", str(repo)])
             self.assertEqual(list(repo.glob("workstation-status-*")), [])
+
+
+class MainQuietTests(unittest.TestCase):
+    def run_main(self, argv: list[str]) -> mock.Mock:
+        report = {
+            "overall": "READY",
+            "profile": "profile.toml",
+            "dependencies": "dependencies.toml",
+            "prerequisites": [],
+            "tools": [],
+        }
+        with (
+            mock.patch("status.collect", return_value=report) as collect,
+            contextlib.redirect_stdout(io.StringIO()),
+        ):
+            status.main(argv)
+        return collect
+
+    def test_progress_is_on_by_default(self) -> None:
+        collect = self.run_main(["--repo", "."])
+        self.assertIs(collect.call_args.kwargs["progress"], True)
+
+    def test_quiet_turns_progress_off(self) -> None:
+        collect = self.run_main(["--repo", ".", "--quiet"])
+        self.assertIs(collect.call_args.kwargs["progress"], False)

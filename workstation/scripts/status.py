@@ -245,6 +245,7 @@ def collect(
     timeout: int = inventory.DEFAULT_TIMEOUT,
     platform: str | None = None,
     hostname: str | None = None,
+    progress: bool = False,
 ) -> dict:
     note = link_config.machine_file(repo, platform, hostname, machine)
     profile_path = prerequisite_file(note)
@@ -253,11 +254,24 @@ def collect(
     profile = load_toml(profile_path)
     dependencies = merge_dependencies(common, profile)
     venv = (repo / ".venv").is_dir()
-    prerequisites = [
-        probe_prerequisite(entry, timeout, venv=venv) for entry in dependencies
-    ]
     cli_dir = repo / "workstation" / "cli"
-    tools = inventory.run_inventory(inventory.discover_tools(cli_dir), timeout=timeout)
+    declared_tools = inventory.discover_tools(cli_dir)
+
+    total = len(dependencies) + len(declared_tools)
+    seen = 0
+
+    def report(label: str) -> None:
+        nonlocal seen
+        if progress:
+            seen += 1
+            print(f"[{seen}/{total}] Probing {label}...", file=sys.stderr)
+
+    prerequisites = []
+    for entry in dependencies:
+        report(entry.get("product", entry.get("id", "?")))
+        prerequisites.append(probe_prerequisite(entry, timeout, venv=venv))
+
+    tools = inventory.run_inventory(declared_tools, timeout=timeout, on_progress=report)
     tool_rows = [
         tool_row(result, repo, cli_dir, profile["platform"]) for result in tools
     ]
@@ -348,13 +362,18 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="also write the report to workstation-status-YYYYMMDD.<ext> under --repo",
     )
+    parser.add_argument(
+        "--quiet",
+        action="store_true",
+        help="suppress the '[n/total] Probing ...' progress lines on stderr",
+    )
     args = parser.parse_args(argv)
 
     reconfigure = getattr(sys.stdout, "reconfigure", None)
     if reconfigure is not None:
         reconfigure(encoding="utf-8")
     try:
-        report = collect(args.repo, args.machine, args.timeout)
+        report = collect(args.repo, args.machine, args.timeout, progress=not args.quiet)
     except (OSError, TypeError, ValueError, tomllib.TOMLDecodeError) as exc:
         parser.error(str(exc))
 

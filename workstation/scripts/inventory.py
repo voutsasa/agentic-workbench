@@ -26,6 +26,7 @@ import re
 import shutil
 import subprocess
 import sys
+from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 
@@ -274,11 +275,21 @@ def roll_up(tool: Tool, probes: list[Probe]) -> ToolResult:
 
 
 def run_inventory(
-    tools: list[Tool], timeout: int = DEFAULT_TIMEOUT, **probe_kwargs
+    tools: list[Tool],
+    timeout: int = DEFAULT_TIMEOUT,
+    on_progress: Callable[[str], None] | None = None,
+    **probe_kwargs,
 ) -> list[ToolResult]:
-    """Probe every command of every tool."""
+    """Probe every command of every tool.
+
+    ``on_progress``, if given, is called with each tool's product name right
+    before it is probed — the probing itself is what's slow, one subprocess
+    per command, so this is where a caller reports progress.
+    """
     results = []
     for tool in tools:
+        if on_progress is not None:
+            on_progress(tool.product)
         probes = [
             probe_command(command, tool.version_flag, timeout=timeout, **probe_kwargs)
             for command in tool.commands
