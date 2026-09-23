@@ -266,3 +266,4 @@ Third-party MCP servers configured into this machine's agent clients. Each has a
 Servers **authored** in this workbench are project output, not workstation tooling, and do not belong here.
 
 * [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/)
+* [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server)

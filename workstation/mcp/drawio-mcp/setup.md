@@ -14,7 +14,7 @@ Official draw.io MCP server (`jgraph/drawio-mcp`). Generates a diagram from XML,
 
 Observed `1.5.0` via `npx -y @drawio/mcp --version` (checked 5 August 2026).
 
-> **Not yet registered.** The package was verified directly, but the `claude mcp add` below has not been run — registration is the user's step. Until they run it and `claude mcp list` confirms, treat the tools as unavailable.
+> **Not yet registered.** The package was verified directly, but neither the shared catalog nor either command below has been applied — registration is the user's step. Until `claude mcp list` or `copilot mcp list` confirms it, treat the tools as unavailable.
 
 ## Which of the four routes this is
 
@@ -29,15 +29,31 @@ The [docs page](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/) 
 
 ## Register it — run by the user
 
+**Shared, project scope (recommended for this repo):** the catalog at
+[`../.mcp.json`](../.mcp.json) already carries the `drawio-mcp` block. Running
+`link_config.py --mcp --apply` (see [`../README.md`](../README.md)) writes it into the
+repo's tracked `.mcp.json`, which **both** Claude Code (project scope) and Copilot CLI
+(workspace scope) read from the same file — nobody has to run either command below
+individually.
+
+**Personal, every repo on this machine** — if you'd rather not share it via the repo:
+
 ```
 claude mcp add -s user drawio-mcp -- npx -y @drawio/mcp
 ```
 
-`-s user` makes it available in every project on this machine, matching how the register describes workstation tooling. Use `-s project` instead to write a tracked `.mcp.json` scoped to one repo.
+```
+copilot mcp add drawio-mcp -- npx -y @drawio/mcp
+```
 
-Confirm with `claude mcp list` — it should report `drawio-mcp: ✓ Connected`. The tools appear as `open_drawio_xml`, `open_drawio_csv`, `open_drawio_mermaid`, `search_shapes`, and `list_pages` / `get_page` / `set_page`.
+Claude's `-s user` and Copilot's (scope-less, always-user) `add` both write to a
+per-machine config outside this repo — `~/.claude.json` and
+`~/.copilot/mcp-config.json` respectively, neither tracked here. The command itself is
+the only record of it — see [`../README.md`](../README.md).
 
-**User scope writes to `~/.claude.json`, which is not tracked in this repo.** The command above is the only record of it — see [`../README.md`](../README.md).
+Confirm with `claude mcp list` (should report `drawio-mcp: ✓ Connected`) or
+`copilot mcp list`. The tools appear as `open_drawio_xml`, `open_drawio_csv`,
+`open_drawio_mermaid`, `search_shapes`, and `list_pages` / `get_page` / `set_page`.
 
 ## Tools worth knowing about
 
@@ -52,7 +68,7 @@ Schemas arrive with the tools, so this covers only what they do not say.
 - **Nothing is written to disk.** The server compresses the diagram, base64-encodes it into a draw.io `#create` URL, and returns the URL. There is no output file unless you use `set_page` against one that already exists. For a committable artefact, render with `d2`, `mmdc`, or `plantuml` instead — see [`cli/README.md`](../../cli/README.md).
 - **`npx -y` resolves the latest version on every launch.** Unpinned by design; pin with `@drawio/mcp@1.5.0` in the args if behaviour shifts mid-task.
 - **The model may reach for another diagramming route first.** Name the tool explicitly in the prompt when you specifically want draw.io.
-- **Do not follow the README's `.claude/settings.json` snippet.** That file has no `mcpServers` key in this Claude Code install; the `claude mcp add` command above is the working route.
+- **Do not follow the README's `.claude/settings.json` snippet.** That file has no `mcpServers` key in this Claude Code install; the catalog or the `mcp add` commands above are the working route.
 - **`DRAWIO_BASE_URL`** points the server at a self-hosted draw.io instance; it defaults to `https://app.diagrams.net/`, so diagrams leave the machine as URL-encoded content unless it is set.
 
 Docs: [draw.io MCP server](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/) · [tool server README](https://github.com/jgraph/drawio-mcp/blob/main/mcp-tool-server/README.md) · full page ingest: [reference.md](reference.md)

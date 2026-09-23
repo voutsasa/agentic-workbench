@@ -861,5 +861,113 @@ class TestDanglingSymlink(TempTree):
         self.assertTrue(report.ok, lc.render(report))
 
 
+class TestMcp(TempTree):
+    """The catalog is merged into ``<repo>/.mcp.json``, never linked."""
+
+    def catalog(self, servers: dict) -> Path:
+        path = lc.mcp_catalog_path(self.repo)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps({"mcpServers": servers}, indent=2), encoding="utf-8")
+        return path
+
+    def live(self, servers: dict) -> Path:
+        path = lc.project_mcp_path(self.repo)
+        path.write_text(json.dumps({"mcpServers": servers}, indent=2), encoding="utf-8")
+        return path
+
+    def test_no_catalog_is_an_empty_status_not_an_error(self) -> None:
+        self.assertEqual(lc.mcp_status(self.repo), [])
+
+    def test_missing_from_the_live_file(self) -> None:
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        (states,) = lc.mcp_status(self.repo)
+        self.assertEqual(states.status, lc.MISSING)
+
+    def test_matching_value_is_linked(self) -> None:
+        entry = {"type": "stdio", "command": "npx"}
+        self.catalog({"drawio-mcp": entry})
+        self.live({"drawio-mcp": entry})
+        (state,) = lc.mcp_status(self.repo)
+        self.assertEqual(state.status, lc.LINKED)
+
+    def test_different_value_is_diverged(self) -> None:
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        self.live({"drawio-mcp": {"type": "stdio", "command": "node"}})
+        (state,) = lc.mcp_status(self.repo)
+        self.assertEqual(state.status, lc.DIVERGED)
+
+    def test_a_live_only_server_is_not_in_the_report(self) -> None:
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        self.live({"personal-tool": {"type": "stdio", "command": "whatever"}})
+        names = [s.name for s in lc.mcp_status(self.repo)]
+        self.assertEqual(names, ["drawio-mcp"])
+
+    def test_apply_adds_missing_entries_and_preserves_live_only_ones(self) -> None:
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        self.live({"personal-tool": {"type": "stdio", "command": "whatever"}})
+        lc.apply_mcp(self.repo)
+        servers = lc.load_mcp_servers(lc.project_mcp_path(self.repo))
+        self.assertEqual(
+            servers,
+            {
+                "personal-tool": {"type": "stdio", "command": "whatever"},
+                "drawio-mcp": {"type": "stdio", "command": "npx"},
+            },
+        )
+
+    def test_apply_skips_a_diverged_entry(self) -> None:
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        self.live({"drawio-mcp": {"type": "stdio", "command": "node"}})
+        lc.apply_mcp(self.repo)
+        servers = lc.load_mcp_servers(lc.project_mcp_path(self.repo))
+        self.assertEqual(servers["drawio-mcp"]["command"], "node")
+
+    def test_apply_creates_the_file_when_absent(self) -> None:
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        self.assertFalse(lc.project_mcp_path(self.repo).is_file())
+        lc.apply_mcp(self.repo)
+        self.assertTrue(lc.project_mcp_path(self.repo).is_file())
+
+    def test_apply_writes_nothing_when_already_all_linked(self) -> None:
+        entry = {"type": "stdio", "command": "npx"}
+        self.catalog({"drawio-mcp": entry})
+        path = self.live({"drawio-mcp": entry})
+        before = path.stat().st_mtime_ns
+        lc.apply_mcp(self.repo)
+        self.assertEqual(path.stat().st_mtime_ns, before)
+
+    def test_main_mcp_flag_reports_and_applies(self) -> None:
+        self.machine_file(sys.platform, lc.short_hostname())
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        code = lc.main(["--repo", str(self.repo), "--home", str(self.home), "--mcp"])
+        self.assertEqual(code, 1)
+        self.assertFalse(lc.project_mcp_path(self.repo).is_file())
+        code = lc.main(
+            ["--repo", str(self.repo), "--home", str(self.home), "--mcp", "--apply"]
+        )
+        self.assertEqual(code, 0)
+        self.assertTrue(lc.project_mcp_path(self.repo).is_file())
+
+    def test_main_mcp_json_output(self) -> None:
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            lc.main(["--repo", str(self.repo), "--mcp", "--json"])
+        payload = json.loads(buf.getvalue())
+        self.assertEqual(
+            payload["mcp_servers"],
+            [{"name": "drawio-mcp", "status": "missing", "detail": "not in .mcp.json"}],
+        )
+        self.assertFalse(payload["ok"])
+
+    def test_without_mcp_flag_the_project_file_is_untouched(self) -> None:
+        self.machine_file(sys.platform, lc.short_hostname())
+        self.catalog({"drawio-mcp": {"type": "stdio", "command": "npx"}})
+        lc.main(
+            ["--repo", str(self.repo), "--home", str(self.home), "--project", "--apply"]
+        )
+        self.assertFalse(lc.project_mcp_path(self.repo).is_file())
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -16,6 +16,12 @@ rather than tracked because Copilot CLI reads ``AGENTS.md`` *and* ``CLAUDE.md``,
 tracked import loads the instructions twice in every Copilot clone. ``--hooks``
 adds the post-edit hook scripts to each selected agent's ``hooks/``, plus
 Copilot's hook registration; Claude's registration lives in ``settings.json``.
+``--mcp`` merges ``workstation/mcp/.mcp.json`` — the catalog of every MCP server this
+repo documents — into ``<repo>/.mcp.json``, the tracked file both Claude Code (project
+scope) and Copilot CLI (workspace scope) read. Merge, not link: a catalog entry missing
+from the live file is added; one already matching is left alone; one present with a
+*different* value is reported ``diverged`` and skipped, same as a diverged ``CLAUDE.md``.
+A live-only server the catalog doesn't know about is never touched.
 
 Two things make this more than a wrapper around ``ln -s``:
 
@@ -130,6 +136,108 @@ class Report:
     @property
     def ok(self) -> bool:
         return all(s.status == LINKED for s in self.states)
+
+
+@dataclass
+class McpState:
+    """One catalog server's status against the repo's live ``.mcp.json``."""
+
+    name: str
+    status: str
+    catalog_value: dict
+    live_value: dict | None
+    detail: str = ""
+
+
+def mcp_catalog_path(repo_root: Path) -> Path:
+    return repo_root / "workstation" / "mcp" / ".mcp.json"
+
+
+def project_mcp_path(repo_root: Path) -> Path:
+    return repo_root / ".mcp.json"
+
+
+def load_mcp_servers(path: Path) -> dict:
+    """The ``mcpServers`` mapping of an ``.mcp.json``-shaped file, or ``{}`` if absent."""
+    if not path.is_file():
+        return {}
+    with path.open("r", encoding="utf-8") as handle:
+        data = json.load(handle)
+    return data.get("mcpServers", {})
+
+
+def mcp_status(repo_root: Path) -> list[McpState]:
+    """Compare the tracked catalog against the repo's real ``.mcp.json``.
+
+    Read-only. A catalog entry the live file lacks is ``missing``; one already
+    matching is ``linked``; one present with a different value is ``diverged`` —
+    the live file may hold a locally adjusted copy, and overwriting it silently
+    would be reconciliation nobody asked for.
+    """
+    catalog = load_mcp_servers(mcp_catalog_path(repo_root))
+    live = load_mcp_servers(project_mcp_path(repo_root))
+    states = []
+    for name, value in catalog.items():
+        if name not in live:
+            states.append(McpState(name, MISSING, value, None, "not in .mcp.json"))
+        elif live[name] == value:
+            states.append(McpState(name, LINKED, value, live[name]))
+        else:
+            states.append(
+                McpState(
+                    name,
+                    DIVERGED,
+                    value,
+                    live[name],
+                    "live value differs from the catalog — reconcile first",
+                )
+            )
+    return states
+
+
+def apply_mcp(repo_root: Path, states: list[McpState] | None = None) -> list[McpState]:
+    """Add every ``missing`` catalog entry to ``<repo>/.mcp.json``.
+
+    Preserves every key the catalog doesn't manage, including a live-only
+    server. ``diverged`` entries are left exactly as ``mcp_status`` found them.
+    Writes only when something actually changes.
+    """
+    states = states if states is not None else mcp_status(repo_root)
+    path = project_mcp_path(repo_root)
+    if path.is_file():
+        with path.open("r", encoding="utf-8") as handle:
+            document = json.load(handle)
+    else:
+        document = {}
+    servers = document.setdefault("mcpServers", {})
+    changed = False
+    for state in states:
+        if state.status != MISSING:
+            continue
+        servers[state.name] = state.catalog_value
+        state.status = LINKED
+        state.detail = "added"
+        state.live_value = state.catalog_value
+        changed = True
+    if changed:
+        with path.open("w", encoding="utf-8", newline="\n") as handle:
+            json.dump(document, handle, indent=2)
+            handle.write("\n")
+    return states
+
+
+def render_mcp(states: list[McpState]) -> str:
+    rows = [
+        "| Server | Status | Detail |",
+        "|---|---|---|",
+    ]
+    for state in states:
+        detail = (state.detail or "—").replace("|", r"\|")
+        rows.append(f"| `{state.name}` | {state.status} | {detail} |")
+    linked = sum(1 for s in states if s.status == LINKED)
+    rows.append("")
+    rows.append(f"**{linked} of {len(states)} MCP servers in `.mcp.json`.**")
+    return "\n".join(rows)
 
 
 def platform_token(platform: str | None = None) -> str:
@@ -560,6 +668,13 @@ def main(argv: list[str] | None = None) -> int:
         "file for this platform)",
     )
     parser.add_argument(
+        "--mcp",
+        action="store_true",
+        help="merge workstation/mcp/.mcp.json's catalog into <repo>/.mcp.json, "
+        "the tracked file Claude Code (project scope) and Copilot CLI "
+        "(workspace scope) both read",
+    )
+    parser.add_argument(
         "--apply",
         action="store_true",
         help="create missing and detached links (default: report only)",
@@ -577,9 +692,9 @@ def main(argv: list[str] | None = None) -> int:
     if reconfigure is not None:
         reconfigure(encoding="utf-8")
 
-    # No target named at all means Claude, as it always has; `--project` and
-    # `--claude-md` are each a complete request and touch the repo only.
-    repo_only = args.project or args.claude_md
+    # No target named at all means Claude, as it always has; `--project`,
+    # `--claude-md` and `--mcp` are each a complete request and touch the repo only.
+    repo_only = args.project or args.claude_md or args.mcp
     agents = tuple(dict.fromkeys(args.agents or ([] if repo_only else ["claude"])))
     copilot_root = args.copilot_home or copilot_home(args.home)
     report = inspect_all(
@@ -597,6 +712,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.apply:
         report = apply(report, force=args.force)
 
+    mcp_states = mcp_status(args.repo) if args.mcp else []
+    if args.mcp and args.apply:
+        mcp_states = apply_mcp(args.repo, mcp_states)
+    mcp_ok = all(s.status == LINKED for s in mcp_states)
+
     if args.json:
         print(
             json.dumps(
@@ -605,8 +725,17 @@ def main(argv: list[str] | None = None) -> int:
                     "project": args.project,
                     "claude_md": args.claude_md,
                     "hooks": args.hooks,
-                    "ok": report.ok,
+                    "mcp": args.mcp,
+                    "ok": report.ok and mcp_ok,
                     "status": report.status,
+                    "mcp_servers": [
+                        {
+                            "name": s.name,
+                            "status": s.status,
+                            "detail": s.detail,
+                        }
+                        for s in mcp_states
+                    ],
                     "links": [
                         {
                             "label": s.link.label,
@@ -625,10 +754,13 @@ def main(argv: list[str] | None = None) -> int:
         )
     else:
         print(render(report))
-        if not report.ok and not args.apply:
+        if args.mcp:
+            print()
+            print(render_mcp(mcp_states))
+        if not (report.ok and mcp_ok) and not args.apply:
             print("\nRe-run with `--apply` to repair what is missing or detached.")
 
-    return 0 if report.ok else 1
+    return 0 if report.ok and mcp_ok else 1
 
 
 if __name__ == "__main__":
