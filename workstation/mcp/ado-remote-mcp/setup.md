@@ -5,7 +5,7 @@ transport: http
 version_observed: n/a (hosted, no local version)
 verified: 2026-09-23
 registered: false
-pinned: n/a
+pinned: false
 ---
 
 # ado-remote-mcp — setup
