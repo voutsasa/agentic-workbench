@@ -18,11 +18,12 @@ makes them itself. If the request did not name a destination path, ask for one b
 | The source is | Route | Command |
 |---|---|---|
 | `github.com/<owner>/<repo>` | **Raw README only. Never clone.** | `curl -s https://raw.githubusercontent.com/<owner>/<repo>/<branch>/README.md` |
+| **A page whose publisher serves its own markdown** — Mintlify (`code.claude.com`, `platform.claude.com`, `modelcontextprotocol.io`), GitHub Docs. **Probe for this first**, whatever else the page looks like | `curl <url>.md` → clean the publisher's components | see below |
 | A direct `.pdf` | Fetch the file itself, never scrape a rendered viewer | `curl -sL -o "<dest>.pdf" <url>` |
 | A local or fetched PDF / Office document | `docling` — real layout understanding, ahead of pandoc | `docling convert <input> --to md --output <dir>` |
 | A legacy binary `.doc` or `.ppt` | Two-step — neither docling nor pandoc reads the old binary format | see below |
 | **Any server-rendered HTML** — Docusaurus, Sphinx, ReadTheDocs, MkDocs, VitePress, mdBook, Jekyll, a classic blog, hand-rolled | curl → extract the article node → pandoc | see below |
-| A JS-hydrated platform (Mintlify, Fern, Rspress — anything whose raw HTML holds no article text) | Playwright → defuddle | headless; see below |
+| A JS-hydrated platform (Fern, Rspress — anything whose raw HTML holds no article text) | Playwright → defuddle | headless; see below |
 
 **One route covers every server-rendered page**, because the extractor's selector is an argument.
 Splitting it by generator only invited the question *which of these is Docusaurus* when the answer
@@ -76,11 +77,44 @@ corrupt source file. Report it; don't retry blindly. `soffice` may need its `pro
 prepended to `PATH` for this run — check the machine note for the exact path and whether a shim
 already resolves it.
 
+### The publisher-markdown route
+
+**Probe every page for this before choosing any other route**, because the HTML routes also produce
+a file and lose more doing it:
+
+```sh
+curl -sLI <url>.md | grep -i "^content-type: text/markdown"
+```
+
+A hit means the platform serves the page's own markdown source, which is the text itself rather than
+a conversion of it — no selector to choose, no pandoc writer to lose a table to, no model anywhere.
+Then:
+
+```sh
+curl -sL <url>.md -o <tmp>/served.md
+python3 <skill>/scripts/clean_publisher_md.py <tmp>/served.md "<dest>.md" <site-root>
+python3 <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
+```
+
+`<site-root>` is the scheme and host, e.g. `https://docs.github.com`; it is what site-relative link
+targets resolve against. `add_frontmatter.py` still needs the rendered HTML, so fetch that too.
+
+**What the cleaner removes** — measured on `code.claude.com` and `docs.github.com`, 2026-09-26:
+Mintlify's component tags (`<Note>`, `<Tabs>`, `<Tab title="…">`, `<Steps>`, `<Frame>`), GitHub Docs'
+per-IDE `<div class="ghd-tool …">` wrappers, anchor-only `<a id="…" />`, raw `<ul><li>` inside table
+cells, and site-relative link targets. **Fenced code blocks pass through untouched** — a `<Note>` in
+an example is that example's content.
+
+Two things it cannot fix, both properties of the source rather than the conversion: a code sample the
+site itself stores without line breaks comes out on one line whichever route you take, and a relative
+link *inside a quoted example file* is correct as it stands. Say so in the hand-back; do not hand-edit
+the corpus.
+
 ### The server-rendered route
 
 ```sh
 curl -sL -A "Mozilla/5.0" <url> -o <tmp>/page.html
-python3 <skill>/scripts/extract_article.py <tmp>/page.html <tag.class|tag#id|tag[attr=value]> <url> \
+python3 <skill>/scripts/extract_article.py <tmp>/page.html <tag|tag.class|tag#id|tag[attr=value]> <url> \
   | pandoc -f html -t gfm -o "<dest>.md"
 python3 <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
 ```
@@ -215,7 +249,8 @@ stdlib-only — the browser is faked. Tests: `python3 -m unittest discover -s <s
 
 | Script | Does |
 |---|---|
-| [`scripts/extract_article.py`](scripts/extract_article.py) | One HTML node out of its page chrome, by `tag.class`, `tag#id` or `tag[attr=value]` |
+| [`scripts/extract_article.py`](scripts/extract_article.py) | One HTML node out of its page chrome, by `tag`, `tag.class`, `tag#id` or `tag[attr=value]` |
+| [`scripts/clean_publisher_md.py`](scripts/clean_publisher_md.py) | A publisher's served markdown into plain GFM — components, anchor-only tags and relative targets out, fenced code untouched |
 | [`scripts/add_frontmatter.py`](scripts/add_frontmatter.py) | The corpus frontmatter block onto a converted file — defuddle's metadata where it is installed, the page's own `<title>` and meta tags where it is not |
 | [`scripts/clean_md_images.py`](scripts/clean_md_images.py) | base64 data URIs out to sibling PNGs |
 | [`scripts/render_page.py`](scripts/render_page.py) | A JS-hydrated page's HTML after hydration, with links made absolute, for defuddle |

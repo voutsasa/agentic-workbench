@@ -6,13 +6,16 @@ WebFetch paraphrases through a model instead of returning the source text
 directly from raw markup and lets `pandoc` do the HTML-to-markdown
 conversion — no model in the loop, no site chrome in the output.
 
-Usage: python extract_article.py <html-file> <tag.class|tag#id|tag[attr=value]> [base-url] > article.html
+Usage: python extract_article.py <html-file> <tag|tag.class|tag#id|tag[attr=value]> [base-url] > article.html
 
   tag.class        e.g. div.theme-doc-markdown — Docusaurus sites (playwright.dev,
                    dbml.dbdiagram.io, d2lang.com, drawio.com all use this)
   tag#id           e.g. main#D7 — plantuml.com's hand-rolled layout
   tag[attr=value]  e.g. main[role=main] — typescriptlang.org/docs, whose article
                    node carries neither a class nor an id
+  tag              e.g. main — agents.md, whose <main> carries no attribute at
+                   all. The first node of that name wins, so use it only where
+                   the page has one
 
 Not Docusaurus-specific despite where it started: the selector is an argument,
 so any server-rendered page whose article sits in one identifiable node works.
@@ -168,12 +171,18 @@ def parse_selector(selector: str) -> tuple[str, str, str]:
         return attribute.group(1), attribute.group(2), attribute.group(3)
     if "." in selector:
         tag, _, value = selector.partition(".")
-        return tag, "class", value
-    if "#" in selector:
+        if re.fullmatch(r"\w+", tag):
+            return tag, "class", value
+    elif "#" in selector:
         tag, _, value = selector.partition("#")
-        return tag, "id", value
+        if re.fullmatch(r"\w+", tag):
+            return tag, "id", value
+    if re.fullmatch(r"\w+", selector):
+        # A bare tag name: no attribute to match on, so the first node of that
+        # name wins. agents.md's <main> carries neither class nor id.
+        return selector, "", ""
     raise ValueError(
-        f"selector must be tag.class, tag#id or tag[attr=value], got {selector!r}"
+        f"selector must be tag, tag.class, tag#id or tag[attr=value], got {selector!r}"
     )
 
 
@@ -187,6 +196,8 @@ class ArticleExtractor(HTMLParser):
     def _matches(self, tag: str, attrs: list[tuple[str, str | None]]) -> bool:
         if tag != self.tag:
             return False
+        if not self.attr:  # bare tag selector: the name is the whole test
+            return True
         raw = dict(attrs).get(self.attr, "") or ""
         return self.value in raw.split() if self.attr == "class" else raw == self.value
 
@@ -234,9 +245,8 @@ def main() -> int:
     parser.feed(html)
     article = "".join(parser.chunks).strip()
     if not article:
-        print(
-            f'no <{tag} {attr}="...{value}..."> found in {html_path}', file=sys.stderr
-        )
+        wanted = f'<{tag} {attr}="...{value}...">' if attr else f"<{tag}>"
+        print(f"no {wanted} found in {html_path}", file=sys.stderr)
         return 1
     article = HASH_LINK.sub("", article)
     article = ANCHOR_BOOKMARK.sub("", article)

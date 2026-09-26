@@ -66,10 +66,13 @@ class ParseSelectorTests(unittest.TestCase):
             ("div", "data-page", "docs.index"),
         )
 
-    def test_bare_tag_is_rejected(self):
-        """A bare tag would match the first <div> on the page, which is chrome."""
+    def test_bare_tag_selector(self):
+        """agents.md's <main> carries neither a class nor an id."""
+        self.assertEqual(extract_article.parse_selector("main"), ("main", "", ""))
+
+    def test_a_selector_that_is_neither_form_is_rejected(self):
         with self.assertRaises(ValueError):
-            extract_article.parse_selector("div")
+            extract_article.parse_selector("div .x")
 
 
 class NodeSelectionTests(unittest.TestCase):
@@ -118,6 +121,14 @@ class NodeSelectionTests(unittest.TestCase):
         out = extract(html, "main#D7")
         self.assertIn("<h2>PlantUML</h2>", out)
         self.assertNotIn("chrome", out)
+
+    def test_bare_tag_selector_finds_a_node_with_no_attributes_at_all(self):
+        """agents.md's article sits in a plain <main>, with the nav outside it."""
+        html = "<body><nav>chrome</nav><main><h2>AGENTS.md</h2></main><footer>x</footer></body>"
+        out = extract(html, "main")
+        self.assertIn("<h2>AGENTS.md</h2>", out)
+        self.assertNotIn("chrome", out)
+        self.assertNotIn("<footer>", out)
 
     def test_attribute_selector_finds_a_node_with_no_class_or_id(self):
         """typescriptlang.org/docs keeps its article in a bare <main role="main">,
