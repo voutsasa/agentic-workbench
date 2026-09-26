@@ -92,12 +92,14 @@ Then:
 
 ```sh
 curl -sL <url>.md -o <tmp>/served.md
-python3 <skill>/scripts/clean_publisher_md.py <tmp>/served.md "<dest>.md" <site-root>
+python3 <skill>/scripts/clean_publisher_md.py <tmp>/served.md "<dest>.md" <url>
 python3 <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
 ```
 
-`<site-root>` is the scheme and host, e.g. `https://docs.github.com`; it is what site-relative link
-targets resolve against. `add_frontmatter.py` still needs the rendered HTML, so fetch that too.
+**Pass the page's own URL**, as in the server-rendered route and for the same reason: `/x`, `./x` and
+`../x` all resolve against it. A site root alone leaves `./server-concepts` — how
+`modelcontextprotocol.io` links its siblings — pointing at nothing. `add_frontmatter.py` still needs
+the rendered HTML, so fetch that too.
 
 **What the cleaner removes** — measured on `code.claude.com` and `docs.github.com`, 2026-09-26:
 Mintlify's component tags (`<Note>`, `<Tabs>`, `<Tab title="…">`, `<Steps>`, `<Frame>`), GitHub Docs'

@@ -17,11 +17,11 @@ targets that point at nothing once the file is local. This strips all of that,
 is that example's content, and mangling it is the one failure this script must
 not have.
 
-Usage: python clean_publisher_md.py <served.md> <dest.md> <base-url>
+Usage: python clean_publisher_md.py <served.md> <dest.md> <page-url>
 
-`<base-url>` is the site root that site-relative targets resolve against, e.g.
-`https://docs.github.com`. Frontmatter is not this script's job — run
-`add_frontmatter.py` over the result, as the other routes do.
+`<page-url>` is the page's own URL, which every relative link target resolves
+against — `/x`, `./x` and `../x` alike. Frontmatter is not this script's job —
+run `add_frontmatter.py` over the result, as the other routes do.
 
 Standard library only: this runs on a fresh clone before any venv exists.
 """
@@ -32,6 +32,7 @@ import argparse
 import re
 import sys
 from pathlib import Path
+from urllib.parse import urljoin
 
 # Mintlify's callout components. The tag becomes a bold label so the callout
 # still reads as one in a plain viewer; the closing tag goes.
@@ -49,13 +50,14 @@ WRAPPER = re.compile(rf"</?({'|'.join(DROP_WRAPPERS)})(\s[^>]*)?>")
 TITLED_OPEN = re.compile(rf"<({'|'.join(TITLED)})\s[^>]*title=\"([^\"]*)\"[^>]*>")
 TITLED_CLOSE = re.compile(rf"</({'|'.join(TITLED)})>")
 
-IMG = re.compile(r"<img\s[^>]*?src=\"([^\"]+)\"[^>]*?/?>")
+IMG = re.compile(r"<img\s[^>]*?/?>")
+IMG_SRC = re.compile(r"src=\"([^\"]+)\"")
 IMG_ALT = re.compile(r"alt=\"([^\"]*)\"")
 ANCHOR_ONLY = re.compile(r"<(a|span)\s+id=\"[^\"]*\"\s*/>")
 DIV = re.compile(r"</?div(\s[^>]*)?>")
 SPAN = re.compile(r"<span(\s[^>]*)?>(.*?)</span>")
 KBD = re.compile(r"<kbd>(.*?)</kbd>")
-RELATIVE_LINK = re.compile(r"\]\((/[^)\s]*)\)")
+RELATIVE_LINK = re.compile(r"\]\((\.{0,2}/[^)\s]*)\)")
 FENCE = re.compile(r"^\s*(```|~~~)")
 BLANK_RUN = re.compile(r"\n{3,}")
 
@@ -89,12 +91,22 @@ def flatten_cell_list(line: str) -> str:
     return line
 
 
-def transform_line(line: str, base: str) -> str:
+def as_markdown_image(tag: str) -> str:
+    """`<img src="x" alt="y" …/>` -> `![y](x)`, or the tag itself if it has no src.
+
+    Mintlify puts these on a line of their own for a diagram and inline mid-
+    sentence for an icon, so this runs over the whole line either way.
+    """
+    src = IMG_SRC.search(tag)
+    if not src:
+        return tag
+    alt = IMG_ALT.search(tag)
+    return f"![{alt.group(1) if alt else ''}]({src.group(1)})"
+
+
+def transform_line(line: str, page_url: str) -> str:
     """Rewrite one line that is not inside a fenced code block."""
-    image = IMG.search(line)
-    if image and line.strip().startswith("<img"):
-        alt = IMG_ALT.search(line)
-        return f"![{alt.group(1) if alt else ''}]({image.group(1)})"
+    line = IMG.sub(lambda m: as_markdown_image(m.group(0)), line)
 
     line = CALLOUT_OPEN.sub(lambda m: f"**{m.group(1)}**", line)
     line = CALLOUT_CLOSE.sub("", line)
@@ -110,12 +122,13 @@ def transform_line(line: str, base: str) -> str:
     if "<ul>" in line:
         line = flatten_cell_list(line)
 
-    return RELATIVE_LINK.sub(rf"]({base}\1)", line)
+    # `/x`, `./x` and `../x` all resolve against the page's own URL — the same
+    # argument, and the same reason, as extract_article.py's third parameter.
+    return RELATIVE_LINK.sub(lambda m: f"]({urljoin(page_url, m.group(1))})", line)
 
 
-def convert(text: str, base: str) -> str:
+def convert(text: str, page_url: str) -> str:
     """Clean a whole document. Fenced code blocks pass through byte-identical."""
-    base = base.rstrip("/")
     out: list[str] = []
     in_code = False
     for line in strip_preamble(text).splitlines():
@@ -126,7 +139,7 @@ def convert(text: str, base: str) -> str:
         if in_code:
             out.append(line)
             continue
-        new = transform_line(line, base)
+        new = transform_line(line, page_url)
         # A line that held nothing but tags is now empty; drop it rather than
         # leaving the blank runs the stripped wrappers would otherwise create.
         if new.strip() or not line.strip():
@@ -140,14 +153,14 @@ def main() -> int:
     )
     parser.add_argument("source", type=Path, help="the fetched <url>.md file")
     parser.add_argument("dest", type=Path, help="where to write the cleaned markdown")
-    parser.add_argument("base_url", help="site root for relative targets")
+    parser.add_argument("page_url", help="the page's own URL, for relative targets")
     args = parser.parse_args()
 
     if not args.source.is_file():
         print(f"not a file: {args.source}", file=sys.stderr)
         return 1
 
-    cleaned = convert(args.source.read_text(encoding="utf-8"), args.base_url)
+    cleaned = convert(args.source.read_text(encoding="utf-8"), args.page_url)
     args.dest.write_text(cleaned, encoding="utf-8")
     print(f"{args.dest}: {len(cleaned.split())} words")
     return 0

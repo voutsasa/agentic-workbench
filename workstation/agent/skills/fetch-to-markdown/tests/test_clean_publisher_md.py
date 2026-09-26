@@ -22,10 +22,11 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "scripts"))
 # E402: sys.path has to be extended before this import, so it cannot move to the top.
 import clean_publisher_md as cleaner
 
-BASE = "https://docs.github.com"
+# The page's own URL, not the site root: `./x` and `../x` resolve against it.
+PAGE = "https://docs.github.com/en/copilot/concepts/prompting/response-customization"
 
 
-def convert(text: str, base: str = BASE) -> str:
+def convert(text: str, base: str = PAGE) -> str:
     return cleaner.convert(text, base)
 
 
@@ -40,8 +41,11 @@ class FencedCodeIsUntouched(unittest.TestCase):
         self.assertIn('<div class="x">and me</div>', convert(source))
 
     def test_relative_links_inside_a_fence_are_not_rewritten(self):
+        """An example instructions file quotes links into its own repo, not the site."""
         source = "# T\n\n```\nsee [Form](../docs/Form.md) and [x](/y)\n```\n"
-        self.assertIn("[x](/y)", convert(source))
+        result = convert(source)
+        self.assertIn("[x](/y)", result)
+        self.assertIn("[Form](../docs/Form.md)", result)
 
     def test_tilde_fences_count_too(self):
         source = "# T\n\n~~~\n<Note>kept</Note>\n~~~\n"
@@ -100,6 +104,13 @@ class MintlifyComponents(unittest.TestCase):
         result = convert('# T\n\n  <img src="https://cdn/x.svg" alt="Lifecycle" />\n')
         self.assertIn("![Lifecycle](https://cdn/x.svg)", result)
 
+    def test_inline_img_keeps_the_sentence_around_it(self):
+        """modelcontextprotocol.io drops an icon mid-sentence."""
+        result = convert(
+            '# T\n\nLook for the <img src="https://cdn/icon.png" width="33" /> icon:\n'
+        )
+        self.assertIn("Look for the ![](https://cdn/icon.png) icon:", result)
+
 
 class GitHubDocsComponents(unittest.TestCase):
     def test_tool_tab_div_wrapper_is_dropped(self):
@@ -134,10 +145,22 @@ class Links(unittest.TestCase):
         result = convert("# T\n\n[x](/a)\n", base="https://agents.md/")
         self.assertIn("[x](https://agents.md/a)", result)
 
-    def test_document_relative_target_is_left_alone(self):
-        """`../docs/…` in an example instructions file is the example's own link."""
-        result = convert("# T\n\nUse [Form](../docs/design-system/Form.md).\n")
-        self.assertIn("[Form](../docs/design-system/Form.md)", result)
+    def test_sibling_relative_target_resolves_against_the_page(self):
+        """modelcontextprotocol.io links siblings as `./server-concepts`."""
+        result = convert(
+            "# T\n\nSee [server concepts](./server-concepts).\n",
+            base="https://modelcontextprotocol.io/docs/learn/architecture",
+        )
+        self.assertIn(
+            "[server concepts](https://modelcontextprotocol.io/docs/learn/server-concepts)",
+            result,
+        )
+
+    def test_parent_relative_target_resolves_against_the_page(self):
+        result = convert("# T\n\n[up](../prompting/x).\n")
+        self.assertIn(
+            "[up](https://docs.github.com/en/copilot/concepts/prompting/x)", result
+        )
 
     def test_autolinks_are_not_treated_as_tags(self):
         result = convert("# T\n\nSee <https://example.com/a> for more.\n")
