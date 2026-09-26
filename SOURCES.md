@@ -188,6 +188,10 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 * [LiteLLM](https://docs.litellm.ai/docs/proxy/docker_quick_start)
 * [DeepEval](https://deepeval.com/docs/introduction)
 * [langfuse](https://langfuse.com/docs/observability/sdk/overview)
+* [MCP architecture overview](https://modelcontextprotocol.io/docs/learn/architecture)
+* [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server)
+* [MCP specification](https://modelcontextprotocol.io/specification)
+* [MCP authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization)
 
 **Gaps — not yet sourced**
 
@@ -235,6 +239,9 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 * [Using hooks with GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks)
 * [Adding agent skills for GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills)
 * [About customizing GitHub Copilot responses](https://docs.github.com/en/copilot/concepts/prompting/response-customization)
+* [Best practices for Claude Code](https://code.claude.com/docs/en/best-practices)
+* [Extend Claude with skills](https://code.claude.com/docs/en/skills)
+* [Claude Code plugins overview](https://code.claude.com/docs/en/plugins)
 
 #### Background and legacy material
 

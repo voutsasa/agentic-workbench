@@ -146,6 +146,10 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [LiteLLM](https://docs.litellm.ai/docs/proxy/docker_quick_start) — Unified proxy/SDK for calling 100+ LLM provider APIs through a single OpenAI-compatible interface.
 * [DeepEval](https://deepeval.com/docs/introduction) — Open-source unit-testing framework for evaluating and benchmarking LLM application outputs.
 * [langfuse](https://langfuse.com/docs/observability/sdk/overview) — Observability and tracing platform for debugging and monitoring LLM applications.
+* [MCP architecture overview](https://modelcontextprotocol.io/docs/learn/architecture) — How MCP clients, servers and transports fit together, and what resources, tools and prompts each are.
+* [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server) — The canonical tutorial for building an MCP server, from tool definitions to transport.
+* [MCP specification](https://modelcontextprotocol.io/specification) — The protocol specification: versions, base protocol, and the client and server feature surface.
+* [MCP authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization) — OAuth 2.1 authorization for MCP servers beyond stdio: flows, tokens and metadata discovery.
 
 ## 5. Implementation architecture
 
@@ -170,6 +174,9 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [Using hooks with GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) — Copilot CLI's hook events, configuration and payloads for running commands automatically around tool use.
 * [Adding agent skills for GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills) — How Copilot CLI discovers and loads `SKILL.md` folders, and where they must live.
 * [About customizing GitHub Copilot responses](https://docs.github.com/en/copilot/concepts/prompting/response-customization) — How Copilot loads AGENTS.md and custom instructions across its CLI, IDE and web surfaces.
+* [Best practices for Claude Code](https://code.claude.com/docs/en/best-practices) — Anthropic's guide to working effectively with Claude Code: instruction files, workflows, tooling and context discipline.
+* [Extend Claude with skills](https://code.claude.com/docs/en/skills) — How Claude Code discovers and loads skills, and where `SKILL.md` folders live.
+* [Claude Code plugins overview](https://code.claude.com/docs/en/plugins) — Packaging skills, agents, hooks and MCP servers as installable plugins, distributed through marketplaces.
 
 #### Background and legacy material
 
