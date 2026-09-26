@@ -229,6 +229,12 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models)
 * [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents)
 * [Using Claude Code: The unreasonable effectiveness of HTML](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html)
+* [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview)
+* [Claude Code hooks reference](https://code.claude.com/docs/en/hooks)
+* [AGENTS.md](https://agents.md/)
+* [Using hooks with GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks)
+* [Adding agent skills for GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills)
+* [About customizing GitHub Copilot responses](https://docs.github.com/en/copilot/concepts/prompting/response-customization)
 
 #### Background and legacy material
 

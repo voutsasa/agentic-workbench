@@ -164,6 +164,12 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — Anthropic on why newer models need fewer explicit constraints, cutting Claude Code's system prompt over 80%.
 * [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — Anthropic's guide to designing agent-friendly tool interfaces, refined using agents themselves.
 * [Using Claude Code: The unreasonable effectiveness of HTML](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html) — Claude blog post on HTML as a surprisingly versatile agent output and interaction format.
+* [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview) — Anthropic's SDK for building custom agents programmatically on Claude Code's harness, in Python and TypeScript.
+* [Claude Code hooks reference](https://code.claude.com/docs/en/hooks) — Lifecycle hook events, matchers and input/output schema for enforcing rules deterministically rather than by prompt.
+* [AGENTS.md](https://agents.md/) — Open standard for the agent instruction file, with its format and the tools that read it.
+* [Using hooks with GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/use-hooks) — Copilot CLI's hook events, configuration and payloads for running commands automatically around tool use.
+* [Adding agent skills for GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills) — How Copilot CLI discovers and loads `SKILL.md` folders, and where they must live.
+* [About customizing GitHub Copilot responses](https://docs.github.com/en/copilot/concepts/prompting/response-customization) — How Copilot loads AGENTS.md and custom instructions across its CLI, IDE and web surfaces.
 
 #### Background and legacy material
 
