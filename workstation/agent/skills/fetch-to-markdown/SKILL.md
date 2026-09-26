@@ -96,10 +96,11 @@ python3 <skill>/scripts/clean_publisher_md.py <tmp>/served.md "<dest>.md" <url>
 python3 <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
 ```
 
-**Pass the page's own URL**, as in the server-rendered route and for the same reason: `/x`, `./x` and
-`../x` all resolve against it. A site root alone leaves `./server-concepts` — how
-`modelcontextprotocol.io` links its siblings — pointing at nothing. `add_frontmatter.py` still needs
-the rendered HTML, so fetch that too.
+**Pass the page's own URL, not the site root**, as in the server-rendered route and for the same
+reason: root-relative, sibling and parent link targets all resolve against it. A site root alone
+leaves the sibling links `modelcontextprotocol.io` writes between its own docs pages pointing at
+nothing — the script's docstring spells the three forms out. `add_frontmatter.py` still needs the
+rendered HTML, so fetch that too.
 
 **What the cleaner removes** — measured on `code.claude.com` and `docs.github.com`, 2026-09-26:
 Mintlify's component tags (`<Note>`, `<Tabs>`, `<Tab title="…">`, `<Steps>`, `<Frame>`), GitHub Docs'
