@@ -14,11 +14,11 @@ What each file and folder is: [`README.md`](README.md) — § *Layout*, then the
 
 **Instruction files**
 
-- `AGENTS.md` is the only copy of these instructions. `CLAUDE.md` and `.agents/rules/workbench.md` each hold one line, `@AGENTS.md` — add nothing else. `CLAUDE.md` stays gitignored and is written per clone by `link_config.py --claude-md --apply`: Copilot CLI reads both files, so a tracked import loads everything twice.
+- `AGENTS.md` is the only copy of these instructions. `CLAUDE.md` and `.agents/rules/workbench.md` each hold one line, `@AGENTS.md` — add nothing else. `CLAUDE.md` stays gitignored and is written per clone by `link_config.py --claude-md --apply`: Copilot CLI reads both files, so tracking it would load everything twice on every Copilot-only clone; a clone that uses Claude Code accepts the double load (`workstation/machines/macos-workstation.md` § *Instruction loading*).
 
 **Register and corpus**
 
-- `SOURCES.md` is the source of truth and is edited first when a source is added or removed. It references no other document; where a reference is needed, point to `SOURCE_CATALOGUE.md`.
+- `SOURCES.md` is the source of truth and is edited first when a source is added or removed. Its relative links reach only the process documents that govern it — `SOURCE_CATALOGUE.md`, this file, `skills/` and the `workstation/*/README.md` indexes — enforced by `checks.register.link_allow_globs` in the `review` skill's `checks.toml`.
 - Every change to `SOURCES.md` gets a matching change to `SOURCE_CATALOGUE.md`: one sentence of ≤20 words per source, mirroring structure and entries exactly. `README.md` carries no source entries.
 - `docs/landing-zone/` and every `reference.md` under `workstation/cli/` and `workstation/mcp/` are machine-written — never hand-edit them.
 - `docs/guidance/`: every note declares its provenance; read `docs/guidance/README.md` before adding one.

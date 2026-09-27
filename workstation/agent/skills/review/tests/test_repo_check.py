@@ -877,6 +877,36 @@ class TestCheckRegister(unittest.TestCase):
         self.assertEqual(self._run(), [])
 
 
+class TestRegisterLinkTargets(unittest.TestCase):
+    """The register links only the process documents that govern it."""
+
+    ALLOW = ("SOURCE_CATALOGUE.md", "skills/**")
+
+    def _run(self, line: str, **overrides):
+        cfg = _register_cfg(**overrides)
+        with _register_repo(sources=SOURCES_OK + "\n" + line + "\n") as repo:
+            return repo_check.check_register(repo.root, ["SOURCES.md"], cfg)
+
+    def test_an_allowed_process_document_is_clean(self):
+        line = "See [the skill](skills/ingest-source/SKILL.md#step-1)."
+        self.assertEqual(self._run(line, link_allow_globs=self.ALLOW), [])
+
+    def test_a_link_outside_the_allow_list_is_a_violation(self):
+        (violation,) = self._run(
+            "Open work is in [TODO](TODO.md).", link_allow_globs=self.ALLOW
+        )
+        self.assertEqual(violation["check"], "register")
+        self.assertIn("TODO.md", violation["detail"])
+
+    def test_external_links_and_anchors_are_not_restricted(self):
+        line = "See [upstream](https://x.test/a.md) and [below](#layers)."
+        self.assertEqual(self._run(line, link_allow_globs=self.ALLOW), [])
+
+    def test_without_an_allow_list_links_are_not_restricted(self):
+        """checks.toml is shared; a repo that sets no list keeps its old gate."""
+        self.assertEqual(self._run("Open work is in [TODO](TODO.md)."), [])
+
+
 class TestCorpusLedger(unittest.TestCase):
     def test_present_and_missing_are_both_reported(self):
         with _register_repo(

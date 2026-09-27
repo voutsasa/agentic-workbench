@@ -9,7 +9,7 @@ nothing to install, and **no model is called from here**.
 | `checks.toml` | The rules it enforces — glossary terms, header schema, scope. Tune this, not the script. |
 | `pre-push` | Git hook wrapper around `repo_check.py`, the repo's own unit tests, **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/` — **on Windows `pre-push.windows` is copied there instead**, see below. |
 | `pre-push.windows` | Windows shim: runs the tracked `pre-push` from the working tree, so its one-time copy never goes stale. |
-| `../tests/test_repo_check.py` | `python3 -m unittest discover -s tests` from the skill root. 123 tests, no network. |
+| `../tests/test_repo_check.py` | `python3 -m unittest discover -s tests` from the skill root. 127 tests, no network. |
 | `../tests/test_pre_push.py` | 19 tests over the hook and the Windows shim, same command. It invokes the hook, so the hook skips step 3 when `PRE_PUSH_IN_TESTS=1`. |
 
 ## repo_check.py
@@ -54,7 +54,10 @@ Five checks, each toggled in `checks.toml`:
    here rather than prose a reader re-executes. Opt-in by **file presence**: a repo with no
    `checks.register.sources` on disk is not checked, the same mechanism `metadata_header`
    uses, and the reason this config is safe to link from a repo that has no register.
-   Destination *existence* is not part of it — see `--corpus` below.
+   Destination *existence* is not part of it — see `--corpus` below. When
+   `checks.register.link_allow_globs` is set, every relative link in the register must
+   match one of its globs, so the register cites the process documents that govern it
+   and nothing else; without the key, links are not restricted.
 
 ### The ingestion ledger — `--corpus`
 

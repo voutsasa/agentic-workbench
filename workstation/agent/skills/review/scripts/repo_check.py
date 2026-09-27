@@ -9,8 +9,9 @@ Five checks, all of them plain file operations — no model, no network, no cost
   metadata_header — required frontmatter fields, per document family, with the
                     values validated rather than merely present
   register        — a source register and its catalogue stay entry-for-entry
-                    identical, and every entry is one bracket link to one
-                    destination. Skipped in a repo that has no register, so the
+                    identical, every entry is one bracket link to one
+                    destination, and its relative links stay within
+                    link_allow_globs when that is set. Skipped in a repo that has no register, so the
                     shared config stays safe to link from anywhere.
 
 `--corpus` is the register's other half, deliberately NOT part of the gate: it
@@ -619,6 +620,38 @@ def _register_shape(rel: str, entries: list[dict], text: str) -> list[dict]:
     return violations
 
 
+def _register_link_targets(rel: str, text: str, allow_globs: list[str]) -> list[dict]:
+    """Relative links out of the register reach only its process documents.
+
+    External targets, anchors and placeholders are not ours to restrict, which
+    `resolve_target` already decides for the links check.
+    """
+    violations = []
+    for lineno, line in prose_lines(text):
+        for raw in _link_targets(line):
+            resolved = resolve_target(raw)
+            if resolved is None:
+                continue
+            target = posixpath.normpath(
+                resolved.lstrip("/")
+                if resolved.startswith("/")
+                else posixpath.join(posixpath.dirname(rel), resolved)
+            )
+            if any(_matches(target, glob) for glob in allow_globs):
+                continue
+            violations.append(
+                {
+                    "check": "register",
+                    "file": rel,
+                    "line": lineno,
+                    "detail": f"the register links {target}, which is not one of "
+                    "the process documents it may reference (link_allow_globs)",
+                    "evidence": line.strip()[:200],
+                }
+            )
+    return violations
+
+
 def _register_mirror(
     catalogue_rel: str, entries: list[dict], catalogue: list[dict]
 ) -> list[dict]:
@@ -709,6 +742,10 @@ def check_register(repo_root: Path, files: list[str], config: dict) -> list[dict
     text = read_text(sources_path)
     entries = parse_register_entries(text)
     violations = _register_shape(sources_rel, entries, text)
+    if "link_allow_globs" in settings:
+        violations.extend(
+            _register_link_targets(sources_rel, text, settings["link_allow_globs"])
+        )
 
     catalogue_rel = settings.get("catalogue")
     if not catalogue_rel:

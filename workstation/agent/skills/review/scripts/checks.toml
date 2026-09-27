@@ -57,6 +57,16 @@ enabled = true
 # pre-push hook. A repo without `sources` on disk is not checked at all.
 sources = "SOURCES.md"
 catalogue = "SOURCE_CATALOGUE.md"
+# The register may link the process documents that govern it — its catalogue,
+# the agent instructions, the skills that ingest into it and the tool indexes —
+# and no other local file. External links are never restricted. Leave the key
+# out and relative links are not checked at all.
+link_allow_globs = [
+  "SOURCE_CATALOGUE.md",
+  "AGENTS.md",
+  "skills/**",
+  "workstation/*/README.md",
+]
 # Destination *existence* is deliberately not part of this check — the corpus is
 # gitignored and absent on a fresh clone, which AGENTS.md calls expected rather
 # than a fault. `repo_check.py --corpus` reports it on demand instead, and is the
