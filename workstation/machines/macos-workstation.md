@@ -265,26 +265,28 @@ been blocked here, which is weak evidence rather than a measurement.
 
 ## CLI toolchain
 
-`python3 workstation/scripts/inventory.py --host workstation`, 2026-09-18. Do not edit by hand.
+`python3 workstation/scripts/inventory.py --host workstation`, 2026-09-27. Do not edit by hand.
 
 Probed on `workstation` (Darwin Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:53 PDT 2026; root:xnu-12377.161.14~5/RELEASE_ARM64_T6031, Python 3.14.6) by `workstation/scripts/inventory.py`.
 
-**13 of 13 usable.**
+**15 of 15 usable.**
 
 | Command | Product | Status | Version | Detail |
 |---|---|---|---|---|
 | `d2` | D2 (Terrastruct) | installed | 0.9.0 | — |
+| `databricks` | Databricks CLI | installed | 1.18.0 | — |
 | `dbml2sql`, `sql2dbml`, `db2dbml` | DBML CLI | installed | 10.1.1 | — |
-| `defuddle` | Defuddle | installed | 0.19.3 | — |
-| `docling` | Docling | installed | 2.115.0 | — |
+| `defuddle` | Defuddle | installed | 0.19.4 | — |
+| `docling` | Docling | installed | 2.130.0 | — |
 | `magick` | ImageMagick | installed | 7.1.2-31 | — |
 | `mmdc` | Mermaid CLI | installed | 11.17.0 | — |
 | `pandoc` | Pandoc | installed | 3.11 | — |
 | `plantuml` | PlantUML | installed | 1.2026.8 | — |
-| `playwright` | Playwright | installed | 1.61.0 | — |
+| `playwright` | Playwright | installed | 1.63.0 | — |
 | `sem` | Sem (Ataraxy Labs) | installed | 0.25.0 | — |
 | `tesseract` | Tesseract OCR | installed | 5.5.3 | — |
 | `typst` | Typst | installed | 0.15.1 | — |
+| `ug`, `ucode` | Unity Gateway (Databricks) | installed | 0.2.0+29.ge43c341 | — |
 | `weasyprint` | WeasyPrint | installed | 70.0 | — |
 
 ### Supporting installs the table does not probe
@@ -293,6 +295,7 @@ Probed on `workstation` (Darwin Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:5
 |---|---|---|
 | `rsvg-convert` (librsvg) | 2.62.3, `/opt/homebrew/bin` | `magick` cannot rasterise SVG through brew's MSVG renderer, so every SVG-to-raster job goes through this. The whole diagram toolchain — d2, PlantUML, Mermaid — emits SVG. Route recorded in [`../cli/magick/install.md`](../cli/magick/install.md). |
 | LibreOffice | `/Applications/LibreOffice.app`, and `soffice` **is** on `PATH` at `/opt/homebrew/bin/soffice` | docling's Office conversion finds it. Note this differs from the Windows box, where it is installed but deliberately kept off `PATH` — see [`../cli/docling/install.md`](../cli/docling/install.md). |
+| Global Python CLIs via `uv tool`, Python 3.12 | `docling` 2.130.0, `playwright` 1.63.0 and `unity-gateway` 0.2.0+29 are in `$(uv tool dir)`, each on Python 3.12.14; moved from pipx on 2026-09-27. `pipx list` keeps only `huggingface-hub`, which isn't a workbench tool | `render_page.py` runs under `$(uv tool dir)/playwright/bin/python`. Playwright's Chromium is build 1243, and `mmdc` resolves to it through `PUPPETEER_EXECUTABLE_PATH`. Builds 1234 stay in `~/Library/Caches/ms-playwright`, because `~/Development/ieee-reader/.venv` still links to them. |
 
 ## Not yet installed
 

@@ -97,6 +97,8 @@ Each row is named by the **command you type**, which is often not the package na
 | `mmdc` | Mermaid CLI | [`mermaid-cli/`](mermaid-cli/) |
 | `d2` | D2 (Terrastruct) | [`d2-cli/`](d2-cli/) |
 | `typst` | Typst | [`typst/`](typst/) |
+| `databricks` | Databricks CLI | [`databricks-cli/`](databricks-cli/) |
+| `ug` / `ucode` | Unity Gateway (Databricks) | [`unity-gateway/`](unity-gateway/) |
 
 ## Do not cross ecosystems by name
 

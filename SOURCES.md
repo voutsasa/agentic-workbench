@@ -271,6 +271,8 @@ Each tool has a folder at `workstation/cli/<tool>/` with install commands, a qui
 * [mermaid-cli](https://github.com/mermaid-js/mermaid-cli)
 * [d2-cli](https://d2lang.com/tour/install/)
 * [typst](https://github.com/typst/typst)
+* [databricks-cli](https://docs.databricks.com/aws/en/dev-tools/cli/install)
+* [unity-gateway](https://github.com/databricks/unity-gateway)
 
 #### MCP servers
 
@@ -280,3 +282,4 @@ Servers **authored** in this workbench are project output, not workstation tooli
 
 * [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/)
 * [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server)
+* [databricks-mcp](https://docs.databricks.com/aws/en/generative-ai/mcp/managed-mcp)

@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-22
+updated: 2026-09-27
 verified: never
 ---
 
@@ -16,6 +16,48 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 29. `verify_claims.py` checks flags after `--` against the outer command
+
+Opened 2026-09-27. In `claude mcp add … -- npx … --authentication pat`, it reads `--authentication` as a
+`claude mcp` flag and refutes it (`workstation/mcp/ado-remote-mcp/setup.md:157`, refuted on `main`
+before this change). A `copilot mcp add … -- ug mcp-proxy --url …` line hit the same defect, and
+`workstation/mcp/databricks-mcp/setup.md` shows the resulting config instead to avoid it.
+
+**Closes when:** a unit test in `workstation/agent/skills/verify-docs/tests/` shows flags after a bare
+`--` are not attributed to the command before it, and `verify_claims.py --repo .` no longer refutes
+`ado-remote-mcp/setup.md:157`.
+
+### 28. `fetch-to-markdown` has three gaps, found ingesting the Databricks sources
+
+Opened 2026-09-27. Each gap was hit on a real page:
+
+- **`clean_publisher_md.py` leaves bare relative targets.** Its `RELATIVE_LINK` pattern needs a leading
+  `/`, `./` or `../`, so `](tests/integration/README.md)` in the unity-gateway README survives. §2's
+  link check catches it, which leaves `workstation/cli/unity-gateway/reference.md` failing that
+  check.
+- **Minified HTML with omitted end tags flattens tables on the curl route.** docs.databricks.com
+  leaves out `</td>`, `</tr>` and `</li>`; pandoc then emits each cell as its own paragraph, and no
+  markup check notices. Rendering through `render_page.py` first fixed it, because the browser
+  writes the tags back out.
+- **§2's markup grep misses `<a`.** With `-t gfm`, pandoc wrote 23 links carrying `target=` as raw
+  `<a href … target="_blank">` HTML; `-t gfm-raw_html` wrote them as markdown links.
+
+**Closes when:** each gap has a unit test in `workstation/agent/skills/fetch-to-markdown/tests/`, shown
+failing before its fix, and the unity-gateway README re-converts with no relative link target.
+
+### 27. The `uv tool` routes and `winget` for databricks-cli have not run on Windows
+
+Opened 2026-09-27. Global Python CLIs moved from pipx to `uv tool install --python 3.12`. On macOS,
+docling, playwright and unity-gateway were migrated and each passed a real-use check. On
+`ema-pf5n4xe7`, docling, playwright and unity-gateway are still on pipx or absent, and
+`winget install Databricks.DatabricksCLI` hasn't run. The pipx shim quarantine recorded in
+`workstation/cli/docling/install.md` has not been tested against uv tool shims.
+
+**Closes when:** on `ema-pf5n4xe7`, the pipx copies are uninstalled, the four Windows rows have run,
+`inventory.py` reports all four tools `installed`, `render_page.py` runs under
+`$(uv tool dir)\playwright\Scripts\python.exe`, and the result is recorded in that machine's note,
+including whether EDR touched the uv shims.
 
 ### 25. The README *Install* steps have not run on Windows
 

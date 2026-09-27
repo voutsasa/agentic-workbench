@@ -14,6 +14,7 @@ called on Windows and inside an activated venv; **on macOS outside a venv it is 
 | [`inventory.py`](inventory.py) | Probe this machine for the CLI toolchain and print the inventory table for [`../machines/`](../machines/) |
 | [`status.py`](status.py) | Check the resolved machine's prerequisite profile and CLI toolchain, then report corrective actions |
 | [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude`, and its skills in `~/.copilot/skills` |
+| [`databricks_mcp.py`](databricks_mcp.py) | Print the Claude Code and Copilot CLI commands that register the Databricks MCP services — runs none of them |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
 `../agent/skills/*/tests/`. Two of them test no script in this folder: `test_readme_skills.py` fails when the skill
@@ -179,3 +180,23 @@ a repo spanning several machines they can only describe whichever was looked at 
 `cli/README.md` documented rather than fixed. Every one of the twelve claimed `status: installed` while
 four were unusable on this machine. The count in a machine file is now the output of a command, which
 means it can be re-derived instead of trusted.
+
+## `databricks_mcp.py`
+
+```
+python workstation/scripts/databricks_mcp.py --profile <profile>                   # every service, both clients
+python workstation/scripts/databricks_mcp.py --profile <profile> --client copilot --service dbsql
+python workstation/scripts/databricks_mcp.py --profile <profile> --remove          # the matching removals
+```
+
+Prints the `claude mcp add-json` and `copilot mcp add` commands that register Databricks' group A MCP
+services (`genie_one_mcp`, `dbsql`, `web_search`, `sandbox`). It **runs none of them**, because
+registration is the user's step. The only command it runs is the read-only `databricks auth describe`,
+and only when `--host` or `--workspace-id` is missing. Claude gets an `http` entry with a
+`headersHelper`; Copilot gets a `ug mcp-proxy` stdio bridge, because its config can't fetch a token
+itself. The reasoning, authentication and traps are in
+[`../mcp/databricks-mcp/setup.md`](../mcp/databricks-mcp/setup.md).
+
+The profile, host and workspace ID are checked against strict patterns before anything is printed,
+because the profile ends up inside a shell command (the `headersHelper`). Connection-backed services
+such as `github` are rejected by design.

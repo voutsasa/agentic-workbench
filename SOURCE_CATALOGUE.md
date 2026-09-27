@@ -204,6 +204,8 @@ See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command �
 * [mermaid-cli](https://github.com/mermaid-js/mermaid-cli) — Renders Mermaid diagram definitions into SVG, PNG, or PDF from the command line.
 * [d2-cli](https://d2lang.com/tour/install/) — Renders D2 diagram scripts into SVG, PNG, PDF, and other formats from the terminal.
 * [typst](https://github.com/typst/typst) — Markup-based typesetting system; the PDF engine pandoc uses here in place of LaTeX.
+* [databricks-cli](https://docs.databricks.com/aws/en/dev-tools/cli/install) — Databricks' Go CLI; holds the OAuth login and issues tokens for the Genie MCP server.
+* [unity-gateway](https://github.com/databricks/unity-gateway) — Databricks' `ug` CLI; runs coding agents through AI Gateway and registers Databricks MCP servers.
 
 #### MCP servers
 
@@ -211,3 +213,4 @@ Third-party MCP servers configured into this machine's agent clients. Each has a
 
 * [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/) — Official draw.io MCP server; opens generated XML, CSV, or Mermaid diagrams in the draw.io editor.
 * [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server) — Microsoft's hosted Azure DevOps MCP Server; org-scoped Entra OAuth over HTTP, no local install.
+* [databricks-mcp](https://docs.databricks.com/aws/en/generative-ai/mcp/managed-mcp) — Databricks' hosted MCP services (Genie, SQL, web search, code sandbox), authenticated through the Databricks CLI login.

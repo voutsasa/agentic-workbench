@@ -19,6 +19,7 @@ Where to find guidance for the MCP servers listed under *Cross-cutting aspects �
 |---|---|---|---|---|
 | `drawio-mcp` | draw.io MCP tool server | stdio | pending user | [`drawio-mcp/`](drawio-mcp/) |
 | `ado-remote-mcp` | Azure DevOps MCP Server (remote) | http | pending user | [`ado-remote-mcp/`](ado-remote-mcp/) |
+| `databricks-<service>` | Databricks managed MCP services (Genie One, DBSQL, web search, sandbox) | http (Claude) · stdio bridge (Copilot) | Claude Code: `databricks-genie_one_mcp`, local scope; rest pending user — not in the catalog | [`databricks-mcp/`](databricks-mcp/) |
 
 **The user registers; this folder records** — see [`AGENTS.md`](../../AGENTS.md#the-user-installs-the-agent-records). The *Registered* column tracks the gap: a row can be fully documented and still not live on this machine.
 
