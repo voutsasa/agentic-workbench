@@ -3,7 +3,7 @@ tool: playwright
 command: playwright
 product: Playwright
 used_by: fetch-to-markdown
-verified: 2026-08-20
+verified: 2026-09-27
 ---
 
 # playwright — install
@@ -12,12 +12,18 @@ Binary: `playwright`. Product: Playwright. Installed via Python on **both** plat
 
 | Platform | Command |
 |---|---|
-| macOS | `pipx install playwright` then `playwright install chromium` |
-| Windows | `pipx install playwright` then `playwright install chromium` |
+| macOS | `uv tool install --python 3.12 playwright` then `playwright install chromium` |
+| Windows | `uv tool install --python 3.12 playwright` then `playwright install chromium` |
 
-**`pipx`, not `uv tool`, and the user runs it.** A global Python CLI install is the one exception to the
-uv-and-venv rule in [`AGENT-INSTRUCTIONS.md`](../../agent/AGENT-INSTRUCTIONS.md); an agent hands over
-these commands and never runs them.
+**`uv tool` with Python 3.12, and the user runs it.** A global Python CLI install is the one exception to
+the uv-and-venv rule in [`AGENT-INSTRUCTIONS.md`](../../agent/AGENT-INSTRUCTIONS.md), where the order is
+Homebrew or Scoop, then `uv tool`, then pipx. Neither brew nor scoop packages it, and on macOS `uv tool` 1.63.0 rendered a page through `render_page.py` (2026-09-27). `--python 3.12` is pinned because uv otherwise picks
+whatever interpreter it finds first: 3.11.15 on macOS, 2026-09-27. An agent hands over this command and
+never runs it. Upgrade with `uv tool upgrade playwright`.
+
+**Moving from a pipx install:** run `pipx uninstall playwright` first, because both write `~/.local/bin/playwright`.
+A new Playwright version needs its own browser build, so run `playwright install chromium` again after
+any install or upgrade.
 
 Verify with `playwright --version`; it prints a `1.x.y` version string.
 
@@ -35,8 +41,13 @@ playwright install firefox webkit
 
 ## Traps
 
+- **`playwright uninstall` removes the *current* install's browsers, not stale ones.** On 2026-09-27
+  it deleted the build that the uv tool install had just fetched (1243), and kept 1234 because
+  another project's `.venv` still linked to it. `~/Library/Caches/ms-playwright/.links/` records which
+  installs use which builds, and other projects' venvs share this cache. To reclaim space, read those
+  links first, never `--all`. Then run `playwright install chromium` again for this install.
 - **`playwright install` is not optional.** The pip package ships no browsers. Skip that second step and every run fails at launch. It is a separate download of several hundred MB.
-- **`pipx` gives you the CLI, not an importable module.** To `import playwright` inside a project, add it there instead — `uv add playwright`. The two are independent installs.
+- **`uv tool` gives you the CLI, not an importable module.** To `import playwright` inside a project, add it there instead — `uv add playwright`. The two are independent installs.
 - **Take the Python channel, not npm.** Playwright is published to both, and npm has generally been a minor version ahead. This workbench scripts it from Python, so the binding you write against matters more than the newer version number; a minor lag is an accepted cost, whatever the two channels read today.
 
 Docs: [Python installation](https://playwright.dev/python/docs/intro) · full page ingest: [reference.md](reference.md)

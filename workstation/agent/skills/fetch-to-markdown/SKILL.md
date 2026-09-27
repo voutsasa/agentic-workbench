@@ -38,12 +38,12 @@ one hydrated page is `retirejs.github.io/retire.js/`: 206 words in the raw HTML,
 because its vulnerability list is built client-side. Then:
 
 ```sh
-"$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" \
+"$(uv tool dir)/playwright/bin/python" \
   <skill>/scripts/render_page.py <url> <tmp>/rendered.html
 defuddle parse - --md --frontmatter < <tmp>/rendered.html > "<dest>.md"
 ```
 
-**Run `render_page.py` with the pipx venv's interpreter** — it is the one script here that needs
+**Run `render_page.py` with the uv tool venv's interpreter** — it is the one script here that needs
 `playwright`, and exits 2 naming that interpreter when run under any other. It handles the two traps
 measured on agentskills.io on 2026-09-18:
 
@@ -247,7 +247,7 @@ record and where. Do not edit a register, index or catalogue from inside this sk
 ## Scripts
 
 All but `render_page.py` are stdlib-only and run under bare `python3` before any venv exists;
-`render_page.py` needs `playwright` and runs under the pipx venv's interpreter. Every test is
+`render_page.py` needs `playwright` and runs under the uv tool venv's interpreter. Every test is
 stdlib-only — the browser is faked. Tests: `python3 -m unittest discover -s <skill>/tests`.
 
 | Script | Does |

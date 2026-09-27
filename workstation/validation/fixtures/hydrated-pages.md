@@ -15,7 +15,7 @@ row useless, which is what happened to agentskills.io between 2026-09-04 and 202
 U=<url>
 curl -sL -A "Mozilla/5.0" "$U" -o /tmp/raw.html
 defuddle parse /tmp/raw.html --md | wc -w
-"$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" \
+"$(uv tool dir)/playwright/bin/python" \
   ../../agent/skills/fetch-to-markdown/scripts/render_page.py "$U" /tmp/r.html
 defuddle parse - --md < /tmp/r.html | wc -w
 ```

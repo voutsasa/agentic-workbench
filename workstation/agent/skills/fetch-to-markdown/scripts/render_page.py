@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Render a JS-hydrated page with headless Chromium and save its HTML.
 
-The first half of the JS-hydrated route; defuddle is the second. The pipx venv's
-interpreter is `bin/python` on POSIX, `Scripts\\python.exe` on Windows:
+The first half of the JS-hydrated route; defuddle is the second. The uv tool
+venv's interpreter is `bin/python` on POSIX, `Scripts\\python.exe` on Windows:
 
-    "$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" \\
+    "$(uv tool dir)/playwright/bin/python" \\
         render_page.py <url> <tmp>/rendered.html
     defuddle parse - --md --frontmatter < <tmp>/rendered.html > "<dest>.md"
 
@@ -19,7 +19,7 @@ agentskills.io on 2026-09-18:
   option to take one, so a relative link would survive into the markdown.
 
 Unlike its sibling scripts this one is not stdlib-only: it needs `playwright`,
-which lives in the pipx venv that `workstation/cli/playwright/install.md` puts
+which lives in the uv tool venv that `workstation/cli/playwright/install.md` puts
 there. Run it with that venv's interpreter, as above. Exit codes: 0 written,
 2 playwright not importable.
 
@@ -39,21 +39,21 @@ ABSOLUTE_HREF = "els => els.forEach(e => e.setAttribute('href', e.href))"
 ABSOLUTE_SRC = "els => els.forEach(e => e.setAttribute('src', e.src))"
 DEFAULT_SETTLE_MS = 3000
 
-#: The pipx venv's interpreter, relative to PIPX_LOCAL_VENVS/playwright — POSIX
+#: The uv tool venv's interpreter, relative to `uv tool dir`/playwright — POSIX
 #: and Windows venvs lay out Scripts/bin differently.
-_PIPX_PYTHON = "Scripts/python.exe" if os.name == "nt" else "bin/python"
+_TOOL_PYTHON = "Scripts/python.exe" if os.name == "nt" else "bin/python"
 
 MISSING = (
     "render_page: playwright is not importable from {python}.\n"
-    "Run this script with the pipx venv's interpreter:\n"
-    f'  "$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/{_PIPX_PYTHON}" '
+    "Run this script with the uv tool venv's interpreter:\n"
+    f'  "$(uv tool dir)/playwright/{_TOOL_PYTHON}" '
     "render_page.py <url> <out.html>\n"
 )
 
 
 def load_playwright() -> tuple[Callable[[], Any], type[BaseException]]:
     """``sync_playwright`` and its ``TimeoutError``, imported only when needed."""
-    from playwright.sync_api import (  # pyright: ignore[reportMissingImports] — pipx venv only
+    from playwright.sync_api import (  # pyright: ignore[reportMissingImports] — uv tool venv only
         TimeoutError,
         sync_playwright,
     )

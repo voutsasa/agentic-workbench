@@ -73,9 +73,17 @@ genuinely is not there:
 1. brew (macOS) / scoop (Windows)
 2. the tool's own ecosystem
      Node-based    → npm    `npm install -g <pkg>`
-     Python-based  → pipx   `pipx install <pkg>`
+     Python-based  → uv     `uv tool install --python 3.12 <pkg>`
+                     pipx   `pipx install <pkg>`, only where install.md records why uv cannot work
 3. neither → record the project's own documented method verbatim
 ```
+
+**Within Python, uv comes before pipx.** Both install the same package from the same index, so this is
+a ranking of installers, not of ecosystems. `uv` is already a required prerequisite
+(`workstation/dependencies.toml`) and pipx is not. `--python 3.12` is pinned because uv otherwise
+picks whatever interpreter it finds first (3.11.15 on macOS, 2026-09-27). A tool that needs system
+libraries (WeasyPrint needs Pango and GObject) belongs on brew or scoop, which bundle them.
+`uv tool install weasyprint` installs cleanly and then fails at import.
 
 **Step 2 is a branch, not a ranking.** npm and pipx are never ranked against each other and you never
 fall through from one to the other: a tool is published to the ecosystem it is written in, and the
@@ -109,7 +117,7 @@ curl -s -o /dev/null -w "%{http_code}" \
 # npm
 curl -s https://registry.npmjs.org/<pkg>    # scoped: / becomes %2f
 
-# pipx
+# PyPI (uv tool, or pipx as the fallback)
 curl -s -o /dev/null -w "%{http_code}" https://pypi.org/pypi/<pkg>/json
 ```
 

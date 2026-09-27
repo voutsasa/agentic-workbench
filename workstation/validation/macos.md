@@ -3,8 +3,8 @@
 Five sections, in order. Each says what to run and what it should print. Record the results in this
 machine's file under [`../machines/`](../machines/README.md), not here.
 
-`$R` below is the clone, the `repo:` field of `~/.claude/machine.md`. `<pipx-python>` is
-`"$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python"`.
+`$R` below is the clone, the `repo:` field of `~/.claude/machine.md`. `<tool-python>` is
+`"$(uv tool dir)/playwright/bin/python"`.
 
 ## A. Config links and instruction loading
 
@@ -90,13 +90,13 @@ rows go stale.
 U=https://retirejs.github.io/retire.js/
 curl -sL -A "Mozilla/5.0" "$U" -o /tmp/raw.html
 defuddle parse /tmp/raw.html --md | wc -w
-<pipx-python> $R/workstation/agent/skills/fetch-to-markdown/scripts/render_page.py "$U" /tmp/r.html
+<tool-python> $R/workstation/agent/skills/fetch-to-markdown/scripts/render_page.py "$U" /tmp/r.html
 defuddle parse - --md --frontmatter < /tmp/r.html | wc -w
 ```
 
 **Expect** a raw count in the low hundreds against a rendered count in the thousands, and a rendered
 `title:` that is the real page, not *Page Not Found*. Running `render_page.py` under any interpreter
-but the pipx one **must** exit 2 naming the right one — that is the check that the guidance is true.
+but the uv tool one **must** exit 2 naming the right one — that is the check that the guidance is true.
 
 Where defuddle's output holds a raw `<table>`, finish through the extractor, per the skill's §2:
 

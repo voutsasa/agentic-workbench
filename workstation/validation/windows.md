@@ -7,8 +7,8 @@ note can cite *validation C* whichever box ran it. Record results in that machin
 Where a step's Windows behaviour is genuinely unknown, it says so. Correct this file from the run
 rather than trusting it.
 
-`$Root` below is the clone, the `repo:` field of `~/.claude/machine.md`. `<pipx-python>` is that
-venv's `Scripts\python.exe`, from `pipx environment --value PIPX_LOCAL_VENVS`.
+`$Root` below is the clone, the `repo:` field of `~/.claude/machine.md`. `<tool-python>` is the
+Playwright uv tool venv's `Scripts\python.exe`, under the directory `uv tool dir` prints.
 
 ## A. Config links and instruction loading
 
@@ -69,7 +69,7 @@ identical with and without `soffice` on `PATH`; that comparison has not been mad
 ```powershell
 $U = "https://retirejs.github.io/retire.js/"
 curl.exe -sL -A "Mozilla/5.0" $U | defuddle parse - --md | Measure-Object -Word
-& <pipx-python> $Root\workstation\agent\skills\fetch-to-markdown\scripts\render_page.py $U $env:TEMP\r.html
+& <tool-python> $Root\workstation\agent\skills\fetch-to-markdown\scripts\render_page.py $U $env:TEMP\r.html
 Get-Content $env:TEMP\r.html -Raw | defuddle parse - --md --frontmatter | Measure-Object -Word
 ```
 
@@ -77,8 +77,8 @@ Get-Content $env:TEMP\r.html -Raw | defuddle parse - --md --frontmatter | Measur
 title that is the real page. Re-measure the row in
 [`fixtures/hydrated-pages.md`](fixtures/hydrated-pages.md) first; rows go stale.
 
-`render_page.py`'s exit-2 message must name the pipx interpreter, as on macOS. It prints
-`sys.executable`, and the Windows pipx layout ends `Scripts\python.exe` rather than `bin/python` — a
+`render_page.py`'s exit-2 message must name the uv tool interpreter, as on macOS. It prints
+`sys.executable`, and the Windows venv layout ends `Scripts\python.exe` rather than `bin/python` — a
 difference the message has to carry, not assume away.
 
 ## E. The repo's own gates

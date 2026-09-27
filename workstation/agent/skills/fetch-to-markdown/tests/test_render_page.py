@@ -122,7 +122,7 @@ class TestMain(unittest.TestCase):
             self.assertEqual(0, code)
             self.assertEqual("<html>ok</html>", out.read_text(encoding="utf-8"))
 
-    def test_missing_playwright_exits_2_naming_the_pipx_interpreter(self) -> None:
+    def test_missing_playwright_exits_2_naming_the_uv_tool_interpreter(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:
             out = Path(tmp) / "rendered.html"
             with (
@@ -136,7 +136,8 @@ class TestMain(unittest.TestCase):
                 code = render_page.main(["https://example.org", str(out)])
             self.assertEqual(2, code)
             written = "".join(c.args[0] for c in err.write.call_args_list)
-            self.assertIn("PIPX_LOCAL_VENVS", written)
+            self.assertIn("$(uv tool dir)/playwright/", written)
+            self.assertNotIn("pipx", written)
             self.assertFalse(out.exists())
 
 

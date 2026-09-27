@@ -14,11 +14,11 @@ Render the page with the skill's tested script, then hand it to defuddle — see
 [`fetch-to-markdown`](../../agent/skills/fetch-to-markdown/SKILL.md) §1 for the full route:
 
 ```sh
-"$(pipx environment --value PIPX_LOCAL_VENVS)/playwright/bin/python" \
+"$(uv tool dir)/playwright/bin/python" \
   workstation/agent/skills/fetch-to-markdown/scripts/render_page.py <url> rendered.html
 ```
 
-**It runs under the pipx venv's interpreter** (`Scripts\python.exe` in place of `bin/python` on
+**It runs under the uv tool venv's interpreter** (`Scripts\python.exe` in place of `bin/python` on
 Windows), which is where `playwright` is importable; the project `.venv` does not have it unless the
 project adds it. The script waits for `networkidle` — `load` alone can fire before hydration and give
 the same empty shell `WebFetch` got — and falls back to `load` plus a settle wait when a site never

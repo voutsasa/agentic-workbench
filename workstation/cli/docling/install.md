@@ -3,7 +3,7 @@ tool: docling
 command: docling
 product: Docling
 used_by: fetch-to-markdown
-verified: 2026-08-26
+verified: 2026-09-27
 ---
 
 # docling — install
@@ -12,12 +12,17 @@ Binary: `docling`. Product: Docling. Python tool, installed the same way on both
 
 | Platform | Command |
 |---|---|
-| macOS | `pipx install docling` |
-| Windows | `pipx install docling` |
+| macOS | `uv tool install --python 3.12 docling` |
+| Windows | `uv tool install --python 3.12 docling` |
 
-**`pipx`, not `uv tool`, and the user runs it.** A global Python CLI install is the one exception to the
-uv-and-venv rule in [`AGENT-INSTRUCTIONS.md`](../../agent/AGENT-INSTRUCTIONS.md); an agent hands over
-this command and never runs it.
+**`uv tool` with Python 3.12, and the user runs it.** A global Python CLI install is the one exception to
+the uv-and-venv rule in [`AGENT-INSTRUCTIONS.md`](../../agent/AGENT-INSTRUCTIONS.md), where the order is
+Homebrew or Scoop, then `uv tool`, then pipx. Neither brew nor scoop packages it, and on macOS `uv tool` 2.130.0 converted a PDF with the same output as the earlier pipx 2.115.0 (2026-09-27). `--python 3.12` is pinned because uv otherwise picks
+whatever interpreter it finds first: 3.11.15 on macOS, 2026-09-27. An agent hands over this command and
+never runs it. Upgrade with `uv tool upgrade docling`.
+
+**Moving from a pipx install:** run `pipx uninstall docling` first, because both write `~/.local/bin/docling`.
+The layout and table models live in a shared cache, not in the tool's venv, so they survive the move.
 
 Verify with `docling --version`. It prints a block, one line per component, and **the version numbers deliberately differ** — do not read a mismatch as a fault. A sample, recorded on Windows when this page was written, kept for its shape rather than its numbers:
 
@@ -30,17 +35,18 @@ Python: cpython-312 (3.12.10)
 Platform: Windows-11-10.0.26200-SP0
 ```
 
-The `Python:` line is the interpreter **pipx picked**, not necessarily the machine's default — worth reading when a version trap below applies.
+The `Python:` line is the interpreter **the tool's venv runs**, not necessarily the machine's default — worth reading when a version trap below applies.
 
 ## A successful install can still be an unrunnable one
 
-`pipx install docling` succeeding proves nothing about whether the command runs. On a managed machine,
+A successful install proves nothing about whether the command runs. On a managed machine,
 endpoint security can quarantine the shim afterwards, and the failure then looks like a permissions
 fault rather than what it is — `Access is denied` before the process starts, with the ACL granting
 `FullControl`.
 
 The test that distinguishes the two is reading the file rather than executing it, and comparing
-against another pipx shim in the same directory:
+against another tool shim in the same directory. This was measured on pipx shims; whether uv tool
+shims are quarantined the same way is unverified:
 
 ```powershell
 [IO.File]::ReadAllBytes("$HOME\.local\bin\docling.exe")     | Measure-Object -Sum Length
@@ -126,6 +132,6 @@ Whether LibreOffice is present on a given machine is recorded in
 
 - **Needs Python 3.10 or higher.** 3.9 support was dropped in 2.70.0.
 - **Models download on first run, not at install.** The first conversion pulls layout and table-structure models; it is slow and needs network. Air-gapped use requires `--artifacts-path` pointing at a pre-fetched model directory.
-- **`pipx` gives the CLI only.** To `from docling.document_converter import DocumentConverter` inside a project, add it there — `uv add docling`.
+- **`uv tool` gives the CLI only.** To `from docling.document_converter import DocumentConverter` inside a project, add it there — `uv add docling`.
 
 Docs: [Installation](https://docling-project.github.io/docling/getting_started/installation/) · full page ingest: [reference.md](reference.md)
