@@ -71,3 +71,16 @@ bin/python
 # the rest are what those commands *create* when someone runs them. A validation
 # step whose output already existed would be proving nothing.
 /tmp/**
+
+# The confluence-publish skill's attachment examples: `![Alt](diagram.png)`,
+# `[Label](report.pdf)` and the `../shared/report.pdf` path-flattening case name
+# files in the Confluence content being published, never files in this repo.
+diagram.png
+report.pdf
+../shared/report.pdf
+# "the tool's `docs/renderers.md`" in confluence-publish: a file in the
+# confluence-sync-md repository, which this repo installs but does not hold.
+docs/renderers.md
+# `CONFLUENCE_PATH='/wiki/'` in confluence-sync-md/install.md is the URL path of
+# a Confluence Cloud site, not a filesystem path.
+/wiki/

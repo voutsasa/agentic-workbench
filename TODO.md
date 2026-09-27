@@ -17,16 +17,31 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 28. confluence-sync-md has no `reference.md`, and its global skills haven't run outside the demo
+
+Opened 2026-09-27. `SOURCES.md` registers confluence-sync-md at its Azure DevOps URL, but the README
+needs sign-in over plain HTTP (`curl` → `302`), and Azure DevOps addresses files as `?path=/docs/x.md`.
+`clean_publisher_md.py` resolves relative links with `urljoin`, which can't produce that form, so a
+conversion would carry dead links. The `confluence-publish` and `confluence-export` skills now run
+`uv run --no-sync -- confluence-sync-md`, which reached the global 0.6.0 from this repo and the pinned
+0.6.0 from `confluence-sync-md-demo`, but no publish or export has run through them since they moved
+here.
+
+**Closes when:** `workstation/cli/confluence-sync-md/reference.md` exists with its relative links in
+Azure DevOps' `?path=` form; and, in a repository with no pinned copy, one `publish check` and one
+`export preview` have run through the skills against a real target page.
+
 ### 27. The `uv tool` routes and `winget` for databricks-cli have not run on Windows
 
 Opened 2026-09-27. Global Python CLIs moved from pipx to `uv tool install --python 3.12`. On macOS,
 docling, playwright and unity-gateway were migrated and each passed a real-use check. On
 `ema-pf5n4xe7`, docling, playwright and unity-gateway are still on pipx or absent, and
-`winget install Databricks.DatabricksCLI` hasn't run. The pipx shim quarantine recorded in
+`winget install Databricks.DatabricksCLI` hasn't run. confluence-sync-md (`uv tool`, Python 3.14) hasn't
+been installed there either. The pipx shim quarantine recorded in
 `workstation/cli/docling/install.md` has not been tested against uv tool shims.
 
-**Closes when:** on `ema-pf5n4xe7`, the pipx copies are uninstalled, the four Windows rows have run,
-`inventory.py` reports all four tools `installed`, `render_page.py` runs under
+**Closes when:** on `ema-pf5n4xe7`, the pipx copies are uninstalled, the five Windows rows have run,
+`inventory.py` reports all five tools `installed`, `render_page.py` runs under
 `$(uv tool dir)\playwright\Scripts\python.exe`, and the result is recorded in that machine's note,
 including whether EDR touched the uv shims.
 

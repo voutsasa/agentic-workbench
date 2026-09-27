@@ -66,6 +66,8 @@ Repo skills serve this workbench; global skills work in any repo. The authoritat
 | [`fix-findings`](workstation/agent/skills/fix-findings/SKILL.md) | global | Applies the most recent review's findings by following the review skill's Apply mode, escalating judgement calls instead of guessing them. |
 | [`python-quality`](workstation/agent/skills/python-quality/SKILL.md) | global | Sets up code-quality checks for Python projects: linting, type checking, test coverage, complexity and dependency audits, calibrated to existing code. |
 | [`pdf-deliverable`](workstation/agent/skills/pdf-deliverable/SKILL.md) | global | Turns markdown or HTML into PDFs, from working notes to formal documents meeting a required page layout or archival standard. |
+| [`confluence-publish`](workstation/agent/skills/confluence-publish/SKILL.md) | global | Publishes Markdown to a Confluence Cloud page under a target page you name, with confluence-sync-md and md2conf. |
+| [`confluence-export`](workstation/agent/skills/confluence-export/SKILL.md) | global | Retrieves Confluence pages, subtrees or spaces as Markdown with cme, previewing the destination for approval first. |
 
 ## Layout
 

@@ -83,6 +83,8 @@ SKILLS = (
     "fix-findings",
     "pdf-deliverable",
     "fetch-to-markdown",
+    "confluence-publish",
+    "confluence-export",
 )
 
 #: Post-edit hook scripts under ``workstation/agent/hooks/``, linked with ``--hooks``.

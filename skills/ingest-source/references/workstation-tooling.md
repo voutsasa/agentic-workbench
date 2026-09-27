@@ -81,7 +81,8 @@ genuinely is not there:
 **Within Python, uv comes before pipx.** Both install the same package from the same index, so this is
 a ranking of installers, not of ecosystems. `uv` is already a required prerequisite
 (`workstation/dependencies.toml`) and pipx is not. `--python 3.12` is pinned because uv otherwise
-picks whatever interpreter it finds first (3.11.15 on macOS, 2026-09-27). A tool that needs system
+picks whatever interpreter it finds first (3.11.15 on macOS, 2026-09-27). A package whose
+`requires-python` floor is higher takes that floor instead: `confluence-sync-md` needs 3.14. A tool that needs system
 libraries (WeasyPrint needs Pango and GObject) belongs on brew or scoop, which bundle them.
 `uv tool install weasyprint` installs cleanly and then fails at import.
 

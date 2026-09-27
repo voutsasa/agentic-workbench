@@ -273,6 +273,7 @@ Each tool has a folder at `workstation/cli/<tool>/` with install commands, a qui
 * [typst](https://github.com/typst/typst)
 * [databricks-cli](https://docs.databricks.com/aws/en/dev-tools/cli/install)
 * [unity-gateway](https://github.com/databricks/unity-gateway)
+* [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md)
 
 #### MCP servers
 

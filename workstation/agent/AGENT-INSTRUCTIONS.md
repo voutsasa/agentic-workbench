@@ -75,8 +75,8 @@ is in the machine note, not here.
   mandate: do not migrate it or ignore the conflict unasked.
 - Python uses uv + pyproject.toml, always in a venv. The one exception is a global Python CLI tool
   listed in `workstation/cli/`. Its route is Homebrew (macOS) or Scoop (Windows) where a package
-  exists; otherwise `uv tool install --python 3.12 <spec>`; and `pipx` only where its `install.md`
-  records why uv cannot work. I run it, per principle 2. Ruff for linting and formatting;
+  exists; otherwise `uv tool install --python 3.12 <spec>` (or the package's own `requires-python`
+  floor where that is higher); and `pipx` only where its `install.md` records why uv cannot work. I run it, per principle 2. Ruff for linting and formatting;
   `pathlib.Path` over `os`; `python-dotenv` for env vars; `pymupdf` for PDFs. Use the project's pinned
   Python version; without one, ask before establishing it.
 - Browser automation and JS-hydrated page rendering use Playwright. Keep its Python binding aligned

@@ -206,6 +206,7 @@ See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command �
 * [typst](https://github.com/typst/typst) — Markup-based typesetting system; the PDF engine pandoc uses here in place of LaTeX.
 * [databricks-cli](https://docs.databricks.com/aws/en/dev-tools/cli/install) — Databricks' Go CLI; holds the OAuth login and issues tokens for the Genie MCP server.
 * [unity-gateway](https://github.com/databricks/unity-gateway) — Databricks' `ug` CLI; runs coding agents through AI Gateway and registers Databricks MCP servers.
+* [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md) — Publishes Markdown to Confluence Cloud with md2conf and exports pages back with cme.
 
 #### MCP servers
 
