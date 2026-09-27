@@ -318,8 +318,8 @@ Copy-Item workstation\agent\skills\review\scripts\pre-push.windows .git\hooks\pr
 ```
 
 **A mid-session edit to this section claimed the opposite and was wrong.** It said `.git/hooks/` held only
-git's fourteen `.sample` files, and [`../../TODO.md`](../../TODO.md) item 21 was opened on that basis; both
-are corrected, the item closed. Whatever the earlier check looked at, `Test-Path .git\hooks\pre-push`
+git's fourteen `.sample` files, and a `TODO.md` item was opened on that basis; both
+are corrected, the item closed in `8816462`. Whatever the earlier check looked at, `Test-Path .git\hooks\pre-push`
 returns `True` in this working tree and the hook demonstrably executes.
 
 It must be a **plain copy**, not a link — git will not run a hook through a junction. The 26 August check
@@ -504,7 +504,7 @@ the exemption notice and the evidence wording. The largest,
 `workstation/scripts/tests`, was omitted from the first record of this run and is the one holding
 `test_readme_skills.py`, `test_python_version.py` and `test_link_config.py`. The 134 is
 `review/tests`, which stood at 106 before this session's `register` check added 28. The last, 17, is
-`workstation/agent/hooks/tests`, expanded this session by item 14's fix. `ruff check .` and
+`workstation/agent/hooks/tests`, expanded this session by the `apply_patch` fix in `dae4ab4`. `ruff check .` and
 `ruff format --check .` both clean across the repo (98 files).
 
 `verify_claims.py --repo .` (offline tier) exited 1 on every run of this section until the last. First
@@ -530,7 +530,7 @@ are [`../../TODO.md`](../../TODO.md) item 20.
 
 Both remaining rows needed a change to `verify_claims.py` rather than to any document, and got one in this
 session: bracket-form matching for the first, and a repo-local flag-exemption file for the synonym. The
-gate is green here — [`../../TODO.md`](../../TODO.md) item 19, now closed, carries the detail and the
+gate is green here — `6572b7b`, which closed the `TODO.md` item, carries the detail and the
 eleven unit tests.
 
 Two docling claims in this file's own docling section looked like a third, worse gap: they returned

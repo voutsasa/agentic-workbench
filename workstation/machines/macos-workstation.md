@@ -227,7 +227,7 @@ in the repo root, System Prompt line quoted as displayed.
 One copy is C − A = 3.5k; B − A = 6.9k is two. System Tools (10.0k) and MCP Tools (667) were identical
 in all three runs. `~/.copilot/copilot-instructions.md` does not exist and
 `COPILOT_CUSTOM_INSTRUCTIONS_DIRS` is unset, so nothing user-level is in the difference. The duplicate
-is accepted, and the routes that would remove it were weighed in `TODO.md` item 10.
+is accepted, and the routes that would remove it were weighed in `TODO.md` item 10, deleted in `730ab39` (`git show 730ab39^:TODO.md`).
 
 **Re-measured 2026-09-19 on Copilot CLI 1.0.86** (`claude-sonnet-4.6`), in the scratch clone
 `~/tmp/wb-probe` with `~/.copilot/copilot-instructions.md` linked, `/context` first in each session.

@@ -17,6 +17,14 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 29. The *Closed* section below contradicts this file's own deletion rule
+
+Opened 2026-09-27 from the repo review; the user chose to delete the closed items. References into them
+from the machine notes and item 12 now cite commit SHAs instead, so nothing links to them any more. The
+deletion itself was refused by the session's permission classifier and is the user's to run.
+
+**Closes when:** `grep -c '^## Closed' TODO.md` prints 0.
+
 ### 28. confluence-sync-md has no `reference.md`, and its global skills haven't run outside the demo
 
 Opened 2026-09-27. `SOURCES.md` registers confluence-sync-md at its Azure DevOps URL, but the README
@@ -65,28 +73,14 @@ the old copy of the hook itself.
 .git\hooks\pre-push -Force` has run, `git ls-files --eol` shows `w/lf` for both files, and a `git push`
 prints the hook's `pre-push: ruff check and ruff format --check` line — recorded in the machine note.
 
-### 20. The corpus is near-empty on this machine — 1 of 76 entries ingested
+### 20. The corpus on this machine is 93 of 94 entries
 
-Opened 2026-09-21, measured rather than estimated: `repo_check.py --corpus` reported **0 of 76** and
-`docs/landing-zone/` did not exist at all. Nothing had recorded that state, while
-[`README.md`](README.md) advertises the ingestion pipeline as a core capability. Absent is not broken —
-the corpus is gitignored and rebuilt from [`SOURCES.md`](SOURCES.md) on request — but it being
-unrecorded was.
+Opened 2026-09-21 at **0 of 76**, with `docs/landing-zone/` absent. On 2026-09-27
+`repo_check.py --corpus` reports **93 of 94**, after `ado-remote-mcp` was ingested through the
+server-rendered route (`div.content`, the page's second one; markup-noise 0, no relative links). The
+one missing entry is `confluence-sync-md`, blocked on the Azure DevOps sign-in in item 28.
 
-The "delta" here is the whole register, so this is a full ingestion run, not a top-up. The preflight and
-the progress ledger a batch resumes from now exist as `repo_check.py --corpus --json`, one row per entry
-with its resolved destination.
-
-**One source has been ingested end to end to validate the route before the set**, per *start small*:
-`SOLID Relevance` (§2, a server-rendered Jekyll blog post) through the
-server-rendered route — curl, `extract_article.py` on the `div.blog-post` node, `pandoc -f html -t gfm`,
-`add_frontmatter.py`. All four quality checks passed on this machine: markup-noise count 0, no relative
-link targets, headings and the blockquote intact, and the file ends on the post's own last paragraph.
-The ledger moved to **1 of 76**. The remaining 75 are a deliberate long operation, the user's to
-schedule.
-
-**Closes when:** `repo_check.py --corpus` reports every entry present, or the user records a smaller
-target here and that target is met.
+**Closes when:** `repo_check.py --corpus` reports 94 of 94.
 
 ### 9. The Azure DevOps pipeline has never run
 
@@ -116,7 +110,7 @@ documentation drift found* — with the run URL recorded here before the item is
 Opened 2026-09-18, with `5949ef5`. Narrowed the same day: the review of `workstation/` applied in
 `e9b3263` exercised failing-test-first (step 4) — `test_link_config.py` failed with 2 failures and 1
 error against the unfixed `link_config.py` before the fix — and recording unfixed findings (step 8),
-into this file's items 16 and 17. Approve-each (step 2) did not run: the user answered the review's
+into this file's item 17 and one closed in `d419f95`. Approve-each (step 2) did not run: the user answered the review's
 decisions and then said to go ahead with all of it.
 
 **Closes when:** one review in Apply mode, with the user asking to approve each finding, offers one

@@ -5,7 +5,7 @@ Enables engineers to set up their workstation and work in an agent-enabled envir
 **Before you start**, the workstation needs two things this repo does not install:
 
 - **Required — Git, Python3, `uv`, Node.js/npm, and an AI coding assistant, externally provisioned.** The skills here are instructions an assistant carries out, so without one they do nothing. Claude Code and GitHub Copilot CLI both load them. `get-workstation-status` reports their presence and versions; it does not install or authenticate them. Git gets the clone; Python runs the workstation scripts; `uv` creates every project venv, which the global instructions require for any Python beyond those bootstrap scripts; Node.js/npm supplies the Node-based toolchain components.
-- **Recommended — a package manager for the toolchain.** The install routes in [`workstation/cli/`](workstation/cli/README.md) assume Homebrew on macOS and Scoop on Windows, with `pipx` or `npm` for tools published to Python or Node registries. winget is noted where a tool offers it. A package manager keeps every tool installable and upgradable with one command, instead of by hand.
+- **Recommended — a package manager for the toolchain.** The install routes in [`workstation/cli/`](workstation/cli/README.md) assume Homebrew on macOS and Scoop on Windows, with `uv tool` (pipx only where a tool's `install.md` records why uv cannot work) or `npm` for tools published to Python or Node registries. winget is noted where a tool offers it. A package manager keeps every tool installable and upgradable with one command, instead of by hand.
 
 ## Install
 

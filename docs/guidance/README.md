@@ -37,7 +37,7 @@ So the bar has a fourth clause in practice: **a note that tells you what to do w
 ## What does not belong
 
 - **Source material.** Ingested third-party content goes to `docs/landing-zone/`, addressed by the register.
-- **Machine description.** How a tool is installed or behaves here goes to `workstation/cli/<tool>/`, or `workstation/mcp/<server>/` for an MCP server. Guidance may *cite* those files, as the PDF note does, but a note that only describes this workstation is misfiled.
+- **Machine description.** How a tool is installed or behaves here goes to `workstation/cli/<tool>/`, or `workstation/mcp/<server>/` for an MCP server. Guidance may *cite* those files, but a note that only describes this workstation is misfiled.
 - **Per-project artefacts.** Constitutions and skills for a specific project are the workbench's *output*, produced elsewhere from this material.
 
 ## Format
