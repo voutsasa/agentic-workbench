@@ -105,6 +105,26 @@ class TestExtraction(unittest.TestCase):
             claim.verification_command, "pandoc --help 2>&1 | grep -F -- '--wrap'"
         )
 
+    def test_flags_after_a_bare_double_dash_are_not_the_outer_commands(self):
+        """`claude mcp add … -- npx … --authentication pat`: `--authentication`
+        belongs to the command after `--`, so `claude` must not be asked about it."""
+        text = (
+            "```\nclaude mcp add --transport stdio ado -e X=1 -- "
+            "npx -y @azure-devops/mcp org --authentication pat\n```\n"
+        )
+        found = [c.claim for c in by_kind(extract_from_text("s.md", text), "cli_flag")]
+        self.assertEqual(found, ["claude supports --transport"])
+
+    def test_inline_snippet_stops_at_a_bare_double_dash_too(self):
+        text = "Run `copilot mcp add db --timeout 5 -- ug mcp-proxy --url x --profile p`.\n"
+        found = [c.claim for c in by_kind(extract_from_text("s.md", text), "cli_flag")]
+        self.assertEqual(found, ["copilot supports --timeout"])
+
+    def test_a_double_dash_inside_a_flag_or_word_is_not_a_separator(self):
+        text = "```\ngit log --oneline --no-merges a--b\n```\n"
+        found = [c.claim for c in by_kind(extract_from_text("s.md", text), "cli_flag")]
+        self.assertEqual(found, ["git supports --oneline", "git supports --no-merges"])
+
     def test_flag_claim_is_dropped_when_no_binary_can_be_inferred(self):
         # No fenced block and not under workstation/cli, so there is no subject.
         self.assertEqual(

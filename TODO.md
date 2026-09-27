@@ -17,17 +17,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 29. `verify_claims.py` checks flags after `--` against the outer command
-
-Opened 2026-09-27. In `claude mcp add … -- npx … --authentication pat`, it reads `--authentication` as a
-`claude mcp` flag and refutes it (`workstation/mcp/ado-remote-mcp/setup.md:157`, refuted on `main`
-before this change). A `copilot mcp add … -- ug mcp-proxy --url …` line hit the same defect, and
-`workstation/mcp/databricks-mcp/setup.md` shows the resulting config instead to avoid it.
-
-**Closes when:** a unit test in `workstation/agent/skills/verify-docs/tests/` shows flags after a bare
-`--` are not attributed to the command before it, and `verify_claims.py --repo .` no longer refutes
-`ado-remote-mcp/setup.md:157`.
-
 ### 27. The `uv tool` routes and `winget` for databricks-cli have not run on Windows
 
 Opened 2026-09-27. Global Python CLIs moved from pipx to `uv tool install --python 3.12`. On macOS,

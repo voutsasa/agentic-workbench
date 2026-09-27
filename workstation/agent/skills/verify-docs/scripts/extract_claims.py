@@ -233,6 +233,16 @@ def subject_binary(text: str, path: str) -> str | None:
     return None
 
 
+#: A bare `--` token: everything after it is another command's argv
+#: (`claude mcp add … -- npx … --authentication`), not the head binary's flags.
+END_OF_OPTIONS_RE = re.compile(r"(?<!\S)--(?!\S)")
+
+
+def own_flags(command: str) -> list[str]:
+    """The long flags that belong to the command's head binary, in order, once each."""
+    return list(dict.fromkeys(FLAG_RE.findall(END_OF_OPTIONS_RE.split(command, 1)[0])))
+
+
 def flag_claim(subject: str | None, flag: str) -> tuple[str, str] | None:
     """Build a (claim, command) pair for a flag, or None when no binary is known."""
     if not subject:
@@ -319,7 +329,7 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
             add(
                 line_no, CLI_INVOCATION, command, "binary_present", f"command -v {head}"
             )
-            for flag in dict.fromkeys(FLAG_RE.findall(command)):
+            for flag in own_flags(command):
                 built = flag_claim(head, flag)
                 if built:
                     add(line_no, CLI_FLAG, built[0], "help_text", built[1])
@@ -362,7 +372,7 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
                 add(line_no, INSTALL, snippet, "registry_lookup", installed[1])
                 continue
             head = snippet.split()[0]
-            flags = list(dict.fromkeys(FLAG_RE.findall(snippet)))
+            flags = own_flags(snippet)
             short = SHORT_FLAG_RE.match(head)
             if short:
                 flags = [head]
