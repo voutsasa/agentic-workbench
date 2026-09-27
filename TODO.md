@@ -17,14 +17,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 29. The *Closed* section below contradicts this file's own deletion rule
-
-Opened 2026-09-27 from the repo review; the user chose to delete the closed items. References into them
-from the machine notes and item 12 now cite commit SHAs instead, so nothing links to them any more. The
-deletion itself was refused by the session's permission classifier and is the user's to run.
-
-**Closes when:** `grep -c '^## Closed' TODO.md` prints 0.
-
 ### 28. confluence-sync-md has no `reference.md`, and its global skills haven't run outside the demo
 
 Opened 2026-09-27. `SOURCES.md` registers confluence-sync-md at its Azure DevOps URL, but the README
@@ -144,7 +136,3 @@ the machine note's `repo:` field from outside this repo, without searching — r
 
 **Closes when:** a session is observed over-applying a rule because of the emphasis (then trim), or
 after a month of sessions without such a case (then drop).
-
-## Closed
-
-The user needs to remvoe manually the items in this section.
