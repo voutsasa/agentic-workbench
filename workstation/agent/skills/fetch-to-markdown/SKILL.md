@@ -97,9 +97,9 @@ python3 <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
 ```
 
 **Pass the page's own URL, not the site root**, as in the server-rendered route and for the same
-reason: root-relative, sibling and parent link targets all resolve against it. A site root alone
+reason: root-relative, sibling, parent and bare link targets all resolve against it. A site root alone
 leaves the sibling links `modelcontextprotocol.io` writes between its own docs pages pointing at
-nothing — the script's docstring spells the three forms out. `add_frontmatter.py` still needs the
+nothing — the script's docstring spells the four forms out. `add_frontmatter.py` still needs the
 rendered HTML, so fetch that too.
 
 **What the cleaner removes** — measured on `code.claude.com` and `docs.github.com`, 2026-09-26:
@@ -131,6 +131,15 @@ pandoc's gfm writer cannot map cleanly — `div`, `header`, `span`, `section`, i
 `<img>`s, `<style>`, empty bookmark anchors — and the chrome that sites put *inside* the article node:
 Antora's breadcrumbs and pagination, an "On this page" aside. The source's own text passes through
 untouched.
+
+Two more passes, both measured on docs.databricks.com (2026-09-27):
+
+- **It writes back end tags the source left out.** Minified pages omit the optional `</td>`, `</tr>`,
+  `</li>` and `</p>`. That is valid HTML5, but pandoc's HTML reader then flattens every table cell into
+  its own paragraph, and no markup check can see it. The extractor closes each element where HTML5
+  implies it, so the curl route keeps the table without a Playwright render.
+- **It keeps only `href` and `title` on a link.** pandoc's gfm writer emits a link carrying `target`,
+  `rel` or `id` as raw `<a …>` (23 on the Databricks CLI page).
 
 `add_frontmatter.py` then prepends the corpus frontmatter block — `title`, `site`, `source`, `domain`,
 `language`, `description`, `word_count` — that defuddle writes itself with `--frontmatter` on the
@@ -174,8 +183,8 @@ A conversion that exits 0 is not evidence. Run these:
 |---|---|
 | Headings and lists survived structurally, not flattened into one paragraph | read the first screen |
 | Tables are still tables, not run-on text — the usual docling/pandoc failure on complex layouts | read one |
-| No leftover markup noise: nav bars, cookie banners, JSX source, "Edit this page" | `grep -c "<div\|<header\|<span\|<svg\|<style\|<table\|<img" <dest>.md` → **must be 0** |
-| Every link resolves off-site | `grep -oE "\]\(\.{0,2}/?[^):]+\)" <dest>.md` → **must be empty**; a relative target means the URL argument was omitted |
+| No leftover markup noise: nav bars, cookie banners, JSX source, "Edit this page" | `grep -c "<div\|<header\|<span\|<svg\|<style\|<table\|<img\|<a " <dest>.md` → **must be 0** |
+| Every link resolves off-site | `grep -oE "\]\(\.{0,2}/?[^):]+\)" <dest>.md \| grep -v "^](#"` → **must be empty**; a relative target means the URL argument was omitted. In-page `#` anchors are fine |
 | PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries. Runs of tabs and spaces between words, and a table of contents rendered as a dot-leader table, are **accepted** (2026-09-18, DDD Reference): they come from the PDF's own text layer, change no meaning, and are not normalised |
 | **A `.docx` with diagrams: count the figures** | `grep -c "data:image/[a-z]*;base64" <dest>.md` against the source's *picture* count, `unzip -p <file>.docx word/document.xml \| grep -c "<pic:pic"`. Charts and shapes are counted differently — see below |
 

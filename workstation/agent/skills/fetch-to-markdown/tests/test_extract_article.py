@@ -395,6 +395,70 @@ class StrippingTests(unittest.TestCase):
         self.assertNotIn("Edit this page", out)
 
 
+class ImpliedEndTagTests(unittest.TestCase):
+    """docs.databricks.com minifies with optional end tags left out, which is valid
+    HTML5 — but pandoc's HTML reader then flattens every table cell into its own
+    paragraph, and no markup check notices. The extractor writes the tags back."""
+
+    def test_table_cells_rows_and_sections_are_closed(self):
+        html = (
+            '<div class="a"><table><thead><tr><th><p>A<th><p>B'
+            "<tbody><tr><td><p>1<td><p>2<tbody><tr><td><p>3<td><p>4</table></div>"
+        )
+        self.assertEqual(
+            extract(html, "div.a"),
+            "<table><thead><tr><th><p>A</p></th><th><p>B</p></th></tr></thead>"
+            "<tbody><tr><td><p>1</p></td><td><p>2</p></td></tr></tbody>"
+            "<tbody><tr><td><p>3</p></td><td><p>4</p></td></tr></tbody></table>",
+        )
+
+    def test_list_items_are_closed(self):
+        html = '<div class="a"><ul><li>one<li>two<ol><li>a<li>b</ol></ul></div>'
+        self.assertEqual(
+            extract(html, "div.a"),
+            "<ul><li>one</li><li>two<ol><li>a</li><li>b</li></ol></li></ul>",
+        )
+
+    def test_a_paragraph_is_closed_by_the_next_block(self):
+        html = '<div class="a"><p>one<p>two<ul><li>x</ul><p>three</div>'
+        self.assertEqual(
+            extract(html, "div.a"),
+            "<p>one</p><p>two</p><ul><li>x</li></ul><p>three</p>",
+        )
+
+    def test_well_formed_input_is_unchanged(self):
+        html = (
+            '<div class="a"><table><tr><td><p>1</p></td></tr></table>'
+            '<ul><li>x</li></ul><p>t <br> <img src="i.png"></p></div>'
+        )
+        self.assertEqual(
+            extract(html, "div.a"),
+            '<table><tr><td><p>1</p></td></tr></table><ul><li>x</li></ul><p>t <br> <img src="i.png"></p>',
+        )
+
+
+class LinkAttributeTests(unittest.TestCase):
+    """pandoc's gfm writer keeps a link as raw `<a …>` when it carries `target`,
+    `rel` or `id` (measured, pandoc 3.11): 23 of them in the Databricks CLI page."""
+
+    def test_only_href_and_title_survive(self):
+        html = (
+            '<p><a href="https://brew.sh/" target="_blank" rel="noopener noreferrer" '
+            'class="" id="k" title="Homebrew">Homebrew</a></p>'
+        )
+        self.assertEqual(
+            extract_article.trim_link_attributes(html),
+            '<p><a href="https://brew.sh/" title="Homebrew">Homebrew</a></p>',
+        )
+
+    def test_unquoted_href_and_other_tags_are_kept(self):
+        html = '<a href=/x target=_blank>X</a><abbr title="t">T</abbr><img class="c" src="i.png">'
+        self.assertEqual(
+            extract_article.trim_link_attributes(html),
+            '<a href="/x">X</a><abbr title="t">T</abbr><img class="c" src="i.png">',
+        )
+
+
 class AbsolutiseTests(unittest.TestCase):
     """The third argument resolves relative targets against the page's own URL.
 

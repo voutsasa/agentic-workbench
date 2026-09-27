@@ -186,12 +186,114 @@ def parse_selector(selector: str) -> tuple[str, str, str]:
     )
 
 
+#: Elements with no end tag at all; never pushed on the open-element stack.
+VOID = frozenset(
+    [
+        "area",
+        "base",
+        "br",
+        "col",
+        "embed",
+        "hr",
+        "img",
+        "input",
+        "link",
+        "meta",
+        "param",
+        "source",
+        "track",
+        "wbr",
+    ]
+)
+#: HTML5 optional end tags: a start tag in the key closes an open element in the
+#: first set, searching no further up than an element in the second (its scope).
+#: docs.databricks.com leaves every one of these out; pandoc's HTML reader then
+#: flattens tables into one paragraph per cell and silently drops list nesting.
+IMPLIED_CLOSE: dict[str, tuple[frozenset[str], frozenset[str]]] = {
+    "li": (frozenset({"li"}), frozenset({"ul", "ol"})),
+    "dt": (frozenset({"dt", "dd"}), frozenset({"dl"})),
+    "dd": (frozenset({"dt", "dd"}), frozenset({"dl"})),
+    "td": (frozenset({"td", "th"}), frozenset({"tr", "table"})),
+    "th": (frozenset({"td", "th"}), frozenset({"tr", "table"})),
+    "tr": (
+        frozenset({"td", "th", "tr"}),
+        frozenset({"thead", "tbody", "tfoot", "table"}),
+    ),
+    **{
+        section: (
+            frozenset({"td", "th", "tr", "thead", "tbody", "tfoot"}),
+            frozenset({"table"}),
+        )
+        for section in ("thead", "tbody", "tfoot")
+    },
+}
+#: Block-level start tags that end an open <p> sitting directly above them.
+CLOSES_P = frozenset(
+    [
+        "address",
+        "article",
+        "aside",
+        "blockquote",
+        "details",
+        "div",
+        "dl",
+        "fieldset",
+        "figcaption",
+        "figure",
+        "footer",
+        "form",
+        "h1",
+        "h2",
+        "h3",
+        "h4",
+        "h5",
+        "h6",
+        "header",
+        "hr",
+        "main",
+        "nav",
+        "ol",
+        "p",
+        "pre",
+        "section",
+        "table",
+        "ul",
+    ]
+)
+
+
 class ArticleExtractor(HTMLParser):
+    """Copy one node's markup, writing back any end tag the source left out.
+
+    Tags are copied as written. An element the source never closed is closed
+    where HTML5 implies it, when its container ends, or when the article ends,
+    so pandoc receives well-formed markup whether or not the page was minified.
+    """
+
     def __init__(self, tag: str, attr: str, value: str) -> None:
         super().__init__(convert_charrefs=False)
         self.tag, self.attr, self.value = tag, attr, value
-        self.depth: int | None = None  # tag-nesting depth once inside the target
+        self.inside = False
+        self.stack: list[str] = []  # open elements inside the target node
         self.chunks: list[str] = []
+
+    def _close_to(self, names: frozenset[str], scope: frozenset[str]) -> None:
+        """Close the outermost open element in ``names`` below the nearest scope boundary.
+
+        Outermost, so a new `<tbody>` ends the open `<th>`, `<tr>` and `<thead>` alike.
+        """
+        found: int | None = None
+        for index in range(len(self.stack) - 1, -1, -1):
+            if self.stack[index] in scope:
+                break
+            if self.stack[index] in names:
+                found = index
+        if found is not None:
+            self._pop_to(found)
+
+    def _pop_to(self, index: int) -> None:
+        while len(self.stack) > index:
+            self.chunks.append(f"</{self.stack.pop()}>")
 
     def _matches(self, tag: str, attrs: list[tuple[str, str | None]]) -> bool:
         if tag != self.tag:
@@ -202,35 +304,77 @@ class ArticleExtractor(HTMLParser):
         return self.value in raw.split() if self.attr == "class" else raw == self.value
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
-        if self.depth is None and self._matches(tag, attrs):
-            self.depth = 0
+        if not self.inside:
+            if self._matches(tag, attrs):
+                self.inside = True
             return
-        if self.depth is not None:
+        if tag in IMPLIED_CLOSE:
+            self._close_to(*IMPLIED_CLOSE[tag])
+        if tag in CLOSES_P and self.stack and self.stack[-1] == "p":
+            self._pop_to(len(self.stack) - 1)
+        self.chunks.append(self.get_starttag_text() or "")
+        if tag not in VOID:
+            self.stack.append(tag)
+
+    def handle_startendtag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
+        # `<br/>`, `<img .../>`: copied as written, never opened.
+        if self.inside:
             self.chunks.append(self.get_starttag_text() or "")
-            if tag == self.tag:
-                self.depth += 1
 
     def handle_endtag(self, tag: str) -> None:
-        if self.depth is None:
+        if not self.inside:
             return
-        if tag == self.tag:
-            if self.depth == 0:
-                self.depth = None
-                return
-            self.depth -= 1
-        self.chunks.append(f"</{tag}>")
+        if tag in self.stack:
+            # Everything opened after it and never closed ends here too.
+            self._pop_to(len(self.stack) - 1 - self.stack[::-1].index(tag))
+        elif tag == self.tag:
+            # The target node's own end tag: close whatever it still holds.
+            self._pop_to(0)
+            self.inside = False
+        elif tag not in VOID:
+            # A stray end tag with nothing to close; pandoc ignores it.
+            self.chunks.append(f"</{tag}>")
+
+    def close(self) -> None:
+        super().close()
+        if self.inside:
+            self._pop_to(0)
 
     def handle_data(self, data: str) -> None:
-        if self.depth is not None:
+        if self.inside:
             self.chunks.append(data)
 
     def handle_entityref(self, name: str) -> None:
-        if self.depth is not None:
+        if self.inside:
             self.chunks.append(f"&{name};")
 
     def handle_charref(self, name: str) -> None:
-        if self.depth is not None:
+        if self.inside:
             self.chunks.append(f"&#{name};")
+
+
+#: One whole `<a …>` opening tag, and one attribute inside it.
+LINK_OPEN = re.compile(r"<a\s[^>]*>", re.IGNORECASE)
+_ATTR = re.compile(r"""([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+)))?""")
+#: The only link attributes pandoc's gfm writer can express; any other one —
+#: `target`, `rel`, `id` (measured, pandoc 3.11) — makes it emit raw `<a …>`.
+KEPT_LINK_ATTRS = ("href", "title")
+
+
+def trim_link_attributes(html: str) -> str:
+    """Rewrite each `<a …>` to keep only ``href`` and ``title``, quoted."""
+
+    def rewrite(match: re.Match[str]) -> str:
+        found: dict[str, str] = {}
+        for attr in _ATTR.finditer(match.group(0)[2:-1]):
+            name = attr.group(1).lower()
+            if name in KEPT_LINK_ATTRS and name not in found:
+                value = next((g for g in attr.group(2, 3, 4) if g is not None), "")
+                found[name] = value.replace('"', "&quot;")
+        kept = "".join(f' {n}="{found[n]}"' for n in KEPT_LINK_ATTRS if n in found)
+        return f"<a{kept}>"
+
+    return LINK_OPEN.sub(rewrite, html)
 
 
 def main() -> int:
@@ -243,6 +387,7 @@ def main() -> int:
     html = Path(html_path).read_text(encoding="utf-8")
     parser = ArticleExtractor(tag, attr, value)
     parser.feed(html)
+    parser.close()
     article = "".join(parser.chunks).strip()
     if not article:
         wanted = f'<{tag} {attr}="...{value}...">' if attr else f"<{tag}>"
@@ -260,6 +405,7 @@ def main() -> int:
     article = DECORATIVE_IMG.sub("", article)
     article = SVG_TAG.sub("", article)
     article = DIV_TAG.sub("", article)
+    article = trim_link_attributes(article)
     if base_url:
         article = absolutise(article, base_url)
     sys.stdout.buffer.write(article.encode("utf-8"))

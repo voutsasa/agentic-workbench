@@ -20,7 +20,7 @@ not have.
 Usage: python clean_publisher_md.py <served.md> <dest.md> <page-url>
 
 `<page-url>` is the page's own URL, which every relative link target resolves
-against — `/x`, `./x` and `../x` alike. Frontmatter is not this script's job —
+against — `/x`, `./x`, `../x` and a bare `x/y` alike. Frontmatter is not this script's job —
 run `add_frontmatter.py` over the result, as the other routes do.
 
 Standard library only: this runs on a fresh clone before any venv exists.
@@ -57,7 +57,9 @@ ANCHOR_ONLY = re.compile(r"<(a|span)\s+id=\"[^\"]*\"\s*/>")
 DIV = re.compile(r"</?div(\s[^>]*)?>")
 SPAN = re.compile(r"<span(\s[^>]*)?>(.*?)</span>")
 KBD = re.compile(r"<kbd>(.*?)</kbd>")
-RELATIVE_LINK = re.compile(r"\]\((\.{0,2}/[^)\s]*)\)")
+# Any target with no scheme and no leading `#`: `/x`, `./x`, `../x` and a bare
+# `x/y.md` (the unity-gateway README links `tests/integration/README.md` that way).
+RELATIVE_LINK = re.compile(r"\]\((?![a-zA-Z][a-zA-Z0-9+.-]*:|#)([^)\s]+)\)")
 FENCE = re.compile(r"^\s*(```|~~~)")
 BLANK_RUN = re.compile(r"\n{3,}")
 
@@ -122,7 +124,7 @@ def transform_line(line: str, page_url: str) -> str:
     if "<ul>" in line:
         line = flatten_cell_list(line)
 
-    # `/x`, `./x` and `../x` all resolve against the page's own URL — the same
+    # `/x`, `./x`, `../x` and bare `x` all resolve against the page's own URL — the same
     # argument, and the same reason, as extract_article.py's third parameter.
     return RELATIVE_LINK.sub(lambda m: f"]({urljoin(page_url, m.group(1))})", line)
 

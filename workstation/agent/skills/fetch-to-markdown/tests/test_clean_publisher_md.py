@@ -162,6 +162,28 @@ class Links(unittest.TestCase):
             "[up](https://docs.github.com/en/copilot/concepts/prompting/x)", result
         )
 
+    def test_bare_relative_target_resolves_against_the_page(self):
+        """The unity-gateway README links `tests/integration/README.md` with no `./`."""
+        result = convert(
+            "# T\n\nSee [tests](tests/integration/README.md).\n",
+            base="https://github.com/databricks/unity-gateway/blob/main/README.md",
+        )
+        self.assertIn(
+            "[tests](https://github.com/databricks/unity-gateway/blob/main/tests/integration/README.md)",
+            result,
+        )
+
+    def test_fragments_schemes_and_absolute_targets_are_untouched(self):
+        source = "# T\n\n[a](#install) [b](mailto:x@y.org) [c](https://z.org/p) [d](http://q.org)\n"
+        result = convert(source)
+        for target in (
+            "(#install)",
+            "(mailto:x@y.org)",
+            "(https://z.org/p)",
+            "(http://q.org)",
+        ):
+            self.assertIn(target, result)
+
     def test_autolinks_are_not_treated_as_tags(self):
         result = convert("# T\n\nSee <https://example.com/a> for more.\n")
         self.assertIn("<https://example.com/a>", result)
