@@ -3,7 +3,7 @@ server: ado-remote-mcp
 package: none — hosted endpoint
 transport: http
 version_observed: n/a (hosted, no local version)
-verified: 2026-09-23
+verified: 2026-09-28
 registered: false
 pinned: false
 ---
@@ -35,6 +35,25 @@ local `npx @azure-devops/mcp` variant, and it is the *only* one that supports ei
 | --- | --- |
 | **GitHub Copilot CLI** | Nothing extra — it's a natively supported environment. |
 | **Claude Code** | A one-time, **org-wide** Microsoft Entra app registration (below). Cursor needs the same; Claude Desktop and Codex can't use the remote server at all — Entra doesn't support the dynamic client registration they require. |
+
+**Why Claude's plain catalog entry fails.** When only the shared HTTP entry is present, Claude Code
+attempts dynamic client registration. Azure DevOps MCP rejects it with *"Incompatible auth server:
+does not support dynamic client registration."* A tenant-specific client ID is therefore mandatory
+for Claude Code, not an optional configuration detail. The shared catalog cannot carry it because it
+is tenant-specific.
+
+**Choose the local server when that Entra registration is unavailable or when a PAT is required.**
+The remote server supports Entra OAuth only; the local `@azure-devops/mcp` server is the supported
+alternative for PAT authentication and a default project or team. Its setup is in
+[Local server — PAT and project defaults](#local-server--pat-and-project-defaults).
+
+**Why Copilot needs nothing and Claude does.** GitHub Copilot CLI is on Microsoft's own
+[supported-environments list](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server#supported-environments)
+alongside Visual Studio, Microsoft Foundry, and Copilot Studio — first-party Microsoft products
+Entra ID pre-registers and pre-consents in every tenant. Claude Code is third-party from Entra's
+side: no tenant has it pre-registered, so each tenant must create its own app registration before
+OAuth can start at all. This is a Microsoft-vs-third-party distinction, not a gap either this repo
+or Claude's config can close.
 
 ### GitHub Copilot CLI
 
@@ -107,6 +126,18 @@ field Claude needs and Copilot doesn't:
 }
 ```
 
+**Scope choice — personal vs. shared.** `-s project` above commits your client ID into the tracked
+`.mcp.json`, visible to every engineer who clones this repo. `-s user` instead writes to
+`~/.claude.json`, staying personal and untracked — swap `-s project` for `-s user` in the command if
+you don't want to commit it yet. The client ID itself isn't a secret, so committing it is safe once
+your tenant's app registration exists; making it the shared default for every EMA engineer using this
+repo is a deliberate call for whoever registers it first, not a side effect of getting your own
+connection working.
+
+Adding the `oauth` block doesn't affect Copilot CLI reading the same file: verified by adding a
+placeholder `oauth` block to `.mcp.json` and confirming `copilot mcp list` still shows
+`ado-remote-mcp (http)` unchanged, then reverting it (2026-09-28).
+
 **The shared catalog deliberately omits `oauth.clientId`.** It only works once the app
 registration above exists, it's specific to your tenant, and there's no way to verify
 one from this repo. Add it to your own `.mcp.json` once you have a real client ID —
@@ -131,8 +162,9 @@ entirely by the signed-in identity's real Azure DevOps permissions, remote or lo
 
 ## Local server — PAT and project defaults
 
-Use this when you specifically need a PAT or a fixed default project/team — the two
-things the remote server cannot do. It's the `stdio` npm package, `@azure-devops/mcp`.
+Use this when you specifically need a PAT, a fixed default project/team, or cannot obtain the
+tenant-level Claude Code app registration required by the remote server. It's the `stdio` npm package,
+`@azure-devops/mcp`.
 
 Authentication methods (`--authentication <value>` / `-a <value>`, default `interactive`):
 
