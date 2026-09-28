@@ -16,7 +16,7 @@ Binary: `jq`. Product: jq, the jqlang command-line JSON processor.
 
 Verify with `jq --version`; it prints `jq-<version>`.
 
-The official download page also supplies standalone macOS and Windows binaries, but this workbench
+The official releases page also supplies standalone macOS and Windows binaries, but this workbench
 uses the platform package manager so `jq` stays on `PATH` and receives the platform's normal updates.
 
 ## Traps
@@ -27,4 +27,4 @@ uses the platform package manager so `jq` stays on `PATH` and receives the platf
   `Authorization` header from a CLI response. Let `databricks_mcp.py` generate that command rather
   than inspecting `.access_token` interactively.
 
-Docs: [Download jq](https://jqlang.org/download/) · full page ingest: [reference.md](reference.md)
+Docs: [jq releases](https://jqlang.org/download/) · full page ingest: [reference.md](reference.md)
