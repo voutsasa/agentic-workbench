@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-27
+updated: 2026-09-28
 verified: never
 ---
 
@@ -17,19 +17,20 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 28. confluence-sync-md has no `reference.md`, and its global skills haven't run outside the demo
+### 28. The Windows Claude and Copilot setup has not run end to end, including MCP servers
 
-Opened 2026-09-27. `SOURCES.md` registers confluence-sync-md at its Azure DevOps URL, but the README
-needs sign-in over plain HTTP (`curl` → `302`), and Azure DevOps addresses files as `?path=/docs/x.md`.
-`clean_publisher_md.py` resolves relative links with `urljoin`, which can't produce that form, so a
-conversion would carry dead links. The `confluence-publish` and `confluence-export` skills now run
-`uv run --no-sync -- confluence-sync-md`, which reached the global 0.6.0 from this repo and the pinned
-0.6.0 from `confluence-sync-md-demo`, but no publish or export has run through them since they moved
-here.
+Opened 2026-09-28. `status.py --json` reports **READY WITH ACTIONS**: all required prerequisites,
+Claude Code 2.1.280, GitHub Copilot CLI 1.0.89, and the Playwright CLI are installed. The read-only
+`link_config.py --project --agent claude --agent copilot` report now has **22 of 22** links live, and
+`link_config.py --mcp` reports both catalog servers linked in `.mcp.json`. Copilot lists both workspace
+servers. Claude cannot connect to ado-remote-mcp because its Entra server does not support dynamic
+client registration; `workstation/mcp/ado-remote-mcp/setup.md` requires an org-wide Entra app
+registration and the project's OAuth client ID. Claude's drawio-mcp connection timed out after 30
+seconds.
 
-**Closes when:** `workstation/cli/confluence-sync-md/reference.md` exists with its relative links in
-Azure DevOps' `?path=` form; and, in a repository with no pinned copy, one `publish check` and one
-`export preview` have run through the skills against a real target page.
+**Closes when:** the Entra app registration, delegated permissions, and Claude project OAuth client
+configuration are in place; Claude successfully invokes both registered MCP servers; and Copilot
+completes its Entra sign-in and successfully invokes both servers from the same Windows setup.
 
 ### 27. The `uv tool` routes and `winget` for databricks-cli have not run on Windows
 

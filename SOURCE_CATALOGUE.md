@@ -1,6 +1,6 @@
 ---
 role: One-sentence capability summary per source, mirroring SOURCES.md
-updated: 2026-09-16
+updated: 2026-09-28
 verified: never
 ---
 
@@ -163,6 +163,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 
 ### 1. Agent working practice
 
+* [DPACT - A Framework for Identity, Accountability, and Task-Scoped Authority in Autonomous AI Agent Systems](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7307799) — Framework for establishing agent identity, accountability, and task-scoped authority in autonomous AI systems.
 * [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — Karpathy's pattern for LLM-maintained knowledge bases layering raw sources, an evolving wiki, and a governing schema.
 * [Agent Skills](https://agentskills.io/home) — Open standard for packaging reusable, on-demand agent capabilities as portable `SKILL.md` folders.
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — Anthropic on why newer models need fewer explicit constraints, cutting Claude Code's system prompt over 80%.
@@ -206,6 +207,7 @@ See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command �
 * [typst](https://github.com/typst/typst) — Markup-based typesetting system; the PDF engine pandoc uses here in place of LaTeX.
 * [databricks-cli](https://docs.databricks.com/aws/en/dev-tools/cli/install) — Databricks' Go CLI; holds the OAuth login and issues tokens for the Genie MCP server.
 * [unity-gateway](https://github.com/databricks/unity-gateway) — Databricks' `ug` CLI; runs coding agents through AI Gateway and registers Databricks MCP servers.
+* [jq](https://jqlang.org/) — Lightweight command-line JSON processor used by Claude’s Databricks MCP token-header helper.
 * [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md) — Publishes Markdown to Confluence Cloud with md2conf and exports pages back with cme.
 
 #### MCP servers

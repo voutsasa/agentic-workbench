@@ -27,15 +27,15 @@ uv sync
 **3. Check the workstation.** The report lists every prerequisite and CLI tool with its status, version and the command that fixes it, and names the skills each tool serves. It installs nothing and exits non-zero only when a required prerequisite fails. On a machine with no note in `workstation/machines/` yet, first follow [*Adding a machine*](workstation/machines/README.md#adding-a-machine).
 
 ```sh
-python3 workstation/scripts/status.py
+python workstation/scripts/status.py
 ```
 
 **4. Load the skills and instructions.**
 
 | You use | Run | It puts in place |
 |---|---|---|
-| Claude Code, alone or with Copilot | `python3 workstation/scripts/link_config.py --project --claude-md --apply` | `.claude/skills/` links, and `CLAUDE.md` holding `@AGENTS.md` |
-| GitHub Copilot only | `python3 workstation/scripts/link_config.py --project --apply` | `.claude/skills/` links. No `CLAUDE.md`: Copilot reads `AGENTS.md` directly, and reads `CLAUDE.md` too, so adding it would load the instructions twice |
+| Claude Code, alone or with Copilot | `python workstation/scripts/link_config.py --project --claude-md --apply` | `.claude/skills/` links, and `CLAUDE.md` holding `@AGENTS.md` |
+| GitHub Copilot only | `python workstation/scripts/link_config.py --project --apply` | `.claude/skills/` links. No `CLAUDE.md`: Copilot reads `AGENTS.md` directly, and reads `CLAUDE.md` too, so adding it would load the instructions twice |
 
 Then start the assistant in the repo — restart it if a session was already open, since instructions are read at session start — and run the [`setup-agents`](skills/setup-agents/SKILL.md) skill. It finds the AI assistants on your machine and sets them up with the shared instructions and skills. Re-run either command without `--apply` to check: it exits non-zero unless everything reads `linked`.
 

@@ -1,6 +1,6 @@
 ---
 role: Source register — source of truth for what belongs in the project
-updated: 2026-09-16
+updated: 2026-09-28
 verified: never
 ---
 
@@ -228,6 +228,7 @@ The per-project output layer: how work is specified, built, verified, and govern
 
 Governs how the agent works, not how the system is built. Feeds the agent working agreement in a constitution and the authoring of skills — never the architecture layers above.
 
+* [DPACT - A Framework for Identity, Accountability, and Task-Scoped Authority in Autonomous AI Agent Systems](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7307799)
 * [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 * [Agent Skills](https://agentskills.io/home)
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models)
@@ -273,6 +274,7 @@ Each tool has a folder at `workstation/cli/<tool>/` with install commands, a qui
 * [typst](https://github.com/typst/typst)
 * [databricks-cli](https://docs.databricks.com/aws/en/dev-tools/cli/install)
 * [unity-gateway](https://github.com/databricks/unity-gateway)
+* [jq](https://jqlang.org/)
 * [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md)
 
 #### MCP servers

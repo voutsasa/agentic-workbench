@@ -99,6 +99,7 @@ Each row is named by the **command you type**, which is often not the package na
 | `typst` | Typst | [`typst/`](typst/) |
 | `databricks` | Databricks CLI | [`databricks-cli/`](databricks-cli/) |
 | `ug` / `ucode` | Unity Gateway (Databricks) | [`unity-gateway/`](unity-gateway/) |
+| `jq` | jq | [`jq/`](jq/) |
 | `confluence-sync-md` / `md2conf` / `cme` | confluence-sync-md | [`confluence-sync-md/`](confluence-sync-md/) |
 
 ## Do not cross ecosystems by name
