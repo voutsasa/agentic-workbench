@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-28
+updated: 2026-09-29
 verified: never
 ---
 
@@ -16,6 +16,50 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 30. The DPACT attended-assistant adoption plan has not been ratified or implemented
+
+Opened 2026-09-29. The DPACT review identifies this workbench as an attended command-line assistant
+environment, not an identity platform. Adoption therefore begins with a local governance profile and
+evidence model rather than claiming DPACT compliance or adding more prompt rules. The staged plan is:
+
+1. Define the attended-assistant profile: principals, agent identities, task purpose, effect classes,
+   approval rules, expiry, retention, and the boundary between repository and production-platform
+   controls (1–2 engineer-days).
+2. Inventory Claude, Copilot, MCP servers, CLI tools, credential sources, owners, data classes, and
+   permitted effects (1–2 engineer-days).
+3. Specify and test a minimal task/grant and redacted audit-event schema, without retaining
+   chain-of-thought or secrets (2–3 engineer-days).
+4. Run an observe-only MCP policy and audit pilot; item 29 supplies the Entra OAuth
+   on-behalf-of gateway route for one read-only external call (4–7 engineer-days).
+5. Enforce explicit approval and task expiry for write, external-disclosure, configuration, and other
+   high-impact effects only after the pilot supplies evidence (5–10 engineer-days).
+6. Assess an identity-provider and tool-gateway production architecture for regulated, production, or
+   autonomous workloads; this requires IAM, platform, security, and vendor ownership (3–6 weeks,
+   excluding approvals).
+
+**Closes when:** the scope and owners are recorded in a versioned architecture decision; stages 1–3
+have passing schema and inventory checks; the item 29 pilot produces allow, deny, and audit evidence;
+the decision to enforce stage 5 or defer it is recorded with its risk rationale; and production-only
+controls are explicitly assigned or excluded.
+
+### 29. A DPACT-compatible Entra OBO policy-gateway proof of concept has not run
+
+Opened 2026-09-29. The DPACT review recommends a repo-local, read-only proof of concept before any
+global assistant enforcement: Microsoft Entra ID remains the identity provider; an open-source
+gateway evaluates the inbound delegated user token, performs the Entra OAuth on-behalf-of exchange
+for one downstream MCP/API, and keeps its confidential-client credential outside the agent runtime.
+OPA is the proposed policy decision point and decision-log source. This does not by itself create a
+verifiable agent identity or task-scoped authority, so the gateway must also hold and audit a trusted
+task, effect, approval, and expiry record rather than trust agent-supplied headers. No component has
+been selected, installed, or configured.
+
+**Closes when:** a versioned architecture decision selects the gateway and audit store; a read-only
+route accepts a valid Entra token and obtains only its required downstream delegated token; a
+resource-, operation-, effect-, and expiry-aware policy allows and denies representative calls; one
+correlated audit trace reconstructs the principal, agent, task, policy decision, token exchange, and
+outcome; and a security review confirms that neither the agent nor its prompts can access the
+gateway's confidential-client credential.
 
 ### 28. The Windows Claude and Copilot setup has not run end to end, including MCP servers
 
