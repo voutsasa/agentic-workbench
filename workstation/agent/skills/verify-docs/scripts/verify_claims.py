@@ -38,6 +38,7 @@ import shutil
 import ssl
 import subprocess
 import sys
+import tempfile
 import threading
 import tomllib
 import urllib.error
@@ -512,7 +513,9 @@ def help_subject(
             if token.endswith(SCRIPT_SUFFIXES):
                 for _base, candidate in candidate_paths(repo_root, doc, token):
                     if candidate.is_file():
-                        return ([head, str(candidate)], f"{head} {Path(token).name}")
+                        # Absolute: the probe runs in a scratch directory.
+                        script = str(candidate.resolve())
+                        return ([head, script], f"{head} {Path(token).name}")
                 return "no-script"  # named a script that is not here
         return "no-script"  # an interpreter with no script
     # A bare word before the flag is a subcommand: `git diff --stat`. Keep at
@@ -644,16 +647,21 @@ class Verifier:
         )
         if not executable:
             return None
+        # A probe runs in a throwaway directory: some tools write there even for
+        # --help (`db2dbml` leaves `dbml-error.log`), and the caller's cwd is
+        # usually the repo under check. `help_subject` makes script paths absolute.
         try:
-            done = subprocess.run(
-                [executable, *argv[1:]],
-                check=False,  # the text is under test, not the status
-                capture_output=True,
-                text=True,
-                timeout=timeout,
-                errors="replace",
-                stdin=subprocess.DEVNULL,
-            )
+            with tempfile.TemporaryDirectory() as scratch:
+                done = subprocess.run(
+                    [executable, *argv[1:]],
+                    check=False,  # the text is under test, not the status
+                    capture_output=True,
+                    text=True,
+                    timeout=timeout,
+                    errors="replace",
+                    stdin=subprocess.DEVNULL,
+                    cwd=scratch,
+                )
         except (OSError, subprocess.SubprocessError):
             return None
         # A piped man page (`git diff --help`) still carries nroff overstrike:

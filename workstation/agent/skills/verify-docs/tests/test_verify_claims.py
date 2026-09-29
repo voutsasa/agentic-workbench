@@ -484,6 +484,31 @@ class TestManPageOverstrike(unittest.TestCase):
         self.assertIn("--staged is a synonym", hit[1])
 
 
+class TestProbeWorkingDirectory(unittest.TestCase):
+    """A probed tool may write into its cwd: `db2dbml` leaves `dbml-error.log`."""
+
+    def test_a_probe_leaves_no_file_where_the_verifier_runs(self):
+        with (
+            tempfile.TemporaryDirectory() as caller,
+            tempfile.TemporaryDirectory() as src,
+        ):
+            script = Path(src) / "noisy.py"
+            script.write_text(
+                "from pathlib import Path\n"
+                "Path('dbml-error.log').write_text('x')\n"
+                "print('usage: noisy [--out-file]')\n",
+                encoding="utf-8",
+            )
+            previous = Path.cwd()
+            os.chdir(caller)
+            try:
+                output = Verifier(Path(src)).help_output(["python", str(script)])
+            finally:
+                os.chdir(previous)
+            self.assertIn("--out-file", output or "")
+            self.assertEqual(list(Path(caller).iterdir()), [])
+
+
 class TestSafeConcurrentHelp(unittest.TestCase):
     def test_git_never_invokes_browser_oriented_long_help(self):
         done = mock.Mock(stdout="usage: git diff [--stat]\n", stderr="")
