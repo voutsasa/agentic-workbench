@@ -83,17 +83,6 @@ OAuth client ID.
 configuration are in place; and Claude successfully invokes an Azure DevOps MCP tool from the Windows
 setup.
 
-### 25. The README *Install* steps have not run on Windows
-
-Opened 2026-09-22. `README.md` § *Install* gained `uv sync`, the pre-push gate and `status.py` as steps
-1–3; on macOS they ran end to end on a fresh clone (`uv sync` installed `pytest` and `ruff`, `status.py`
-reported `READY`). The Windows pre-push step is now validated in item 24's recorded evidence, but no
-evidence yet establishes that `uv sync` and `status.py` ran in a fresh Windows clone.
-
-**Closes when:** on `ema-pf5n4xe7`, a fresh clone runs `uv sync`, then
-`python workstation\scripts\status.py` exits 0 with a Requirement cell reading `workstation tool for
-fetch-to-markdown, pdf-deliverable` on the Pandoc row — recorded in the machine note.
-
 ### 20. The corpus on this machine is 93 of 94 entries
 
 Opened 2026-09-21 at **0 of 76**, with `docs/landing-zone/` absent. On 2026-09-27
