@@ -17,13 +17,71 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 39. A bare-integer version claim is now refuted
+
+Opened 2026-09-29. `verify_claims.py` compares version claims against `VERSION_TOKEN_RE` tokens, which
+need at least one dot, so a tool whose `--version` prints only `11` fails a true "version 11" claim.
+The old substring test accepted it. No claim of that shape is known in the repo.
+
+**Closes when:** a test pins the behaviour for a single-integer version — accepted if the tool prints
+it as its version, or documented as unsupported.
+
+### 38. `verify_claims.py` names the wrong subject in one help-text claim
+
+Opened 2026-09-29. For line 19 of `workstation/cli/dbml-cli/quick_start.md` (`db2dbml supports --out-file`) the
+evidence reads "All is not on PATH here": the extractor takes a word of prose, not `db2dbml`, as the
+binary. HEAD behaves the same, so this predates the 2026-09-29 fixes.
+
+**Closes when:** a regression test reproduces the wrong subject and the claim is verified against
+`db2dbml`.
+
+### 37. A first push whose tip is already on the default branch verifies nothing
+
+Opened 2026-09-29. The pre-push hook diffs a new branch against the remote default branch, else `main`,
+else `master`. When the pushed tip is that branch's tip — `main` to a new, empty remote — the diff is
+empty, so `verify_claims.py` never runs. Measured in a throwaway repo pushing to a local bare remote.
+
+**Closes when:** the hook checks the pushed markdown in that case too, with a test in
+`workstation/agent/skills/review/tests/test_pre_push.py`.
+
+### 36. The Copilot ruff hook may never run on Windows
+
+Opened 2026-09-29. `workstation/agent/hooks/ruff-on-edit.copilot.json` has only a `bash` command.
+If Copilot CLI on Windows runs the `powershell` field, the hook is silently inactive there. Unverified:
+no Copilot session has been observed editing a `.py` file on Windows.
+
+**Closes when:** a Windows Copilot CLI edit to a `.py` file shows ruff running, or the registration
+gains a `powershell` entry that is observed running.
+
+### 35. The macOS link table is stale
+
+Opened 2026-09-29. `workstation/machines/macos-workstation.md` still shows the 15-row table; `SKILLS`
+now has nine skills, and the Windows re-run on 2026-09-29 reported 21 of 21.
+
+**Closes when:** `workstation/scripts/link_config.py --agent claude --agent copilot` is run on the macOS
+machine and its output replaces that table.
+
+### 34. The symlinked pre-push hook path is untested
+
+Opened 2026-09-29. The hook now finds `repo_check.py` and `verify_claims.py` beside its own real
+location, following symlinks. `test_symlinked_hook_resolves_to_its_real_location` skips on the Windows
+machine, which has no symlink privilege; the Windows shim path is tested and was run end to end.
+
+**Closes when:** that test runs unskipped and passes on macOS, and one real `git push` from a repo other
+than the workbench runs the linked hook there.
+
 ### 33. Claude has not validated the Windows drawio-mcp connection
 
 Opened 2026-09-29. The catalog entry is linked, but Claude's `drawio-mcp` connection timed out after
 30 seconds. This is independent of the Azure DevOps MCP OAuth requirement in item 28.
 
-**Closes when:** Claude reports `drawio-mcp` connected and successfully invokes one Draw.io tool from
-the Windows setup.
+Also 2026-09-29, in a later Windows Claude Code session: `drawio-mcp` connected and its tools were
+offered, while `ado-remote-mcp` failed to connect with "Incompatible auth server: does not support
+dynamic client registration" — the same failure item 28 already tracks. No Draw.io tool was actually
+invoked in that session, so the connection is observed but unproven.
+
+**Closes when:** Claude successfully invokes one Draw.io tool from the Windows setup — a reported
+connection alone does not close this.
 
 ### 30. The DPACT attended-assistant adoption plan has not been ratified or implemented
 
@@ -83,14 +141,17 @@ OAuth client ID.
 configuration are in place; and Claude successfully invokes an Azure DevOps MCP tool from the Windows
 setup.
 
-### 20. The corpus on this machine is 93 of 94 entries
+### 20. The corpus is not fully ingested on every machine
 
 Opened 2026-09-21 at **0 of 76**, with `docs/landing-zone/` absent. On 2026-09-27
-`repo_check.py --corpus` reports **93 of 94**, after `ado-remote-mcp` was ingested through the
-server-rendered route (`div.content`, the page's second one; markup-noise 0, no relative links). The
-one missing entry is `confluence-sync-md`, blocked on the Azure DevOps sign-in in item 28.
+`repo_check.py --corpus` reported 93 of the register's then-94 entries on this machine, after
+`ado-remote-mcp` was ingested through the server-rendered route (`div.content`, the page's second
+one; markup-noise 0, no relative links). The register has grown since — per-machine and register
+counts are not tracked here, because both drift independently and this file is not the ledger for
+either. The known-outstanding gap is `confluence-sync-md`, blocked on the Azure DevOps sign-in in
+item 28.
 
-**Closes when:** `repo_check.py --corpus` reports 94 of 94.
+**Closes when:** every entry is ingested on each machine — `repo_check.py --corpus` reports N of N.
 
 ### 9. The Azure DevOps pipeline has never run
 
