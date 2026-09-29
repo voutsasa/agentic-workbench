@@ -17,14 +17,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 43. The `setup-mcp-servers` skill has not shown the Databricks parameter guide
-
-Opened 2026-09-29. `databricks_mcp.py --help` now ends with `PARAMETER_GUIDE`, unit-tested, and the
-skill's § 2 tells the agent to show that section verbatim. No session has run the skill since.
-
-**Closes when:** a `setup-mcp-servers` run for Databricks shows the guide's *Where each Databricks
-value comes from* section unparaphrased before asking for the profile.
-
 ### 41. No `/api/2.0/mcp/` Databricks server has connected yet
 
 Opened 2026-09-29. `workstation/scripts/databricks_mcp.py` now prints these servers
@@ -32,16 +24,13 @@ Opened 2026-09-29. `workstation/scripts/databricks_mcp.py` now prints these serv
 assumptions are unproven: that these URLs need no `?o=` query string, and that the CLI login's
 `all-apis` scope covers `genie` and `ai-search`.
 
+Blocked on 2026-09-29, on the Windows machine: `databricks auth profiles` showed both profiles for
+`adb-1279343764318407` as `Valid NO`. `genie list-spaces` and `vector-search-endpoints list-endpoints`
+both failed with `Unauthorized network access to workspace: 1279343764318407`. An earlier session had
+seen both lists come back empty. So no Genie space or AI Search index is yet known to this identity.
+
 **Closes when:** one Genie Agent and one AI Search server each answer a read-only tool call from
 Claude Code and from Copilot CLI, and the generator is corrected for whatever that run shows.
-### 39. A bare-integer version claim is now refuted
-
-Opened 2026-09-29. `verify_claims.py` compares version claims against `VERSION_TOKEN_RE` tokens, which
-need at least one dot, so a tool whose `--version` prints only `11` fails a true "version 11" claim.
-The old substring test accepted it. No claim of that shape is known in the repo.
-
-**Closes when:** a test pins the behaviour for a single-integer version — accepted if the tool prints
-it as its version, or documented as unsupported.
 
 ### 37. A first push whose tip is already on the default branch verifies nothing
 

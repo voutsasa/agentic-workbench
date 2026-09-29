@@ -498,6 +498,39 @@ class TestManPageOverstrike(unittest.TestCase):
         self.assertIn("--staged is a synonym", hit[1])
 
 
+class TestBareIntegerVersion(unittest.TestCase):
+    """VERSION_TOKEN_RE needs a dot, so `version 11` was refuted against `11`."""
+
+    def verdict(self, expected: str, output: str) -> str:
+        verifier = Verifier(Path("."))
+        with mock.patch.object(verifier, "version_text", return_value=output):
+            return verifier.verify_version(
+                claim("version", f"tool reports version {expected}")
+            )[2]
+
+    def test_a_tool_printing_only_the_integer_verifies_it(self):
+        for output in ("11\n", "tool 11\n", "tool version v11 (build 2024)\n"):
+            with self.subTest(output=output):
+                self.assertEqual(VERIFIED, self.verdict("11", output))
+
+    def test_a_different_integer_is_refuted(self):
+        self.assertEqual(REFUTED, self.verdict("11", "tool 12\n"))
+
+    def test_an_integer_inside_another_number_does_not_match(self):
+        for output in (
+            "tool 110\n",
+            "tool 2011\n",
+            "tool 0.11\n",
+            "build-11a\n",
+            "tool 3 (built 2024-11-05)\n",
+        ):
+            with self.subTest(output=output):
+                self.assertEqual(REFUTED, self.verdict("11", output))
+
+    def test_a_bare_major_still_matches_a_dotted_version(self):
+        self.assertEqual(VERIFIED, self.verdict("11", "tool 11.2.0\n"))
+
+
 class TestProbeWorkingDirectory(unittest.TestCase):
     """A probed tool may write into its cwd: `db2dbml` leaves `dbml-error.log`."""
 

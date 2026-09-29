@@ -557,6 +557,19 @@ def version_matches(expected: str, token: str) -> bool:
     return have == want or any(have.startswith(want + sep) for sep in ".-+")
 
 
+def bare_version_in(expected: str, text: str) -> bool:
+    """A dotless version such as `11`, standing alone in the tool's output.
+
+    `VERSION_TOKEN_RE` needs a dot, so a tool printing only `11` yields no token.
+    Dots and hyphens bound the match on both sides, so `0.11`, `110` and the
+    month in `2024-11-05` do not verify it.
+    """
+    want = expected.lstrip("v")
+    if not want.isdigit():
+        return False
+    return re.search(rf"(?<![\w.-])v?{want}(?![\w.-])", text) is not None
+
+
 REGISTRY_API = {
     "npm view": ("npm", "https://registry.npmjs.org/{pkg}"),
     "pip index versions": ("PyPI", "https://pypi.org/pypi/{pkg}/json"),
@@ -996,7 +1009,9 @@ class Verifier:
                 UNVERIFIABLE,
             )
         found = VERSION_TOKEN_RE.findall(text)
-        if any(version_matches(expected, token) for token in found):
+        if any(version_matches(expected, token) for token in found) or (
+            bare_version_in(expected, text)
+        ):
             return ("binary_version", clip(text.splitlines()[0]), VERIFIED)
         actual = found[0] if found else clip(text.splitlines()[0])
         return ("binary_version", f"reports {actual}, doc says {expected}", REFUTED)
