@@ -494,7 +494,7 @@ class TestSafeConcurrentHelp(unittest.TestCase):
         ):
             hit = Verifier(Path(".")).find_flag(["git", "diff"], "--stat")
         self.assertIsNotNone(hit)
-        self.assertEqual(run.call_args.args[0], ["git", "diff", "-h"])
+        self.assertEqual(run.call_args.args[0], ["/usr/bin/git", "diff", "-h"])
         self.assertNotIn("--help", run.call_args.args[0])
 
     def test_concurrent_requests_execute_one_help_probe(self):
@@ -1399,6 +1399,61 @@ class TestReportAndCollection(unittest.TestCase):
             claims = collect_claims(root, ["a.md", "b.md"])
             self.assertEqual(len(claims), len({c.id for c in claims}))
             self.assertEqual(sorted(c.id for c in claims), [c.id for c in claims])
+
+
+class TestVersionTokenMatch(unittest.TestCase):
+    """A documented version must match a whole version token, not a substring."""
+
+    GIT = "git version 2.55.0.windows.5\n"
+
+    def verdict(self, expected: str, output: str = GIT) -> str:
+        with TempRepo({}) as root:
+            verifier = Verifier(root)
+            with mock.patch.object(verifier, "version_text", return_value=output):
+                return verifier.verify_version(
+                    claim("version", f"git reports version {expected}")
+                )[2]
+
+    def test_a_substring_of_the_version_is_refuted(self):
+        self.assertEqual(self.verdict("5.0"), REFUTED)
+        self.assertEqual(self.verdict("2.5"), REFUTED)
+
+    def test_the_exact_version_is_verified(self):
+        self.assertEqual(self.verdict("2.55.0"), VERIFIED)
+        self.assertEqual(self.verdict("v2.55.0"), VERIFIED)
+
+    def test_a_dotted_prefix_at_a_component_boundary_is_verified(self):
+        self.assertEqual(self.verdict("2.55"), VERIFIED)
+
+
+class TestResolvedExecutable(unittest.TestCase):
+    """Windows cannot start npm's `mmdc.CMD` shim by bare name; run what `which` found."""
+
+    def test_the_resolved_path_is_what_gets_run(self):
+        resolved = r"C:\npm\mmdc.CMD"
+        done = mock.Mock(stdout="11.4.0\n", stderr="")
+        with (
+            TempRepo({}) as root,
+            mock.patch("verify_claims.shutil.which", return_value=resolved),
+            mock.patch("verify_claims.subprocess.run", return_value=done) as run,
+        ):
+            output = Verifier(root).version_text("mmdc")
+        self.assertEqual(output, "11.4.0\n")
+        self.assertEqual(run.call_args.args[0][0], resolved)
+
+
+class TestExplicitFilesWithoutClaims(unittest.TestCase):
+    """Prose-only files named with --files are a pass, not a refusal."""
+
+    def test_explicit_files_with_no_claims_exit_zero(self):
+        out = io.StringIO()
+        with (
+            TempRepo({"doc.md": "Just prose, nothing to check.\n"}) as root,
+            contextlib.redirect_stdout(out),
+        ):
+            code = main(["--repo", str(root), "--files", "doc.md"])
+        self.assertEqual(code, 0)
+        self.assertIn("no claims", out.getvalue())
 
 
 if __name__ == "__main__":

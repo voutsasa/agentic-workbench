@@ -8,19 +8,22 @@ reaches a shell — verifiers are built from structured fields and run with
 |---|---|
 | `extract_claims.py` | Finds candidate claims and *proposes* a command for each. Decides nothing. |
 | `verify_claims.py` | Executes a verifier per claim and returns a verdict. Exits non-zero on any `REFUTED`. |
-| `../tests/test_extract_claims.py` | 35 tests. `python3 -m unittest discover -s tests` from the skill root. |
-| `../tests/test_verify_claims.py` | 125 tests, including both regression classes below. |
+| `../tests/test_extract_claims.py` | Extractor tests. `<venv-python> -m unittest discover -s tests -t tests` from the skill root. |
+| `../tests/test_verify_claims.py` | Verifier tests, including both regression classes below. Same command. |
+
+`<venv-python>` is the calling project's venv interpreter — `.venv/bin/python`
+on macOS, `.venv\Scripts\python.exe` on Windows — never a global `python3`.
 
 ## verify_claims.py
 
 ```bash
-python3 verify_claims.py --repo .                      # offline tier, whole repo
-python3 verify_claims.py --repo . --files a.md b.md    # just these documents
-python3 verify_claims.py --repo . --kind version       # one claim kind
-python3 verify_claims.py --repo . --online             # add URLs and registries
-python3 verify_claims.py --repo . --strict             # UNVERIFIABLE fails too
-python3 verify_claims.py --repo . --json               # machine-readable
-python3 verify_claims.py --repo . --no-allow-file      # ignore both allow files
+<venv-python> verify_claims.py --repo .                      # offline tier, whole repo
+<venv-python> verify_claims.py --repo . --files a.md b.md    # just these documents
+<venv-python> verify_claims.py --repo . --kind version       # one claim kind
+<venv-python> verify_claims.py --repo . --online             # add URLs and registries
+<venv-python> verify_claims.py --repo . --strict             # UNVERIFIABLE fails too
+<venv-python> verify_claims.py --repo . --json               # machine-readable
+<venv-python> verify_claims.py --repo . --no-allow-file      # ignore both allow files
 ```
 
 ### The two tiers
@@ -51,9 +54,9 @@ tool that is actually hung, and each binary is probed once per run and cached.
 
 | Code | Meaning |
 |---|---|
-| `0` | nothing refuted |
+| `0` | nothing refuted — including files named by `--files` that yield no claims |
 | `1` | at least one `REFUTED` (or, under `--strict`, one `UNVERIFIABLE`) |
-| `2` | the gate could not run — empty scope, no claims extracted, unreadable tree |
+| `2` | the gate could not run — empty scope, no claims extracted from the whole-repo default, unreadable tree |
 
 `2` is deliberately separate from `1`, matching `repo_check.py`. A gate that
 reports success because the checker broke is worse than no gate.

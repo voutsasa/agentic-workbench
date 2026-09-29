@@ -29,9 +29,12 @@ sentence you write to the user while running this skill.
 ## Run the deterministic pass first
 
 ```bash
-python3 <skill>/scripts/verify_claims.py --repo <repo-root>            # offline
-python3 <skill>/scripts/verify_claims.py --repo <repo-root> --online   # + URLs, registries
+<venv-python> <skill>/scripts/verify_claims.py --repo <repo-root>            # offline
+<venv-python> <skill>/scripts/verify_claims.py --repo <repo-root> --online   # + URLs, registries
 ```
+
+`<venv-python>` is the project's venv interpreter — `.venv/bin/python` on macOS,
+`.venv\Scripts\python.exe` on Windows — never a global `python3`.
 
 `verify_claims.py` settles every claim a command can settle *without a model*:
 paths resolved from the correct base directory, flags found on a bounded help
@@ -58,7 +61,7 @@ Run these in order. Phase 2 is a hard stop.
 ### Phase 1 — Build the claims manifest
 
 ```bash
-python3 <skill>/scripts/extract_claims.py --repo <repo-root> --out claims.jsonl --summary
+<venv-python> <skill>/scripts/extract_claims.py --repo <repo-root> --out claims.jsonl --summary
 ```
 
 The corpus is `git ls-files '*.md'` minus `docs/landing-zone/` — tracked, authored
@@ -90,7 +93,10 @@ actually execute.
 Present the manifest summary — totals by kind and by file, the claims you added
 by hand, and anything you judge unverifiable before trying. **Do not run a single
 verification command until the user approves the manifest.** They may want the
-scope cut, and verification is the expensive half.
+scope cut, and verification is the expensive half. The one exemption is the
+deterministic pass above (`verify_claims.py`): it writes nothing and runs only
+local `--help`/`--version` probes — plus reads, under `--online` — so it has
+already run by now.
 
 ### Phase 3 — Verify
 
@@ -171,6 +177,6 @@ worth a human on the other end of a pull request.
 | script | purpose |
 | --- | --- |
 | `scripts/extract_claims.py` | phase 1 — markdown to JSONL claims manifest |
-| `scripts/verify_claims.py` | phase 2 — one mechanical verifier per claim, a verdict each. Exits non-zero on any `REFUTED`, which is what makes it usable in the pre-push hook. |
-| `tests/test_extract_claims.py` | 35 tests. `python3 -m unittest discover -s tests` — stdlib only, no dependencies |
-| `tests/test_verify_claims.py` | 106 tests, same command |
+| `scripts/verify_claims.py` | the deterministic pass — phase 3 done mechanically, run before phase 1: one verifier per claim, a verdict each. Exits non-zero on any `REFUTED`, which is what makes it usable in the pre-push hook. |
+| `tests/test_extract_claims.py` | extractor tests. `<venv-python> -m unittest discover -s tests -t tests` from the skill root — stdlib only, no dependencies |
+| `tests/test_verify_claims.py` | verifier tests, same command |

@@ -135,13 +135,15 @@ def tracked_markdown(
     repo: Path, excludes: tuple[str, ...] = DEFAULT_EXCLUDES
 ) -> list[str]:
     """Return repo-relative markdown paths tracked by git, minus excluded prefixes."""
+    # -z: without it git octal-quotes non-ASCII names ("caf\303\251.md").
     out = subprocess.run(
-        ["git", "-C", str(repo), "ls-files", "*.md"],
+        ["git", "-C", str(repo), "ls-files", "-z", "*.md"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=True,
     ).stdout
-    files = [line for line in out.splitlines() if line]
+    files = [name for name in out.split("\0") if name]
     return [f for f in files if not any(f.startswith(prefix) for prefix in excludes)]
 
 

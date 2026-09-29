@@ -541,6 +541,17 @@ VERSION_CLAIM_RE = re.compile(
     r"^(?P<binary>\S+)\s+reports version\s+(?P<expected>\S+)$"
 )
 
+
+def version_matches(expected: str, token: str) -> bool:
+    """A whole version token, or a dotted prefix of one at a component boundary.
+
+    `2.55` matches `2.55.0`; `2.5` and `5.0` do not — a substring test would
+    verify both against `git version 2.55.0.windows.5`.
+    """
+    want, have = expected.lstrip("v"), token.lstrip("v")
+    return have == want or any(have.startswith(want + sep) for sep in ".-+")
+
+
 REGISTRY_API = {
     "npm view": ("npm", "https://registry.npmjs.org/{pkg}"),
     "pip index versions": ("PyPI", "https://pypi.org/pypi/{pkg}/json"),
@@ -626,8 +637,12 @@ class Verifier:
         help and then exit 1, and `--version` on a Java wrapper is noisy. What
         is being tested is the *text*, not the status.
         """
-        executable = sys.executable if argv[0] in INTERPRETERS else argv[0]
-        if not shutil.which(executable):
+        # Run the path `which` resolved, not the bare name: on Windows,
+        # CreateProcess cannot start npm's `mmdc.CMD` shim by name alone.
+        executable = shutil.which(
+            sys.executable if argv[0] in INTERPRETERS else argv[0]
+        )
+        if not executable:
             return None
         try:
             done = subprocess.run(
@@ -947,9 +962,9 @@ class Verifier:
                 f"`{binary} --version` produced no output",
                 UNVERIFIABLE,
             )
-        if expected.lstrip("v") in text.replace("v", ""):
-            return ("binary_version", clip(text.splitlines()[0]), VERIFIED)
         found = VERSION_TOKEN_RE.findall(text)
+        if any(version_matches(expected, token) for token in found):
+            return ("binary_version", clip(text.splitlines()[0]), VERIFIED)
         actual = found[0] if found else clip(text.splitlines()[0])
         return ("binary_version", f"reports {actual}, doc says {expected}", REFUTED)
 
@@ -1347,6 +1362,17 @@ def main(argv: list[str] | None = None) -> int:
             )
             return EXIT_ERROR
         claims = collect_claims(repo, files, tuple(args.kind) if args.kind else None)
+        if not claims and args.files:
+            # Named files that are all prose leave nothing to refute. Only the
+            # whole-repo default treats an empty extraction as a broken run.
+            if args.json:
+                print("[]")
+            else:
+                print(
+                    f"verify_claims: no claims in {len(files)} named file(s) "
+                    "— nothing to verify."
+                )
+            return EXIT_OK
         if not claims:
             print(
                 "verify_claims: no claims extracted — refusing to report a pass.",

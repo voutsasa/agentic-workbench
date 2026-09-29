@@ -4,7 +4,9 @@ Standard library only (unittest), so the skill has no dependencies of its own:
     python -m unittest discover -s tests -v
 """
 
+import subprocess
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
@@ -18,6 +20,7 @@ from extract_claims import (
     looks_like_path,
     subject_binary,
     summarise,
+    tracked_markdown,
 )
 
 
@@ -344,6 +347,17 @@ class TestSummary(unittest.TestCase):
         report = summarise(claims)
         self.assertIn("| install | 2 |", report)
         self.assertIn("**Total: 2 claims across 1 files.**", report)
+
+
+class TestTrackedMarkdown(unittest.TestCase):
+    def test_non_ascii_names_are_returned_verbatim(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            repo = Path(tmp)
+            (repo / "café.md").write_text("x\n", encoding="utf-8")
+            (repo / "plain.md").write_text("x\n", encoding="utf-8")
+            subprocess.run(["git", "init", "-q", str(repo)], check=True)
+            subprocess.run(["git", "-C", str(repo), "add", "."], check=True)
+            self.assertEqual(sorted(tracked_markdown(repo)), ["café.md", "plain.md"])
 
 
 if __name__ == "__main__":
