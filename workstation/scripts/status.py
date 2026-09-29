@@ -5,7 +5,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import getpass
 import io
 import json
 import platform as platform_mod
@@ -18,6 +17,7 @@ from pathlib import Path
 
 import inventory
 import link_config
+from report_persistence import report_filename as persisted_report_filename
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 VERSION_PARTS = re.compile(r"\d+")
@@ -345,11 +345,6 @@ def render_csv(report: dict) -> str:
     return buffer.getvalue()
 
 
-def filename_component(value: str) -> str:
-    """Return one portable filename component derived from a display value."""
-    return re.sub(r"[^A-Za-z0-9._-]+", "-", value).strip(".-") or "unknown"
-
-
 def report_filename(
     format_: str,
     machine: str,
@@ -357,13 +352,7 @@ def report_filename(
     timestamp: datetime | None = None,
 ) -> str:
     """Name a persisted report by machine, user, local timestamp, and format."""
-    extension = {"json": "json", "csv": "csv"}.get(format_, "md")
-    current = timestamp or datetime.now().astimezone()
-    return (
-        f"status-{filename_component(machine)}-"
-        f"{filename_component(user or getpass.getuser())}-"
-        f"{current:%Y%m%dT%H%M%S%z}.{extension}"
-    )
+    return persisted_report_filename("status", format_, machine, user, timestamp)
 
 
 def main(argv: list[str] | None = None) -> int:

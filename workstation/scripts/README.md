@@ -33,10 +33,14 @@ python -m unittest discover -s workstation/scripts/tests -t workstation/scripts/
 python workstation/scripts/inventory.py                   # markdown table
 python workstation/scripts/inventory.py --json            # machine-readable, plus suggested_id
 python workstation/scripts/inventory.py --host workstation  # print a chosen name, not the DNS one
+python workstation/scripts/inventory.py --persist
+python workstation/scripts/inventory.py --persist --csv
 ```
 
 `--host` exists because the output is pasted into a **committed** file and a hostname is often a
 person's name. It changes the provenance line and `suggested_id`; it changes nothing that was probed.
+`--persist` writes `inventory-<machine>-<user>-<timestamp>.md` under `--repo`; adding `--csv` writes
+the inventory rows as CSV instead.
 
 Reads `../cli/*/install.md` frontmatter for each tool's `command` (comma-separated if it ships more than
 one) and optional `version_flag`, resolves each command on `PATH`, and runs its version probe. Adding a
@@ -103,6 +107,8 @@ python workstation/scripts/link_config.py --agent copilot       # instructions +
 python workstation/scripts/link_config.py --agent claude --agent copilot  # both
 python workstation/scripts/link_config.py --project             # this repo's skills, into .claude/skills
 python workstation/scripts/link_config.py --hooks --agent claude --agent copilot  # also the post-edit hooks
+python workstation/scripts/link_config.py --persist
+python workstation/scripts/link_config.py --persist --csv
 ```
 
 **`--agent` picks whose home is linked**, repeatable, default `claude`. `copilot` links the `SKILLS`
@@ -111,6 +117,8 @@ directories into `$COPILOT_HOME/skills` and `AGENT-INSTRUCTIONS.md` as
 through `~/.claude/CLAUDE.md` when `chat.useClaudeMdFile` is enabled.
 `COPILOT_HOME` is honoured only when `--home` is your real home, so a test pointing `--home` at a
 scratch tree cannot be redirected by an inherited variable; `--copilot-home` overrides both.
+`--persist` writes `link-config-<machine>-<user>-<timestamp>.md` under `--repo`; adding `--csv`
+writes link and MCP states as CSV instead.
 
 **`--project` links this repo's own skills** — every `skills/<name>/SKILL.md` — into
 `<repo>/.claude/skills/`, where Claude Code and Copilot both load them at project scope. `.claude/` is

@@ -484,6 +484,48 @@ class TestMain(TempTree):
         self.assertTrue((chosen / "skills" / "review" / "SKILL.md").exists())
         self.assertFalse((self.home / ".copilot").exists())
 
+    def test_persist_csv_writes_link_report_under_the_repo(self) -> None:
+        self.machine_file()
+        with contextlib.redirect_stdout(io.StringIO()):
+            exit_code = lc.main(
+                [
+                    "--repo",
+                    str(self.repo),
+                    "--home",
+                    str(self.home),
+                    "--persist",
+                    "--csv",
+                ]
+            )
+        written = next(self.repo.glob("link-config-windows-*-*.csv"))
+        self.assertEqual(exit_code, 1)
+        self.assertTrue(written.is_file())
+        self.assertTrue(
+            written.read_text(encoding="utf-8").startswith(
+                "Category,Artefact,Kind,Status,Detail\n"
+            )
+        )
+
+    def test_persist_writes_markdown_by_default(self) -> None:
+        self.machine_file()
+        with contextlib.redirect_stdout(io.StringIO()):
+            exit_code = lc.main(
+                [
+                    "--repo",
+                    str(self.repo),
+                    "--home",
+                    str(self.home),
+                    "--persist",
+                ]
+            )
+        written = next(self.repo.glob("link-config-windows-*-*.md"))
+        self.assertEqual(exit_code, 1)
+        self.assertTrue(
+            written.read_text(encoding="utf-8").startswith(
+                "| Artefact | Kind | Status | Detail |\n"
+            )
+        )
+
 
 class TestCopilotPlan(TempTree):
     def copilot(self, agents: tuple[str, ...] = ("copilot",)) -> list[lc.Link]:

@@ -22,11 +22,15 @@ converted file, a pipeline run — and not when it merely feels handled.
 Opened 2026-09-29. A Databricks MCP setup check found that a command such as
 `python workstation/scripts/databricks_mcp.py --profile ...` produces the claim "`python` supports
 `--profile`". The generator's own help proves the flag, but the wrongly bound claim remains
-unverifiable and obscures the actual documentation result.
+unverifiable and obscures the actual documentation result. The 29 September full offline sweep also
+refuted five Unity Gateway claims because the extractor bound flags to an incomplete command:
+`ug mcp-proxy --host`, `--profile`, and `--url`;
+`ug mcp --names`; and `ug configure --agents`.
 
 **Closes when:** the extractor binds flags after an interpreter invocation to the repository-local
-script; a regression fixture covers `databricks_mcp.py`; and the Databricks setup manifest no longer
-contains `python supports --profile`, `--service`, `--host`, or equivalent generator flags.
+script and to the complete subcommand invocation; regression fixtures cover `databricks_mcp.py` and
+the Unity Gateway forms above; and the manifest contains no false `python supports …` or
+`ug supports …` flag claims.
 
 ### 30. The DPACT attended-assistant adoption plan has not been ratified or implemented
 
@@ -74,52 +78,28 @@ gateway's confidential-client credential.
 
 ### 28. The Windows Claude and Copilot setup has not run end to end, including MCP servers
 
-Opened 2026-09-28. `status.py --json` reports **READY WITH ACTIONS**: all required prerequisites,
-Claude Code 2.1.280, GitHub Copilot CLI 1.0.89, and the Playwright CLI are installed. The read-only
-`link_config.py --project --agent claude --agent copilot` report now has **22 of 22** links live, and
-`link_config.py --mcp` reports both catalog servers linked in `.mcp.json`. Copilot lists both workspace
-servers. Claude cannot connect to ado-remote-mcp because its Entra server does not support dynamic
-client registration; `workstation/mcp/ado-remote-mcp/setup.md` requires an org-wide Entra app
-registration and the project's OAuth client ID. Claude's drawio-mcp connection timed out after 30
-seconds.
+Opened 2026-09-28. `status.py` reports **READY WITH ACTIONS**: all required prerequisites are present;
+the latest observed versions are Claude Code 2.1.284 and GitHub Copilot CLI 1.0.89. The 29 September
+`link_config.py --project --agent claude --agent copilot --mcp --apply` report has **24 of 24** links
+live and both catalog servers linked in `.mcp.json`. Copilot lists both workspace servers. Claude cannot
+connect to ado-remote-mcp because its Entra server does not support dynamic client registration;
+`workstation/mcp/ado-remote-mcp/setup.md` requires an org-wide Entra app registration and the project's
+OAuth client ID. Claude's drawio-mcp connection timed out after 30 seconds.
 
 **Closes when:** the Entra app registration, delegated permissions, and Claude project OAuth client
 configuration are in place; Claude successfully invokes both registered MCP servers; and Copilot
 completes its Entra sign-in and successfully invokes both servers from the same Windows setup.
 
-### 27. The `uv tool` routes and `winget` for databricks-cli have not run on Windows
-
-Opened 2026-09-27. Global Python CLIs moved from pipx to `uv tool install --python 3.12`. On macOS,
-docling, playwright and unity-gateway were migrated and each passed a real-use check. On
-`ema-pf5n4xe7`, docling, playwright and unity-gateway are still on pipx or absent, and
-`winget install Databricks.DatabricksCLI` hasn't run. confluence-sync-md (`uv tool`, Python 3.14) hasn't
-been installed there either. The pipx shim quarantine recorded in
-`workstation/cli/docling/install.md` has not been tested against uv tool shims.
-
-**Closes when:** on `ema-pf5n4xe7`, the pipx copies are uninstalled, the five Windows rows have run,
-`inventory.py` reports all five tools `installed`, `render_page.py` runs under
-`$(uv tool dir)\playwright\Scripts\python.exe`, and the result is recorded in that machine's note,
-including whether EDR touched the uv shims.
-
 ### 25. The README *Install* steps have not run on Windows
 
 Opened 2026-09-22. `README.md` § *Install* gained `uv sync`, the pre-push gate and `status.py` as steps
 1–3; on macOS they ran end to end on a fresh clone (`uv sync` installed `pytest` and `ruff`, `status.py`
-reported `READY`). Step 2 on Windows is item 24.
+reported `READY`). The Windows pre-push step is now validated in item 24's recorded evidence, but no
+evidence yet establishes that `uv sync` and `status.py` ran in a fresh Windows clone.
 
 **Closes when:** on `ema-pf5n4xe7`, a fresh clone runs `uv sync`, then
 `python workstation\scripts\status.py` exits 0 with a Requirement cell reading `workstation tool for
 fetch-to-markdown, pdf-deliverable` on the Pandoc row — recorded in the machine note.
-
-### 24. The Windows pre-push shim has not run on Windows
-
-Opened 2026-09-21. `workstation/agent/skills/review/scripts/pre-push.windows` replaces the copied hook on
-Windows; its 4 tests pass on macOS, and on macOS it runs the real hook end to end. `ema-pf5n4xe7` still has
-the old copy of the hook itself.
-
-**Closes when:** on `ema-pf5n4xe7`, `Copy-Item workstation\agent\skills\review\scripts\pre-push.windows
-.git\hooks\pre-push -Force` has run, `git ls-files --eol` shows `w/lf` for both files, and a `git push`
-prints the hook's `pre-push: ruff check and ruff format --check` line — recorded in the machine note.
 
 ### 20. The corpus on this machine is 93 of 94 entries
 

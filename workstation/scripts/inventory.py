@@ -19,6 +19,8 @@ Standard library only. Run from anywhere::
 from __future__ import annotations
 
 import argparse
+import csv
+import io
 import json
 import os
 import platform
@@ -29,6 +31,8 @@ import sys
 from collections.abc import Callable
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+
+from report_persistence import report_filename
 
 DEFAULT_VERSION_FLAG = "--version"
 DEFAULT_TIMEOUT = 120
@@ -357,8 +361,32 @@ def render_markdown(
     return "\n".join(lines)
 
 
+def render_csv(results: list[ToolResult]) -> str:
+    """Render inventory rows as CSV."""
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(("Command", "Product", "Status", "Version", "Detail"))
+    for result in results:
+        writer.writerow(
+            (
+                ", ".join(probe.command for probe in result.probes),
+                result.product,
+                result.status,
+                result.version,
+                result.detail,
+            )
+        )
+    return buffer.getvalue()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
+    parser.add_argument(
+        "--repo",
+        type=Path,
+        default=Path(__file__).resolve().parents[2],
+        help="repository root where --persist writes the report",
+    )
     default_cli = Path(__file__).resolve().parents[1] / "cli"
     parser.add_argument(
         "--cli-dir",
@@ -366,8 +394,12 @@ def main(argv: list[str] | None = None) -> int:
         default=default_cli,
         help=f"directory holding <tool>/install.md (default: {default_cli})",
     )
-    parser.add_argument(
+    formats = parser.add_mutually_exclusive_group()
+    formats.add_argument(
         "--json", action="store_true", help="emit JSON instead of a markdown table"
+    )
+    formats.add_argument(
+        "--csv", action="store_true", help="emit CSV instead of a markdown table"
     )
     parser.add_argument(
         "--host",
@@ -380,6 +412,11 @@ def main(argv: list[str] | None = None) -> int:
         type=int,
         default=DEFAULT_TIMEOUT,
         help=f"seconds to wait for a version probe (default: {DEFAULT_TIMEOUT})",
+    )
+    parser.add_argument(
+        "--persist",
+        action="store_true",
+        help="also write inventory-<machine>-<user>-<timestamp>.<ext> under --repo",
     )
     args = parser.parse_args(argv)
 
@@ -402,6 +439,7 @@ def main(argv: list[str] | None = None) -> int:
     facts = machine_facts()
     results = run_inventory(tools, timeout=args.timeout)
 
+    format_ = "json" if args.json else "csv" if args.csv else "md"
     if args.json:
         if args.host:
             facts = facts | {"node": args.host}
@@ -410,9 +448,18 @@ def main(argv: list[str] | None = None) -> int:
             "suggested_id": suggested_id(facts),
             "tools": [asdict(r) for r in results],
         }
-        print(json.dumps(payload, indent=2))
+        rendered = json.dumps(payload, indent=2)
+    elif args.csv:
+        rendered = render_csv(results)
     else:
-        print(render_markdown(results, facts, host=args.host))
+        rendered = render_markdown(results, facts, host=args.host)
+    print(rendered)
+
+    if args.persist:
+        machine = args.host or suggested_id(facts)
+        destination = args.repo / report_filename("inventory", format_, machine)
+        destination.write_text(rendered, encoding="utf-8")
+        print(f"Report written to {destination}")
     return 0
 
 

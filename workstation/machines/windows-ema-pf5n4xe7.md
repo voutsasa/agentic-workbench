@@ -315,25 +315,21 @@ refuses when the two have drifted, which is the case above: the severed copy hel
 repo held the new. There, confirm the stale side carries nothing unique — `Compare-Object` showed 44
 lines only in the severed copy, all of them text the edit had replaced — and then use `--force`.
 
-### The `pre-push` gate is installed, as a copy — observed running 21 September 2026
+### The `pre-push` gate uses the tracked shim — verified 29 September 2026
 
-Observed on a real push, which is stronger than the file check either way: the push of `0249fc6` printed
-the hook's own `No claim was refuted.` before git's `b4ce085..0249fc6  main -> main`. `.git/hooks/pre-push`
-is 10,389 bytes, dated 15 September, and was **SHA-256 identical** to the tracked
-[`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push) as of `46fbd34`.
-
-**The copy is behind the tracked hook** — at least the retired `.verify-claims-allow` parse and the
-ruff step added on 2026-09-21. **Pending, not yet run here:** replace it with the shim, once, which ends the
-re-copying for good (see [`../agent/setup/windows.md`](../agent/setup/windows.md#the-pre-push-gate)):
+The Windows shim replaced the stale copied hook and ran end to end on a real push:
 
 ```powershell
 Copy-Item workstation\agent\skills\review\scripts\pre-push.windows .git\hooks\pre-push -Force
+git ls-files --eol workstation/agent/skills/review/scripts/pre-push workstation/agent/skills/review/scripts/pre-push.windows
+git push --set-upstream origin av-20260929-junk
 ```
 
-**A mid-session edit to this section claimed the opposite and was wrong.** It said `.git/hooks/` held only
-git's fourteen `.sample` files, and a `TODO.md` item was opened on that basis; both
-are corrected, the item closed in `8816462`. Whatever the earlier check looked at, `Test-Path .git\hooks\pre-push`
-returns `True` in this working tree and the hook demonstrably executes.
+Both hook files report `i/lf w/lf attr/text eol=lf`. The push printed
+`pre-push: ruff check and ruff format --check`, passed `repo_check.py`, Ruff, and every configured unit
+test suite, then Azure DevOps accepted the new branch. The shim executes the tracked
+[`../agent/skills/review/scripts/pre-push`](../agent/skills/review/scripts/pre-push), so future pulls
+automatically use its current implementation.
 
 It must be a **plain copy**, not a link — git will not run a hook through a junction. The 26 August check
 found the copy executing via its own shebang with 0 CR bytes.
@@ -374,28 +370,31 @@ for that reason.
 
 ## CLI toolchain
 
-Probed on `ema-pf5n4xe7` (Windows 10.0.26200, Python 3.14.7) by
-[`../scripts/inventory.py`](../scripts/inventory.py) on 21 September 2026.
+Probed on `EMA-PF5N4XE7` (Windows 10.0.26200, Python 3.12.10) by
+[`../scripts/inventory.py`](../scripts/inventory.py) on 29 September 2026.
 
-**12 of 13 usable.** `defuddle`, `tesseract` and `weasyprint` are now installed — cleared since the 14
-September probe, which had all three absent; `typst` is probed here for the first time, added to the
-toolchain the same day as this run.
+**17 of 17 usable.** This probe ran from the fresh-clone validation venv; its Python version identifies
+the probe, not the machine's default Python.
 
 | Command | Product | Status | Version | Detail |
 |---|---|---|---|---|
+| `confluence-sync-md`, `md2conf` | confluence-sync-md | installed | 0.6.0 | — |
 | `d2` | D2 (Terrastruct) | installed | 0.9.0 | — |
+| `databricks` | Databricks CLI | installed | 1.18.0 | — |
 | `dbml2sql`, `sql2dbml`, `db2dbml` | DBML CLI | installed | 9.0.0 | — |
 | `defuddle` | Defuddle | installed | 0.19.4 | — |
-| `docling` | Docling | installed | 2.122.0 | — |
-| `magick` | ImageMagick | installed | 7.1.2-31 | — |
+| `docling` | Docling | installed | 2.131.0 | — |
+| `jq` | jq | installed | 1.8.2 | — |
+| `magick` | ImageMagick | installed | 7.1.2-32 | — |
 | `mmdc` | Mermaid CLI | installed | 11.16.0 | — |
 | `pandoc` | Pandoc | installed | 3.11 | — |
 | `plantuml` | PlantUML | installed | 1.2026.8 | — |
-| `playwright` | Playwright | installed | 1.61.0 | — |
+| `playwright` | Playwright | installed | 1.63.0 | — |
 | `sem` | Sem (Ataraxy Labs) | installed | 0.13.0 | — |
 | `tesseract` | Tesseract OCR | installed | 5.5.3.20260724 | — |
-| `typst` | Typst | absent | — | not on PATH |
-| `weasyprint` | WeasyPrint | installed | 69.0 | — |
+| `typst` | Typst | installed | 0.15.1 | — |
+| `ug`, `ucode` | Unity Gateway (Databricks) | installed | 0.2.0+36.gafd2ce1 | — |
+| `weasyprint` | WeasyPrint | installed | 70.0 | — |
 
 Regenerate with `python workstation/scripts/inventory.py`. Do not edit the table by hand.
 
@@ -413,9 +412,10 @@ same readability test that diagnosed it:
 | `docling --version` | `Docling version: 2.122.0`, on `cpython-312 (3.12.10)` |
 | `docling convert --to md` on a 132 KB `.docx` | converted in 3.45 s |
 
-pipx runs it from `C:\Users\voutsas\AppData\Local\pipx\pipx\venvs`, not the `~\.local\pipx\venvs` path
-the original diagnosis probed. **Ingestion of PDF and Office formats is no longer blocked here.** The
-general form of the readability test stays in
+The original pipx route ran it from `C:\Users\voutsas\AppData\Local\pipx\pipx\venvs`, not the
+`~\.local\pipx\venvs` path the original diagnosis probed. The current route is `uv tool` (Docling
+2.131.0 in the 29 September inventory); `pipx list` is empty. **Ingestion of PDF and Office formats is
+no longer blocked here.** The general form of the readability test stays in
 [`../cli/docling/install.md`](../cli/docling/install.md) — it is the discriminator that separates this
 from the `whoami` case below.
 
@@ -592,6 +592,12 @@ Re-verified end to end afterward: `render_page.py` on `retirejs.github.io/retire
 rendered HTML; `defuddle parse --md --frontmatter` on it gave a 15,137-word body (`word_count: 17260` in
 its own frontmatter count) against the 206-word raw fetch, with `title: "Retire.js"` — the real page
 title. Validation section D is now fully closed, not just the raw half.
+
+On 29 September, the `uv tool` Playwright route was also exercised after a temporary shim
+*Access is denied* fault: `playwright --version` reported 1.63.0, Chromium installed, and
+`$(uv tool dir)\playwright\Scripts\python.exe` ran `render_page.py https://example.com rendered.html`.
+`Test-Path rendered.html` returned `True`. The cause or endpoint-security action that restored shim
+execution was not observed.
 
 **Still outstanding, and the user's to do:** one key — `env.ANTHROPIC_MODEL`, per *`settings.json` is not
 drift* above. The four top-level keys are merged. Plus one interactive restart, to prove the

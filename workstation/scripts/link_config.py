@@ -42,6 +42,8 @@ Default is read-only. Nothing is written without ``--apply``.
 from __future__ import annotations
 
 import argparse
+import csv
+import io
 import json
 import os
 import socket
@@ -50,6 +52,8 @@ import sys
 from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
+
+from report_persistence import report_filename
 
 # Statuses, worst last so the rollup can take a max.
 LINKED = "linked"
@@ -615,6 +619,28 @@ def render(report: Report) -> str:
     return "\n".join(rows)
 
 
+def render_csv(report: Report, mcp_states: list[McpState]) -> str:
+    """Render link and MCP states as CSV rows."""
+    buffer = io.StringIO()
+    writer = csv.writer(buffer, lineterminator="\n")
+    writer.writerow(("Category", "Artefact", "Kind", "Status", "Detail"))
+    for state in report.states:
+        writer.writerow(
+            (
+                "link",
+                state.link.label,
+                "dir" if state.link.is_dir else "file",
+                state.status,
+                state.detail,
+            )
+        )
+    for state in mcp_states:
+        writer.writerow(
+            ("mcp_server", state.name, "server", state.status, state.detail)
+        )
+    return buffer.getvalue()
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=(__doc__ or "").splitlines()[0])
     parser.add_argument(
@@ -687,7 +713,16 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="with --apply, also replace a diverged or occupied destination",
     )
-    parser.add_argument("--json", action="store_true", help="machine-readable output")
+    formats = parser.add_mutually_exclusive_group()
+    formats.add_argument("--json", action="store_true", help="machine-readable output")
+    formats.add_argument(
+        "--csv", action="store_true", help="emit CSV instead of Markdown"
+    )
+    parser.add_argument(
+        "--persist",
+        action="store_true",
+        help="also write link-config-<machine>-<user>-<timestamp>.<ext> under --repo",
+    )
     args = parser.parse_args(argv)
 
     # The table uses em-dashes, and a Windows console defaults to cp1252.
@@ -720,48 +755,57 @@ def main(argv: list[str] | None = None) -> int:
         mcp_states = apply_mcp(args.repo, mcp_states)
     mcp_ok = all(s.status == LINKED for s in mcp_states)
 
+    format_ = "json" if args.json else "csv" if args.csv else "md"
     if args.json:
-        print(
-            json.dumps(
-                {
-                    "agents": list(agents),
-                    "project": args.project,
-                    "claude_md": args.claude_md,
-                    "hooks": args.hooks,
-                    "mcp": args.mcp,
-                    "ok": report.ok and mcp_ok,
-                    "status": report.status,
-                    "mcp_servers": [
-                        {
-                            "name": s.name,
-                            "status": s.status,
-                            "detail": s.detail,
-                        }
-                        for s in mcp_states
-                    ],
-                    "links": [
-                        {
-                            "label": s.link.label,
-                            "source": str(s.link.source),
-                            "dest": str(s.link.dest),
-                            "kind": "dir" if s.link.is_dir else "file",
-                            "status": s.status,
-                            "detail": s.detail,
-                            "repaired": s.repaired,
-                        }
-                        for s in report.states
-                    ],
-                },
-                indent=2,
-            )
+        rendered = json.dumps(
+            {
+                "agents": list(agents),
+                "project": args.project,
+                "claude_md": args.claude_md,
+                "hooks": args.hooks,
+                "mcp": args.mcp,
+                "ok": report.ok and mcp_ok,
+                "status": report.status,
+                "mcp_servers": [
+                    {
+                        "name": s.name,
+                        "status": s.status,
+                        "detail": s.detail,
+                    }
+                    for s in mcp_states
+                ],
+                "links": [
+                    {
+                        "label": s.link.label,
+                        "source": str(s.link.source),
+                        "dest": str(s.link.dest),
+                        "kind": "dir" if s.link.is_dir else "file",
+                        "status": s.status,
+                        "detail": s.detail,
+                        "repaired": s.repaired,
+                    }
+                    for s in report.states
+                ],
+            },
+            indent=2,
         )
+    elif args.csv:
+        rendered = render_csv(report, mcp_states)
     else:
-        print(render(report))
+        rendered = render(report)
         if args.mcp:
-            print()
-            print(render_mcp(mcp_states))
+            rendered += "\n\n" + render_mcp(mcp_states)
         if not (report.ok and mcp_ok) and not args.apply:
-            print("\nRe-run with `--apply` to repair what is missing or detached.")
+            rendered += (
+                "\n\nRe-run with `--apply` to repair what is missing or detached."
+            )
+
+    print(rendered)
+    if args.persist:
+        machine = machine_file(args.repo, machine=args.machine).stem
+        destination = args.repo / report_filename("link-config", format_, machine)
+        destination.write_text(rendered, encoding="utf-8")
+        print(f"Report written to {destination}")
 
     return 0 if report.ok and mcp_ok else 1
 

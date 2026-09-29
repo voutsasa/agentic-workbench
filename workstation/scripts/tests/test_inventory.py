@@ -13,7 +13,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stdout
+from io import StringIO
 from pathlib import Path
+from unittest import mock
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
@@ -446,6 +449,90 @@ class RealCliDirTests(unittest.TestCase):
         installs = sorted(cli_dir.glob("*/install.md"))
         self.assertTrue(installs, f"no install.md found under {cli_dir}")
         self.assertEqual(len(discover_tools(cli_dir)), len(installs))
+
+
+class PersistTests(unittest.TestCase):
+    def test_persist_writes_markdown_by_default(self):
+        facts = {
+            "node": "BOX",
+            "system": "Windows",
+            "release": "10",
+            "version": "10.0.26200",
+            "machine": "AMD64",
+            "python": "3.14.7",
+        }
+        results = [
+            roll_up(
+                Tool("pandoc", "Pandoc", ["pandoc"]),
+                [Probe("pandoc", INSTALLED, version="3.11")],
+            )
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with (
+                mock.patch(
+                    "inventory.discover_tools", return_value=[Tool("x", "X", ["x"])]
+                ),
+                mock.patch("inventory.run_inventory", return_value=results),
+                mock.patch("inventory.machine_facts", return_value=facts),
+                redirect_stdout(StringIO()),
+            ):
+                exit_code = inventory.main(
+                    [
+                        "--repo",
+                        str(root),
+                        "--cli-dir",
+                        str(root),
+                        "--persist",
+                    ]
+                )
+            written = next(root.glob("inventory-windows-box-*-*.md"))
+            self.assertEqual(exit_code, 0)
+            self.assertTrue(
+                written.read_text(encoding="utf-8").startswith("Probed on `BOX`")
+            )
+
+    def test_persist_csv_writes_the_inventory_under_the_repo(self):
+        facts = {
+            "node": "BOX",
+            "system": "Windows",
+            "release": "10",
+            "version": "10.0.26200",
+            "machine": "AMD64",
+            "python": "3.14.7",
+        }
+        results = [
+            roll_up(
+                Tool("pandoc", "Pandoc", ["pandoc"]),
+                [Probe("pandoc", INSTALLED, version="3.11")],
+            )
+        ]
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with (
+                mock.patch(
+                    "inventory.discover_tools", return_value=[Tool("x", "X", ["x"])]
+                ),
+                mock.patch("inventory.run_inventory", return_value=results),
+                mock.patch("inventory.machine_facts", return_value=facts),
+                redirect_stdout(StringIO()),
+            ):
+                exit_code = inventory.main(
+                    [
+                        "--repo",
+                        str(root),
+                        "--cli-dir",
+                        str(root),
+                        "--persist",
+                        "--csv",
+                    ]
+                )
+            written = next(root.glob("inventory-windows-box-*-*.csv"))
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(
+                written.read_text(encoding="utf-8"),
+                "Command,Product,Status,Version,Detail\npandoc,Pandoc,installed,3.11,\n",
+            )
 
 
 if __name__ == "__main__":
