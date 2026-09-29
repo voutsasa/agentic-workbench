@@ -108,6 +108,7 @@ allow_context = [
   "download and disk",
   "over the network genuinely is a download",
   "imagemagick.org",
+  "jqlang.org",
 ]
 
 [checks.metadata_header]
