@@ -19,12 +19,12 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 import databricks_mcp
 from databricks_mcp import (
-    SERVICES,
     Workspace,
     claude_config,
     commands,
     main,
     parse_describe,
+    parse_internal_services,
     resolve_workspace,
 )
 
@@ -35,10 +35,19 @@ def no_describe(profile: str) -> tuple[str, str]:
     raise AssertionError("describe must not run when host and workspace ID are given")
 
 
-def run(argv: list[str], describe=no_describe) -> tuple[int, str, str]:
+def internal_services(profile: str) -> tuple[str, ...]:
+    assert profile == "dbc-abc"
+    return ("genie_one_mcp", "dbsql")
+
+
+def run(
+    argv: list[str],
+    describe=no_describe,
+    discover=internal_services,
+) -> tuple[int, str, str]:
     out, err = io.StringIO(), io.StringIO()
     with redirect_stdout(out), redirect_stderr(err):
-        code = main(argv, describe=describe)
+        code = main(argv, describe=describe, discover=discover)
     return code, out.getvalue(), err.getvalue()
 
 
@@ -84,19 +93,15 @@ class CopilotTest(unittest.TestCase):
 
 
 class MainTest(unittest.TestCase):
-    def test_default_prints_every_service_for_both_clients(self):
+    def test_default_prints_every_available_service_for_both_clients(self):
         code, out, _ = run(
             ["--profile", "dbc-abc", "--host", WS.host, "--workspace-id", "123"]
         )
         self.assertEqual(code, 0)
         lines = out.splitlines()
-        self.assertEqual(len(lines), 2 * len(SERVICES))
-        self.assertEqual(
-            sum(line.startswith("claude ") for line in lines), len(SERVICES)
-        )
-        self.assertEqual(
-            sum(line.startswith("copilot ") for line in lines), len(SERVICES)
-        )
+        self.assertEqual(len(lines), 4)
+        self.assertEqual(sum(line.startswith("claude ") for line in lines), 2)
+        self.assertEqual(sum(line.startswith("copilot ") for line in lines), 2)
 
     def test_filters_and_scope(self):
         code, out, _ = run([
@@ -106,9 +111,47 @@ class MainTest(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertEqual(out.strip(), "claude mcp remove databricks-dbsql -s user")
 
-    def test_connection_backed_service_is_rejected(self):
-        with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
-            main(["--profile", "p", "--service", "github"], describe=no_describe)
+    def test_unavailable_service_is_rejected(self):
+        code, out, err = run(
+            [
+                "--profile",
+                "dbc-abc",
+                "--host",
+                WS.host,
+                "--workspace-id",
+                "123",
+                "--service",
+                "github",
+            ]
+        )
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+        self.assertIn("unavailable", err)
+
+    def test_remove_requires_explicit_service_without_discovery(self):
+        code, out, err = run(
+            ["--profile", "dbc-abc", "--remove"],
+            discover=lambda _: (_ for _ in ()).throw(AssertionError("unexpected")),
+        )
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+        self.assertIn("--remove requires", err)
+
+    def test_remove_allows_a_service_no_longer_in_the_catalog(self):
+        code, out, _ = run(
+            [
+                "--profile",
+                "dbc-abc",
+                "--remove",
+                "--client",
+                "copilot",
+                "--service",
+                "dbsql",
+            ],
+            discover=lambda _: (_ for _ in ()).throw(AssertionError("unexpected")),
+        )
+        self.assertEqual(code, 0)
+        self.assertEqual(out.strip(), "copilot mcp remove databricks-dbsql")
 
     def test_describe_fills_missing_values(self):
         code, out, _ = run(
@@ -143,6 +186,33 @@ class ResolveTest(unittest.TestCase):
         self.assertEqual(
             parse_describe(output), ("https://h.cloud.databricks.com", "42")
         )
+
+
+class CatalogTest(unittest.TestCase):
+    def test_only_internal_system_ai_services_are_returned(self):
+        response = {
+            "mcp_services": [
+                {
+                    "name": "mcp-services/system.ai.genie_one_mcp",
+                    "config": {"internal": {}},
+                },
+                {
+                    "name": "mcp-services/system.ai.github",
+                    "config": {},
+                },
+                {
+                    "name": "mcp-services/other.ai.ignored",
+                    "config": {"internal": {}},
+                },
+            ]
+        }
+        self.assertEqual(
+            parse_internal_services(json.dumps(response)), ("genie_one_mcp",)
+        )
+
+    def test_missing_catalog_list_is_rejected(self):
+        with self.assertRaisesRegex(TypeError, "mcp_services"):
+            parse_internal_services("{}")
 
 
 if __name__ == "__main__":

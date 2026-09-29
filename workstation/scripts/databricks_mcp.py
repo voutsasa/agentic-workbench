@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 """Print the commands that register Databricks MCP services with Claude Code and Copilot CLI.
 
-Covers the ``system.ai`` services that need nothing beyond the Databricks CLI
-login (group A in ``workstation/mcp/databricks-mcp/setup.md``). Every service is
-the same endpoint shape with a different name, so the commands are generated
-rather than copied by hand per service and per client.
+Covers the currently available ``system.ai`` services that need nothing beyond
+the Databricks CLI login. The script discovers those internal services through
+the read-only Unity Catalog MCP-services API, then generates rather than copies
+commands per service and per client.
 
 Writes nothing and registers nothing: registering an MCP server is the user's
 step (``AGENTS.md`` § *The user installs; the agent records*). The one command
@@ -14,8 +14,8 @@ and workspace ID when they are not passed.
 Standard library only. Run from anywhere::
 
     python workstation/scripts/databricks_mcp.py --profile <profile>
-    python workstation/scripts/databricks_mcp.py --profile <profile> --client copilot --service dbsql
-    python workstation/scripts/databricks_mcp.py --profile <profile> --remove
+    python workstation/scripts/databricks_mcp.py --profile <profile> --client copilot
+    python workstation/scripts/databricks_mcp.py --profile <profile> --remove --service <service>
 """
 
 from __future__ import annotations
@@ -29,19 +29,19 @@ import sys
 from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 
-# Group A: system.ai services backed by Databricks itself ("config": {"internal": {}}),
-# so the CLI token alone authenticates them. Connection-backed services (github,
-# slack, ...) need a per-user SaaS sign-in first and are deliberately not offered.
-SERVICES = ("genie_one_mcp", "dbsql", "web_search", "sandbox")
 CLIENTS = ("claude", "copilot")
 CLAUDE_SCOPES = ("local", "user")
 NAME_PREFIX = "databricks-"
+MCP_SERVICES_PATH = (
+    "/api/2.1/unity-catalog/mcp-services?parent=schemas/system.ai&view=BASIC"
+)
 
 # The profile and host are interpolated into a shell command (the Claude
 # headersHelper), so only characters that cannot break out of it are accepted.
 PROFILE_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 HOST_RE = re.compile(r"^https://[A-Za-z0-9.-]+$")
 WORKSPACE_ID_RE = re.compile(r"^[0-9]+$")
+SERVICE_RE = re.compile(r"^[A-Za-z0-9_]+$")
 
 
 @dataclass(frozen=True)
@@ -100,7 +100,7 @@ def copilot_remove(service: str) -> list[str]:
 
 
 def commands(
-    ws: Workspace,
+    ws: Workspace | None,
     services: Sequence[str],
     clients: Sequence[str],
     claude_scope: str,
@@ -110,15 +110,19 @@ def commands(
     for client in clients:
         for service in services:
             if client == "claude":
-                out.append(
-                    claude_remove(service, claude_scope)
-                    if remove
-                    else claude_add(ws, service, claude_scope)
-                )
+                if remove:
+                    out.append(claude_remove(service, claude_scope))
+                else:
+                    if ws is None:
+                        raise ValueError("a workspace is required to add MCP services")
+                    out.append(claude_add(ws, service, claude_scope))
             else:
-                out.append(
-                    copilot_remove(service) if remove else copilot_add(ws, service)
-                )
+                if remove:
+                    out.append(copilot_remove(service))
+                else:
+                    if ws is None:
+                        raise ValueError("a workspace is required to add MCP services")
+                    out.append(copilot_add(ws, service))
     return out
 
 
@@ -146,6 +150,66 @@ def parse_describe(output: str) -> tuple[str, str]:
         details.get("configuration", {}).get("workspace_id", {}).get("value", "")
     )
     return host, workspace_id
+
+
+def parse_internal_services(output: str) -> tuple[str, ...]:
+    """Internal ``system.ai`` services from a Unity Catalog API response."""
+    try:
+        response = json.loads(output)
+    except json.JSONDecodeError as exc:
+        raise ValueError("MCP-services response was not valid JSON") from exc
+
+    entries = response.get("mcp_services")
+    if not isinstance(entries, list):
+        raise TypeError("MCP-services response has no `mcp_services` list")
+
+    prefix = "mcp-services/system.ai."
+    services: list[str] = []
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        config = entry.get("config")
+        name = entry.get("name")
+        if not isinstance(config, dict) or "internal" not in config:
+            continue
+        if not isinstance(name, str) or not name.startswith(prefix):
+            continue
+        service = name.removeprefix(prefix)
+        if SERVICE_RE.fullmatch(service):
+            services.append(service)
+
+    return tuple(dict.fromkeys(services))
+
+
+def discover_internal_services(profile: str) -> tuple[str, ...]:
+    """Read the current internal service catalog for a Databricks CLI profile."""
+    result = subprocess.run(
+        [
+            "databricks",
+            "api",
+            "get",
+            MCP_SERVICES_PATH,
+            "-p",
+            profile,
+            "-o",
+            "json",
+        ],
+        capture_output=True,
+        text=True,
+        timeout=60,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise ValueError(
+            "could not list internal MCP services: "
+            f"{(result.stderr or result.stdout).strip()}"
+        )
+    services = parse_internal_services(result.stdout)
+    if not services:
+        raise ValueError(
+            "the workspace has no internally backed system.ai MCP services"
+        )
+    return services
 
 
 def resolve_workspace(
@@ -186,8 +250,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--service",
         action="append",
-        choices=SERVICES,
-        help="repeatable; default: all of " + ", ".join(SERVICES),
+        help="repeatable; additions must be currently internal system.ai services",
     )
     parser.add_argument(
         "--client", action="append", choices=CLIENTS, help="repeatable; default: both"
@@ -204,15 +267,37 @@ def build_parser() -> argparse.ArgumentParser:
 def main(
     argv: list[str] | None = None,
     describe: Callable[[str], tuple[str, str]] = describe_profile,
+    discover: Callable[[str], tuple[str, ...]] = discover_internal_services,
 ) -> int:
     args = build_parser().parse_args(argv)
+
     try:
-        ws = resolve_workspace(args.profile, args.host, args.workspace_id, describe)
-    except ValueError as exc:
+        if not PROFILE_RE.match(args.profile):
+            raise ValueError(
+                f"profile {args.profile!r}: use letters, digits, '.', '_' or '-' only"
+            )
+        requested = list(dict.fromkeys(args.service or []))
+        if args.remove:
+            if not requested:
+                raise ValueError("--remove requires at least one --service")
+            services = requested
+            ws = None
+        else:
+            available = discover(args.profile)
+            services = requested or list(available)
+            unavailable = sorted(set(services).difference(available))
+            if unavailable:
+                raise ValueError(
+                    "service(s) unavailable as internal system.ai MCP services: "
+                    + ", ".join(unavailable)
+                )
+            ws = resolve_workspace(args.profile, args.host, args.workspace_id, describe)
+    except (TypeError, ValueError) as exc:
         print(f"databricks_mcp: {exc}", file=sys.stderr)
         return 2
-    services = list(dict.fromkeys(args.service or SERVICES))
+
     clients = list(dict.fromkeys(args.client or CLIENTS))
+    assert ws is not None or args.remove
     for argv_out in commands(ws, services, clients, args.claude_scope, args.remove):
         print(shlex.join(argv_out))
     return 0

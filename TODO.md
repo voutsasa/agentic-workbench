@@ -17,6 +17,17 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 31. The documentation claim extractor binds local-script flags to `python`
+
+Opened 2026-09-29. A Databricks MCP setup check found that a command such as
+`python workstation/scripts/databricks_mcp.py --profile ...` produces the claim "`python` supports
+`--profile`". The generator's own help proves the flag, but the wrongly bound claim remains
+unverifiable and obscures the actual documentation result.
+
+**Closes when:** the extractor binds flags after an interpreter invocation to the repository-local
+script; a regression fixture covers `databricks_mcp.py`; and the Databricks setup manifest no longer
+contains `python supports --profile`, `--service`, `--host`, or equivalent generator flags.
+
 ### 30. The DPACT attended-assistant adoption plan has not been ratified or implemented
 
 Opened 2026-09-29. The DPACT review identifies this workbench as an attended command-line assistant

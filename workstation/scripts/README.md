@@ -14,7 +14,7 @@ called on Windows and inside an activated venv; **on macOS outside a venv it is 
 | [`inventory.py`](inventory.py) | Probe this machine for the CLI toolchain and print the inventory table for [`../machines/`](../machines/) |
 | [`status.py`](status.py) | Check the resolved machine's prerequisite profile and CLI toolchain, then report corrective actions |
 | [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude`, and its skills in `~/.copilot/skills` |
-| [`databricks_mcp.py`](databricks_mcp.py) | Print the Claude Code and Copilot CLI commands that register the Databricks MCP services — runs none of them |
+| [`databricks_mcp.py`](databricks_mcp.py) | Read available internal Databricks MCP services, then print Claude Code and Copilot CLI registration commands — runs none of them |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
 `../agent/skills/*/tests/`. Two of them test no script in this folder: `test_readme_skills.py` fails when the skill
