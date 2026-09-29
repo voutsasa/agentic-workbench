@@ -229,6 +229,19 @@ nothing because the index already holds LF.
 Because `core.symlinks=false`, a symlink committed to this repo would check out here as a text file
 containing its target path. Nothing in the repo relies on one.
 
+### Git HTML help opens browser tabs in Copilot sessions
+
+Measured 2026-09-29: Scoop Git's system configuration at
+`C:\Users\voutsas\scoop\apps\git\2.55.0.5\etc\gitconfig` sets `help.format=html`. The reported
+Copilot-session symptom is tabs such as `file:///C:/Users/voutsas/scoop/apps/git/2.55.0.5/mingw64/share/doc/git-doc/git-diff.html`;
+this is Git's HTML rendering of `git diff --help`, not a diff failure.
+
+Use `git diff -h` (and the equivalent `-h` form for other Git subcommands) in automated routes. The
+tracked claim verifier does so. Do not set `help.format=man` here: the measured transient invocation
+`git -c help.format=man help diff` exits 128 because this Git installation has no `man` viewer.
+`core.pager` and `GIT_PAGER` do not control this behavior. The shared route is
+[`../agent/setup/windows.md`](../agent/setup/windows.md#git-html-help-in-copilot-sessions).
+
 ### The Azure DevOps remote needs `credential.useHttpPath`
 
 The remote is `origin`, `https://euemadev@dev.azure.com/euemadev/EA/_git/agentic-workbench`. Without

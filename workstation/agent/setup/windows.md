@@ -132,6 +132,27 @@ it was the shim, copy it again. To catch every affected file at once, not just t
 git ls-files --eol | Select-String "w/crlf" | Where-Object { $_ -match "eol=lf" }
 ```
 
+## Git HTML help in Copilot sessions
+
+Git for Windows can configure `help.format=html`. In that mode, `git <subcommand> --help` opens the
+installed HTML manual in the default browser. A Copilot session that probes several Git subcommands
+can therefore create many `file:///.../git-<subcommand>.html` tabs without a Git failure.
+
+Check without opening a manual:
+
+```powershell
+git config --show-origin --get help.format
+```
+
+**Use `git <subcommand> -h`, not `git <subcommand> --help`, in Copilot instructions, hooks, and
+deterministic checks.** `-h` writes concise usage to the terminal and does not invoke the browser.
+The tracked `verify_claims.py` verifier follows this rule for Git subjects; use the shim above so a
+push runs that current tracked implementation instead of a copied, stale hook.
+
+Do not change `help.format` to `man` as an untested blanket workaround. Some Windows Git
+installations do not include a `man` viewer, which turns an unwanted browser tab into a failed help
+request. `core.pager` and `GIT_PAGER` do not control the HTML-help browser behavior.
+
 ## Windows traps
 
 - **`git checkout` severs a hardlink, and freezes the copy at the old content.** This is the trap that
