@@ -72,6 +72,8 @@ three commands missing does not report as installed.
 python workstation/scripts/status.py
 python workstation/scripts/status.py --json
 python workstation/scripts/status.py --machine macos-workstation
+python workstation/scripts/status.py --persist
+python workstation/scripts/status.py --persist --csv
 ```
 
 Resolves the same machine note as `link_config.py`, loads common requirements from
@@ -80,6 +82,10 @@ those dependency probes with `inventory.py`. It exits non-zero only when a requi
 The Python row reports the interpreter running the script when the repo has a `.venv`, and otherwise
 probes the profile's Python command on `PATH` — the one the bootstrap scripts run on before a venv exists.
 Authentication is deliberately not probed.
+`--persist` also writes the Markdown report under the repository root as
+`status-<workstation>-<user>-<timestamp>.md`; adding `--csv` writes the same
+rows as CSV with a `.csv` extension. The timestamp uses the local timezone and
+contains no filename-unsafe characters.
 
 A tool's *Requirement* cell names the skills that need it, read from the optional `used_by` key
 (comma-separated skill names) in its `install.md` frontmatter — so a missing tool says which skills it

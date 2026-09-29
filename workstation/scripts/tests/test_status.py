@@ -7,7 +7,7 @@ import io
 import sys
 import tempfile
 import unittest
-from datetime import date
+from datetime import UTC, datetime
 from pathlib import Path
 from unittest import mock
 
@@ -417,22 +417,37 @@ class RenderCsvTests(unittest.TestCase):
 
 
 class ReportFilenameTests(unittest.TestCase):
-    def test_extension_matches_the_active_format(self) -> None:
-        today = date(2026, 9, 22)
+    def test_includes_machine_user_timestamp_and_active_format(self) -> None:
+        timestamp = datetime(2026, 9, 22, 14, 5, 9).astimezone()
         self.assertEqual(
-            status.report_filename("md", today), "workstation-status-20260922.md"
+            status.report_filename("md", "windows-box", "alice", timestamp),
+            f"status-windows-box-alice-{timestamp:%Y%m%dT%H%M%S%z}.md",
         )
         self.assertEqual(
-            status.report_filename("json", today), "workstation-status-20260922.json"
+            status.report_filename("json", "windows-box", "alice", timestamp),
+            f"status-windows-box-alice-{timestamp:%Y%m%dT%H%M%S%z}.json",
         )
         self.assertEqual(
-            status.report_filename("csv", today), "workstation-status-20260922.csv"
+            status.report_filename("csv", "windows-box", "alice", timestamp),
+            f"status-windows-box-alice-{timestamp:%Y%m%dT%H%M%S%z}.csv",
+        )
+
+    def test_replaces_filename_unsafe_machine_and_user_characters(self) -> None:
+        self.assertEqual(
+            status.report_filename(
+                "md",
+                "windows / box",
+                "alice@example.com",
+                datetime(2026, 9, 22, tzinfo=UTC),
+            ),
+            "status-windows-box-alice-example.com-20260922T000000+0000.md",
         )
 
 
 class MainPersistTests(unittest.TestCase):
     def test_persist_writes_the_rendered_report_and_prints_its_path(self) -> None:
         report = {
+            "machine": "m",
             "overall": "READY",
             "profile": "profile.toml",
             "dependencies": "dependencies.toml",
@@ -446,13 +461,14 @@ class MainPersistTests(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()) as out,
             ):
                 exit_code = status.main(["--repo", str(repo), "--persist"])
-            written = repo / status.report_filename("md")
+            written = next(repo.glob("status-m-*-*.md"))
             self.assertEqual(exit_code, 0)
             self.assertTrue(written.is_file())
             self.assertIn(f"Report written to {written}", out.getvalue())
 
     def test_without_persist_writes_nothing(self) -> None:
         report = {
+            "machine": "m",
             "overall": "READY",
             "profile": "profile.toml",
             "dependencies": "dependencies.toml",
@@ -466,7 +482,30 @@ class MainPersistTests(unittest.TestCase):
                 contextlib.redirect_stdout(io.StringIO()),
             ):
                 status.main(["--repo", str(repo)])
-            self.assertEqual(list(repo.glob("workstation-status-*")), [])
+            self.assertEqual(list(repo.glob("status-*-*-*")), [])
+
+    def test_persist_csv_writes_a_csv_report(self) -> None:
+        report = {
+            "machine": "m",
+            "overall": "READY",
+            "profile": "profile.toml",
+            "dependencies": "dependencies.toml",
+            "prerequisites": [],
+            "tools": [],
+        }
+        with tempfile.TemporaryDirectory() as directory:
+            repo = Path(directory)
+            with (
+                mock.patch("status.collect", return_value=report),
+                contextlib.redirect_stdout(io.StringIO()),
+            ):
+                exit_code = status.main(["--repo", str(repo), "--persist", "--csv"])
+            written = next(repo.glob("status-m-*-*.csv"))
+            self.assertEqual(exit_code, 0)
+            self.assertEqual(
+                written.read_text(encoding="utf-8"),
+                "Capability,Requirement,Status,Version,Evidence,Corrective action\n",
+            )
 
 
 class MainQuietTests(unittest.TestCase):

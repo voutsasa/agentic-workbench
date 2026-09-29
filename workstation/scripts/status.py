@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import getpass
 import io
 import json
 import platform as platform_mod
@@ -12,7 +13,7 @@ import re
 import sys
 import tomllib
 from dataclasses import asdict, dataclass
-from datetime import date, datetime
+from datetime import datetime
 from pathlib import Path
 
 import inventory
@@ -337,16 +338,32 @@ def render(report: dict) -> str:
 def render_csv(report: dict) -> str:
     rows = report["prerequisites"] + report["tools"]
     buffer = io.StringIO()
-    writer = csv.writer(buffer)
+    writer = csv.writer(buffer, lineterminator="\n")
     writer.writerow(HEADERS)
     for row in rows:
         writer.writerow(row_values(row))
     return buffer.getvalue()
 
 
-def report_filename(format_: str, today: date | None = None) -> str:
+def filename_component(value: str) -> str:
+    """Return one portable filename component derived from a display value."""
+    return re.sub(r"[^A-Za-z0-9._-]+", "-", value).strip(".-") or "unknown"
+
+
+def report_filename(
+    format_: str,
+    machine: str,
+    user: str | None = None,
+    timestamp: datetime | None = None,
+) -> str:
+    """Name a persisted report by machine, user, local timestamp, and format."""
     extension = {"json": "json", "csv": "csv"}.get(format_, "md")
-    return f"workstation-status-{(today or datetime.now().astimezone().date()):%Y%m%d}.{extension}"
+    current = timestamp or datetime.now().astimezone()
+    return (
+        f"status-{filename_component(machine)}-"
+        f"{filename_component(user or getpass.getuser())}-"
+        f"{current:%Y%m%dT%H%M%S%z}.{extension}"
+    )
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -360,7 +377,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--persist",
         action="store_true",
-        help="also write the report to workstation-status-YYYYMMDD.<ext> under --repo",
+        help="also write status-<machine>-<user>-<timestamp>.<ext> under --repo",
     )
     parser.add_argument(
         "--quiet",
@@ -386,7 +403,7 @@ def main(argv: list[str] | None = None) -> int:
     print(rendered)
 
     if args.persist:
-        destination = args.repo / report_filename(format_)
+        destination = args.repo / report_filename(format_, report["machine"])
         destination.write_text(rendered, encoding="utf-8")
         print(f"Report written to {destination}")
 
