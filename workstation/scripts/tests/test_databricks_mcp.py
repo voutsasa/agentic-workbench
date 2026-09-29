@@ -281,6 +281,14 @@ class ManagedServerTest(unittest.TestCase):
             ],
         )
 
+    def test_uuid_genie_space_is_accepted(self):
+        space = "01ef2b3c-4d5e-6f70-8192-a3b4c5d6e7f8"
+        code, out, _ = run(
+            [*ADD, "--client", "copilot", "--genie-space", space], discover=no_discover
+        )
+        self.assertEqual(code, 0)
+        self.assertIn(f"/api/2.0/mcp/genie/{space}", out)
+
     def test_unsafe_ids_are_refused(self):
         for flag, value in [
             ("--genie-space", "01ef; rm -rf ~"),
@@ -294,6 +302,38 @@ class ManagedServerTest(unittest.TestCase):
                 self.assertEqual(code, 2)
                 self.assertEqual(out, "")
                 self.assertIn(flag.removeprefix("--"), err)
+
+
+class HelpTest(unittest.TestCase):
+    def help_text(self) -> str:
+        out = io.StringIO()
+        with redirect_stdout(out), self.assertRaises(SystemExit) as exit_:
+            main(["--help"], describe=no_describe, discover=no_discover)
+        self.assertEqual(exit_.exception.code, 0)
+        return out.getvalue()
+
+    def test_help_explains_where_every_databricks_value_comes_from(self):
+        guide = databricks_mcp.PARAMETER_GUIDE
+        self.assertIn(guide, self.help_text())
+        for flag, lookup in [
+            ("--profile", "databricks auth profiles"),
+            ("--host", "details.host"),
+            ("--workspace-id", "workspace_id"),
+            ("--service", "AI Gateway > MCPs"),
+            ("--genie-space", "databricks genie list-spaces"),
+            ("--ai-search", "databricks vector-search-indexes list-indexes"),
+            ("--sql", "databricks warehouses list"),
+        ]:
+            with self.subTest(flag=flag):
+                [section] = [
+                    block
+                    for block in guide.split("\n\n")
+                    if block.startswith("  --") and block.split()[0] == flag
+                ]
+                self.assertIn(lookup, section)
+
+    def test_guide_keeps_its_line_breaks(self):
+        self.assertIn("\n  --genie-space ID\n", self.help_text())
 
 
 class ResolveTest(unittest.TestCase):

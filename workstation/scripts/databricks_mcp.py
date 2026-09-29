@@ -51,13 +51,68 @@ PROFILE_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 HOST_RE = re.compile(r"^https://[A-Za-z0-9.-]+$")
 WORKSPACE_ID_RE = re.compile(r"^[0-9]+$")
 SERVICE_RE = re.compile(r"^[A-Za-z0-9_]+$")
-GENIE_SPACE_RE = re.compile(r"^[A-Za-z0-9]+$")
+#: The REST API types a space ID as a UUID, so hyphens are allowed.
+GENIE_SPACE_RE = re.compile(r"^[A-Za-z0-9-]+$")
 #: ``catalog.schema`` or ``catalog.schema.index``; unquoted identifiers only.
 AI_SEARCH_RE = re.compile(r"^[A-Za-z0-9_]+\.[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)?$")
 SQL_WARNING = (
     "databricks-sql runs any SQL the agent writes, writes included, as the"
     " profile's identity; no service policy applies to it"
 )
+
+#: Shown under ``--help`` and by the ``setup-mcp-servers`` skill, which prints
+#: this text rather than keeping its own copy.
+PARAMETER_GUIDE = """\
+Where each Databricks value comes from (every command below is read-only):
+
+  --profile PROFILE
+    The Databricks CLI profile holding your OAuth login. Required.
+    Get it: databricks auth profiles
+      Use a Name whose Valid column is YES.
+    None yet, or Valid NO: databricks auth login --host <workspace-url>
+
+  --host HOST
+    The workspace URL, https://adb-<workspace-id>.<n>.azuredatabricks.net,
+    with no trailing slash. Optional: read from the profile when omitted.
+    Get it: databricks auth describe -p <profile> -o json
+      Field details.host, or the browser's address bar in the workspace.
+
+  --workspace-id WORKSPACE_ID
+    The numeric workspace ID, sent as ?o=<id>. Optional, like --host.
+    Get it: databricks auth describe -p <profile> -o json
+      Field details.configuration.workspace_id.value. On Azure it is also
+      the digits after adb- in the host.
+
+  --service SERVICE
+    A system.ai MCP Service, e.g. genie_one_mcp. Default: every internal
+    one the workspace offers. Note that dbsql writes unless its policy
+    sets disallow_writes.
+    Get it: databricks api get '/api/2.1/unity-catalog/mcp-services?parent=schemas/system.ai&view=BASIC' -p <profile> -o json
+      Names mcp-services/system.ai.<service> whose config has an internal
+      key; or, in the workspace, AI Gateway > MCPs.
+
+  --genie-space ID
+    A Genie Agent's space ID. The space must be shared with you; the
+    server is read-only.
+    Get it: databricks genie list-spaces -p <profile> -o json
+      Field spaces[].space_id, matched by spaces[].title. An empty list
+      means no space is shared with this identity.
+
+  --ai-search CATALOG.SCHEMA[.INDEX]
+    An AI Search (Vector Search) index, or a schema for all its indexes.
+    The index must use Databricks managed embeddings.
+    Get it: databricks vector-search-endpoints list-endpoints -p <profile>
+      then: databricks vector-search-indexes list-indexes <endpoint-name> -p <profile>
+      Field vector_indexes[].name is catalog.schema.index; or Catalog
+      Explorer > the index.
+
+  --sql
+    Databricks SQL. Takes no value, but the profile's identity needs a
+    SQL warehouse it can use, and it writes: pick a profile that holds
+    only USE CATALOG, USE SCHEMA and SELECT.
+    Get it: databricks warehouses list -p <profile>
+      Fields id, name and state; the server picks the warehouse itself.
+"""
 
 
 @dataclass(frozen=True)
@@ -82,7 +137,9 @@ def managed_url(ws: Workspace, path: str) -> str:
 def genie_server(space_id: str) -> tuple[str, str]:
     """Name and ``/api/2.0/mcp/`` path of a Genie Agent server."""
     if not GENIE_SPACE_RE.fullmatch(space_id):
-        raise ValueError(f"genie-space {space_id!r}: use letters and digits only")
+        raise ValueError(
+            f"genie-space {space_id!r}: use letters, digits and hyphens only"
+        )
     return f"{NAME_PREFIX}genie-{space_id}", f"genie/{space_id}"
 
 
@@ -287,7 +344,9 @@ def resolve_workspace(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Print Claude Code / Copilot CLI commands that register "
-        "Databricks MCP servers. Runs none of them."
+        "Databricks MCP servers. Runs none of them.",
+        epilog=PARAMETER_GUIDE,
+        formatter_class=argparse.RawDescriptionHelpFormatter,
     )
     parser.add_argument("--profile", required=True, help="Databricks CLI profile")
     parser.add_argument(

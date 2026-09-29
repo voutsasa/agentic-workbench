@@ -17,6 +17,14 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 43. The `setup-mcp-servers` skill has not shown the Databricks parameter guide
+
+Opened 2026-09-29. `databricks_mcp.py --help` now ends with `PARAMETER_GUIDE`, unit-tested, and the
+skill's § 2 tells the agent to show that section verbatim. No session has run the skill since.
+
+**Closes when:** a `setup-mcp-servers` run for Databricks shows the guide's *Where each Databricks
+value comes from* section unparaphrased before asking for the profile.
+
 ### 41. No `/api/2.0/mcp/` Databricks server has connected yet
 
 Opened 2026-09-29. `workstation/scripts/databricks_mcp.py` now prints these servers

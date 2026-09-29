@@ -206,7 +206,9 @@ python workstation/scripts/databricks_mcp.py --profile <profile> --genie-space <
 
 `--genie-space`, `--ai-search` and `--sql` add managed `/api/2.0/mcp/` servers, whose resource path
 only you know. Asking only for these skips the catalog query. `--sql` is never implied, and it prints
-a warning on stderr because that server writes.
+a warning on stderr because that server writes. `--help` ends with a guide giving, per option, the
+Databricks value it needs and the read-only command that finds it; the `setup-mcp-servers` skill
+shows that text rather than a copy of it.
 
 Prints the `claude mcp add-json` and `copilot mcp add` commands that register a profile's currently
 internal `system.ai` MCP services — discovered at run time from the workspace's Unity Catalog

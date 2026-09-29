@@ -198,8 +198,9 @@ python workstation/scripts/databricks_mcp.py --profile "$DBX_PROFILE" --remove -
 | `--ai-search <c>.<s>` | `databricks-ai-search-<c>-<s>` | The form Microsoft's own example uses |
 
 Both flags repeat and combine with `--service` and `--client`. IDs are restricted to letters, digits
-and `_` (the space ID to letters and digits), because they end up in a shell command. Confirm as in
-[Confirm](#confirm).
+and `_` (the space ID to letters, digits and `-`), because they end up in a shell command. Confirm
+as in [Confirm](#confirm). `databricks_mcp.py --help` lists, per flag, the read-only command that
+finds each value.
 
 **Not yet observed here:** a connection to any `/api/2.0/mcp/` endpoint. Microsoft's URL patterns
 carry no `?o=` query string, so none is added; and the CLI login's default `all-apis` scope has been

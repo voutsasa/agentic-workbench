@@ -49,9 +49,15 @@ Ask only questions that apply, in structured form when available. Never request 
 |---|---|
 | draw.io | Which available client(s); shared project catalog or personal user scope; whether opening URL-encoded diagrams in a browser is acceptable. |
 | Azure DevOps | Remote Entra OAuth or local server; organization; available client(s); read-only/toolset restriction; and, for Claude remote OAuth, whether a tenant app registration and client ID already exist. For local routes ask only the auth method and optional default project/team, never the credential. |
-| Databricks | Available client(s); existing CLI profile; discovered internal service(s); and Claude local or user scope. |
+| Databricks | Available client(s); existing CLI profile; discovered internal service(s); any Genie space IDs or AI Search `catalog.schema[.index]` targets; whether to opt in to Databricks SQL, which writes; and Claude local or user scope. |
 
 Read the selected server's `workstation/mcp/<server>/setup.md` before deciding a route.
+
+**For Databricks, show the parameter guide before asking.** Run
+`<python> <workbench>/workstation/scripts/databricks_mcp.py --help` (it reads nothing from Databricks)
+and show the user its *Where each Databricks value comes from* section verbatim. It says, per option,
+which value is needed and the read-only command that yields it. Do not paraphrase or keep a copy of
+it here: the script is its only source.
 
 ## 3. Hand over commands
 
@@ -64,8 +70,9 @@ prove.
 - ADO remote: explain Entra browser sign-in. For Claude, stop until the tenant app registration exists;
   client ID is not a secret but the user chooses user versus project scope. For local ADO, hand over
   the environment-variable route without placing a PAT in the command.
-- Databricks: run the generator only after discovery reports services available. It prints commands
-  but registers nothing. The user reviews and runs one selected line.
+- Databricks: run the generator only after discovery reports services available, unless only
+  `--genie-space`, `--ai-search` or `--sql` servers are wanted, which need no catalog query. It
+  prints commands but registers nothing. The user reviews and runs one selected line.
 
 ## 4. Verify
 
