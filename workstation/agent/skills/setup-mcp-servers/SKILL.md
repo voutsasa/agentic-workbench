@@ -15,7 +15,7 @@ assumes the current repository is the workbench.
   command.
 - Run `mcp add`, `mcp remove`, `link_config.py --apply`, an installation, or a sign-in command.
 - Write a client configuration, `.mcp.json`, settings file, or machine note.
-- Use `ug configure`, `ug claude`, or `ug mcp add --agents ...`; those can redirect model traffic.
+- Use `ug configure` or `ug claude`; those can redirect model traffic.
 
 The user runs every registration and authentication command. This skill only discovers state and
 hands over commands from the recorded setup routes.
