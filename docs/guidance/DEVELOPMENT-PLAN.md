@@ -1,6 +1,6 @@
 ---
 role: Phased capability curriculum, doubling as a prioritised ingestion backlog
-updated: 2026-09-16
+updated: 2026-09-29
 verified: never
 ---
 
@@ -160,7 +160,7 @@ The order is deliberate — understand the method before touching the tooling.
 | | Importance | Reading / tutorial |
 |---|---|---|
 | ➕ | ★★★★★ | [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) — workflows vs. agents; the foundational piece |
-| ➕ | ★★★★★ | [Claude Code best practices](https://code.claude.com/docs/en/best-practices) — most directly actionable item this week |
+| ✓ | ★★★★★ | [Claude Code best practices](https://code.claude.com/docs/en/best-practices) — most directly actionable item this week |
 | ✓ | ★★★★☆ | [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — current guidance; supersedes much of the two below |
 | ✓ | ★★★☆☆ | [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) — filed as background in the register |
 | ✓ | ★★★☆☆ | [Context Engineering for AI Agents: Memory vs. Compaction vs. Tool Clearing](https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools) — filed as background in the register |
@@ -175,7 +175,7 @@ The order is deliberate — understand the method before touching the tooling.
 | ➕ | ★★★★★ | [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) — **the single most important document in this track** |
 | ➕ | ★★★★★ | [anthropics/skills](https://github.com/anthropics/skills) — **tutorial:** read `docx`/`pdf`/`pptx` as production reference implementations |
 | ➕ | ★★★★☆ | [Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) — progressive disclosure, the core mechanic |
-| ➕ | ★★★★★ | [Claude Code — Skills](https://code.claude.com/docs/en/skills) — where skills actually live in the tool you use; the platform docs cover the API surface, not this |
+| ✓ | ★★★★★ | [Claude Code — Skills](https://code.claude.com/docs/en/skills) — where skills actually live in the tool you use; the platform docs cover the API surface, not this |
 | ➕ | ★★★★☆ | [Claude Skills Cookbook](https://github.com/anthropics/claude-cookbooks/tree/main/skills) — **tutorial:** runnable notebooks; the guided path, without the course overhead |
 | ✓ | ★★★☆☆ | [Agent Skills](https://agentskills.io/home) — the portable open standard; thinner than Anthropic's own docs |
 | ➕ | ★★☆☆☆ | *Optional.* [Agent Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) — the orientation piece. Largely subsumed by the two docs above; read it only if you want the concepts before the practice. |
@@ -188,8 +188,8 @@ The order is deliberate — understand the method before touching the tooling.
 
 | | Importance | Reading / tutorial |
 |---|---|---|
-| ➕ | ★★★★★ | [MCP — Architecture](https://modelcontextprotocol.io/docs/learn/architecture) — resources vs. tools vs. prompts; get this distinction wrong and the server's shape is wrong |
-| ➕ | ★★★★★ | [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server) — **the canonical tutorial** |
+| ✓ | ★★★★★ | [MCP — Architecture](https://modelcontextprotocol.io/docs/learn/architecture) — resources vs. tools vs. prompts; get this distinction wrong and the server's shape is wrong |
+| ✓ | ★★★★★ | [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server) — **the canonical tutorial** |
 | ✓ | ★★★★★ | [FastMCP](https://gofastmcp.com/servers/server) — the ergonomic layer you will actually build on |
 | ➕ | ★★★☆☆ | [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk) — reference for when FastMCP abstracts something you need to reach under |
 
@@ -238,7 +238,7 @@ The order is deliberate — understand the method before touching the tooling.
 |---|---|---|
 | ➕ | ★★★★★ | [Code execution with MCP: building more efficient agents](https://www.anthropic.com/engineering/code-execution-with-mcp) — why tool-per-call stops scaling; this month's whole rationale |
 | ✓ | ★★★★★ | [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — the tool-design discipline the shared server needs |
-| ➕ | ★★★☆☆ | [MCP specification](https://modelcontextprotocol.io/specification) — reference, not a read-through |
+| ✓ | ★★★☆☆ | [MCP specification](https://modelcontextprotocol.io/specification) — reference, not a read-through |
 
 **Do:** this is the plan's shared-functionality convention made real — what several skills need in common gets refactored into a local MCP server. By month 4 you will have enough skills for the duplication to be visible rather than hypothetical.
 **Deliverable:** ⓦ one shared MCP server replacing duplicated per-skill scripts.
@@ -248,7 +248,7 @@ The order is deliberate — understand the method before touching the tooling.
 | | Importance | Reading / tutorial |
 |---|---|---|
 | ✓ | ★★★★☆ | [DeepEval](https://deepeval.com/docs/introduction) — the harness itself |
-| ➕ | ★★★★☆ | [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview) — needed to drive generation programmatically enough to evaluate it |
+| ✓ | ★★★★☆ | [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview) — needed to drive generation programmatically enough to evaluate it |
 | ✓ | ★★★☆☆ | [langfuse](https://langfuse.com/docs/observability/sdk/overview) — valuable, but tracing can follow once the eval loop exists |
 | ➕ | ★★★☆☆ | Close one **§4 gap** — observability beyond LLM tracing (OpenTelemetry). langfuse traces the model calls; OTel traces everything around them. |
 
@@ -328,10 +328,10 @@ This was one month in earlier drafts and could not fit: twelve register entries 
 
 | | Importance | Reading / tutorial |
 |---|---|---|
-| ➕ | ★★★★★ | Agent SDK overview — read at month 5; Python and TypeScript, and central by this phase |
-| ➕ | ★★★★★ | [Claude Code hooks reference](https://code.claude.com/docs/en/hooks) — deterministic enforcement where a prompt won't do; the fallback if month 5 shows constitutions don't constrain |
+| ✓ | ★★★★★ | Agent SDK overview (no repeat link; same source as month 5's row) — read at month 5; Python and TypeScript, and central by this phase |
+| ✓ | ★★★★★ | [Claude Code hooks reference](https://code.claude.com/docs/en/hooks) — deterministic enforcement where a prompt won't do; the fallback if month 5 shows constitutions don't constrain |
 | ➕ | ★★★★☆ | [Building agents with the Claude Agent SDK](https://claude.com/blog/building-agents-with-the-claude-agent-sdk) — the worked narrative around the reference docs |
-| ➕ | ★★★★☆ | [Create plugins](https://code.claude.com/docs/en/plugins) — packaging skills, agents, hooks, and MCP servers for reuse across projects; the mechanism this phase's bootstrap deliverable needs |
+| ✓ | ★★★★☆ | [Create plugins](https://code.claude.com/docs/en/plugins) — packaging skills, agents, hooks, and MCP servers for reuse across projects; the mechanism this phase's bootstrap deliverable needs |
 
 **Do:** package the workbench so a new project bootstraps from it in one command. Move artefact generation from interactive sessions to Agent SDK harnesses where it's repeatable.
 **Deliverable:** ⓦ bootstrap skill/command; SDK-driven generation for the mechanical parts. From here a new project starts from the workbench in one command rather than by hand.
@@ -340,7 +340,7 @@ This was one month in earlier drafts and could not fit: twelve register entries 
 
 | | Importance | Reading / tutorial |
 |---|---|---|
-| ➕ | ★★★★★ | [MCP Authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization) — OAuth 2.1; essential the moment a server stops being stdio-only, irrelevant until then |
+| ✓ | ★★★★★ | [MCP Authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization) — OAuth 2.1; essential the moment a server stops being stdio-only, irrelevant until then |
 | ➕ | ★★★★☆ | OWASP ASVS — for the MCP tool surface, once ingested |
 | ✓ | ★★★☆☆ | Revisit context-engineering material against a year of real traces |
 

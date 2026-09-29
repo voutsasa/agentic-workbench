@@ -81,7 +81,7 @@ genuinely is not there:
 **Within Python, uv comes before pipx.** Both install the same package from the same index, so this is
 a ranking of installers, not of ecosystems. `uv` is already a required prerequisite
 (`workstation/dependencies.toml`) and pipx is not. `--python 3.12` is pinned because uv otherwise
-picks whatever interpreter it finds first (3.11.15 on macOS, 2026-09-27). A package whose
+picks whatever interpreter it finds first on the machine, which drifts over time and across clones. A package whose
 `requires-python` floor is higher takes that floor instead: `confluence-sync-md` needs 3.14. A tool that needs system
 libraries (WeasyPrint needs Pango and GObject) belongs on brew or scoop, which bundle them.
 `uv tool install weasyprint` installs cleanly and then fails at import.
@@ -141,12 +141,6 @@ install is never fixed by changing the recorded install route**, and whether a g
 is install status belonging in `workstation/machines/<id>.md`. `workstation/cli/README.md` sets out how
 to report each case — and finding one is a matter to raise with the user, not to quietly upgrade.
 
-### Links in the row
-
-**Install docs** is required — the project's own installation page, not a distro's. **Quick start** is
-conditional: include it only when it is a *separate* page from the install docs. For most tools the two
-are one page and repeating the URL adds nothing; write `—` in the quick-start cell instead.
-
 ---
 
 ## B. MCP servers (`#### MCP servers`)
@@ -159,11 +153,9 @@ Create `workstation/mcp/<server>/` and write **two** files:
 | `reference.md` | ingested, via `fetch-to-markdown` | the server's own docs page |
 
 Then add a row to the servers table in `workstation/mcp/README.md`, in the same position the server
-occupies in `SOURCES.md`:
-
-```
-| `<server>` | <Product> | <transport> | [`<server>/`](<server>/) |
-```
+occupies in `SOURCES.md`. Read that table's own header row first and match its current columns —
+its column set has changed before, so a template hard-coded here would go stale the next time it
+does.
 
 **Two files, not three**, and the reasoning lives in `workstation/mcp/README.md`: `setup.md` carries
 only what the tool schemas do not.

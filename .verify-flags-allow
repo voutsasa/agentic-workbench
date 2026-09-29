@@ -19,6 +19,6 @@
 # 0 on git 2.55.0.windows.5, while `git diff -h` names only `--cached` and never
 # prints the string `--staged` at all. The full `git diff --help` is a man or HTML
 # page, which prints nothing to stdout on Windows, so no help parsing reaches the
-# synonym. Covers AGENT-INSTRUCTIONS.md:87 and skills/review/SKILL.md:134, both of
-# which give the command a reviewer runs.
+# synonym. Covers every `git diff --staged` in the repo's docs — the command a
+# reviewer runs, named in more than one place.
 git diff --staged

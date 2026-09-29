@@ -6,8 +6,9 @@ description: Identify this machine and the AI coding assistants on it (Claude Co
 # Set up the agents on this machine
 
 Check workstation status, detect agent configuration, ask, describe, then ask again. **Nothing on the machine changes
-before the user answers step 4**, and even then this skill only ever writes links, plus — with `--mcp` — a merge into
-the repo's own tracked `.mcp.json`, never a client's user-scope config.
+before the user answers step 4**, and even then this skill only ever writes links, the gitignored per-clone
+`CLAUDE.md` (an `@AGENTS.md` import, with `--claude-md`), and a merge into the repo's own tracked `.mcp.json`
+(with `--mcp`) — never a client's user-scope config.
 
 This skill orchestrates recorded routes; it does not carry them. Which agent reads what, and the
 provider steps, are in [`workstation/agent/setup/README.md`](../../workstation/agent/setup/README.md).

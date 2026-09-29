@@ -1,6 +1,7 @@
 # Weekly evidence-verified documentation audit — the Azure DevOps twin of
-# .github/workflows/verify-docs.yml, for the `emaea` remote, which the GitHub
-# workflow never reaches. Same two passes, same reports, same rule: the pipeline
+# .github/workflows/verify-docs.yml, for this repo's Azure DevOps remote, which
+# the GitHub workflow never reaches (the remote's name differs per clone — see
+# each machine note). Same two passes, same reports, same rule: the pipeline
 # never edits documentation; it opens a pull request a human reviews.
 #
 # One-time setup in Azure DevOps, the user's to do:

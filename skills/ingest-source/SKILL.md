@@ -63,9 +63,10 @@ rather than recording a degraded conversion.
 
 ## 3. Record it
 
-Add the source's **one-line, ≤20-word capability summary** to `SOURCE_CATALOGUE.md`, in the same
-section and the same position it occupies in `SOURCES.md`. The two files must stay entry-for-entry
-identical.
+Confirm the source's **one-line, ≤20-word capability summary** already exists in
+`SOURCE_CATALOGUE.md`, in the same section and position it occupies in `SOURCES.md` — `AGENTS.md` has
+it written together with the `SOURCES.md` change at registration. Add it only if the entry was
+registered without one. The two files must stay entry-for-entry identical.
 
 `README.md` is the landing page and carries no source entries, so it needs no change.
 

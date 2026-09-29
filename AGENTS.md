@@ -27,7 +27,7 @@ What each file and folder is: [`README.md`](README.md) — § *Layout*, then the
 
 **Skills**
 
-- `skills/` holds skills that name `SOURCES.md`, `docs/landing-zone/` or `workstation/`; `workstation/agent/skills/` holds global ones. The line and the per-clone `.claude/skills/` links are in `skills/README.md`.
+- `skills/` holds skills that name `SOURCES.md`, `docs/landing-zone/` or `workstation/`; `workstation/agent/skills/` holds global ones. The line and the per-clone `.claude/skills/` links are in `skills/README.md`. A global skill may still name a `workstation/` path when it locates the workbench clone through the machine note's `repo:` field rather than assuming it is the current repo — `setup-mcp-servers` does this (`workstation/agent/skills/setup-mcp-servers/SKILL.md`).
 - `ingest-source` does register mechanics only — no routing, no conversion. `fetch-to-markdown` is global: never add a register or destination directory to it.
 - `setup-agents` carries no route of its own and never writes a settings file.
 - The global skill list is `link_config.py`'s `SKILLS` tuple — never a prose copy.
@@ -43,7 +43,7 @@ What each file and folder is: [`README.md`](README.md) — § *Layout*, then the
 
 **Repo mechanics**
 
-- `.verify-claims-allow` lists only paths *meant* not to exist here, each with a reason. A path that should exist and does not is a defect to fix, never an entry. `.verify-flags-allow` is its sibling for flag claims and stays separate for exactly that reason — it lists only a flag that *works* but that no help text documents, and a flag the tool lacks is a defect in the document. All of `.pre-push-tests`, `.pre-push-ruff`, and `.pre-push-pyright` stay repo-local: the pre-push hook is shared across repos.
+- `.verify-claims-allow` lists only paths meant not to exist here, or per-clone/machine state not guaranteed on a fresh clone, each with a reason. A path that should exist and does not is a defect to fix, never an entry. `.verify-flags-allow` is its sibling for flag claims and stays separate for exactly that reason — it lists only a flag that *works* but that no help text documents, and a flag the tool lacks is a defect in the document. All of `.pre-push-tests`, `.pre-push-ruff`, and `.pre-push-pyright` stay repo-local: the pre-push hook is shared across repos.
 - Run repository Python validation from the project `.venv`: execute the relevant `unittest` suites named in `.pre-push-tests`, then run `ruff check .`, `ruff format --check .`, and the venv interpreter with `-m pyright` (`.venv\Scripts\python.exe -m pyright` on Windows; `.venv/bin/python -m pyright` on macOS). The hook's suite list remains the source of truth; do not duplicate it in prose.
 
 ## The layer model
