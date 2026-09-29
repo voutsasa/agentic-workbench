@@ -280,6 +280,13 @@ this table by hand. `Kind` says what the source is, not how it is linked — `di
 directory, else `file` (`link_config.py`, the `kind =` line in its report); on Windows a `dir` is still a
 junction and a `file` a hardlink, per the module's link-creation docstring.
 
+### Copilot MCP servers validated end to end on 29 September 2026
+
+Copilot CLI reloaded four MCP servers. `ado-remote-mcp` successfully listed **165** accessible private
+Azure DevOps projects in `euemadev` without another Entra sign-in. `open_drawio_mermaid` successfully
+created the `Start -> Validate -> Complete` diagram and returned a Draw.io Editor URL. The project
+names and generated URL are intentionally not recorded here.
+
 **The first `--force`, on 26 August 2026**, was the same situation with more at stake: `CLAUDE.md` read
 `diverged` because the live copy was a plain edited file, not a link. That was safe only because the
 drift had already been triaged: of its 14 live-only lines, 12 were

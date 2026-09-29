@@ -17,6 +17,14 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 33. Claude has not validated the Windows drawio-mcp connection
+
+Opened 2026-09-29. The catalog entry is linked, but Claude's `drawio-mcp` connection timed out after
+30 seconds. This is independent of the Azure DevOps MCP OAuth requirement in item 28.
+
+**Closes when:** Claude reports `drawio-mcp` connected and successfully invokes one Draw.io tool from
+the Windows setup.
+
 ### 31. The documentation claim extractor binds local-script flags to `python`
 
 Opened 2026-09-29. A Databricks MCP setup check found that a command such as
@@ -76,19 +84,19 @@ correlated audit trace reconstructs the principal, agent, task, policy decision,
 outcome; and a security review confirms that neither the agent nor its prompts can access the
 gateway's confidential-client credential.
 
-### 28. The Windows Claude and Copilot setup has not run end to end, including MCP servers
+### 28. Claude has not validated ado-remote-mcp from Windows
 
 Opened 2026-09-28. `status.py` reports **READY WITH ACTIONS**: all required prerequisites are present;
 the latest observed versions are Claude Code 2.1.284 and GitHub Copilot CLI 1.0.89. The 29 September
 `link_config.py --project --agent claude --agent copilot --mcp --apply` report has **24 of 24** links
-live and both catalog servers linked in `.mcp.json`. Copilot lists both workspace servers. Claude cannot
-connect to ado-remote-mcp because its Entra server does not support dynamic client registration;
+live and both catalog servers linked in `.mcp.json`. Claude cannot connect to ado-remote-mcp because
+its Entra server does not support dynamic client registration;
 `workstation/mcp/ado-remote-mcp/setup.md` requires an org-wide Entra app registration and the project's
-OAuth client ID. Claude's drawio-mcp connection timed out after 30 seconds.
+OAuth client ID.
 
 **Closes when:** the Entra app registration, delegated permissions, and Claude project OAuth client
-configuration are in place; Claude successfully invokes both registered MCP servers; and Copilot
-completes its Entra sign-in and successfully invokes both servers from the same Windows setup.
+configuration are in place; and Claude successfully invokes an Azure DevOps MCP tool from the Windows
+setup.
 
 ### 25. The README *Install* steps have not run on Windows
 
