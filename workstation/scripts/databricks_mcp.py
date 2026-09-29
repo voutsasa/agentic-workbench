@@ -7,9 +7,12 @@ the read-only Unity Catalog MCP-services API, then generates rather than copies
 commands per service and per client.
 
 Writes nothing and registers nothing: registering an MCP server is the user's
-step (``AGENTS.md`` § *The user installs; the agent records*). The one command
-it may run is the read-only ``databricks auth describe``, to resolve the host
-and workspace ID when they are not passed.
+step (``AGENTS.md`` § *The user installs; the agent records*). Unless
+``--remove`` is passed, it runs the read-only ``databricks api get
+.../unity-catalog/mcp-services...`` to discover the profile's current internal
+services, and the read-only ``databricks auth describe`` to resolve the host
+and workspace ID when they are not passed. Neither command registers or
+changes anything.
 
 Standard library only. Run from anywhere::
 
@@ -38,6 +41,8 @@ MCP_SERVICES_PATH = (
 
 # The profile and host are interpolated into a shell command (the Claude
 # headersHelper), so only characters that cannot break out of it are accepted.
+#: Matched with ``fullmatch``, not ``match``: ``$`` alone tolerates one trailing
+#: ``\n``, which would otherwise let a profile or host slip past this check.
 PROFILE_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 HOST_RE = re.compile(r"^https://[A-Za-z0-9.-]+$")
 WORKSPACE_ID_RE = re.compile(r"^[0-9]+$")
@@ -218,7 +223,7 @@ def resolve_workspace(
     workspace_id: str | None,
     describe: Callable[[str], tuple[str, str]] = describe_profile,
 ) -> Workspace:
-    if not PROFILE_RE.match(profile):
+    if not PROFILE_RE.fullmatch(profile):
         raise ValueError(
             f"profile {profile!r}: use letters, digits, '.', '_' or '-' only"
         )
@@ -227,7 +232,7 @@ def resolve_workspace(
         host = host or described_host
         workspace_id = workspace_id or described_id
     host = host.rstrip("/")
-    if not HOST_RE.match(host):
+    if not HOST_RE.fullmatch(host):
         raise ValueError(f"host {host!r}: expected https://<workspace-hostname>")
     if not WORKSPACE_ID_RE.match(workspace_id):
         raise ValueError(f"workspace ID {workspace_id!r}: expected digits only")
@@ -272,7 +277,7 @@ def main(
     args = build_parser().parse_args(argv)
 
     try:
-        if not PROFILE_RE.match(args.profile):
+        if not PROFILE_RE.fullmatch(args.profile):
             raise ValueError(
                 f"profile {args.profile!r}: use letters, digits, '.', '_' or '-' only"
             )
@@ -294,6 +299,17 @@ def main(
             ws = resolve_workspace(args.profile, args.host, args.workspace_id, describe)
     except (TypeError, ValueError) as exc:
         print(f"databricks_mcp: {exc}", file=sys.stderr)
+        return 2
+    except OSError as exc:
+        print(
+            f"databricks_mcp: could not run the `databricks` CLI: {exc}",
+            file=sys.stderr,
+        )
+        return 2
+    except subprocess.TimeoutExpired as exc:
+        print(
+            f"databricks_mcp: `databricks` CLI call timed out: {exc}", file=sys.stderr
+        )
         return 2
 
     clients = list(dict.fromkeys(args.client or CLIENTS))

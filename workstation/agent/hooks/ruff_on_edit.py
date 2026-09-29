@@ -34,31 +34,45 @@ PATH_KEYS = ("file_path", "path", "filePath")
 
 #: Copilot's ``apply_patch`` tool passes a patch body, not JSON, as ``toolArgs``:
 #: ``*** Begin Patch\n*** Update File: <path>\n...``. ``Add File`` covers a patch
-#: that creates a file instead of editing one.
-PATCH_FILE_LINE = re.compile(r"^\*\*\* (?:Update|Add) File: (.+)$", re.MULTILINE)
+#: that creates a file instead of editing one. The path is matched non-greedily
+#: with an optional trailing ``\r`` before ``$``: on a CRLF patch, plain ``(.+)$``
+#: keeps the ``\r`` in the capture (``$`` in MULTILINE mode matches just before
+#: the ``\n``), which then never compares equal to a bare ``.py`` suffix.
+PATCH_FILE_LINE = re.compile(r"^\*\*\* (?:Update|Add) File: (.+?)\r?$", re.MULTILINE)
 
 
-def edited_path(payload: dict) -> Path | None:
-    """The file the tool wrote, absolute, or None when the payload names none."""
+def _resolve(value: str | None, cwd: Path) -> Path | None:
+    if not value:
+        return None
+    path = Path(value)
+    return path if path.is_absolute() else cwd / path
+
+
+def edited_paths(payload: dict) -> list[Path]:
+    """Every file the tool wrote, absolute. A multi-file ``apply_patch`` body
+    names one per ``Update``/``Add File`` line; any other payload names one."""
+    cwd = Path(payload.get("cwd") or os.getcwd())
     args = payload.get("tool_input") or payload.get("toolArgs") or {}
-    value = None
     if isinstance(args, str):
         try:
             args = json.loads(args)
         except ValueError:
-            match = PATCH_FILE_LINE.search(args)
-            value = match.group(1) if match else None
-            args = {}
-    if value is None:
-        if not isinstance(args, dict):
-            return None
-        value = next((args[k] for k in PATH_KEYS if isinstance(args.get(k), str)), None)
-    if not value:
-        return None
-    path = Path(value)
-    if not path.is_absolute():
-        path = Path(payload.get("cwd") or os.getcwd()) / path
-    return path
+            paths = [
+                _resolve(match.group(1), cwd)
+                for match in PATCH_FILE_LINE.finditer(args)
+            ]
+            return [path for path in paths if path is not None]
+    if not isinstance(args, dict):
+        return []
+    value = next((args[k] for k in PATH_KEYS if isinstance(args.get(k), str)), None)
+    path = _resolve(value, cwd)
+    return [path] if path is not None else []
+
+
+def edited_path(payload: dict) -> Path | None:
+    """The first file the tool wrote, absolute, or None when it names none."""
+    paths = edited_paths(payload)
+    return paths[0] if paths else None
 
 
 def ruff_beside(interpreter: str) -> Path:
@@ -72,20 +86,22 @@ def main(stdin=None, interpreter: str = sys.executable, run=subprocess.run) -> i
         payload = json.load(stdin if stdin is not None else sys.stdin)
     except ValueError:
         return 0
-    path = edited_path(payload) if isinstance(payload, dict) else None
-    if path is None or path.suffix != ".py" or not path.is_file():
+    paths = edited_paths(payload) if isinstance(payload, dict) else []
+    py_paths = [path for path in paths if path.suffix == ".py" and path.is_file()]
+    if not py_paths:
         return 0
     ruff = ruff_beside(interpreter)
     if not ruff.is_file():
         return 0
     status = 0
-    for command in (["check", "--fix"], ["format"]):
-        done = run(
-            [str(ruff), *command, str(path)],
-            stdin=subprocess.DEVNULL,
-            check=False,
-        )
-        status = status or done.returncode
+    for path in py_paths:
+        for command in (["check", "--fix"], ["format"]):
+            done = run(
+                [str(ruff), *command, str(path)],
+                stdin=subprocess.DEVNULL,
+                check=False,
+            )
+            status = status or done.returncode
     return status
 
 

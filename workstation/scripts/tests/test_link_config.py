@@ -192,6 +192,26 @@ class TestInspect(TempTree):
         (link.dest / "b").write_text("y", encoding="utf-8")
         self.assertIn("2 entries", lc.inspect(link).detail)
 
+    def test_a_regular_file_where_a_directory_is_expected_is_occupied(self) -> None:
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        link.dest.parent.mkdir(parents=True, exist_ok=True)
+        link.dest.write_text("not a directory", encoding="utf-8")
+        state = lc.inspect(link)
+        self.assertEqual(state.status, lc.OCCUPIED)
+        self.assertIn("file where a directory is expected", state.detail)
+
+    def test_a_junction_to_another_existing_target_is_occupied_not_a_real_directory(
+        self,
+    ) -> None:
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        link.dest.mkdir(parents=True)
+        (link.dest / "unexpected.md").write_text("x", encoding="utf-8")
+        with mock.patch.object(os.path, "isjunction", return_value=True, create=True):
+            state = lc.inspect(link)
+        self.assertEqual(state.status, lc.OCCUPIED)
+        self.assertIn("junction", state.detail.lower())
+        self.assertNotIn("real directory holding", state.detail)
+
 
 class TestSameTarget(TempTree):
     def test_a_plain_copy_is_not_the_same_target(self) -> None:
@@ -262,6 +282,17 @@ class TestApply(TempTree):
         report = lc.apply(lc.inspect_all([link]))
         self.assertEqual(report.states[0].status, lc.OCCUPIED)
         self.assertEqual((link.dest / "mine.md").read_text(encoding="utf-8"), "keep me")
+
+    def test_force_still_refuses_to_delete_a_non_empty_real_directory(self) -> None:
+        """--force safely replaces a junction or a stray file, but never deletes
+        user data: a non-empty real directory must be cleared by hand."""
+        link = next(l for l in self.plan() if l.label == "skills/review")
+        link.dest.mkdir(parents=True)
+        (link.dest / "mine.md").write_text("keep me", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([link]), force=True)
+        self.assertNotEqual(report.states[0].status, lc.LINKED)
+        self.assertEqual((link.dest / "mine.md").read_text(encoding="utf-8"), "keep me")
+        self.assertIn("by hand", report.states[0].detail)
 
     def test_no_source_is_never_linked(self) -> None:
         link = next(l for l in self.plan() if l.label == "machine.md")

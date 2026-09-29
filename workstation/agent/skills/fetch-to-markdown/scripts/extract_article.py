@@ -274,6 +274,7 @@ class ArticleExtractor(HTMLParser):
         super().__init__(convert_charrefs=False)
         self.tag, self.attr, self.value = tag, attr, value
         self.inside = False
+        self.done = False  # first match wins: set once the target node closes
         self.stack: list[str] = []  # open elements inside the target node
         self.chunks: list[str] = []
 
@@ -305,7 +306,10 @@ class ArticleExtractor(HTMLParser):
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         if not self.inside:
-            if self._matches(tag, attrs):
+            # First match wins: once the target node has been extracted and
+            # closed, a later node of the same name — e.g. a second <main> in
+            # the page's footer — must not be appended to it.
+            if not self.done and self._matches(tag, attrs):
                 self.inside = True
             return
         if tag in IMPLIED_CLOSE:
@@ -331,6 +335,7 @@ class ArticleExtractor(HTMLParser):
             # The target node's own end tag: close whatever it still holds.
             self._pop_to(0)
             self.inside = False
+            self.done = True
         elif tag not in VOID:
             # A stray end tag with nothing to close; pandoc ignores it.
             self.chunks.append(f"</{tag}>")

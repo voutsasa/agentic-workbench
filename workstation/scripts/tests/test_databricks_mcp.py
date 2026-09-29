@@ -10,6 +10,7 @@ from __future__ import annotations
 import io
 import json
 import shlex
+import subprocess
 import sys
 import unittest
 from contextlib import redirect_stderr, redirect_stdout
@@ -168,6 +169,38 @@ class MainTest(unittest.TestCase):
         self.assertEqual(out, "")
         self.assertIn("profile", err)
 
+    def test_profile_with_trailing_newline_is_refused(self):
+        code, out, err = run(
+            ["--profile", "dbc-abc\n", "--host", WS.host, "--workspace-id", "123"]
+        )
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+        self.assertIn("profile", err)
+
+    def test_missing_databricks_cli_is_reported_not_raised(self):
+        def discover_missing_cli(_profile: str) -> tuple[str, ...]:
+            raise FileNotFoundError("databricks")
+
+        code, out, err = run(
+            ["--profile", "dbc-abc", "--host", WS.host, "--workspace-id", "123"],
+            discover=discover_missing_cli,
+        )
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+        self.assertIn("databricks", err)
+
+    def test_discovery_timeout_is_reported_not_raised(self):
+        def discover_timeout(_profile: str) -> tuple[str, ...]:
+            raise subprocess.TimeoutExpired(cmd="databricks", timeout=60)
+
+        code, out, err = run(
+            ["--profile", "dbc-abc", "--host", WS.host, "--workspace-id", "123"],
+            discover=discover_timeout,
+        )
+        self.assertEqual(code, 2)
+        self.assertEqual(out, "")
+        self.assertIn("timed out", err.lower())
+
 
 class ResolveTest(unittest.TestCase):
     def test_bad_host_and_id(self):
@@ -175,6 +208,14 @@ class ResolveTest(unittest.TestCase):
             resolve_workspace("p", "http://insecure.example", "1", no_describe)
         with self.assertRaises(ValueError):
             resolve_workspace("p", WS.host, "12a", no_describe)
+
+    def test_profile_with_trailing_newline_is_rejected(self):
+        with self.assertRaises(ValueError):
+            resolve_workspace("dbc-abc\n", WS.host, "123", no_describe)
+
+    def test_host_with_trailing_newline_is_rejected(self):
+        with self.assertRaises(ValueError):
+            resolve_workspace("dbc-abc", WS.host + "\n", "123", no_describe)
 
     def test_parse_describe(self):
         output = json.dumps({

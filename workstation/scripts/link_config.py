@@ -512,6 +512,26 @@ def inspect(link: Link) -> LinkState:
     if same_target(link.source, link.dest):
         return LinkState(link, LINKED, "")
     if link.is_dir:
+        # A junction or symlink pointing at some *other* existing directory is
+        # still just a link — --force replaces it safely, the same as any other
+        # detached link. Checked before iterdir(), which would otherwise report
+        # its target's contents as if they belonged to a real directory here.
+        if is_junction(link.dest):
+            detail = "junction to another target"
+            try:
+                detail += f" ({os.readlink(link.dest)})"
+            except OSError:
+                pass
+            return LinkState(link, OCCUPIED, detail)
+        if link.dest.is_symlink():
+            detail = "symlink to another target"
+            try:
+                detail += f" ({os.readlink(link.dest)})"
+            except OSError:
+                pass
+            return LinkState(link, OCCUPIED, detail)
+        if not link.dest.is_dir():
+            return LinkState(link, OCCUPIED, "file where a directory is expected")
         # A directory that is not the target and holds files is somebody's data.
         entries = sorted(p.name for p in link.dest.iterdir())
         if entries:
@@ -519,7 +539,8 @@ def inspect(link: Link) -> LinkState:
                 link,
                 OCCUPIED,
                 f"real directory holding {len(entries)} entr"
-                f"{'y' if len(entries) == 1 else 'ies'}",
+                f"{'y' if len(entries) == 1 else 'ies'}"
+                " — non-empty, so --force cannot clear it: remove it by hand first",
             )
         return LinkState(link, DETACHED, "empty directory, not a link")
     try:
@@ -573,7 +594,13 @@ def clear_dest(state: LinkState) -> None:
     if not dest.exists() and not dest.is_symlink():
         return
     if dest.is_dir() and not dest.is_symlink():
-        os.rmdir(dest)
+        try:
+            os.rmdir(dest)
+        except OSError as exc:
+            raise OSError(
+                f"{dest} is a non-empty real directory holding user data; "
+                "--force does not delete it — clear it by hand, then re-run"
+            ) from exc
     else:
         dest.unlink()
 
@@ -711,7 +738,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--force",
         action="store_true",
-        help="with --apply, also replace a diverged or occupied destination",
+        help="with --apply, also replace a diverged destination, or an occupied "
+        "one that is a file or a junction/symlink to another target; never a "
+        "non-empty real directory, which must be cleared by hand",
     )
     formats = parser.add_mutually_exclusive_group()
     formats.add_argument("--json", action="store_true", help="machine-readable output")

@@ -78,6 +78,28 @@ class TestEditedPath(unittest.TestCase):
         payload = {"toolArgs": patch, "cwd": "/repo"}
         self.assertEqual(hook.edited_path(payload), Path("/repo/a.py"))
 
+    def test_copilot_apply_patch_with_crlf_line_endings(self):
+        """A patch using CRLF must not leave a trailing '\\r' in the path, or
+        the suffix check downstream (`.py` vs `.py\\r`) never matches."""
+        patch = (
+            "*** Begin Patch\r\n*** Update File: a.py\r\n@@\r\n-x=1\r\n+x = 1\r\n"
+            "*** End Patch\r\n"
+        )
+        payload = {"toolArgs": patch, "cwd": "/repo"}
+        self.assertEqual(hook.edited_path(payload), Path("/repo/a.py"))
+
+    def test_edited_paths_returns_every_file_in_a_multi_file_patch(self):
+        patch = (
+            "*** Begin Patch\n"
+            "*** Update File: a.py\n@@\n-x=1\n+x = 1\n"
+            "*** Update File: b.py\n@@\n-y=2\n+y = 2\n"
+            "*** End Patch\n"
+        )
+        payload = {"toolArgs": patch, "cwd": "/repo"}
+        self.assertEqual(
+            hook.edited_paths(payload), [Path("/repo/a.py"), Path("/repo/b.py")]
+        )
+
 
 class TestMain(unittest.TestCase):
     def setUp(self):
@@ -135,6 +157,22 @@ class TestMain(unittest.TestCase):
     def test_malformed_stdin_is_ignored(self):
         self.assertEqual(hook.main(io.StringIO("{"), str(self.python), self.runner), 0)
         self.runner.assert_not_called()
+
+    def test_multi_file_patch_processes_every_python_file(self):
+        second = self.root / "b.py"
+        second.write_text("y=2\n")
+        patch = (
+            "*** Begin Patch\n"
+            f"*** Update File: {self.file}\n@@\n-x=1\n+x = 1\n"
+            f"*** Update File: {second}\n@@\n-y=2\n+y = 2\n"
+            "*** End Patch\n"
+        )
+        payload = {"toolArgs": patch, "cwd": str(self.root)}
+        stdin = io.StringIO(json.dumps(payload))
+        status = hook.main(stdin, str(self.python), self.runner)
+        self.assertEqual(status, 0)
+        processed = {Path(c.args[0][-1]) for c in self.runner.call_args_list}
+        self.assertEqual(processed, {self.file, second})
 
 
 if __name__ == "__main__":

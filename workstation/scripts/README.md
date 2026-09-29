@@ -160,7 +160,7 @@ linking it. See [`../agent/README.md`](../agent/README.md#settings-are-merged-ne
 | `missing` | nothing at the destination | creates it |
 | `detached` | plain copy whose **content still matches**, or a **dangling symlink** whose target was renamed away — either way nothing has been lost | re-links it |
 | `diverged` | plain copy, **content differs** — the destination holds edits the repo lacks | **skipped**; needs `--force` |
-| `occupied` | destination is a real directory with files in it | **skipped**; needs `--force` |
+| `occupied` | destination is a file, or a junction/symlink to another target, where the plan expects a directory — or a real directory holding files | **skipped**; `--force` replaces a file or a junction/symlink to another target, but never a non-empty real directory — that holds user data and must be cleared by hand first |
 | `no_source` | the repo has no such file, e.g. no machine note for this host | never linked |
 
 The `detached`/`diverged` split is the point of the script. Both look identical to anything comparing
@@ -200,13 +200,15 @@ means it can be re-derived instead of trusted.
 ```
 python workstation/scripts/databricks_mcp.py --profile <profile>                   # every service, both clients
 python workstation/scripts/databricks_mcp.py --profile <profile> --client copilot --service dbsql
-python workstation/scripts/databricks_mcp.py --profile <profile> --remove          # the matching removals
+python workstation/scripts/databricks_mcp.py --profile <profile> --remove --service <service>  # the matching removals
 ```
 
-Prints the `claude mcp add-json` and `copilot mcp add` commands that register Databricks' group A MCP
-services (`genie_one_mcp`, `dbsql`, `web_search`, `sandbox`). It **runs none of them**, because
-registration is the user's step. The only command it runs is the read-only `databricks auth describe`,
-and only when `--host` or `--workspace-id` is missing. Claude gets an `http` entry with a
+Prints the `claude mcp add-json` and `copilot mcp add` commands that register a profile's currently
+internal `system.ai` MCP services — discovered at run time from the workspace's Unity Catalog
+MCP-services API, not a fixed list. It **runs none of the registration commands themselves**, because
+registration is the user's step. Unless `--remove` is passed, it runs the read-only
+`databricks api get .../unity-catalog/mcp-services...` to discover those services, and also the
+read-only `databricks auth describe` when `--host` or `--workspace-id` is missing. Claude gets an `http` entry with a
 `headersHelper`; Copilot gets a `ug mcp-proxy` stdio bridge, because its config can't fetch a token
 itself. The reasoning, authentication and traps are in
 [`../mcp/databricks-mcp/setup.md`](../mcp/databricks-mcp/setup.md).

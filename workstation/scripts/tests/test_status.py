@@ -195,6 +195,24 @@ class PrerequisiteProbeTests(unittest.TestCase):
         probe_all.assert_called_once_with("python", timeout=1)
 
     @mock.patch("status.inventory.probe_all_versions")
+    def test_all_versions_still_shows_the_active_version_when_path_lacks_it(
+        self, probe_all: mock.Mock
+    ) -> None:
+        """The runtime that actually ran this script (3.14.0) must not drop out
+        just because PATH only resolves an older 3.13.1."""
+        probe_all.return_value = [
+            inventory.Probe("python", inventory.INSTALLED, version="3.13.1"),
+        ]
+        row = status.probe_prerequisite(
+            {**PYTHON_RUNTIME, "all_versions": True},
+            timeout=1,
+            runtime_version="3.14.0",
+            runtime_path=r"C:\repo\.venv\Scripts\python.exe",
+            venv=True,
+        )
+        self.assertEqual(row.version, "3.14.0 (active), 3.13.1")
+
+    @mock.patch("status.inventory.probe_all_versions")
     def test_all_versions_without_the_flag_is_not_probed(
         self, probe_all: mock.Mock
     ) -> None:
@@ -208,9 +226,11 @@ class PrerequisiteProbeTests(unittest.TestCase):
         probe_all.assert_not_called()
 
     @mock.patch("status.inventory.probe_all_versions")
-    def test_no_extra_versions_found_keeps_the_single_version(
+    def test_no_extra_versions_found_still_marks_the_active_one(
         self, probe_all: mock.Mock
     ) -> None:
+        """Even with nothing else on PATH, the active version is always shown,
+        tagged — never silently absent."""
         probe_all.return_value = []
         row = status.probe_prerequisite(
             {**PYTHON_RUNTIME, "all_versions": True},
@@ -219,7 +239,7 @@ class PrerequisiteProbeTests(unittest.TestCase):
             runtime_path=r"C:\repo\.venv\Scripts\python.exe",
             venv=True,
         )
-        self.assertEqual(row.version, "python 3.14.7")
+        self.assertEqual(row.version, "3.14.7 (active)")
 
 
 class CollectVenvTests(unittest.TestCase):

@@ -130,6 +130,17 @@ class NodeSelectionTests(unittest.TestCase):
         self.assertNotIn("chrome", out)
         self.assertNotIn("<footer>", out)
 
+    def test_a_second_matching_node_after_the_first_closes_is_ignored(self):
+        """First-match-wins: a second <main> in the footer must not be appended
+        after the target's own end tag has already closed the extraction."""
+        html = (
+            "<body><main><h2>Real</h2></main>"
+            "<footer><main><h2>Footer main</h2></main></footer></body>"
+        )
+        out = extract(html, "main")
+        self.assertIn("<h2>Real</h2>", out)
+        self.assertNotIn("Footer main", out)
+
     def test_attribute_selector_finds_a_node_with_no_class_or_id(self):
         """typescriptlang.org/docs keeps its article in a bare <main role="main">,
         with the site settings and the footer outside it."""

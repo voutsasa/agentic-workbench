@@ -147,15 +147,17 @@ def probe_prerequisite(
     if entry.get("all_versions"):
         stem = re.sub(r"\d+(\.\d+)*$", "", commands[0])
         active_version = installed[0].version if installed else ""
-        distinct = sorted(
-            {
-                probe.version
-                for probe in inventory.probe_all_versions(stem, timeout=timeout)
-                if probe.status == inventory.INSTALLED and probe.version
-            },
-            key=version_key,
-            reverse=True,
-        )
+        discovered = {
+            probe.version
+            for probe in inventory.probe_all_versions(stem, timeout=timeout)
+            if probe.status == inventory.INSTALLED and probe.version
+        }
+        # The interpreter that actually ran this script may not be the one PATH
+        # resolves to (e.g. a venv's base interpreter), so it must always be in
+        # the list — never only among whatever probe_all_versions found on PATH.
+        if active_version:
+            discovered.add(active_version)
+        distinct = sorted(discovered, key=version_key, reverse=True)
         if distinct:
             version = ", ".join(
                 f"{v} (active)" if v == active_version else v for v in distinct
