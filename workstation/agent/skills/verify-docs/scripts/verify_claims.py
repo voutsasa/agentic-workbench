@@ -486,7 +486,9 @@ def fenced_lines(repo_root: Path, file: str) -> set[int]:
 
 def command_on_line(text: str, flag: str) -> list[str] | None:
     """Recover the invocation carrying `flag` from a markdown line."""
-    candidates = [text.strip().lstrip("$> ").strip()]
+    # A line that marks its code with backticks is prose; only the spans are
+    # commands. Read whole, `All three ... `--out-file`` ran `All` as a binary.
+    candidates = [] if "`" in text else [text.strip().lstrip("$> ").strip()]
     candidates += [m.strip() for m in INLINE_CODE_RE.findall(text)]
     for candidate in candidates:
         if flag in candidate.split() or any(
@@ -649,9 +651,14 @@ class Verifier:
             return None
         # A probe runs in a throwaway directory: some tools write there even for
         # --help (`db2dbml` leaves `dbml-error.log`), and the caller's cwd is
-        # usually the repo under check. `help_subject` makes script paths absolute.
+        # usually the repo under check. It sits inside that repo, under `.git`
+        # where `git status` cannot see it, because help can depend on context:
+        # outside a repo `git diff -h` prints only its `--no-index` usage.
+        # `help_subject` makes script paths absolute.
+        git_dir = self.repo_root / ".git"
+        parent = git_dir if git_dir.is_dir() else self.repo_root
         try:
-            with tempfile.TemporaryDirectory() as scratch:
+            with tempfile.TemporaryDirectory(dir=parent) as scratch:
                 done = subprocess.run(
                     [executable, *argv[1:]],
                     check=False,  # the text is under test, not the status

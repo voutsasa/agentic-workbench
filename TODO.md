@@ -43,15 +43,6 @@ The old substring test accepted it. No claim of that shape is known in the repo.
 **Closes when:** a test pins the behaviour for a single-integer version — accepted if the tool prints
 it as its version, or documented as unsupported.
 
-### 38. `verify_claims.py` names the wrong subject in one help-text claim
-
-Opened 2026-09-29. For line 19 of `workstation/cli/dbml-cli/quick_start.md` (`db2dbml supports --out-file`) the
-evidence reads "All is not on PATH here": the extractor takes a word of prose, not `db2dbml`, as the
-binary. HEAD behaves the same, so this predates the 2026-09-29 fixes.
-
-**Closes when:** a regression test reproduces the wrong subject and the claim is verified against
-`db2dbml`.
-
 ### 37. A first push whose tip is already on the default branch verifies nothing
 
 Opened 2026-09-29. The pre-push hook diffs a new branch against the remote default branch, else `main`,

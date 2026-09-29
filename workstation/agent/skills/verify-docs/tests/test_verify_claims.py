@@ -17,6 +17,7 @@ import io
 import json
 import os
 import shutil
+import subprocess
 import sys
 import tempfile
 import time
@@ -310,6 +311,19 @@ class TestSimilarLookingSubjects(unittest.TestCase):
             self.assertEqual(UNVERIFIABLE, verdict)
             self.assertIn("inferred from prose", evidence)
 
+    def test_prose_around_an_inline_flag_is_not_an_invocation(self):
+        """dbml-cli/quick_start.md:19 was probed as the command `All three ...`."""
+        page = "All three write to stdout unless given `-o, --out-file <path>`.\n"
+        with (
+            TempRepo({"doc.md": page}) as root,
+            OnPath("db2dbml", "  -o, --out-file <pathspec>\n"),
+        ):
+            _name, evidence, verdict = Verifier(root).verify_cli_flag(
+                claim("cli_flag", "db2dbml supports --out-file", line=1)
+            )
+            self.assertEqual(VERIFIED, verdict, evidence)
+            self.assertIn("db2dbml", evidence)
+
     def test_a_flag_in_a_real_invocation_is_refutable(self):
         page = "```sh\npandoc --pdf-variant in.md\n```\n"
         with TempRepo({"doc.md": page}) as root, OnPath("pandoc", "--pdf-engine\n"):
@@ -507,6 +521,15 @@ class TestProbeWorkingDirectory(unittest.TestCase):
                 os.chdir(previous)
             self.assertIn("--out-file", output or "")
             self.assertEqual(list(Path(caller).iterdir()), [])
+
+    @unittest.skipUnless(shutil.which("git"), "git is not on PATH")
+    def test_a_probe_keeps_the_repository_context(self):
+        """Outside a repo `git diff -h` prints only its `--no-index` usage."""
+        with tempfile.TemporaryDirectory() as repo:
+            subprocess.run(["git", "init", "-q", repo], check=True)
+            output = Verifier(Path(repo)).help_output(["git", "diff"], "-h")
+            self.assertIn("--cached", output or "")
+            self.assertEqual([p.name for p in Path(repo).iterdir()], [".git"])
 
 
 class TestSafeConcurrentHelp(unittest.TestCase):
