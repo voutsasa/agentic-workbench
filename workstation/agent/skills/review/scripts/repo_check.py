@@ -34,12 +34,13 @@ Exit codes:
 Exit 2 is deliberately distinct from 1: a gate that reports success because the
 checker broke is worse than no gate. Both fail a push.
 
-Stdlib only, matching clean_md_images.py at the repo root.
+Stdlib only, matching fetch-to-markdown's scripts/clean_md_images.py.
 """
 
 from __future__ import annotations
 
 import argparse
+import io
 import json
 import posixpath
 import re
@@ -101,25 +102,31 @@ def enabled_checks(config: dict) -> list[str]:
 
 
 def collect_files(repo_root: Path, config: dict, runner=subprocess.run) -> list[str]:
-    """Tracked markdown, minus the excluded corpus paths.
+    """Tracked files matching scope.include_globs, minus scope.exclude_globs.
 
     Uses git rather than a filesystem walk so the ingested corpus — gitignored by
-    design — never enters the check. -z because paths contain spaces.
+    design — never enters the check. -z because paths contain spaces; UTF-8
+    because that is what git emits, whatever the locale codepage is.
     """
     proc = runner(
-        ["git", "-C", str(repo_root), "ls-files", "-z", "*.md"],
+        ["git", "-C", str(repo_root), "ls-files", "-z"],
         capture_output=True,
         text=True,
+        encoding="utf-8",
         check=False,
     )
     if proc.returncode != 0:
         raise CheckError(f"git ls-files failed: {proc.stderr.strip()}")
 
-    excluded = config.get("scope", {}).get("exclude_globs", [])
+    scope = config.get("scope", {})
+    included = scope.get("include_globs", ["**/*.md"])
+    excluded = scope.get("exclude_globs", [])
     files = [
         rel
         for rel in proc.stdout.split("\0")
-        if rel.strip() and not any(_matches(rel, pat) for pat in excluded)
+        if rel.strip()
+        and any(_matches(rel, pat) for pat in included)
+        and not any(_matches(rel, pat) for pat in excluded)
     ]
     return sorted(files)
 
@@ -341,6 +348,14 @@ def check_terminology(repo_root: Path, files: list[str], config: dict) -> list[d
     ]
     violations = []
     for rel in files:
+        # A rule's allow_paths exempts whole files; the rest of the rules still apply.
+        applicable = [
+            entry
+            for entry in compiled
+            if not any(_matches(rel, glob) for glob in entry[0].get("allow_paths", []))
+        ]
+        if not applicable:
+            continue
         path = repo_root / rel
         for lineno, line in prose_lines(read_text(path)):
             # A link target is a path or URL, not prose, so it is stripped before
@@ -349,7 +364,7 @@ def check_terminology(repo_root: Path, files: list[str], config: dict) -> list[d
             # (a [Download] link to imagemagick.org names their page, not ours).
             prose = INLINE_LINK.sub(lambda m: m.group(0).split("](")[0] + "]", line)
             lowered = line.lower()
-            for rule, pattern, allowed in compiled:
+            for rule, pattern, allowed in applicable:
                 match = pattern.search(prose)
                 if not match:
                     continue
@@ -947,4 +962,10 @@ def _git_root(start: Path) -> Path:
 
 
 if __name__ == "__main__":
+    # A git hook inherits the console codepage (cp1252 on Windows), which cannot
+    # encode every tracked path or the report's own dashes. Same fix as
+    # verify_claims.py: reconfigure before the first print.
+    for stream in (sys.stdout, sys.stderr):
+        if isinstance(stream, io.TextIOWrapper):
+            stream.reconfigure(encoding="utf-8")
     sys.exit(main())

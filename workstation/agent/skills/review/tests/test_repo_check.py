@@ -5,6 +5,7 @@ python3 -m unittest discover -s tests
 
 from __future__ import annotations
 
+import os
 import subprocess
 import sys
 import tempfile
@@ -434,6 +435,18 @@ class TestCheckTerminology(unittest.TestCase):
             self.assertEqual(
                 len(repo_check.check_terminology(repo.root, ["a.md"], _cfg())), 1
             )
+
+    def test_allow_paths_exempts_matching_files_only(self):
+        """A rule's allow_paths globs are read, not just documented."""
+        cfg = _cfg()
+        cfg["checks"]["terminology"]["rules"][0]["allow_paths"] = ["vendor/**"]
+        with TempRepo(
+            {"vendor/x.md": "Download it.\n", "a.md": "Download it.\n"}
+        ) as repo:
+            flagged = repo_check.check_terminology(
+                repo.root, ["a.md", "vendor/x.md"], cfg
+            )
+            self.assertEqual([v["file"] for v in flagged], ["a.md"])
 
 
 class TestParseFrontmatter(unittest.TestCase):
@@ -1012,6 +1025,74 @@ class TestCollectFiles(unittest.TestCase):
         with self.assertRaises(repo_check.CheckError):
             repo_check.collect_files(Path("/nope"), _cfg(), runner=failing)
 
+    def test_default_scope_is_tracked_markdown_only(self):
+        """No include_globs means `**/*.md`, filtered here rather than by git."""
+
+        def fake_git(cmd, **kwargs):
+            out = "README.md\0notes.txt\0docs/a.md\0"
+            return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
+
+        self.assertEqual(
+            repo_check.collect_files(Path("/repo"), _cfg(), runner=fake_git),
+            ["README.md", "docs/a.md"],
+        )
+
+    def test_include_globs_narrow_the_scope(self):
+        """scope.include_globs is read, not just documented."""
+
+        def fake_git(cmd, **kwargs):
+            out = "README.md\0docs/a.md\0docs/b.txt\0"
+            return subprocess.CompletedProcess(cmd, 0, stdout=out, stderr="")
+
+        cfg = _cfg(scope={"include_globs": ["docs/**/*.md"], "exclude_globs": []})
+        self.assertEqual(
+            repo_check.collect_files(Path("/repo"), cfg, runner=fake_git),
+            ["docs/a.md"],
+        )
+
+    def test_non_ascii_tracked_path_is_decoded_as_utf8(self):
+        """Regression: git emits UTF-8; the locale codec (cp1252) mangled it.
+
+        A tracked `café.md` came back as `cafÃ©.md`, which then failed to read
+        and turned the whole gate into exit 2.
+        """
+        with TempRepo({"café.md": "# x\n"}) as repo:
+            subprocess.run(["git", "init", "-q", str(repo.root)], check=True)
+            subprocess.run(["git", "-C", str(repo.root), "add", "café.md"], check=True)
+            self.assertEqual(repo_check.collect_files(repo.root, _cfg()), ["café.md"])
+
+    def test_main_reports_a_non_ascii_path_it_cannot_encode_in_the_locale(self):
+        """stdout is UTF-8 whatever the console codepage, like verify_claims.py."""
+        name = "日本.md"
+        with TempRepo(
+            {
+                name: "[x](missing.md)\n",
+                "checks.toml": "[checks.links]\nenabled = true\n",
+            }
+        ) as repo:
+            subprocess.run(["git", "init", "-q", str(repo.root)], check=True)
+            subprocess.run(["git", "-C", str(repo.root), "add", name], check=True)
+            env = {k: v for k, v in os.environ.items() if k != "PYTHONIOENCODING"}
+            env["PYTHONUTF8"] = "0"
+            proc = subprocess.run(
+                [
+                    sys.executable,
+                    str(Path(repo_check.__file__)),
+                    "--repo-root",
+                    str(repo.root),
+                    "--config",
+                    str(repo.root / "checks.toml"),
+                ],
+                capture_output=True,
+                env=env,
+                check=False,
+            )
+            stdout = proc.stdout.decode("utf-8")
+            self.assertEqual(
+                proc.returncode, 1, stdout + proc.stderr.decode("utf-8", "replace")
+            )
+            self.assertIn(name, stdout)
+
 
 class TestFormatReport(unittest.TestCase):
     def test_clean_run(self):
@@ -1144,6 +1225,20 @@ class TestConfigAndExitCodes(unittest.TestCase):
         """A key in checks.toml with no runner behind it fails the gate at exit 2."""
         cfg = repo_check.load_config(repo_check.DEFAULT_CONFIG)
         self.assertEqual([n for n in cfg["checks"] if n not in repo_check.CHECKS], [])
+
+    def test_bare_paths_prefixes_name_every_repo_skill(self):
+        """checks.toml says "add a sibling line per new skill" — hold it to that."""
+        cfg = repo_check.load_config(repo_check.DEFAULT_CONFIG)
+        prefixes = cfg["checks"]["bare_paths"]["prefixes"]
+        skills_dir = Path(__file__).resolve().parents[5] / "skills"
+        if not skills_dir.is_dir():
+            self.skipTest("not running inside the workbench clone")
+        missing = [
+            f"skills/{d.name}/"
+            for d in sorted(skills_dir.iterdir())
+            if (d / "SKILL.md").is_file() and f"skills/{d.name}/" not in prefixes
+        ]
+        self.assertEqual(missing, [])
 
     def test_shipped_config_declares_no_model(self):
         """Nothing here calls a model; a stray [claude] block would mislead."""

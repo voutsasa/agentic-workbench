@@ -9,13 +9,20 @@
 # itself goes stale on the first pull that changes it; this file only runs the
 # tracked hook from the working tree, so pulls reach it with nothing to re-copy.
 # Arguments and git's ref list on stdin pass through `exec` unchanged.
+#
+# In the workbench the tracked hook is used. Any other repo has none, so the
+# shim falls back to the review skill linked globally by link_config.py — the
+# hook finds its checkers beside itself, so either location works.
 
-HOOK="$(git rev-parse --show-toplevel)/workstation/agent/skills/review/scripts/pre-push"
+REPO_HOOK="$(git rev-parse --show-toplevel)/workstation/agent/skills/review/scripts/pre-push"
 
-if [ ! -f "$HOOK" ]; then
-  echo "pre-push: tracked hook not found at $HOOK." >&2
-  echo "          Refusing rather than pushing ungated. Bypass with git push --no-verify" >&2
-  exit 1
-fi
+for HOOK in "$REPO_HOOK" \
+            "$HOME/.claude/skills/review/scripts/pre-push" \
+            "$HOME/.copilot/skills/review/scripts/pre-push"; do
+  [ -f "$HOOK" ] && exec bash "$HOOK" "$@"
+done
 
-exec bash "$HOOK" "$@"
+echo "pre-push: tracked hook not found at $REPO_HOOK," >&2
+echo "          nor in ~/.claude/skills or ~/.copilot/skills." >&2
+echo "          Refusing rather than pushing ungated. Bypass with git push --no-verify" >&2
+exit 1

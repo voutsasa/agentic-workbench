@@ -8,17 +8,18 @@ nothing to install, and **no model is called from here**.
 | `repo_check.py` | Deterministic documentation gate. Exits non-zero on any violation. |
 | `checks.toml` | The rules it enforces — glossary terms, header schema, scope. Tune this, not the script. |
 | `pre-push` | Git hook wrapper around `repo_check.py`, optional Ruff and Pyright checks, the repo's own unit tests, **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/` — **on Windows `pre-push.windows` is copied there instead**, see below. |
-| `pre-push.windows` | Windows shim: runs the tracked `pre-push` from the working tree, so its one-time copy never goes stale. |
-| `../tests/test_repo_check.py` | `python3 -m unittest discover -s tests` from the skill root. 127 tests, no network. |
-| `../tests/test_pre_push.py` | 23 tests over the hook and the Windows shim, same command. It invokes the hook, so the hook skips the unit-test step when `PRE_PUSH_IN_TESTS=1`. |
+| `pre-push.windows` | Windows shim: runs the tracked `pre-push` from the working tree — or, in a repo without one, the globally linked review skill's — so its one-time copy never goes stale. |
+| `../tests/test_repo_check.py` | From the repo root, `.venv/bin/python -m unittest discover -s workstation/agent/skills/review/tests -t workstation/agent/skills/review/tests` (`.venv\Scripts\python.exe` on Windows). No network. |
+| `../tests/test_pre_push.py` | The hook and the Windows shim, same command. It invokes the hook, so the hook skips the unit-test step when `PRE_PUSH_IN_TESTS=1`. |
 
 ## repo_check.py
 
 ```bash
-python3 repo_check.py                 # check the repo containing this script
-python3 repo_check.py --json          # machine-readable violations
-python3 repo_check.py --list-files    # what is in scope, then stop
-python3 repo_check.py --corpus        # register ingestion ledger, then stop
+# python on Windows, python3 on macOS
+python repo_check.py                  # check the repo containing this script
+python repo_check.py --json           # machine-readable violations
+python repo_check.py --list-files     # what is in scope, then stop
+python repo_check.py --corpus         # register ingestion ledger, then stop
 ```
 
 Five checks, each toggled in `checks.toml`:
@@ -62,8 +63,8 @@ Five checks, each toggled in `checks.toml`:
 ### The ingestion ledger — `--corpus`
 
 ```bash
-python3 repo_check.py --corpus         # how many entries are ingested, and which are not
-python3 repo_check.py --corpus --json  # one row per entry, for a batch to resume from
+python repo_check.py --corpus          # how many entries are ingested, and which are not
+python repo_check.py --corpus --json   # one row per entry, for a batch to resume from
 ```
 
 Deliberately **not** part of the gate, and the one place in this script where an absent
@@ -117,7 +118,7 @@ doing nothing: claim verification lives in its own script, not in this one.
 |---|---|---|---|
 | Question | is the prose internally consistent? | is each claim still true? | what should be done about it? |
 | Method | reads the files | executes a verifier per claim | reads the evidence |
-| Runtime | **~1.4s** over 68 files, interpreter start included | scoped runs are typically sub-second; full runs vary by corpus and toolchain | minutes |
+| Runtime | about a second and a half over the whole repo, interpreter start included | scoped runs are typically sub-second; full runs vary by corpus and toolchain | minutes |
 | Cost | none | none | tokens |
 | Fits | every push | every push, scoped to the change | on demand, or CI |
 
@@ -155,12 +156,26 @@ hook through a junction either, so the hook must be a `Copy-Item`. What is copie
 even executes, and the check for it are in
 [`../../../setup/windows.md`](../../../setup/windows.md#the-pre-push-gate) § *The pre-push gate*.
 
+**Where the hook finds its scripts.** `repo_check.py` and `verify_claims.py` are resolved
+beside the hook's own real location — the symlink in `.git/hooks/` is followed with a
+`readlink` loop (macOS gained `readlink -f` only in 12.3) — never in the repo being pushed.
+One copy therefore gates every repo that links it, not only this one. On Windows the shim
+runs this repo's tracked hook when there is one, and otherwise the review skill linked
+under `~/.claude/skills/` or `~/.copilot/skills/`. If `repo_check.py` is still not found the
+hook says so and skips only step 1; the steps the repo opted into still run. If
+`verify_claims.py` is not found, step 5 is skipped silently, as before.
+
+**Which interpreter.** Every step, the two checkers included, runs on the pushed repo's
+`.venv` interpreter. With no `.venv` the hook falls back to `python` on `PATH` on Windows,
+`python3` elsewhere, and prints that it did.
+
 The hook runs five checks in order, and stops at the first refusal:
 
-1. `repo_check.py` over the whole repo, unconditionally. At a second and a half there is
-   nothing to optimise around.
+1. `repo_check.py` over the whole repo, whenever the repo tracks any markdown; a code-only
+   repo skips it, since the checker refuses an empty scope. At about a second and a half
+   there is nothing to optimise around.
 2. **`ruff check` and `ruff format --check`**, only when the repo has a `.pre-push-ruff`
-   file at its root, run as `python -m ruff` on the same interpreter as step 3. Both run
+   file at its root, run as `python -m ruff` on the selected interpreter. Both run
    before the verdict, so one push shows every violation. `SKIP_RUFF=1` skips only this step.
 3. **`python -m pyright`**, only when the repo has a `.pre-push-pyright` file at its root.
    It runs through the selected venv interpreter, so it works on macOS and when Windows blocks
@@ -168,13 +183,15 @@ The hook runs five checks in order, and stops at the first refusal:
    on 29 September 2026; measure before enabling it in another repository.
    `SKIP_PYRIGHT=1` skips only this step.
 4. **The repo's own unit tests**, one `python -m unittest discover` per directory named in
-   `.pre-push-tests`, on the repo's `.venv` interpreter when it has one and `python3`
-   otherwise. No file, no tests. A named directory that does not exist, or holds no tests,
+   `.pre-push-tests`, on the selected interpreter. No file, no tests. A named directory that does not exist, or holds no tests,
    refuses the push rather than passing it.
 5. `verify_claims.py` over **only the markdown in this push**, worked out from the refs
-   git feeds the hook on stdin. Scoped that way it is under a second; the whole repo
-   varies by corpus and toolchain, because it executes `--help` for every documented tool. A claim you did
-   not touch is a claim you did not break.
+   git feeds the hook on stdin. Scoped that way it is typically under a second; the whole
+   repo varies by corpus and toolchain, because it executes `--help` for every documented
+   tool. A claim you did not touch is a claim you did not break. A new branch is compared
+   with the remote's default branch (`refs/remotes/<remote>/HEAD`, else `main`, else
+   `master`); a root commit with the empty tree. A diff that cannot run — a remote sha
+   not fetched here, say — refuses the push with exit 2 rather than checking nothing.
 
 Exemptions and test directories all come from the repo being pushed —
 `.verify-claims-allow` for paths, `.verify-flags-allow` for flags, `.pre-push-tests` for
@@ -189,21 +206,22 @@ glob back as `--allow` — a second parser of one format, retired for that reaso
 
 A suite that itself invokes the hook — `tests/test_pre_push.py` does — would run the
 suites again from inside them. The hook sets `PRE_PUSH_IN_TESTS=1` for the tests it
-starts and skips step 3 when it finds that set.
+starts and skips step 4 when it finds that set.
 
 ### Running it by hand
 
 ```bash
-.git/hooks/pre-push        # repo_check and unit tests only, and it says so
+.git/hooks/pre-push        # repo_check only, and it says so
 ```
 
 git passes the hook two arguments and the ref list on stdin; a hand run supplies neither.
-Check 3 has nothing to scope itself to, so the hook runs checks 1 and 2, prints **`verify_claims.py
-did NOT run`**, and exits 0 — `repo_check: all enabled checks passed` alone is not evidence
-of a full pass. For check 3 by hand:
+Step 5 has nothing to scope itself to, and a hand-run hook must not start the unit tests
+recursively, so the hook runs step 1 only, prints that **ruff, Pyright, the unit tests and
+`verify_claims.py` did NOT run**, and exits 0 — `repo_check: all enabled checks passed`
+alone is not evidence of a full pass. For step 5 by hand, from the repo root:
 
 ```bash
-python3 ../../verify-docs/scripts/verify_claims.py --repo .
+.venv/bin/python workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 ```
 
 Before that guard existed the same command hung indefinitely: the ref loop is a bare `while
@@ -214,6 +232,8 @@ Bypasses, narrowest first:
 
 ```bash
 SKIP_VERIFY_CLAIMS=1 git push   # skip claim verification, keep the rest
+SKIP_RUFF=1 git push            # skip ruff, keep the rest
+SKIP_PYRIGHT=1 git push         # skip Pyright, keep the rest
 SKIP_PRE_PUSH_TESTS=1 git push  # skip the unit tests, keep the rest
 SKIP_REPO_CHECK=1 git push      # skip every check in this hook
 git push --no-verify            # skip every hook in the repository

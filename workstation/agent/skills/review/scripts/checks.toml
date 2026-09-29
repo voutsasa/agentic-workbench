@@ -35,7 +35,14 @@ enabled = true
 # `~/.claude/skills/<name>` and `../agent/skills/<name>` reference in the
 # workstation docs, none of which are repo-root-relative. Naming the skill
 # folder keeps the prefix unambiguous. Add a sibling line per new skill.
-prefixes = ["workstation/cli/", "workstation/machines/", "workstation/scripts/", "skills/ingest-source/"]
+prefixes = [
+  "workstation/cli/",
+  "workstation/machines/",
+  "workstation/scripts/",
+  "skills/get-workstation-status/",
+  "skills/ingest-source/",
+  "skills/setup-agents/",
+]
 # Allowed not to exist. The ingested reference.md files are gitignored by
 # design and absent on a fresh clone, so requiring them would fail the gate on
 # exactly the checkout where nothing is wrong.
@@ -91,8 +98,9 @@ path = "workstation/mcp/{name}/reference.md"
 enabled = true
 # [[checks.terminology.rules]] — `wrong` is the term to flag, `right` is the
 # replacement, `why` is shown in the violation so a reader can judge it.
-# `allow_paths` and `allow_context` carve out legitimate uses; without them a
-# blanket rule flags the repo's own vocabulary.
+# `allow_paths` (globs, whole files exempt from that rule) and `allow_context`
+# (phrases, one line exempt) carve out legitimate uses; without them a blanket
+# rule flags the repo's own vocabulary.
 
 [[checks.terminology.rules]]
 wrong = "download"
@@ -177,8 +185,6 @@ fields = [
   { name = "transport", allowed_values = ["stdio", "http", "sse"] },
   { name = "version_observed" },
   { name = "verified", format = "date" },
-  # registered drives the "Registered" column in workstation/mcp/README.md.
-  { name = "registered", allowed_values = ["true", "false"] },
   # pinned = false means `npx -y` resolves latest on every launch.
   { name = "pinned", allowed_values = ["true", "false"] },
 ]
@@ -213,8 +219,9 @@ fields = [
 ]
 
 [scope]
-# Only tracked markdown is checked. The ingested corpus is machine-written and
-# excluded from git, so it is not ours to hold to a house style.
+# Only tracked files are checked — those matching include_globs (default
+# `**/*.md`) and no exclude_globs entry. The ingested corpus is machine-written
+# and excluded from git, so it is not ours to hold to a house style.
 include_globs = ["**/*.md"]
 exclude_globs = [
   "docs/landing-zone/**",

@@ -3,7 +3,7 @@
 # Pre-push gate. Five checks, all deterministic, none calling a model and none
 # touching the network:
 #
-#   1. repo_check.py    — is the prose internally consistent? Whole repo, ~0.07s.
+#   1. repo_check.py    — is the prose internally consistent? Whole repo.
 #   2. ruff             — `ruff check` and `ruff format --check`, only in a repo
 #                         with a .pre-push-ruff file at its root.
 #   3. pyright          — `python -m pyright`, only in a repo with a
@@ -11,7 +11,12 @@
 #   4. unit tests       — the directories the repo names in .pre-push-tests.
 #                         No file, no tests.
 #   5. verify_claims.py — is each claim still true? Only the markdown being
-#                         pushed, ~0.3s for a typical change.
+#                         pushed.
+#
+# Every step runs on the pushed repo's .venv interpreter; python on PATH
+# (python3 outside Windows) only when the repo has no .venv, and the hook says
+# so. repo_check.py and verify_claims.py are found beside this script (after following symlinks), so
+# the hook works from any repo that links it; without them, steps 2-4 still run.
 #
 # Install (from the repo root):
 #   ln -sf ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
@@ -19,13 +24,13 @@
 # The symlink keeps the hook versioned — .git/hooks is not tracked, so a copied
 # hook silently rots and never reaches a fresh clone.
 #
-# Why the fourth check is scoped to changed files: verifying every claim in the
+# Why the fifth check is scoped to changed files: verifying every claim in the
 # repo varies by corpus and toolchain, because it executes `--help` for every
-# documented tool. Scoped to what is actually being pushed it is typically under a second,
-# and a claim you did not touch is one you did not break. Run the full sweep on
-# demand instead:
+# documented tool. Scoped to what is actually being pushed it is typically under
+# a second, and a claim you did not touch is one you did not break. Run the full
+# sweep on demand instead:
 #
-#   python3 workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
+#   .venv/bin/python workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 #   …--online     also checks external URLs and package registries
 #   …--strict     UNVERIFIABLE fails too, not just REFUTED
 #
@@ -51,30 +56,69 @@ if [ "${SKIP_REPO_CHECK:-0}" = "1" ]; then
 fi
 
 REPO_ROOT="$(git rev-parse --show-toplevel)" || exit 0
-CHECKER="$REPO_ROOT/workstation/agent/skills/review/scripts/repo_check.py"
-VERIFIER="$REPO_ROOT/workstation/agent/skills/verify-docs/scripts/verify_claims.py"
 
-if [ ! -f "$CHECKER" ]; then
-  echo "pre-push: checker not found at $CHECKER — skipping." >&2
-  exit 0
+# The checkers live beside this script, not in the repo being pushed: one copy
+# of the hook serves every repo that links it, and only the workbench has a
+# `workstation/` tree. So resolve this file's real location first — .git/hooks/
+# pre-push is a symlink on macOS, and on Windows pre-push.windows execs the
+# tracked file (or the globally linked skill) by path. A readlink loop rather
+# than `readlink -f`, which macOS only gained in 12.3.
+SELF="${BASH_SOURCE[0]//\\//}"                    # C:\a\b → C:/a/b on Windows
+while [ -L "$SELF" ]; do
+  link="$(readlink "$SELF")"
+  case "$link" in
+    /*) SELF="$link" ;;
+    *) case "$SELF" in */*) SELF="${SELF%/*}/$link" ;; *) SELF="$link" ;; esac ;;
+  esac
+done
+case "$SELF" in */*) SCRIPT_DIR="${SELF%/*}" ;; *) SCRIPT_DIR="." ;; esac
+SCRIPT_DIR="$(cd "$SCRIPT_DIR" && pwd -P)"
+CHECKER="$SCRIPT_DIR/repo_check.py"
+VERIFIER="$(cd "$SCRIPT_DIR/../.." && pwd -P)/verify-docs/scripts/verify_claims.py"
+
+# The repo's own venv when it has one, so every step — the gates as well as
+# ruff and the suites — runs on the interpreter the project pins.
+PYTHON=""
+for candidate in "$REPO_ROOT/.venv/bin/python" "$REPO_ROOT/.venv/Scripts/python.exe"; do
+  if [ -x "$candidate" ]; then
+    PYTHON="$candidate"
+    break
+  fi
+done
+if [ -z "$PYTHON" ]; then
+  # Windows names its interpreter python; python3 there is absent or a Store stub.
+  case "$(uname -s)" in
+    MINGW*|MSYS*|CYGWIN*) PYTHON=python ;;
+    *) PYTHON=python3 ;;
+  esac
+  echo "pre-push: no .venv interpreter in $REPO_ROOT — falling back to $PYTHON on PATH." >&2
 fi
 
-# The checker cannot need Git's ref list; reserve that stdin for the loop below.
-# This also prevents a checker subprocess from blocking on or consuming the list.
-python3 "$CHECKER" --repo-root "$REPO_ROOT" < /dev/null
-status=$?
+if [ ! -f "$CHECKER" ]; then
+  echo "pre-push: checker not found at $CHECKER — skipping the documentation" >&2
+  echo "          check. The steps this repo opted into still run." >&2
+elif [ -z "$(git -C "$REPO_ROOT" ls-files -- '*.md' | head -n 1)" ]; then
+  # A code-only repo has nothing for the gate to read, and the checker refuses
+  # an empty scope; that refusal is for a misconfigured scope, not this.
+  echo "pre-push: no tracked markdown — skipping the documentation check." >&2
+else
+  # The checker cannot need Git's ref list; reserve that stdin for the loop
+  # below. This also prevents a checker subprocess from consuming the list.
+  "$PYTHON" "$CHECKER" --repo-root "$REPO_ROOT" < /dev/null
+  status=$?
 
-case "$status" in
-  0) ;;
-  1) echo "" >&2
-     echo "pre-push: push refused — fix the violations above, or bypass with" >&2
-     echo "          SKIP_REPO_CHECK=1 git push" >&2
-     exit "$status" ;;
-  *) echo "" >&2
-     echo "pre-push: the gate could not run (exit $status). Refusing rather than" >&2
-     echo "          assuming a pass. Bypass with SKIP_REPO_CHECK=1 git push" >&2
-     exit "$status" ;;
-esac
+  case "$status" in
+    0) ;;
+    1) echo "" >&2
+       echo "pre-push: push refused — fix the violations above, or bypass with" >&2
+       echo "          SKIP_REPO_CHECK=1 git push" >&2
+       exit "$status" ;;
+    *) echo "" >&2
+       echo "pre-push: the gate could not run (exit $status). Refusing rather than" >&2
+       echo "          assuming a pass. Bypass with SKIP_REPO_CHECK=1 git push" >&2
+       exit "$status" ;;
+  esac
+fi
 
 # git calls this hook with two arguments, the destination remote's name and its
 # location (githooks(5)); a hand run passes none. That is the reliable test for
@@ -87,20 +131,11 @@ esac
 if [ "$#" -lt 2 ]; then
   echo "" >&2
   echo "pre-push: no ref list on stdin — not invoked by git." >&2
-  echo "          repo_check.py ran above. verify_claims.py did NOT run." >&2
-  echo "          For the claim check: python3 $VERIFIER --repo $REPO_ROOT" >&2
+  echo "          Only repo_check.py ran above: ruff, Pyright, the unit tests and" >&2
+  echo "          verify_claims.py did NOT run." >&2
+  echo "          For the claim check: $PYTHON $VERIFIER --repo $REPO_ROOT" >&2
   exit 0
 fi
-
-# The repo's own venv when it has one, so ruff and the suites run on the
-# interpreter the project pins; bare python3 otherwise, like the checks above.
-PYTHON=python3
-for candidate in "$REPO_ROOT/.venv/bin/python" "$REPO_ROOT/.venv/Scripts/python.exe"; do
-  if [ -x "$candidate" ]; then
-    PYTHON="$candidate"
-    break
-  fi
-done
 
 # --- ruff, in repos that opt in with .pre-push-ruff -----------------------------
 
@@ -219,19 +254,55 @@ fi
 
 # git feeds the hook "<local ref> <local sha> <remote ref> <remote sha>" per ref.
 # A remote sha of all zeros means the branch is new there, so compare against the
-# default branch instead of against nothing.
+# remote's default branch — its HEAD when known, else main, else master — and
+# against the parent, or the empty tree for a root commit, when none of those
+# shares history with it. A diff that cannot run refuses the push: hiding its
+# error once let a push pass having checked nothing.
 ZERO="0000000000000000000000000000000000000000"
+REMOTE="$1"
+EMPTY_TREE="$(git hash-object -t tree --stdin < /dev/null)"
+
+default_ref() {
+  local ref
+  if ref="$(git symbolic-ref -q "refs/remotes/$REMOTE/HEAD" 2>/dev/null)"; then
+    printf '%s\n' "$ref"
+    return
+  fi
+  for ref in refs/heads/main refs/heads/master; do
+    if git rev-parse -q --verify "$ref" > /dev/null; then
+      printf '%s\n' "$ref"
+      return
+    fi
+  done
+}
+
 changed=""
-while read -r _local_ref local_sha _remote_ref remote_sha; do
+while read -r local_ref local_sha _remote_ref remote_sha; do
   [ -z "${local_sha:-}" ] && continue
   [ "$local_sha" = "$ZERO" ] && continue          # a deletion carries no files
   if [ "${remote_sha:-$ZERO}" = "$ZERO" ]; then
-    base="$(git merge-base "$local_sha" refs/heads/main 2>/dev/null)" || base=""
-    [ -z "$base" ] && base="$local_sha^"
+    base=""
+    ref="$(default_ref)"
+    [ -n "$ref" ] && base="$(git merge-base "$local_sha" "$ref" 2>/dev/null)"
+    if [ -z "$base" ]; then
+      if git rev-parse -q --verify "$local_sha^" > /dev/null; then
+        base="$local_sha^"
+      else
+        base="$EMPTY_TREE"                          # a root commit: every file is new
+      fi
+    fi
   else
     base="$remote_sha"
   fi
-  changed+="$(git diff --name-only --diff-filter=ACMR "$base" "$local_sha" -- '*.md' 2>/dev/null)"$'\n'
+  if ! diff_out="$(git diff --name-only --diff-filter=ACMR "$base" "$local_sha" -- '*.md')"; then
+    echo "" >&2
+    echo "pre-push: cannot diff $base..$local_sha for $local_ref, so the claim" >&2
+    echo "          check cannot tell what is being pushed. Refusing rather than" >&2
+    echo "          assuming a pass. Fetch first, or bypass with" >&2
+    echo "          SKIP_VERIFY_CLAIMS=1 git push" >&2
+    exit 2
+  fi
+  changed+="$diff_out"$'\n'
 done
 
 # Deduplicate, drop blanks, and keep only files that still exist in the worktree.
@@ -259,7 +330,7 @@ if [ "${#files[@]}" -eq 0 ]; then
   exit 0
 fi
 
-python3 "$VERIFIER" --repo "$REPO_ROOT" --files "${files[@]}"
+"$PYTHON" "$VERIFIER" --repo "$REPO_ROOT" --files "${files[@]}"
 status=$?
 
 case "$status" in

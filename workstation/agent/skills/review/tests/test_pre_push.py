@@ -30,6 +30,7 @@ from __future__ import annotations
 import os
 import shutil
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
@@ -165,19 +166,69 @@ HOOK_ENV_FLAGS = (
 )
 
 
+#: Stands in for repo_check.py and verify_claims.py: logs the interpreter and
+#: arguments it was started with, into the repo it runs in, then passes.
+LOGGING_STUB = """import sys
+from pathlib import Path
+
+with Path({log!r}).open("a", encoding="utf-8") as log:
+    log.write(" ".join(sys.argv[1:]) + "\\n")
+sys.exit(0)
+"""
+
+
 class HookRepoCase(unittest.TestCase):
-    """A throwaway git repo with a passing stub checker and no verifier."""
+    """A throwaway git repo, and apart from it a copy of the hook.
+
+    The hook sits in its own skills-shaped tree with a passing stub checker
+    beside it and no verifier, the layout of the global skills link. The repo
+    has no `workstation/` tree at all — it stands for any repo but the
+    workbench, so the hook has to find its checker from its own location.
+    """
 
     def setUp(self) -> None:
         self._tmp = tempfile.TemporaryDirectory()
         self.addCleanup(self._tmp.cleanup)
-        self.root = Path(self._tmp.name)
+        base = Path(self._tmp.name)
+        self.root = base / "repo"
+        self.root.mkdir()
         subprocess.run(["git", "init", "-q", str(self.root)], check=True)
+        scripts = base / "skills" / "review" / "scripts"
+        scripts.mkdir(parents=True)
+        self.hook = scripts / "pre-push"
+        shutil.copyfile(HOOK, self.hook)
         # A stub that passes, so the hook reaches the unit-test step. There is
         # no verifier, so the hook exits straight after that step.
-        checker = self.root / "workstation/agent/skills/review/scripts/repo_check.py"
-        checker.parent.mkdir(parents=True)
-        checker.write_text("import sys\nsys.exit(0)\n", encoding="utf-8")
+        self.checker = scripts / "repo_check.py"
+        self.checker.write_text(
+            LOGGING_STUB.format(log="checker-calls.log"), encoding="utf-8"
+        )
+        self.verifier = base / "skills" / "verify-docs" / "scripts" / "verify_claims.py"
+
+    def add_verifier(self) -> None:
+        self.verifier.parent.mkdir(parents=True)
+        self.verifier.write_text(
+            LOGGING_STUB.format(log="verifier-calls.log"), encoding="utf-8"
+        )
+
+    def log(self, name: str) -> list[str]:
+        path = self.root / name
+        return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+    def git(self, *args: str) -> str:
+        return subprocess.run(
+            ["git", "-C", str(self.root), "-c", "user.name=t", "-c", "user.email=t@t"]
+            + list(args),
+            check=True,
+            capture_output=True,
+            text=True,
+        ).stdout.strip()
+
+    def commit(self, name: str) -> str:
+        (self.root / name).write_text("# x\n", encoding="utf-8")
+        self.git("add", name)
+        self.git("commit", "-q", "-m", name)
+        return self.git("rev-parse", "HEAD")
 
     def write_suite(self, name: str, body: str) -> None:
         suite = self.root / name
@@ -187,18 +238,167 @@ class HookRepoCase(unittest.TestCase):
     def name_dirs(self, text: str) -> None:
         (self.root / ".pre-push-tests").write_text(text, encoding="utf-8")
 
-    def run_hook(self, **env: str) -> subprocess.CompletedProcess:
+    def run_hook(
+        self, *, hook: Path | None = None, refs: str = "", **env: str
+    ) -> subprocess.CompletedProcess:
         clean = {k: v for k, v in os.environ.items() if k not in HOOK_ENV_FLAGS}
-        return subprocess.run(
-            hook_command("origin", "remote"),
+        if BASH is None:
+            raise RuntimeError("bash is required to test the pre-push hook")
+        # Bytes, not text: text mode on Windows writes "\n" as "\r\n", and git
+        # itself feeds the ref list LF-terminated.
+        proc = subprocess.run(
+            [BASH, "-c", 'exec "$@"', "bash", str(hook or self.hook)]
+            + ["origin", "remote"],
             cwd=self.root,
             env={**clean, **env},
-            stdin=subprocess.DEVNULL,
+            input=refs.encode("utf-8"),
             capture_output=True,
-            text=True,
             timeout=TIMEOUT_S,
             check=False,
         )
+        return subprocess.CompletedProcess(
+            proc.args,
+            proc.returncode,
+            proc.stdout.decode("utf-8", "replace"),
+            proc.stderr.decode("utf-8", "replace"),
+        )
+
+
+class ScriptResolutionTests(HookRepoCase):
+    """The hook finds its checkers beside itself, not in the pushed repo."""
+
+    def test_checker_beside_the_hook_runs_outside_the_workbench(self) -> None:
+        self.commit("README.md")
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.log("checker-calls.log")), 1, result.stderr)
+
+    def test_a_repo_with_no_tracked_markdown_skips_the_checker(self) -> None:
+        # A code-only repo has nothing for the documentation gate to read; the
+        # checker would refuse with "no tracked markdown", blocking every push.
+        (self.root / "a.py").write_text("x = 1\n", encoding="utf-8")
+        self.git("add", "a.py")
+        self.git("commit", "-q", "-m", "code")
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.log("checker-calls.log"), [], result.stderr)
+        self.assertIn("no tracked markdown", result.stderr)
+
+    def test_symlinked_hook_resolves_to_its_real_location(self) -> None:
+        self.commit("README.md")
+        link = self.root / ".git" / "hooks" / "pre-push"
+        try:
+            link.symlink_to(self.hook)
+        except OSError as exc:
+            self.skipTest(f"cannot create a symlink here: {exc}")
+        result = self.run_hook(hook=link)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(len(self.log("checker-calls.log")), 1, result.stderr)
+
+    def test_missing_checker_still_runs_the_opted_in_steps(self) -> None:
+        self.checker.unlink()
+        self.write_suite("suite", FAILING_SUITE)
+        self.name_dirs("suite\n")
+        result = self.run_hook()
+        self.assertIn("checker not found", result.stderr)
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("tests in suite failed", result.stderr)
+
+
+def make_venv_python(root: Path) -> None:
+    """A `.venv/bin/python` that logs each call, then runs this interpreter."""
+    python = root / ".venv" / "bin" / "python"
+    python.parent.mkdir(parents=True)
+    real = Path(sys.executable).as_posix()
+    python.write_text(
+        "#!/usr/bin/env bash\nprintf '%s\\n' \"$*\" >> venv-calls.log\n"
+        f'exec "{real}" "$@"\n',
+        encoding="utf-8",
+        newline="\n",
+    )
+    python.chmod(0o755)
+
+
+class InterpreterTests(HookRepoCase):
+    """Every Python step, the gates included, runs on the repo's venv."""
+
+    def test_checker_runs_on_the_venv_interpreter(self) -> None:
+        make_venv_python(self.root)
+        self.commit("README.md")
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = self.log("venv-calls.log")
+        self.assertTrue(any("repo_check.py" in c for c in calls), calls)
+
+    def test_verifier_runs_on_the_venv_interpreter(self) -> None:
+        make_venv_python(self.root)
+        self.add_verifier()
+        self.git("symbolic-ref", "HEAD", "refs/heads/x")
+        sha = self.commit("a.md")
+        result = self.run_hook(refs=f"refs/heads/x {sha} refs/heads/x {ZERO}\n")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        calls = self.log("venv-calls.log")
+        self.assertTrue(any("verify_claims.py" in c for c in calls), calls)
+
+    def test_no_venv_falls_back_to_the_platform_interpreter_and_says_so(
+        self,
+    ) -> None:
+        """`python` on Windows, where `python3` is absent or a Store stub."""
+        expected = "python" if os.name == "nt" else "python3"
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn(f"falling back to {expected} on PATH", result.stderr)
+
+
+ZERO = "0" * 40
+
+
+class RefListTests(HookRepoCase):
+    """Which markdown the claim verifier is given for each pushed ref."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        self.add_verifier()
+
+    def verified(self) -> list[str]:
+        calls = self.log("verifier-calls.log")
+        self.assertEqual(len(calls), 1, calls)
+        return calls[0].split("--files ", 1)[1].split()
+
+    def test_new_branch_from_a_root_commit_checks_its_files(self) -> None:
+        """Regression: `$sha^` does not exist, and the hidden diff error passed."""
+        self.git("symbolic-ref", "HEAD", "refs/heads/feature")
+        sha = self.commit("a.md")
+        result = self.run_hook(
+            refs=f"refs/heads/feature {sha} refs/heads/feature {ZERO}\n"
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.verified(), ["a.md"])
+
+    def test_new_branch_diffs_against_the_remote_default_branch(self) -> None:
+        """The remote's HEAD, not a hard-coded main, is the merge base."""
+        self.git("symbolic-ref", "HEAD", "refs/heads/trunk")
+        trunk = self.commit("base.md")
+        self.git("update-ref", "refs/remotes/origin/trunk", trunk)
+        self.git(
+            "symbolic-ref", "refs/remotes/origin/HEAD", "refs/remotes/origin/trunk"
+        )
+        self.git("checkout", "-q", "-b", "feature")
+        self.commit("b.md")
+        sha = self.commit("c.md")
+        result = self.run_hook(
+            refs=f"refs/heads/feature {sha} refs/heads/feature {ZERO}\n"
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(sorted(self.verified()), ["b.md", "c.md"])
+
+    def test_a_diff_that_cannot_run_refuses_the_push(self) -> None:
+        sha = self.commit("a.md")
+        unknown = "1" * 40
+        result = self.run_hook(refs=f"refs/heads/x {sha} refs/heads/x {unknown}\n")
+        self.assertNotEqual(result.returncode, 0, result.stderr)
+        self.assertIn("SKIP_VERIFY_CLAIMS=1", result.stderr)
+        self.assertEqual(self.log("verifier-calls.log"), [])
 
 
 class UnitTestStepTests(HookRepoCase):
@@ -424,11 +624,29 @@ class WindowsShimTests(unittest.TestCase):
         result = self.run_shim(HOOK_STUB_EXIT="1")
         self.assertEqual(result.returncode, 1)
 
+    def empty_home(self) -> Path:
+        home = self.root.parent / f"{self.root.name}-home"
+        home.mkdir()
+        self.addCleanup(shutil.rmtree, home, True)
+        return home
+
     def test_missing_hook_refuses_rather_than_passing(self) -> None:
-        result = self.run_shim()
+        result = self.run_shim(HOME=self.empty_home().as_posix())
         self.assertNotEqual(result.returncode, 0)
         self.assertIn("not found", result.stderr)
         self.assertIn("--no-verify", result.stderr)
+
+    def test_outside_the_workbench_runs_the_globally_linked_hook(self) -> None:
+        """Any other repo has no tracked hook; the skills link has one."""
+        home = self.empty_home()
+        self.tracked = home / ".claude/skills/review/scripts/pre-push"
+        self.write_stub()
+        result = self.run_shim(stdin="x\n", HOME=home.as_posix())
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            (self.root / "args.log").read_text(encoding="utf-8").splitlines(),
+            ["origin", "https://example.invalid/repo"],
+        )
 
 
 if __name__ == "__main__":

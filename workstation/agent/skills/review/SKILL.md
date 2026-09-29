@@ -151,8 +151,8 @@ above; applying does not replace it.
 | `scripts/repo_check.py --corpus` | The register's ingestion ledger: which entries have an ingested file and which do not. **Not** part of the gate — the corpus is gitignored, so a fresh clone has none and nothing is wrong. The preflight for an ingestion run. |
 | `scripts/checks.toml` | The rules it enforces. Tune this file, not the script. |
 | `scripts/pre-push` | Git hook wrapper; symlinked into `.git/hooks/pre-push` — **on Windows copy `scripts/pre-push.windows` there instead**, a shim that runs the tracked hook, or the push runs ungated with nothing to show it. `scripts/README.md` § *The pre-push hook* has both routes. |
-| `tests/test_repo_check.py` | 127 tests. `python3 -m unittest discover -s tests` — stdlib only. |
-| `tests/test_pre_push.py` | 23 tests over the hook and the Windows shim, same command. |
+| `tests/test_repo_check.py` | From the skill root, `<repo>/.venv/bin/python -m unittest discover -s tests -t tests` (`.venv\Scripts\python.exe` on Windows) — stdlib only, on the project venv. |
+| `tests/test_pre_push.py` | The hook and the Windows shim, same command. |
 
 `scripts/README.md` carries the exit codes, the scope rule, why every check ships on, and
 why claim-verification is `verify-docs`' job rather than this gate's.
