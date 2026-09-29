@@ -243,6 +243,38 @@ def own_flags(command: str) -> list[str]:
     return list(dict.fromkeys(FLAG_RE.findall(END_OF_OPTIONS_RE.split(command, 1)[0])))
 
 
+def command_subject(command: str) -> str | None:
+    """Return the command prefix that owns a command's flags.
+
+    An interpreter's flags often belong to a repository-local script, while a
+    CLI's flags often belong to a subcommand. Everything before the first flag
+    is the bounded command prefix; arguments after that flag do not affect its
+    ownership.
+    """
+    prefix = END_OF_OPTIONS_RE.split(command, 1)[0]
+    tokens = prefix.split()
+    first_option = next(
+        (index for index, token in enumerate(tokens) if token.startswith("-")),
+        len(tokens),
+    )
+    tokens = tokens[:first_option]
+    if not tokens:
+        return None
+    if tokens[0] in {"python", "python3"}:
+        script = next(
+            (token for token in tokens[1:] if token.endswith((".py", ".pyw"))),
+            None,
+        )
+        if script:
+            return f"{tokens[0]} {script}"
+    subject = [tokens[0]]
+    for token in tokens[1:]:
+        if len(subject) == 3 or "." in token or not BINARY_RE.match(token):
+            break
+        subject.append(token)
+    return " ".join(subject)
+
+
 def flag_claim(subject: str | None, flag: str) -> tuple[str, str] | None:
     """Build a (claim, command) pair for a flag, or None when no binary is known."""
     if not subject:
@@ -329,8 +361,9 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
             add(
                 line_no, CLI_INVOCATION, command, "binary_present", f"command -v {head}"
             )
+            command_owner = command_subject(command)
             for flag in own_flags(command):
-                built = flag_claim(head, flag)
+                built = flag_claim(command_owner, flag)
                 if built:
                     add(line_no, CLI_FLAG, built[0], "help_text", built[1])
             for token in tokens[1:]:
@@ -378,7 +411,7 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
                 flags = [head]
             # A snippet that starts with a flag has no binary of its own; it
             # belongs to whatever tool the document is about.
-            binary = subject if head.startswith("-") else head
+            binary = subject if head.startswith("-") else command_subject(snippet)
             if flags and head not in SHELL_NOISE:
                 for flag in flags:
                     built = flag_claim(binary, flag)

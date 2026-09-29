@@ -341,6 +341,13 @@ class TestHelpSubject(unittest.TestCase):
         self.assertEqual(["git", "diff"], argv)
         self.assertEqual("git diff", label)
 
+    def test_nested_subcommands_carry_the_flag(self):
+        argv, label = subject(
+            Path("/repo"), "doc.md", ["ug", "mcp", "add", "--names"], "--names"
+        )
+        self.assertEqual(["ug", "mcp", "add"], argv)
+        self.assertEqual("ug mcp add", label)
+
     def test_a_bare_binary_keeps_its_own_flag(self):
         argv, _ = subject(Path("/repo"), "doc.md", ["pandoc", "--wrap=none"], "--wrap")
         self.assertEqual(["pandoc"], argv)

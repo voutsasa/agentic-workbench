@@ -515,24 +515,28 @@ def help_subject(
                         return ([head, str(candidate)], f"{head} {Path(token).name}")
                 return "no-script"  # named a script that is not here
         return "no-script"  # an interpreter with no script
-    # A bare word before the flag is a subcommand: `git diff --stat`.
+    # A bare word before the flag is a subcommand: `git diff --stat`. Keep at
+    # most two levels; anything later may be an argument and must not execute.
     flag_at = next(
         (i for i, t in enumerate(tokens) if t == flag or t.startswith(flag + "=")),
         len(tokens),
     )
-    subcommand = None
-    if flag_at > 1:
-        nxt = tokens[1]
-        if SUBCOMMAND_RE.match(nxt) and "/" not in nxt and "." not in nxt:
-            subcommand = nxt
-    if subcommand:
-        return ([head, subcommand], f"{head} {subcommand}")
-    return ([head], head)
+    argv = [head]
+    for token in tokens[1:flag_at]:
+        if (
+            len(argv) == 3
+            or "/" in token
+            or "." in token
+            or not SUBCOMMAND_RE.match(token)
+        ):
+            break
+        argv.append(token)
+    return (argv, " ".join(argv))
 
 
 # --- verifiers -----------------------------------------------------------------
 
-FLAG_CLAIM_RE = re.compile(r"^(?P<binary>\S+)\s+supports\s+(?P<flag>-{1,2}[\w-]+)$")
+FLAG_CLAIM_RE = re.compile(r"^(?P<binary>.+?)\s+supports\s+(?P<flag>-{1,2}[\w-]+)$")
 VERSION_CLAIM_RE = re.compile(
     r"^(?P<binary>\S+)\s+reports version\s+(?P<expected>\S+)$"
 )

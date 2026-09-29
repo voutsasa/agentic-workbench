@@ -556,8 +556,9 @@ eleven unit tests.
 Two docling claims in this file's own docling section looked like a third, worse gap: they returned
 **different verdicts depending on whether the run was scoped to one file or covered the repo**. They were
 not a verifier defect. The probe timeout was 20 seconds while `docling` takes 17s to answer `--version`
-and 20s to answer `--help` here, so the verdict turned on machine load — now 120s — and this file wrote
-`docling --to md` for what is really a `docling convert` flag, which the verifier was right to refuse.
+and 20s to answer `--help` here, so the verdict turned on machine load — now 120s — and this file
+omitted the conversion subcommand from an output-format invocation, which the verifier was right to
+refuse.
 Both fixed; the scoped run over this file now reports **0 refuted**.
 
 ## Not yet installed

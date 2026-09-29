@@ -113,17 +113,56 @@ class TestExtraction(unittest.TestCase):
             "npx -y @azure-devops/mcp org --authentication pat\n```\n"
         )
         found = [c.claim for c in by_kind(extract_from_text("s.md", text), "cli_flag")]
-        self.assertEqual(found, ["claude supports --transport"])
+        self.assertEqual(found, ["claude mcp add supports --transport"])
+
+    def test_local_script_flags_bind_to_the_interpreter_and_script(self):
+        text = "```\npython workstation/scripts/databricks_mcp.py --profile demo\n```\n"
+        found = [
+            c.claim
+            for c in by_kind(
+                extract_from_text("workstation/scripts/README.md", text), "cli_flag"
+            )
+        ]
+        self.assertEqual(
+            found,
+            ["python workstation/scripts/databricks_mcp.py supports --profile"],
+        )
+
+    def test_subcommand_flags_bind_to_the_complete_command(self):
+        text = (
+            "```\n"
+            "ug mcp-proxy --url endpoint --host workspace --profile profile\n"
+            "ug configure --agents claude\n"
+            "ug mcp add --names system.ai.genie_one_mcp\n"
+            "```\n"
+        )
+        found = [
+            c.claim
+            for c in by_kind(extract_from_text("quick_start.md", text), "cli_flag")
+        ]
+        self.assertEqual(
+            found,
+            [
+                "ug mcp-proxy supports --url",
+                "ug mcp-proxy supports --host",
+                "ug mcp-proxy supports --profile",
+                "ug configure supports --agents",
+                "ug mcp add supports --names",
+            ],
+        )
 
     def test_inline_snippet_stops_at_a_bare_double_dash_too(self):
         text = "Run `copilot mcp add db --timeout 5 -- ug mcp-proxy --url x --profile p`.\n"
         found = [c.claim for c in by_kind(extract_from_text("s.md", text), "cli_flag")]
-        self.assertEqual(found, ["copilot supports --timeout"])
+        self.assertEqual(found, ["copilot mcp add supports --timeout"])
 
     def test_a_double_dash_inside_a_flag_or_word_is_not_a_separator(self):
         text = "```\ngit log --oneline --no-merges a--b\n```\n"
         found = [c.claim for c in by_kind(extract_from_text("s.md", text), "cli_flag")]
-        self.assertEqual(found, ["git supports --oneline", "git supports --no-merges"])
+        self.assertEqual(
+            found,
+            ["git log supports --oneline", "git log supports --no-merges"],
+        )
 
     def test_flag_claim_is_dropped_when_no_binary_can_be_inferred(self):
         # No fenced block and not under workstation/cli, so there is no subject.

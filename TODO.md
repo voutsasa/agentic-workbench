@@ -25,21 +25,6 @@ Opened 2026-09-29. The catalog entry is linked, but Claude's `drawio-mcp` connec
 **Closes when:** Claude reports `drawio-mcp` connected and successfully invokes one Draw.io tool from
 the Windows setup.
 
-### 31. The documentation claim extractor binds local-script flags to `python`
-
-Opened 2026-09-29. A Databricks MCP setup check found that a command such as
-`python workstation/scripts/databricks_mcp.py --profile ...` produces the claim "`python` supports
-`--profile`". The generator's own help proves the flag, but the wrongly bound claim remains
-unverifiable and obscures the actual documentation result. The 29 September full offline sweep also
-refuted five Unity Gateway claims because the extractor bound flags to an incomplete command:
-`ug mcp-proxy --host`, `--profile`, and `--url`;
-`ug mcp --names`; and `ug configure --agents`.
-
-**Closes when:** the extractor binds flags after an interpreter invocation to the repository-local
-script and to the complete subcommand invocation; regression fixtures cover `databricks_mcp.py` and
-the Unity Gateway forms above; and the manifest contains no false `python supports …` or
-`ug supports …` flag claims.
-
 ### 30. The DPACT attended-assistant adoption plan has not been ratified or implemented
 
 Opened 2026-09-29. The DPACT review identifies this workbench as an attended command-line assistant
