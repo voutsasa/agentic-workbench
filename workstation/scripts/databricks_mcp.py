@@ -4,7 +4,10 @@
 Covers the currently available ``system.ai`` services that need nothing beyond
 the Databricks CLI login. The script discovers those internal services through
 the read-only Unity Catalog MCP-services API, then generates rather than copies
-commands per service and per client.
+commands per service and per client. It also covers the managed ``/api/2.0/mcp/``
+servers whose resource path the user names: Genie Agents (``--genie-space``), AI
+Search indexes or schemas (``--ai-search``) and, only when asked, Databricks SQL
+(``--sql``), which writes. These need no catalog query.
 
 Writes nothing and registers nothing: registering an MCP server is the user's
 step (``AGENTS.md`` § *The user installs; the agent records*). Unless
@@ -18,6 +21,7 @@ Standard library only. Run from anywhere::
 
     python workstation/scripts/databricks_mcp.py --profile <profile>
     python workstation/scripts/databricks_mcp.py --profile <profile> --client copilot
+    python workstation/scripts/databricks_mcp.py --profile <profile> --genie-space <id>
     python workstation/scripts/databricks_mcp.py --profile <profile> --remove --service <service>
 """
 
@@ -47,6 +51,13 @@ PROFILE_RE = re.compile(r"^[A-Za-z0-9._-]+$")
 HOST_RE = re.compile(r"^https://[A-Za-z0-9.-]+$")
 WORKSPACE_ID_RE = re.compile(r"^[0-9]+$")
 SERVICE_RE = re.compile(r"^[A-Za-z0-9_]+$")
+GENIE_SPACE_RE = re.compile(r"^[A-Za-z0-9]+$")
+#: ``catalog.schema`` or ``catalog.schema.index``; unquoted identifiers only.
+AI_SEARCH_RE = re.compile(r"^[A-Za-z0-9_]+\.[A-Za-z0-9_]+(\.[A-Za-z0-9_]+)?$")
+SQL_WARNING = (
+    "databricks-sql runs any SQL the agent writes, writes included, as the"
+    " profile's identity; no service policy applies to it"
+)
 
 
 @dataclass(frozen=True)
@@ -64,6 +75,30 @@ def service_url(ws: Workspace, service: str) -> str:
     return f"{ws.host}/ai-gateway/mcp-services/system.ai.{service}?o={ws.workspace_id}"
 
 
+def managed_url(ws: Workspace, path: str) -> str:
+    return f"{ws.host}/api/2.0/mcp/{path}"
+
+
+def genie_server(space_id: str) -> tuple[str, str]:
+    """Name and ``/api/2.0/mcp/`` path of a Genie Agent server."""
+    if not GENIE_SPACE_RE.fullmatch(space_id):
+        raise ValueError(f"genie-space {space_id!r}: use letters and digits only")
+    return f"{NAME_PREFIX}genie-{space_id}", f"genie/{space_id}"
+
+
+def ai_search_server(target: str) -> tuple[str, str]:
+    """Name and path of an AI Search server for one index or a whole schema."""
+    if not AI_SEARCH_RE.fullmatch(target):
+        raise ValueError(
+            f"ai-search {target!r}: expected catalog.schema or catalog.schema.index"
+        )
+    parts = target.split(".")
+    return f"{NAME_PREFIX}ai-search-{'-'.join(parts)}", "ai-search/" + "/".join(parts)
+
+
+SQL_SERVER = (f"{NAME_PREFIX}sql", "sql")
+
+
 def headers_helper(profile: str) -> str:
     return (
         f"databricks auth token -p {profile}"
@@ -71,37 +106,37 @@ def headers_helper(profile: str) -> str:
     )
 
 
-def claude_config(ws: Workspace, service: str) -> dict[str, str]:
+def http_entry(ws: Workspace, url: str) -> dict[str, str]:
     """The Claude Code server entry: native HTTP, token fetched per connection."""
-    return {
-        "type": "http",
-        "url": service_url(ws, service),
-        "headersHelper": headers_helper(ws.profile),
-    }
+    return {"type": "http", "url": url, "headersHelper": headers_helper(ws.profile)}
 
 
-def claude_add(ws: Workspace, service: str, scope: str) -> list[str]:
-    config = json.dumps(claude_config(ws, service))
-    return ["claude", "mcp", "add-json", "-s", scope, server_name(service), config]
+def claude_config(ws: Workspace, service: str) -> dict[str, str]:
+    return http_entry(ws, service_url(ws, service))
 
 
-def claude_remove(service: str, scope: str) -> list[str]:
-    return ["claude", "mcp", "remove", server_name(service), "-s", scope]
+def claude_add(ws: Workspace, name: str, url: str, scope: str) -> list[str]:
+    config = json.dumps(http_entry(ws, url))
+    return ["claude", "mcp", "add-json", "-s", scope, name, config]
 
 
-def copilot_add(ws: Workspace, service: str) -> list[str]:
+def claude_remove(name: str, scope: str) -> list[str]:
+    return ["claude", "mcp", "remove", name, "-s", scope]
+
+
+def copilot_add(ws: Workspace, name: str, url: str) -> list[str]:
     """The Copilot CLI entry: a stdio bridge, since Copilot has no header helper."""
     return [
-        "copilot", "mcp", "add", server_name(service), "--",
+        "copilot", "mcp", "add", name, "--",
         "ug", "mcp-proxy",
-        "--url", service_url(ws, service),
+        "--url", url,
         "--host", ws.host,
         "--profile", ws.profile,
     ]  # fmt: skip
 
 
-def copilot_remove(service: str) -> list[str]:
-    return ["copilot", "mcp", "remove", server_name(service)]
+def copilot_remove(name: str) -> list[str]:
+    return ["copilot", "mcp", "remove", name]
 
 
 def commands(
@@ -110,24 +145,34 @@ def commands(
     clients: Sequence[str],
     claude_scope: str,
     remove: bool = False,
+    managed: Sequence[tuple[str, str]] = (),
 ) -> list[list[str]]:
+    """Commands per client: ``system.ai`` services first, then managed servers.
+
+    ``managed`` holds ``(name, path)`` pairs for paths under ``/api/2.0/mcp/``.
+    """
+    if ws is None and not remove:
+        raise ValueError("a workspace is required to add MCP services")
+    names = [server_name(service) for service in services]
+    names += [name for name, _ in managed]
+    urls: list[str] = []
+    if ws is not None:
+        urls = [service_url(ws, service) for service in services]
+        urls += [managed_url(ws, path) for _, path in managed]
+
     out: list[list[str]] = []
     for client in clients:
-        for service in services:
-            if client == "claude":
-                if remove:
-                    out.append(claude_remove(service, claude_scope))
+        for i, name in enumerate(names):
+            if remove:
+                if client == "claude":
+                    out.append(claude_remove(name, claude_scope))
                 else:
-                    if ws is None:
-                        raise ValueError("a workspace is required to add MCP services")
-                    out.append(claude_add(ws, service, claude_scope))
-            else:
-                if remove:
-                    out.append(copilot_remove(service))
+                    out.append(copilot_remove(name))
+            elif ws is not None:
+                if client == "claude":
+                    out.append(claude_add(ws, name, urls[i], claude_scope))
                 else:
-                    if ws is None:
-                        raise ValueError("a workspace is required to add MCP services")
-                    out.append(copilot_add(ws, service))
+                    out.append(copilot_add(ws, name, urls[i]))
     return out
 
 
@@ -242,7 +287,7 @@ def resolve_workspace(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
         description="Print Claude Code / Copilot CLI commands that register "
-        "Databricks system.ai MCP services. Runs none of them."
+        "Databricks MCP servers. Runs none of them."
     )
     parser.add_argument("--profile", required=True, help="Databricks CLI profile")
     parser.add_argument(
@@ -256,6 +301,23 @@ def build_parser() -> argparse.ArgumentParser:
         "--service",
         action="append",
         help="repeatable; additions must be currently internal system.ai services",
+    )
+    parser.add_argument(
+        "--genie-space",
+        action="append",
+        metavar="ID",
+        help="repeatable; a Genie Agent, /api/2.0/mcp/genie/<ID>",
+    )
+    parser.add_argument(
+        "--ai-search",
+        action="append",
+        metavar="CATALOG.SCHEMA[.INDEX]",
+        help="repeatable; one AI Search index, or every index in a schema",
+    )
+    parser.add_argument(
+        "--sql",
+        action="store_true",
+        help="Databricks SQL, /api/2.0/mcp/sql; it writes, so never by default",
     )
     parser.add_argument(
         "--client", action="append", choices=CLIENTS, help="repeatable; default: both"
@@ -282,11 +344,21 @@ def main(
                 f"profile {args.profile!r}: use letters, digits, '.', '_' or '-' only"
             )
         requested = list(dict.fromkeys(args.service or []))
+        managed = [genie_server(s) for s in dict.fromkeys(args.genie_space or [])]
+        managed += [ai_search_server(t) for t in dict.fromkeys(args.ai_search or [])]
+        if args.sql:
+            managed.append(SQL_SERVER)
         if args.remove:
-            if not requested:
-                raise ValueError("--remove requires at least one --service")
+            if not requested and not managed:
+                raise ValueError(
+                    "--remove requires at least one --service, --genie-space,"
+                    " --ai-search or --sql"
+                )
             services = requested
             ws = None
+        elif managed and not requested:
+            services = []
+            ws = resolve_workspace(args.profile, args.host, args.workspace_id, describe)
         else:
             available = discover(args.profile)
             services = requested or list(available)
@@ -314,7 +386,10 @@ def main(
 
     clients = list(dict.fromkeys(args.client or CLIENTS))
     assert ws is not None or args.remove
-    for argv_out in commands(ws, services, clients, args.claude_scope, args.remove):
+    if args.sql and not args.remove:
+        print(f"databricks_mcp: warning: {SQL_WARNING}", file=sys.stderr)
+    out = commands(ws, services, clients, args.claude_scope, args.remove, managed)
+    for argv_out in out:
         print(shlex.join(argv_out))
     return 0
 

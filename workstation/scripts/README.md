@@ -14,7 +14,7 @@ called on Windows and inside an activated venv; **on macOS outside a venv it is 
 | [`inventory.py`](inventory.py) | Probe this machine for the CLI toolchain and print the inventory table for [`../machines/`](../machines/) |
 | [`status.py`](status.py) | Check the resolved machine's prerequisite profile and CLI toolchain, then report corrective actions |
 | [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude`, and its skills in `~/.copilot/skills` |
-| [`databricks_mcp.py`](databricks_mcp.py) | Read available internal Databricks MCP services, then print Claude Code and Copilot CLI registration commands — runs none of them |
+| [`databricks_mcp.py`](databricks_mcp.py) | Read available internal Databricks MCP services, or take named Genie Agent, AI Search and SQL servers, then print Claude Code and Copilot CLI registration commands — runs none of them |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
 `../agent/skills/*/tests/`. Two of them test no script in this folder: `test_readme_skills.py` fails when the skill
@@ -201,7 +201,12 @@ means it can be re-derived instead of trusted.
 python workstation/scripts/databricks_mcp.py --profile <profile>                   # every service, both clients
 python workstation/scripts/databricks_mcp.py --profile <profile> --client copilot --service dbsql
 python workstation/scripts/databricks_mcp.py --profile <profile> --remove --service <service>  # the matching removals
+python workstation/scripts/databricks_mcp.py --profile <profile> --genie-space <id> --ai-search <catalog>.<schema>[.<index>]
 ```
+
+`--genie-space`, `--ai-search` and `--sql` add managed `/api/2.0/mcp/` servers, whose resource path
+only you know. Asking only for these skips the catalog query. `--sql` is never implied, and it prints
+a warning on stderr because that server writes.
 
 Prints the `claude mcp add-json` and `copilot mcp add` commands that register a profile's currently
 internal `system.ai` MCP services — discovered at run time from the workspace's Unity Catalog
@@ -213,6 +218,6 @@ read-only `databricks auth describe` when `--host` or `--workspace-id` is missin
 itself. The reasoning, authentication and traps are in
 [`../mcp/databricks-mcp/setup.md`](../mcp/databricks-mcp/setup.md).
 
-The profile, host and workspace ID are checked against strict patterns before anything is printed,
+The profile, host, workspace ID, Genie space ID and AI Search path are checked against strict patterns before anything is printed,
 because the profile ends up inside a shell command (the `headersHelper`). Connection-backed services
 such as `github` are rejected by design.

@@ -202,6 +202,100 @@ class MainTest(unittest.TestCase):
         self.assertIn("timed out", err.lower())
 
 
+def no_discover(_profile: str) -> tuple[str, ...]:
+    raise AssertionError("the system.ai catalog must not be read for managed servers")
+
+
+ADD = ["--profile", "dbc-abc", "--host", WS.host, "--workspace-id", "123"]
+
+
+class ManagedServerTest(unittest.TestCase):
+    def test_genie_space_prints_both_clients_without_discovery(self):
+        code, out, _ = run([*ADD, "--genie-space", "01ef"], discover=no_discover)
+        self.assertEqual(code, 0)
+        claude, copilot = (shlex.split(line) for line in out.splitlines())
+        self.assertEqual(claude[5], "databricks-genie-01ef")
+        entry = json.loads(claude[6])
+        self.assertEqual(entry["url"], WS.host + "/api/2.0/mcp/genie/01ef")
+        self.assertEqual(
+            entry["headersHelper"], claude_config(WS, "x")["headersHelper"]
+        )
+        self.assertEqual(copilot[3], "databricks-genie-01ef")
+        self.assertEqual(
+            copilot[copilot.index("--url") + 1], WS.host + "/api/2.0/mcp/genie/01ef"
+        )
+
+    def test_ai_search_index_and_schema(self):
+        code, out, _ = run(
+            [*ADD, "--client", "claude", "--ai-search", "main.docs.chunks",
+             "--ai-search", "main.docs"],
+            discover=no_discover,
+        )  # fmt: skip
+        self.assertEqual(code, 0)
+        index, schema = (shlex.split(line) for line in out.splitlines())
+        self.assertEqual(index[5], "databricks-ai-search-main-docs-chunks")
+        self.assertEqual(
+            json.loads(index[6])["url"],
+            WS.host + "/api/2.0/mcp/ai-search/main/docs/chunks",
+        )
+        self.assertEqual(schema[5], "databricks-ai-search-main-docs")
+        self.assertEqual(
+            json.loads(schema[6])["url"], WS.host + "/api/2.0/mcp/ai-search/main/docs"
+        )
+
+    def test_sql_is_opt_in_and_warns_that_it_writes(self):
+        code, out, err = run(
+            [*ADD, "--client", "copilot", "--sql"], discover=no_discover
+        )
+        self.assertEqual(code, 0)
+        argv = shlex.split(out)
+        self.assertEqual(argv[3], "databricks-sql")
+        self.assertEqual(argv[argv.index("--url") + 1], WS.host + "/api/2.0/mcp/sql")
+        self.assertIn("writes", err)
+
+    def test_default_run_registers_no_managed_server(self):
+        _, out, _ = run(ADD)
+        self.assertNotIn("/api/2.0/mcp/", out)
+
+    def test_services_and_managed_servers_combine(self):
+        code, out, _ = run(
+            [*ADD, "--client", "claude", "--service", "genie_one_mcp",
+             "--genie-space", "01ef"]
+        )  # fmt: skip
+        self.assertEqual(code, 0)
+        self.assertEqual(len(out.splitlines()), 2)
+
+    def test_remove_managed_servers_needs_no_workspace(self):
+        code, out, _ = run(
+            ["--profile", "dbc-abc", "--remove", "--client", "copilot",
+             "--genie-space", "01ef", "--ai-search", "main.docs", "--sql"],
+            describe=no_describe, discover=no_discover,
+        )  # fmt: skip
+        self.assertEqual(code, 0)
+        self.assertEqual(
+            out.splitlines(),
+            [
+                "copilot mcp remove databricks-genie-01ef",
+                "copilot mcp remove databricks-ai-search-main-docs",
+                "copilot mcp remove databricks-sql",
+            ],
+        )
+
+    def test_unsafe_ids_are_refused(self):
+        for flag, value in [
+            ("--genie-space", "01ef; rm -rf ~"),
+            ("--genie-space", "01ef\n"),
+            ("--ai-search", "main"),
+            ("--ai-search", "a.b.c.d"),
+            ("--ai-search", "main.do$cs"),
+        ]:
+            with self.subTest(flag=flag, value=value):
+                code, out, err = run([*ADD, flag, value], discover=no_discover)
+                self.assertEqual(code, 2)
+                self.assertEqual(out, "")
+                self.assertIn(flag.removeprefix("--"), err)
+
+
 class ResolveTest(unittest.TestCase):
     def test_bad_host_and_id(self):
         with self.assertRaises(ValueError):
