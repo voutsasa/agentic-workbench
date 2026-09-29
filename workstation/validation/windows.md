@@ -91,9 +91,11 @@ foreach ($d in (Get-Content .pre-push-tests | Where-Object { $_ -and $_ -notmatc
   .venv\Scripts\python.exe -m unittest discover -s $d -t $d
 }
 .venv\Scripts\ruff.exe check . ; .venv\Scripts\ruff.exe format --check .
+.venv\Scripts\python.exe -m pyright
 ```
 
-**Expect** `all enabled checks passed`, `No claim was refuted`, `OK` from every suite, and ruff clean.
+**Expect** `all enabled checks passed`, `No claim was refuted`, `OK` from every suite, ruff clean,
+and `0 errors, 0 warnings, 0 informations` from Pyright.
 
 Two Windows traps that fail this section rather than the thing it tests: the `pre-push` hook is a
 **copy** here, not a link, and `core.autocrlf=true` would break it with *bad interpreter* — both in

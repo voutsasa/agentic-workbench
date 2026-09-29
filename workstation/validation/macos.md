@@ -118,7 +118,9 @@ for d in $(grep -v '^#' .pre-push-tests | grep -v '^$'); do
   .venv/bin/python -m unittest discover -s $d -t $d
 done
 .venv/bin/ruff check . && .venv/bin/ruff format --check .
+.venv/bin/python -m pyright
 ```
 
-**Expect** `all enabled checks passed`, `No claim was refuted`, `OK` from every suite, and ruff clean.
+**Expect** `all enabled checks passed`, `No claim was refuted`, `OK` from every suite, ruff clean,
+and `0 errors, 0 warnings, 0 informations` from Pyright.
 A `.venv` that does not exist yet is the user's to create (`uv venv`, `uv sync`), never the agent's.

@@ -79,7 +79,7 @@ return subprocess.run(command, check=False).returncode  # noqa: S603
 | Concern | Tool | Note |
 |---|---|---|
 | Lint, format, security, complexity | **ruff** — `E,F,I,B,UP,S,C90,D1` | no separate bandit, no separate complexity gate |
-| Types | **pyright**, with `venvPath` and `venv` set | without those two lines it resolves against the system interpreter and calls every third-party import missing |
+| Types | **pyright**, run as the project venv interpreter with `-m pyright`, with `venvPath` and `venv` set | the module route avoids a blocked Windows console launcher; without those two lines it resolves against the system interpreter and calls every third-party import missing |
 | Complexity trend | **radon**, advisory only | ruff blocks, radon reports what a gate cannot |
 | Dependency CVEs | **`uvx pip-audit`** | the one thing ruff's `S` rules do not cover |
 | Docstrings | **`D1` only** | enforce that they exist; never dictate their shape |

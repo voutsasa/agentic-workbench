@@ -12,6 +12,7 @@ decision for phase 2, not a side effect of measuring.
 """
 
 import json
+import os
 import re
 import shutil
 import subprocess
@@ -137,14 +138,21 @@ def run(command: list[str], cwd: Path) -> tuple[int, str]:
     return result.returncode, result.stdout + result.stderr
 
 
+def venv_executable(project: Path, name: str, platform: str = os.name) -> Path:
+    """Return a tool path in the platform's conventional venv layout."""
+    directory = "Scripts" if platform == "nt" else "bin"
+    suffix = ".exe" if platform == "nt" else ""
+    return project / ".venv" / directory / f"{name}{suffix}"
+
+
 def measure(project: Path) -> list[Finding]:
     """Every measurement, in the order the report reads best."""
 
     findings: list[Finding] = []
-    venv = project / ".venv" / "bin"
     target = python_requirement(project)
+    python = venv_executable(project, "python")
 
-    ruff = venv / "ruff"
+    ruff = venv_executable(project, "ruff")
     if ruff.is_file():
         _, output = run([str(ruff), "check", ".", "--statistics"], project)
         counts = parse_ruff(output)
@@ -163,9 +171,9 @@ def measure(project: Path) -> list[Finding]:
     else:
         findings.append(Finding("ruff", False, "not installed — `uv add --dev ruff`"))
 
-    pyright = venv / "pyright"
-    if pyright.is_file():
-        _, output = run([str(pyright), "--outputjson"], project)
+    pyright = venv_executable(project, "pyright")
+    if python.is_file() and pyright.is_file():
+        _, output = run([str(python), "-m", "pyright", "--outputjson"], project)
         try:
             summary = json.loads(output).get("summary", {})
             errors = summary.get("errorCount", "?")
@@ -186,7 +194,6 @@ def measure(project: Path) -> list[Finding]:
             Finding("pyright", False, "not installed — `uv add --dev pyright`")
         )
 
-    python = venv / "python"
     if python.is_file():
         _, output = run(
             [str(python), "-m", "pytest", "-q", "--cov", "--cov-report=term"], project

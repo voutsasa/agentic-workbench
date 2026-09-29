@@ -152,7 +152,7 @@ above; applying does not replace it.
 | `scripts/checks.toml` | The rules it enforces. Tune this file, not the script. |
 | `scripts/pre-push` | Git hook wrapper; symlinked into `.git/hooks/pre-push` — **on Windows copy `scripts/pre-push.windows` there instead**, a shim that runs the tracked hook, or the push runs ungated with nothing to show it. `scripts/README.md` § *The pre-push hook* has both routes. |
 | `tests/test_repo_check.py` | 127 tests. `python3 -m unittest discover -s tests` — stdlib only. |
-| `tests/test_pre_push.py` | 19 tests over the hook and the Windows shim, same command. |
+| `tests/test_pre_push.py` | 23 tests over the hook and the Windows shim, same command. |
 
 `scripts/README.md` carries the exit codes, the scope rule, why every check ships on, and
 why claim-verification is `verify-docs`' job rather than this gate's.

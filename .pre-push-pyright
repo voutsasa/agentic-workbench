@@ -1,0 +1,3 @@
+# Presence opts this repository into `python -m pyright` on the project venv
+# interpreter before every push. The shared hook reads this marker; its content
+# is ignored. Skip one push with SKIP_PYRIGHT=1 git push.

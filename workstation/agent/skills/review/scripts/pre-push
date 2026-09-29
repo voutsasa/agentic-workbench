@@ -1,14 +1,16 @@
 #!/usr/bin/env bash
 #
-# Pre-push gate. Four checks, all deterministic, none calling a model and none
+# Pre-push gate. Five checks, all deterministic, none calling a model and none
 # touching the network:
 #
 #   1. repo_check.py    — is the prose internally consistent? Whole repo, ~0.07s.
 #   2. ruff             — `ruff check` and `ruff format --check`, only in a repo
 #                         with a .pre-push-ruff file at its root.
-#   3. unit tests       — the directories the repo names in .pre-push-tests.
+#   3. pyright          — `python -m pyright`, only in a repo with a
+#                         .pre-push-pyright file at its root.
+#   4. unit tests       — the directories the repo names in .pre-push-tests.
 #                         No file, no tests.
-#   4. verify_claims.py — is each claim still true? Only the markdown being
+#   5. verify_claims.py — is each claim still true? Only the markdown being
 #                         pushed, ~0.3s for a typical change.
 #
 # Install (from the repo root):
@@ -33,6 +35,7 @@
 #   SKIP_VERIFY_CLAIMS=1 git push  — skip the claim verifier, keep the rest
 #   SKIP_PRE_PUSH_TESTS=1 git push — skip the unit tests, keep the rest
 #   SKIP_RUFF=1 git push           — skip ruff, keep the rest
+#   SKIP_PYRIGHT=1 git push        — skip Pyright, keep the rest
 #   SKIP_REPO_CHECK=1 git push     — skip every check in this hook
 #   git push --no-verify           — skip every hook in the repository
 #
@@ -121,6 +124,28 @@ if [ -f "$REPO_ROOT/.pre-push-ruff" ]; then
       echo "          run: is ruff in the repo's .venv?). Fix them, or bypass with" >&2
       echo "          SKIP_RUFF=1 git push" >&2
       exit 1
+    fi
+  fi
+fi
+
+# --- Pyright, in repos that opt in with .pre-push-pyright ----------------------
+
+# Pyright's generated console launcher can be blocked by endpoint protection.
+# The venv interpreter's module route is portable across macOS and Windows and
+# runs the same installed package.
+if [ -f "$REPO_ROOT/.pre-push-pyright" ]; then
+  if [ "${SKIP_PYRIGHT:-0}" = "1" ]; then
+    echo "pre-push: SKIP_PYRIGHT=1 — skipping Pyright." >&2
+  else
+    echo "pre-push: Pyright" >&2
+    (cd "$REPO_ROOT" && "$PYTHON" -m pyright < /dev/null)
+    status=$?
+    if [ "$status" -ne 0 ]; then
+      echo "" >&2
+      echo "pre-push: push refused — Pyright reported the problems above (or could not" >&2
+      echo "          run: is pyright in the repo's .venv?). Fix them, or bypass with" >&2
+      echo "          SKIP_PYRIGHT=1 git push" >&2
+      exit "$status"
     fi
   fi
 fi

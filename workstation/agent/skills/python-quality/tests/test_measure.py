@@ -27,6 +27,7 @@ from measure import (
     propose_coverage,
     python_requirement,
     report,
+    venv_executable,
 )
 
 # ruff's own numbers from the project this skill came from. Note how much smaller they are than
@@ -159,6 +160,16 @@ class TheVersionAnythingParsingTheSourceMustMatch(unittest.TestCase):
 
     def test_no_pyproject_at_all_is_not_a_crash(self) -> None:
         self.assertEqual(python_requirement(self.tmp_path), "")
+
+    def test_venv_executables_follow_the_platform_layout(self) -> None:
+        self.assertEqual(
+            venv_executable(self.tmp_path, "python", "nt"),
+            self.tmp_path / ".venv" / "Scripts" / "python.exe",
+        )
+        self.assertEqual(
+            venv_executable(self.tmp_path, "pyright", "posix"),
+            self.tmp_path / ".venv" / "bin" / "pyright",
+        )
 
 
 class TheReport(unittest.TestCase):

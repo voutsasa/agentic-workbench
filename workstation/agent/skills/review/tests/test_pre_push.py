@@ -2,8 +2,9 @@
 
     python3 -m unittest discover -s tests
 
-Three things are covered here: the invocation guard, the ruff step opted into by
-``.pre-push-ruff``, and the unit-test step driven by ``.pre-push-tests``. What the checkers do once invoked is covered by
+Four things are covered here: the invocation guard, the ruff and Pyright steps
+opted into by their respective marker files, and the unit-test step driven by
+``.pre-push-tests``. What the checkers do once invoked is covered by
 test_repo_check.py and by the verifier's own suite; this file exists for the
 behaviour that lives only in the shell script.
 
@@ -160,6 +161,7 @@ HOOK_ENV_FLAGS = (
     "SKIP_PRE_PUSH_TESTS",
     "PRE_PUSH_IN_TESTS",
     "SKIP_RUFF",
+    "SKIP_PYRIGHT",
 )
 
 
@@ -307,6 +309,59 @@ class RuffStepTests(HookRepoCase):
         result = self.run_hook(SKIP_RUFF="1", RUFF_STUB_EXIT="1")
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertIn("SKIP_RUFF=1", result.stderr)
+        self.assertEqual(self.calls(), [])
+
+
+PYRIGHT_STUB = """import os
+import sys
+from pathlib import Path
+
+with Path("pyright-calls.log").open("a", encoding="utf-8") as log:
+    log.write(" ".join(sys.argv[1:]) + "\\n")
+sys.exit(int(os.environ.get("PYRIGHT_STUB_EXIT", "0")))
+"""
+
+
+class PyrightStepTests(HookRepoCase):
+    """The Pyright step, opted into per repo by ``.pre-push-pyright``."""
+
+    def setUp(self) -> None:
+        super().setUp()
+        stub = self.root / "pyright"
+        stub.mkdir()
+        (stub / "__init__.py").write_text("", encoding="utf-8")
+        (stub / "__main__.py").write_text(PYRIGHT_STUB, encoding="utf-8")
+
+    def opt_in(self) -> None:
+        (self.root / ".pre-push-pyright").write_text("", encoding="utf-8")
+
+    def calls(self) -> list[str]:
+        log = self.root / "pyright-calls.log"
+        return log.read_text(encoding="utf-8").splitlines() if log.exists() else []
+
+    def test_no_file_runs_no_pyright(self) -> None:
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls(), [])
+
+    def test_opted_in_runs_the_module(self) -> None:
+        self.opt_in()
+        result = self.run_hook()
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.calls(), [""])
+
+    def test_pyright_failure_refuses_the_push(self) -> None:
+        self.opt_in()
+        result = self.run_hook(PYRIGHT_STUB_EXIT="1")
+        self.assertNotEqual(result.returncode, 0)
+        self.assertIn("Pyright", result.stderr)
+        self.assertIn("SKIP_PYRIGHT=1", result.stderr)
+
+    def test_skip_flag_skips_only_pyright(self) -> None:
+        self.opt_in()
+        result = self.run_hook(SKIP_PYRIGHT="1", PYRIGHT_STUB_EXIT="1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("SKIP_PYRIGHT=1", result.stderr)
         self.assertEqual(self.calls(), [])
 
 

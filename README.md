@@ -11,7 +11,7 @@ Enables engineers to set up their workstation and work in an agent-enabled envir
 
 A fresh clone loads nothing on its own: the venv, the pre-push hook, the repo skills and Claude Code's `CLAUDE.md` are all per-clone and gitignored. Run these from the repo root before the first session. Use `python3` on macOS and `python` on Windows; the scripts are stdlib-only, so they run before a venv exists.
 
-**1. Create the venv and install the development tools.** `uv sync` creates `.venv` on the Python pinned by `.python-version` (fetching it if missing) and installs the `dev` group — `pytest`, `ruff`, `pyright` — from `uv.lock`. The pre-push hook runs ruff and the test suites on this venv.
+**1. Create the venv and install the development tools.** `uv sync` creates `.venv` on the Python pinned by `.python-version` (fetching it if missing) and installs the `dev` group — `pytest`, `ruff`, `pyright` — from `uv.lock`. The pre-push hook runs ruff, Pyright through the venv interpreter, and the test suites on this venv.
 
 ```sh
 uv sync
@@ -171,6 +171,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 | `.verify-flags-allow` | Its sibling for flag claims, one `<command> <flag>` per line: a flag that works but that no help text documents, such as `git diff --staged`. It only ever downgrades a refutation. |
 | `.pre-push-tests` | Unit-test directories the pre-push hook runs before a push, one per line. Repo-local for the same reason. |
 | `.pre-push-ruff` | Its presence makes the pre-push hook run `ruff check` and `ruff format --check`. Repo-local for the same reason. |
+| `.pre-push-pyright` | Its presence makes the pre-push hook run the venv interpreter with `-m pyright`. Repo-local for the same reason. |
 | `.gitignore` | Excludes the ingested corpus, the per-clone `.claude/` and `CLAUDE.md`, `.venv/`, `.DS_Store`, and Python build artefacts. |
 | `.github/workflows/verify-docs.yml` | Weekly documentation audit on GitHub Actions, opening a pull request with the reports. **Dormant:** the repo is hosted on Azure DevOps, where it does not run — its port is the next row. |
 | `azure-pipelines/verify-docs.yml` | The same weekly audit for Azure DevOps, opening a pull request with `az repos pr create`. Its header lists the one-time setup in ADO. **Written, not yet run** — [`TODO.md`](TODO.md) #9. |
