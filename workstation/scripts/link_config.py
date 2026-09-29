@@ -85,6 +85,7 @@ SKILLS = (
     "fetch-to-markdown",
     "confluence-publish",
     "confluence-export",
+    "setup-mcp-servers",
 )
 
 #: Post-edit hook scripts under ``workstation/agent/hooks/``, linked with ``--hooks``.

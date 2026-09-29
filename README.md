@@ -68,6 +68,7 @@ Repo skills serve this workbench; global skills work in any repo. The authoritat
 | [`pdf-deliverable`](workstation/agent/skills/pdf-deliverable/SKILL.md) | global | Turns markdown or HTML into PDFs, from working notes to formal documents meeting a required page layout or archival standard. |
 | [`confluence-publish`](workstation/agent/skills/confluence-publish/SKILL.md) | global | Publishes Markdown to a Confluence Cloud page under a target page you name, with confluence-sync-md and md2conf. |
 | [`confluence-export`](workstation/agent/skills/confluence-export/SKILL.md) | global | Retrieves Confluence pages, subtrees or spaces as Markdown with cme, previewing the destination for approval first. |
+| [`setup-mcp-servers`](workstation/agent/skills/setup-mcp-servers/SKILL.md) | global | Guides safe setup of documented MCP servers, collecting non-secret choices and handing registration commands to the user. |
 
 ## Layout
 
