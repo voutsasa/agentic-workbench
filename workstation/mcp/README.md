@@ -19,7 +19,7 @@ Where to find guidance for the MCP servers listed under *Cross-cutting aspects �
 |---|---|---|---|
 | `drawio-mcp` | draw.io MCP tool server | stdio | [`drawio-mcp/`](drawio-mcp/) |
 | `ado-remote-mcp` | Azure DevOps MCP Server (remote) | http | [`ado-remote-mcp/`](ado-remote-mcp/) |
-| `databricks-<service>` | Databricks managed MCP services (Genie One, DBSQL, web search, sandbox) | http (Claude) · stdio bridge (Copilot) | [`databricks-mcp/`](databricks-mcp/) |
+| `databricks-<service>` | Azure Databricks managed MCP services (Genie One, DBSQL, sandbox) | http (Claude) · stdio bridge (Copilot) | [`databricks-mcp/`](databricks-mcp/) |
 
 **The user registers; this folder records** — see [`AGENTS.md`](../../AGENTS.md#the-user-installs-the-agent-records). Whether a server is actually registered and connected on a given machine is that machine's state, recorded under [`../machines/`](../machines/), not here: a row can be fully documented and still not live on this machine.
 

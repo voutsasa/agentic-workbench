@@ -285,4 +285,4 @@ Servers **authored** in this workbench are project output, not workstation tooli
 
 * [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/)
 * [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server)
-* [databricks-mcp](https://docs.databricks.com/aws/en/generative-ai/mcp/managed-mcp)
+* [databricks-mcp](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/managed-mcp)

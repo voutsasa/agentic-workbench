@@ -17,6 +17,15 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 41. No `/api/2.0/mcp/` Databricks server has connected yet
+
+Opened 2026-09-29. `workstation/scripts/databricks_mcp.py` now prints these servers
+(`--genie-space`, `--ai-search`, `--sql`), unit-tested, but no printed command has been run. Two
+assumptions are unproven: that these URLs need no `?o=` query string, and that the CLI login's
+`all-apis` scope covers `genie` and `ai-search`.
+
+**Closes when:** one Genie Agent and one AI Search server each answer a read-only tool call from
+Claude Code and from Copilot CLI, and the generator is corrected for whatever that run shows.
 ### 39. A bare-integer version claim is now refuted
 
 Opened 2026-09-29. `verify_claims.py` compares version claims against `VERSION_TOKEN_RE` tokens, which

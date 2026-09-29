@@ -308,7 +308,7 @@ a route fact — recorded here rather than there.
 **Databricks managed MCP services — catalog snapshot, 29 September 2026.** The live `system.ai`
 catalog on this workspace contained eight services, of which only `genie_one_mcp` was internal (the
 rest are connection-backed SaaS services the registration script excludes) — see
-[`../mcp/databricks-mcp/setup.md`](../mcp/databricks-mcp/setup.md#the-servers). Not a portable service
+[`../mcp/databricks-mcp/setup.md`](../mcp/databricks-mcp/setup.md#the-server-family). Not a portable service
 list; a different workspace or profile can differ.
 
 ### d2's own SVG rasterises through `magick` without `rsvg-convert`

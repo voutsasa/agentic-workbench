@@ -216,4 +216,4 @@ Third-party MCP servers configured into this machine's agent clients. Each has a
 
 * [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/) — Official draw.io MCP server; opens generated XML, CSV, or Mermaid diagrams in the draw.io editor.
 * [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server) — Microsoft's hosted Azure DevOps MCP Server; org-scoped Entra OAuth over HTTP, no local install.
-* [databricks-mcp](https://docs.databricks.com/aws/en/generative-ai/mcp/managed-mcp) — Databricks' hosted MCP services (Genie, SQL, web search, code sandbox), authenticated through the Databricks CLI login.
+* [databricks-mcp](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/managed-mcp) — Azure Databricks' hosted MCP servers (Genie, AI Search, SQL, sandbox), authenticated through the Databricks CLI login.

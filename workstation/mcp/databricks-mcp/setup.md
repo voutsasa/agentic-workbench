@@ -9,19 +9,64 @@ pinned: false
 
 # databricks-mcp — setup
 
-Databricks' managed MCP servers are published as **MCP services** in the workspace's `system.ai`
-Unity Catalog schema. This guide covers their registration for **Claude Code** and **GitHub Copilot
-CLI**. The service catalog is workspace-specific and changes while Databricks labels managed MCP
-servers **Public Preview**, so commands are generated from the live catalog rather than copied from a
-fixed service list.
+**This guide is for Azure Databricks.** Every Databricks page it cites is the Azure edition on
+Microsoft Learn, and the workspace it assumes is an Azure Databricks workspace.
 
-Verified against Databricks' [managed MCP servers page](https://docs.databricks.com/aws/en/generative-ai/mcp/managed-mcp),
-[Genie One page](https://docs.databricks.com/aws/en/agents/mcp-tools/genie-mcp) and
-[MCP Services page](https://docs.databricks.com/aws/en/agents/mcp-tools/mcp-services), Claude
-Code's [MCP docs](https://code.claude.com/docs/en/mcp), `copilot mcp add --help`, and the
-[Unity Gateway README](https://github.com/databricks/unity-gateway), on 29 September 2026.
+Azure Databricks' managed MCP servers come in two shapes: **MCP Services** in the workspace's
+`system.ai` Unity Catalog schema, reached through Unity Gateway, and **managed servers** under
+`/api/2.0/mcp/`. This guide registers the first kind for **Claude Code** and **GitHub Copilot CLI**.
+Which services a workspace offers varies, so commands are generated from the live catalog rather than
+copied from a fixed list.
 
-## The servers
+Verified against Microsoft Learn's Azure Databricks pages — [managed MCP servers](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/managed-mcp),
+[Databricks-provided MCP Services](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/built-in-mcp-services),
+[Genie One](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/genie-mcp),
+[Databricks SQL](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/databricks-sql),
+[Genie Agent](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/genie-agent),
+[AI Search](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/ai-search) and
+[Unity Catalog functions](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/uc-functions),
+dated 11 and 21 September 2026 — and Claude Code's [MCP docs](https://code.claude.com/docs/en/mcp),
+`copilot mcp add --help`, and the [Unity Gateway README](https://github.com/databricks/unity-gateway),
+on 29 September 2026.
+
+## The server family
+
+### MCP Services in `system.ai` — what the generator registers
+
+Endpoint `$DBX_HOST/ai-gateway/mcp-services/system.ai.<service>`, OAuth scope `ai-gateway`. Each
+service is a Unity Catalog securable with a built-in service policy; account users hold `EXECUTE` on
+`system.ai` by default.
+
+**Workspace tools** — authenticated by the Databricks CLI token alone:
+
+| Service | Status | Capability | Tools | Writes |
+| --- | --- | --- | --- | --- |
+| `genie_one_mcp` | GA | Natural-language analytics across the workspace: Genie searches the data, writes and runs SQL, and answers grounded in Genie Ontology, with deep links to its sources | `genie_ask`, `genie_poll_response`, `genie_get_query_result`, `genie_cancel_response`; `view_ask` instead of `genie_ask` on MCP Apps clients | Queries only; Unity Catalog permissions apply to every request |
+| `dbsql` | Beta | Runs SQL on a SQL warehouse with the caller's Unity Catalog and warehouse permissions; queries run asynchronously | `execute_sql` (the name in Microsoft's example) | **Reads and writes by default.** Read-only once `disallow_writes` is `true` in the `system.ai.dbsql_policy` policy |
+| `sandbox` | Beta | Runs Python, SQL or shell code in an isolated environment | not listed | No network egress |
+
+**Connected applications** — call a third-party service and need their own per-user sign-in, so the
+generator excludes them: `slack`, `github`, `atlassian` (Jira and Confluence), `google_drive`,
+`google_calendar`, `gmail`, `microsoft_365` (SharePoint, Outlook and Teams). Google and Microsoft 365
+each need a one-time OAuth login in Catalog Explorer before the first call.
+
+### Managed servers under `/api/2.0/mcp/` — Public Preview, generated on request
+
+Endpoint `$DBX_HOST/api/2.0/mcp/<path>`. Each needs a resource path that only you know, so the
+generator prints them only when you name them:
+[Register an `/api/2.0/mcp/` server](#register-an-api20mcp-server).
+
+| Server | Path | OAuth scope | Capability | Writes |
+| --- | --- | --- | --- | --- |
+| Genie Agent | `genie/{genie_space_id}` | `genie` | Natural-language questions over one Genie Agent — up to 25 Unity Catalog tables | Read-only; no conversation history between calls |
+| AI Search | `ai-search/{catalog}/{schema}/{index_name}` | `ai-search` | Semantic search over an AI Search (formerly Vector Search) index; needs Databricks managed embeddings. One tool per index, named `CATALOG__SCHEMA__INDEX_NAME` | Queries only |
+| Databricks SQL | `sql` | `sql` | Same as `dbsql` above; Microsoft recommends the `system.ai.dbsql` service for its grants, policies and audit log | Reads and writes |
+| Unity Catalog functions | `functions/{catalog}/{schema}/{function_name}` | `unity-catalog` | Registered Python and SQL functions as tools, plus the `system.ai` functions such as the `python_exec` code interpreter | Whatever the function does |
+
+The Beta Genie endpoint `/api/2.0/mcp/genie`, with no space ID, is deprecated and is sunset on
+31 October 2026; use `system.ai.genie_one_mcp`.
+
+### How the generator chooses
 
 The generator runs this read-only catalog query:
 
@@ -134,6 +179,69 @@ for anyone without it. The repo's `.mcp.json` is also read by *both* clients (wo
 they need different entry types for the same server. Claude's `-s local` and Copilot's user config
 keep each person's registration private.
 
+## Register an `/api/2.0/mcp/` server
+
+The generator prints the same two entry shapes for these, with the resource path you name. Asking
+only for these servers skips the catalog query:
+
+```sh
+python workstation/scripts/databricks_mcp.py --profile "$DBX_PROFILE" --genie-space <genie_space_id>
+python workstation/scripts/databricks_mcp.py --profile "$DBX_PROFILE" --ai-search <catalog>.<schema>.<index_name>
+python workstation/scripts/databricks_mcp.py --profile "$DBX_PROFILE" --ai-search <catalog>.<schema>   # every index in it
+python workstation/scripts/databricks_mcp.py --profile "$DBX_PROFILE" --remove --genie-space <genie_space_id>
+```
+
+| Flag | Server name | Where the ID comes from |
+| --- | --- | --- |
+| `--genie-space <id>` | `databricks-genie-<id>` | The Genie Agent's page in the workspace; the agent must be shared with you |
+| `--ai-search <c>.<s>.<i>` | `databricks-ai-search-<c>-<s>-<i>` | Catalog Explorer → the index |
+| `--ai-search <c>.<s>` | `databricks-ai-search-<c>-<s>` | The form Microsoft's own example uses |
+
+Both flags repeat and combine with `--service` and `--client`. IDs are restricted to letters, digits
+and `_` (the space ID to letters and digits), because they end up in a shell command. Confirm as in
+[Confirm](#confirm).
+
+**Not yet observed here:** a connection to any `/api/2.0/mcp/` endpoint. Microsoft's URL patterns
+carry no `?o=` query string, so none is added; and the CLI login's default `all-apis` scope has been
+seen to work only for the `system.ai` services. A `401`/`403` on first connect points at the scope
+first — the servers want `genie`, `ai-search` and `sql`.
+
+## Databricks SQL — guidance, not registered by default
+
+`$DBX_HOST/api/2.0/mcp/sql`, OAuth scope `sql`, one tool (`execute_sql` in Microsoft's example).
+It runs whatever SQL the agent writes, asynchronously, with the caller's Unity Catalog and warehouse
+permissions.
+
+**It reads and writes, and no service policy applies to it.** The read-only switch Microsoft
+documents — `disallow_writes` in `system.ai.dbsql_policy` — belongs to the `system.ai.dbsql` MCP
+Service, not to this endpoint, and tool selection cannot help when the server has one tool. What an
+agent can change through it is exactly what the signed-in identity can change.
+
+Before registering it:
+
+1. **Decide which identity it runs as.** Your own login gives the agent every write privilege you
+   hold. For read-only use, register it under a profile whose identity holds only `USE CATALOG`,
+   `USE SCHEMA` and `SELECT` on the data in question — a separate Databricks CLI profile, for
+   example one logged in as a service principal granted nothing more.
+2. **Prefer `system.ai.dbsql` where the workspace offers it.** Microsoft recommends it for its grants,
+   policies, audit log and usage tracking, and it is the only route with a documented read-only
+   switch. Setting that switch is a workspace-wide change: service policies are Beta, and an account
+   admin must first turn on the **Unity Gateway** beta features on the account console **Previews**
+   page.
+3. **Pin the warehouse if cost or isolation matters.** The server otherwise picks one; agent code can
+   pass `warehouse_id` as a `_meta` parameter, but neither client's registration can.
+
+To register it once those are settled, run the generator with `--sql` and `--profile` set to the
+identity chosen in step 1. `--sql` is never implied, and the generator warns on stderr that the
+server writes:
+
+```sh
+python workstation/scripts/databricks_mcp.py --profile <read-only-profile> --sql
+```
+
+Databricks SQL is hosted by Azure Databricks, like every server in this guide: there is nothing to
+install locally beyond the Databricks CLI, `jq` and, for Copilot, `ug`.
+
 ## Unity Gateway (`ug`): the Copilot bridge, not a setup tool here
 
 This family uses exactly one `ug` command, `ug mcp-proxy`, as Copilot's bridge. Don't use `ug`'s
@@ -163,7 +271,7 @@ setup commands on Claude Code:
 - **Service availability and tool effects change by workspace.** The generator prevents registration
   of unavailable internal services, not unsafe tool calls. Treat every newly discovered tool as
   potentially read/write until its current Databricks documentation and Unity Catalog permissions have
-  been checked.
+  been checked. `dbsql` is the known case: it writes unless its policy says otherwise.
 - **A Claude `headersHelper` doesn't run until the folder is trusted.** That applies to local scope
   too. In a folder you haven't accepted the trust dialog for, `claude mcp get` prints
   `headersHelper not run — this workspace has no persisted trust` and then `✘ Failed to connect`.
@@ -177,9 +285,9 @@ setup commands on Claude Code:
   without it hasn't been tested here.
 - **Never commit a token**, in `.mcp.json` or anywhere else. Neither route needs one written down.
 
-Docs: [Managed MCP servers](https://docs.databricks.com/aws/en/generative-ai/mcp/managed-mcp) ·
-[Genie One](https://docs.databricks.com/aws/en/agents/mcp-tools/genie-mcp) ·
-[MCP Services](https://docs.databricks.com/aws/en/agents/mcp-tools/mcp-services) ·
+Docs (Azure Databricks): [Managed MCP servers](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/managed-mcp) ·
+[Databricks-provided MCP Services](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/built-in-mcp-services) ·
+[Genie One](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/genie-mcp) ·
 [Claude Code `headersHelper`](https://code.claude.com/docs/en/mcp) ·
 [Copilot CLI MCP servers](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-mcp-servers) ·
 full page ingest: [reference.md](reference.md)
