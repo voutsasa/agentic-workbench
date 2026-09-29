@@ -26,8 +26,10 @@ assumptions are unproven: that these URLs need no `?o=` query string, and that t
 
 Blocked on 2026-09-29, on the Windows machine: `databricks auth profiles` showed both profiles for
 `adb-1279343764318407` as `Valid NO`. `genie list-spaces` and `vector-search-endpoints list-endpoints`
-both failed with `Unauthorized network access to workspace: 1279343764318407`. An earlier session had
-seen both lists come back empty. So no Genie space or AI Search index is yet known to this identity.
+both failed with `Unauthorized network access to workspace: 1279343764318407`. On 2026-09-30, after
+re-login, both profiles were `Valid YES` for the same user; `genie list-spaces` returned `{}` and
+`vector-search-endpoints list-endpoints` returned `[]`. Nothing to register until a Genie space is
+shared with this identity or an AI Search index exists.
 
 **Closes when:** one Genie Agent and one AI Search server each answer a read-only tool call from
 Claude Code and from Copilot CLI, and the generator is corrected for whatever that run shows.
