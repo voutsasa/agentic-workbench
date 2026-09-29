@@ -545,6 +545,27 @@ class TestSafeConcurrentHelp(unittest.TestCase):
         self.assertEqual(run.call_args.args[0], ["/usr/bin/git", "diff", "-h"])
         self.assertNotIn("--help", run.call_args.args[0])
 
+    def test_a_flag_git_help_omits_never_opens_the_browser_help(self):
+        """`git diff -h` never lists `--staged`; the no-help fallback ran `--help`.
+
+        With `help.format=html`, Git for Windows opened git-diff.html on every
+        verify_claims run, pre-push included.
+        """
+        done = mock.Mock(stdout="usage: git diff [--cached]\n", stderr="")
+        run = mock.Mock(return_value=done)
+        page = "```sh\ngit diff --staged --stat\n```\n"
+        with (
+            TempRepo({"doc.md": page}) as root,
+            mock.patch("verify_claims.shutil.which", return_value="/usr/bin/git"),
+            mock.patch("verify_claims.subprocess.run", run),
+        ):
+            Verifier(root).verify_cli_flag(
+                claim("cli_flag", "git diff supports --staged", line=2)
+            )
+        probes = [call.args[0] for call in run.call_args_list]
+        self.assertTrue(probes)
+        self.assertFalse([p for p in probes if "--help" in p or "--help-extra" in p])
+
     def test_concurrent_requests_execute_one_help_probe(self):
         verifier = Verifier(Path("."))
         calls = 0

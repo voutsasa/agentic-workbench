@@ -571,6 +571,20 @@ def clip(text: object, width: int = 110) -> str:
 
 
 HELP_FLAGS = ("--help", "-h", "--help-extra")
+
+
+def is_git_binary(binary: str) -> bool:
+    return Path(binary).name.lower() in {"git", "git.exe"}
+
+
+def help_flags_for(binary: str) -> tuple[str, ...]:
+    """Git gets only `-h`: `git <cmd> --help` opens a browser on Git for Windows.
+
+    Every probe of a binary goes through here, so no fallback can reach `--help`.
+    """
+    return ("-h",) if is_git_binary(binary) else HELP_FLAGS
+
+
 OVERSTRIKE_RE = re.compile(r".\x08")
 MAX_SUBCOMMANDS = 6
 COMMANDS_HEADING_RE = re.compile(
@@ -642,6 +656,10 @@ class Verifier:
         help and then exit 1, and `--version` on a Java wrapper is noisy. What
         is being tested is the *text*, not the status.
         """
+        # Last line of defence for `help_flags_for`: never start a git probe
+        # that could open a browser, whichever code path asked for it.
+        if is_git_binary(argv[0]) and {"--help", "--help-extra"} & set(argv[1:]):
+            return None
         # Run the path `which` resolved, not the bare name: on Windows,
         # CreateProcess cannot start npm's `mmdc.CMD` shim by name alone.
         executable = shutil.which(
@@ -830,8 +848,8 @@ class Verifier:
             if text and text.strip():
                 return (f"{argv[0]} {flag}", clip(text.splitlines()[0], 80))
         negated = bracket_negation_re(flag)
-        is_git = Path(argv[0]).name.lower() in {"git", "git.exe"}
-        help_flags = ("-h",) if is_git else HELP_FLAGS
+        is_git = is_git_binary(argv[0])
+        help_flags = help_flags_for(argv[0])
         for help_flag in help_flags:
             line = flag_line(self.help_output(argv, help_flag), flag, negated)
             if line:
@@ -907,7 +925,7 @@ class Verifier:
             if hit:
                 where, line = hit
                 return ("help_text", f"`{where}`: {line}", VERIFIED)
-        if not any(self.help_output(argv, hf) for hf in HELP_FLAGS):
+        if not any(self.help_output(argv, hf) for hf in help_flags_for(argv[0])):
             return (
                 "help_text",
                 f"`{argv[0]}` prints no help — nothing to check against",
