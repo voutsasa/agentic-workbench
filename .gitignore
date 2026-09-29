@@ -55,6 +55,7 @@ wheels/
 /link-config-*.md
 /link-config-*.csv
 /link-config-*.json
+**/temp*
 
 # IDEs
 **/.vscode/
