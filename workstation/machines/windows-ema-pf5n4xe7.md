@@ -212,9 +212,8 @@ Validated 2026-09-29 in
 `C:\Users\voutsas\Work\Development\agentic-coding\junk\agentic-workbench-windows-validation`, a
 fresh Windows clone using the tracked `3.14` pin and `uv.lock`. `uv sync` created `.venv` with
 CPython 3.14.7 and installed the ten locked development packages, including Pyright, pytest, and
-Ruff. The resulting
-`.venv\Scripts\python.exe workstation\scripts\status.py --persist` exited 0; its Pandoc row read
-`workstation tool for fetch-to-markdown, pdf-deliverable`. The retained report is
+Ruff. The resulting persisted status report exited 0; its Pandoc row read `workstation tool for
+fetch-to-markdown, pdf-deliverable`. The retained report is
 `status-windows-ema-pf5n4xe7-voutsas-20260929T175322+0200.md` in that clone.
 
 ## Git
