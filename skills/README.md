@@ -30,7 +30,7 @@ authors skills as a deliverable, which is the reason for the second tree. A repo
 skill should write it straight into `.claude/skills/` and skip the link.
 
 ```sh
-python3 workstation/scripts/link_config.py --project --apply
+python workstation/scripts/link_config.py --project --apply   # python3 on macOS
 ```
 
 Add `--claude-md` in a clone where Claude Code runs; the root README's *Install* section says why a
@@ -57,5 +57,5 @@ Same shape as the global skills, so a promotion is a move rather than a rewrite:
 <skill>/SKILL.md           name: must equal the folder name, or it does not load
 <skill>/references/        loaded on demand, for branches most runs never take
 <skill>/scripts/           stdlib-only, so they run before any venv exists
-<skill>/tests/             unittest; python3 -m unittest discover -s skills/<skill>/tests
+<skill>/tests/             unittest; python -m unittest discover -s skills/<skill>/tests (python3 on macOS)
 ```

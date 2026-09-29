@@ -27,7 +27,15 @@ d2 --scale 2 input.d2 out.svg
 rsvg-convert out.svg | magick png:- -trim +repage out.png
 ```
 
-The `rsvg-convert` hop is not optional. ``magick out.svg out.png`` on its own fails with ``unable to read font `'`` — brew's ImageMagick is built against its internal MSVG renderer, which cannot handle the fonts d2 embeds.
+**Whether the `rsvg-convert` hop is optional is a measured, per-machine fact, not a rule** — see
+[`../magick/quick_start.md`](../magick/quick_start.md) § *SVG input*. On brew's macOS build,
+``magick out.svg out.png`` fails outright with ``unable to read font `'`` — brew's ImageMagick is built
+against its internal MSVG renderer, which cannot handle the fonts d2 embeds — so the hop is not
+optional there. On this workbench's scoop Windows build, `magick` converts a d2-generated SVG (with
+its embedded fonts) directly to a non-blank PNG at exit 0, with no `rsvg-convert` on `PATH` at all —
+measured 29 September 2026, recorded in [`../../machines/windows-ema-pf5n4xe7.md`](../../machines/windows-ema-pf5n4xe7.md).
+Check your own build with the test in `magick/quick_start.md` before assuming either way; see
+[`install.md`](install.md) for the platform split.
 
 ## Capabilities
 

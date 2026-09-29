@@ -38,8 +38,8 @@ reading stdin cannot.
 
 ## Traps
 
-- **The pip package is not the browser.** `import playwright` succeeding proves nothing: `BrowserType.launch` fails with a missing `chrome-headless-shell` until `playwright install chromium` has fetched the binaries into `ms-playwright/`. That is not optional and it is not implied by installing the tool — it caught this workstation out on 21 September 2026. The command is the user's to run, in [install.md](install.md).
-- **Chromium is the only engine installed here**, by choice — see [install.md](install.md). `p.firefox` and `p.webkit` fail until the others are fetched.
+- **The pip package is not the browser.** `import playwright` succeeding proves nothing: `BrowserType.launch` fails with a missing `chrome-headless-shell` until `playwright install chromium` has fetched the binaries into `ms-playwright/`. That is not optional and it is not implied by installing the tool. The command is the user's to run, in [install.md](install.md); whether a given machine has hit this is recorded in that machine's file under [`../../machines/`](../../machines/).
+- **Only the engines you fetch are installed.** `p.firefox` and `p.webkit` fail until each is fetched with `playwright install <engine>`; which engines a given machine has is install status, recorded there too, not here.
 - **Headless is the default and is what you want here.** No browser extension is involved in this route, despite defuddle also shipping as one.
 
 Docs: [Library mode](https://playwright.dev/python/docs/library) — driving a browser directly, without pytest · full page ingest: [reference.md](reference.md)

@@ -75,9 +75,8 @@ set — already wide enough to include `SIM`, `RUF`, `UP` and `I` — plus `E402
 with the installed ruff version**; a newer ruff may find errors this one does not. `uv.lock` records
 which version that is; this file does not repeat it.
 
-The `workstation/scripts/` and skill scripts are stdlib-only by design and are the deliberate
-exception: they run under bare `python3` before any venv exists. See
-[`../scripts/README.md`](../scripts/README.md).
+`workstation/scripts/` is stdlib-only by design and is the deliberate exception: it runs under bare
+`python3` before any venv exists. See [`../scripts/README.md`](../scripts/README.md).
 
 ## Claude Code config
 
@@ -85,6 +84,11 @@ exception: they run under bare `python3` before any venv exists. See
 `python3 workstation/scripts/link_config.py --agent claude --agent copilot`, exit 0; every link is a
 symlink into this repo. `--project` reports the repo's own skills separately, **3 of 3 linked** — the
 two runs together are the `18 of 18` that `setup-agents` quotes below.
+
+**This count is dated and needs a re-run on this machine.** The `SKILLS` tuple has since grown —
+`windows-ema-pf5n4xe7.md` reported **21 of 21** on 2026-09-29 with three more skills
+(`confluence-publish`, `confluence-export`, `setup-mcp-servers`) — and the figure below has not been
+re-measured here since 2026-09-22.
 
 | Artefact | Kind | Status |
 |---|---|---|
@@ -151,7 +155,7 @@ prints `repo_check: all enabled checks passed`, then `verify_claims.py did NOT r
 Check 2 is scoped to the refs git feeds on stdin, which a hand run has none of. Run it directly:
 
 ```sh
-python3 workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
+.venv/bin/python workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 ```
 
 Until 2026-09-13 that same hand run **hung** rather than returning, which cost this session two
@@ -297,6 +301,8 @@ Probed on `workstation` (Darwin Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:5
 | `rsvg-convert` (librsvg) | 2.62.3, `/opt/homebrew/bin` | `magick` cannot rasterise SVG through brew's MSVG renderer, so every SVG-to-raster job goes through this. The whole diagram toolchain — d2, PlantUML, Mermaid — emits SVG. Route recorded in [`../cli/magick/install.md`](../cli/magick/install.md). |
 | LibreOffice | `/Applications/LibreOffice.app`, and `soffice` **is** on `PATH` at `/opt/homebrew/bin/soffice` | docling's Office conversion finds it. Note this differs from the Windows box, where it is installed but deliberately kept off `PATH` — see [`../cli/docling/install.md`](../cli/docling/install.md). |
 | Global Python CLIs via `uv tool`, Python 3.12 | `docling` 2.130.0, `playwright` 1.63.0 and `unity-gateway` 0.2.0+29 are in `$(uv tool dir)`, each on Python 3.12.14; moved from pipx on 2026-09-27. `confluence-sync-md` 0.6.0 is there too, on Python 3.14.6 (its `requires-python` floor), from Azure DevOps `main`, with `md2conf` and `cme` exposed through `--with-executables-from`. `pipx list` keeps only `huggingface-hub`, which isn't a workbench tool | `render_page.py` runs under `$(uv tool dir)/playwright/bin/python`. Playwright's Chromium is build 1243, and `mmdc` resolves to it through `PUPPETEER_EXECUTABLE_PATH`. Builds 1234 stay in `~/Library/Caches/ms-playwright`, because `~/Development/ieee-reader/.venv` still links to them. |
+| `databricks` (Databricks CLI) | Homebrew 7, via `brew info databricks` → `databricks/tap/databricks` | Confirms this machine took the macOS route in [`../cli/databricks-cli/install.md`](../cli/databricks-cli/install.md), not a stray PyPI `databricks-cli`. |
+| `tesseract` language data | `eng`, `osd`, `snum` (`tesseract --list-langs`) | English-only, by choice — see [`../cli/tesseract/install.md`](../cli/tesseract/install.md). A job asking for another language fails with a missing-tessdata error, not poor output. |
 
 ## Not yet installed
 

@@ -4,7 +4,6 @@ package: @drawio/mcp
 transport: stdio
 version_observed: 1.5.0
 verified: 2026-08-05
-registered: false
 pinned: false
 ---
 
@@ -14,7 +13,9 @@ Official draw.io MCP server (`jgraph/drawio-mcp`). Generates a diagram from XML,
 
 Observed `1.5.0` via `npx -y @drawio/mcp --version` (checked 5 August 2026).
 
-> **Not yet registered.** The package was verified directly, but neither the shared catalog nor either command below has been applied — registration is the user's step. Until `claude mcp list` or `copilot mcp list` confirms it, treat the tools as unavailable.
+> **Whether this is registered on your machine is machine state, not a fact this file can carry** — see
+> [`../../machines/`](../../machines/). Confirm with `claude mcp list` or `copilot mcp list` before
+> assuming the tools are live rather than trusting this page.
 
 ## Which of the four routes this is
 

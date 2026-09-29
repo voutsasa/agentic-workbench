@@ -85,8 +85,8 @@ difference the message has to carry, not assume away.
 
 ```powershell
 Set-Location $Root
-python workstation\agent\skills\review\scripts\repo_check.py
-python workstation\agent\skills\verify-docs\scripts\verify_claims.py --repo .
+.venv\Scripts\python.exe workstation\agent\skills\review\scripts\repo_check.py
+.venv\Scripts\python.exe workstation\agent\skills\verify-docs\scripts\verify_claims.py --repo .
 foreach ($d in (Get-Content .pre-push-tests | Where-Object { $_ -and $_ -notmatch '^#' })) {
   .venv\Scripts\python.exe -m unittest discover -s $d -t $d
 }

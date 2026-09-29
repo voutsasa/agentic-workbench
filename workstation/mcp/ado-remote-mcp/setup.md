@@ -4,7 +4,6 @@ package: none — hosted endpoint
 transport: http
 version_observed: n/a (hosted, no local version)
 verified: 2026-09-28
-registered: false
 pinned: false
 ---
 
@@ -18,10 +17,9 @@ Verified directly against [Microsoft's own README](https://github.com/microsoft/
 and the [remote-server docs page](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server)
 it links to (23 September 2026) — not guessed.
 
-> **Not yet registered.** The catalog entry in [`../.mcp.json`](../.mcp.json) is correct,
-> but nobody has run the commands below or completed Claude Code's app registration.
-> Until `claude mcp list` / `copilot mcp list` confirms a connection, treat the tools as
-> unavailable.
+> **Whether this is registered on your machine is machine state, not a fact this file can carry** — see
+> [`../../machines/`](../../machines/). The catalog entry in [`../.mcp.json`](../.mcp.json) is correct
+> either way. Confirm with `claude mcp list` / `copilot mcp list` before assuming a connection.
 
 ## Remote first — but read the auth asymmetry before picking a client
 

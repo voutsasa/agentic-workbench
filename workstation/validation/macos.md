@@ -74,7 +74,7 @@ done
 Then the base64 split, which every `.docx` and PDF conversion needs:
 
 ```sh
-python3 $R/workstation/agent/skills/fetch-to-markdown/scripts/clean_md_images.py /tmp/val/chartex.md
+$R/.venv/bin/python $R/workstation/agent/skills/fetch-to-markdown/scripts/clean_md_images.py /tmp/val/chartex.md
 ```
 
 **Expect** `Found 2 embedded images`, a `-no-base64.md` beside the original, and the PNGs in a sibling
@@ -101,7 +101,7 @@ but the uv tool one **must** exit 2 naming the right one — that is the check t
 Where defuddle's output holds a raw `<table>`, finish through the extractor, per the skill's §2:
 
 ```sh
-python3 $R/workstation/agent/skills/fetch-to-markdown/scripts/extract_article.py \
+$R/.venv/bin/python $R/workstation/agent/skills/fetch-to-markdown/scripts/extract_article.py \
   /tmp/r.html section#main_content "$U" > /tmp/article.html
 pandoc -f html -t markdown -o /tmp/r.md /tmp/article.html
 ```
@@ -112,8 +112,8 @@ pandoc -f html -t markdown -o /tmp/r.md /tmp/article.html
 
 ```sh
 cd $R
-python3 workstation/agent/skills/review/scripts/repo_check.py
-python3 workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
+.venv/bin/python workstation/agent/skills/review/scripts/repo_check.py
+.venv/bin/python workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 for d in $(grep -v '^#' .pre-push-tests | grep -v '^$'); do
   .venv/bin/python -m unittest discover -s $d -t $d
 done

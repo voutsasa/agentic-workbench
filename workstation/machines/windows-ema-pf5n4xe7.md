@@ -5,7 +5,7 @@ os_version: 10.0.26200
 shell: PowerShell 7.6.5
 python: 3.14.7
 repo: C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench
-verified: 2026-09-21
+verified: 2026-09-29
 ---
 
 # Windows 11 — `EMA-PF5N4XE7`
@@ -269,33 +269,58 @@ config, not repo config — a fresh clone here needs it again.
 
 ## Claude Code config — installed
 
-**15 of 15 linked**, applied 21 September 2026 by
-`python workstation\scripts\link_config.py --agent claude --agent copilot --apply --force`, which then
-exited 0. `--force` was needed: `CLAUDE.md`, `machine.md` and `copilot/copilot-instructions.md` all read
-`diverged` first — triaged by diffing each against its repo source before forcing, per *the three
-hardlinks sever constantly* below; all three carried only stale text the repo had since superseded,
-nothing live-only, so the overwrite was safe.
+**21 of 21 linked**, re-checked 29 September 2026 by
+`python workstation\scripts\link_config.py --agent claude --agent copilot`, exit 0 — up from 15 of 15
+as the `SKILLS` tuple grew.
 
 | Artefact | Kind | Status |
 |---|---|---|
-| `skills/review`, `skills/python-quality`, `skills/verify-docs`, `skills/fix-findings`, `skills/pdf-deliverable`, `skills/fetch-to-markdown` | dir | linked |
-| `copilot/skills/review`, `copilot/skills/python-quality`, `copilot/skills/verify-docs`, `copilot/skills/fix-findings`, `copilot/skills/pdf-deliverable`, `copilot/skills/fetch-to-markdown` | dir | linked |
+| `skills/review`, `skills/python-quality`, `skills/verify-docs`, `skills/fix-findings`, `skills/pdf-deliverable`, `skills/fetch-to-markdown`, `skills/confluence-publish`, `skills/confluence-export`, `skills/setup-mcp-servers` | dir | linked |
+| `copilot/skills/review`, `copilot/skills/python-quality`, `copilot/skills/verify-docs`, `copilot/skills/fix-findings`, `copilot/skills/pdf-deliverable`, `copilot/skills/fetch-to-markdown`, `copilot/skills/confluence-publish`, `copilot/skills/confluence-export`, `copilot/skills/setup-mcp-servers` | dir | linked |
 | `CLAUDE.md` | file | linked |
 | `copilot/copilot-instructions.md` | file | linked |
 | `machine.md` | file | linked |
 | `settings.json` | — | excluded by design; merged by hand — see below |
 
-Re-check with `python workstation/scripts/link_config.py --agent claude --agent copilot`. Do not edit
-this table by hand. `Kind` says what the source is, not how it is linked — `dir` if the source is a
-directory, else `file` (`link_config.py`, the `kind =` line in its report); on Windows a `dir` is still a
-junction and a `file` a hardlink, per the module's link-creation docstring.
+**21 of 21 linked.** `settings.json` is excluded by design — it is merged by hand.
+
+Re-check with the same command. Do not edit this table by hand. `Kind` says what the source is, not how
+it is linked — `dir` if the source is a directory, else `file` (`link_config.py`, the `kind =` line in
+its report); on Windows a `dir` is still a junction and a `file` a hardlink, per the module's
+link-creation docstring.
+
+**The original link, 21 September 2026:** `python workstation\scripts\link_config.py --agent claude
+--agent copilot --apply --force`, exit 0, reporting 15 of 15 (the `SKILLS` tuple then had six entries).
+`--force` was needed: `CLAUDE.md`, `machine.md` and `copilot/copilot-instructions.md` all read
+`diverged` first — triaged by diffing each against its repo source before forcing, per *the three
+hardlinks sever constantly* below; all three carried only stale text the repo had since superseded,
+nothing live-only, so the overwrite was safe.
 
 ### Copilot MCP servers validated end to end on 29 September 2026
 
 Copilot CLI reloaded four MCP servers. `ado-remote-mcp` successfully listed **165** accessible private
 Azure DevOps projects in `euemadev` without another Entra sign-in. `open_drawio_mermaid` successfully
 created the `Start -> Validate -> Complete` diagram and returned a Draw.io Editor URL. The project
-names and generated URL are intentionally not recorded here.
+names and generated URL are intentionally not recorded here. Both servers' registration status,
+per [`../mcp/README.md`](../mcp/README.md) and their own `setup.md` files, is this machine's state, not
+a route fact — recorded here rather than there.
+
+**Databricks managed MCP services — catalog snapshot, 29 September 2026.** The live `system.ai`
+catalog on this workspace contained eight services, of which only `genie_one_mcp` was internal (the
+rest are connection-backed SaaS services the registration script excludes) — see
+[`../mcp/databricks-mcp/setup.md`](../mcp/databricks-mcp/setup.md#the-servers). Not a portable service
+list; a different workspace or profile can differ.
+
+### d2's own SVG rasterises through `magick` without `rsvg-convert`
+
+Measured 29 September 2026: `d2 --scale 2` on the one-line source `a -> b` compiled to SVG at exit 0,
+then `magick <that svg> out.png` (no `rsvg-convert` on `PATH` at all — `Get-Command rsvg-convert`
+returns nothing here) converted it directly at exit 0 to a 510×868 PNG with 142 distinct colours —
+antialiased text, not a blank canvas — despite an Inkscape font-face warning on stderr. Confirms, with
+an actual d2 diagram rather than a plain-text SVG, what
+[`../cli/magick/quick_start.md`](../cli/magick/quick_start.md) § *SVG input* already measured on this
+scoop ImageMagick build: the `rsvg-convert` hop that brew's macOS build needs is not needed here. See
+[`../cli/d2-cli/quick_start.md`](../cli/d2-cli/quick_start.md) for the reconciled rule.
 
 **The first `--force`, on 26 August 2026**, was the same situation with more at stake: `CLAUDE.md` read
 `diverged` because the live copy was a plain edited file, not a link. That was safe only because the
@@ -308,8 +333,8 @@ bytes and cannot know whether it happened.
 ### The three hardlinks sever constantly — assume they are broken
 
 Only the file links are at risk — `CLAUDE.md`, `machine.md` and `copilot/copilot-instructions.md`; the
-twelve skill junctions survive everything. **Two causes, and
-the second fires on ordinary work:**
+eighteen skill junctions (nine skills × two agents, as of 29 September 2026) survive everything. **Two
+causes, and the second fires on ordinary work:**
 
 **Git operations.** These links were made while the repo sat on `workstation-multi-machine`. Git replaces
 a tracked file rather than writing through it, so merging to `main`, switching branches, or pulling a
@@ -371,10 +396,12 @@ Bedrock on this machine for compliance reasons**, so that block stays where it i
 | `tui` | `"fullscreen"` | top level | matches | merged |
 | `fastMode` | `true` | top level | matches | merged |
 | `env.ANTHROPIC_MODEL` | `eu.anthropic.claude-opus-5` | inside `env` | `eu.anthropic.claude-sonnet-5` | **outstanding** |
-| `hooks` | `SessionStart` + `PostToolUse` blocks from [`../agent/settings.json`](../agent/settings.json) | top level | present, measured 21 September 2026: `SessionStart` runs `powershell-tool-prompt.ps1`; `PostToolUse` (matcher `Edit\|Write`) tries `.venv/bin/python` then `.venv/Scripts/python.exe` before `ruff_on_edit.py`, `exit 0` if neither exists | merged |
+| `hooks` | `PostToolUse` block from [`../agent/settings.json`](../agent/settings.json); `SessionStart` is **not** from that file — it was added straight to the live file, per *A `SessionStart` hook raises the question* above | top level | present, measured 21 September 2026: `SessionStart` runs `powershell-tool-prompt.ps1`; `PostToolUse` (matcher `Edit\|Write`) tries `.venv/bin/python` then `.venv/Scripts/python.exe` before `ruff_on_edit.py`, `exit 0` if neither exists | merged |
 
 `env` survived the merge intact — all five members present, `CLAUDE_CODE_USE_BEDROCK=1`,
-`ANTHROPIC_SMALL_FAST_MODEL=eu.anthropic.claude-haiku-4-5` — which was the thing at risk. Top-level
+`ANTHROPIC_SMALL_FAST_MODEL=eu.anthropic.claude-haiku-4-5` (the **legacy** key —
+`ANTHROPIC_DEFAULT_HAIKU_MODEL` replaces it, per
+[`../agent/README.md`](../agent/README.md#the-merge-procedure)) — which was the thing at risk. Top-level
 `model: "opus"` already matches and is the setting a session actually resolves to;
 `env.ANTHROPIC_MODEL` is the Bedrock ID passed through to the provider. They are independent, so the
 last row is the only edit `env` needs.
@@ -391,7 +418,10 @@ Probed on `EMA-PF5N4XE7` (Windows 10.0.26200, Python 3.12.10) by
 [`../scripts/inventory.py`](../scripts/inventory.py) on 29 September 2026.
 
 **17 of 17 usable.** This probe ran from the fresh-clone validation venv; its Python version identifies
-the probe, not the machine's default Python.
+the probe, not the machine's default Python. **That 3.12.10 figure is inconsistent** with the 3.14.7
+pin recorded in *Python scaffolding* above and in the *Fresh-clone install validated* note below, both
+also dated around this session; which environment actually ran this probe was not reconciled here.
+Treat 3.12.10 as superseded until the probe is re-run and the discrepancy is resolved.
 
 | Command | Product | Status | Version | Detail |
 |---|---|---|---|---|
@@ -575,8 +605,6 @@ Both fixed; the scoped run over this file now reports **0 refuted**.
 
 Deliberate gaps, so they are not rediscovered as faults:
 
-- `typst` — not on `PATH` here as of the 21 September 2026 probe; needed for `pandoc --pdf-engine=typst`
-  (validation section B). Not yet installed, not yet a hold.
 - **LibreOffice is installed but deliberately off `PATH`** — see the docling section above. Not a gap.
 
 Resolved 26 August 2026 and no longer gaps: `~/.claude/machine.md`, the six skills for both agents, and
@@ -584,6 +612,8 @@ the `pre-push` hook are all in place per *Claude Code config* above; `docling` i
 by 21 September 2026 and no longer gaps:** `defuddle`, `tesseract` and `weasyprint` — all three read
 `absent` on 14 September and `installed` on 21 September; no route was recorded here, so how each was
 installed is unknown. **Resolved the same day:** Playwright's Chromium browser binary, per below.
+**Resolved by 29 September 2026:** `typst` — read `absent`/not on `PATH` on the 21 September probe,
+`installed` at 0.15.1 in the CLI toolchain table above; no route was recorded here either.
 
 ### VS Code — launched, and it loads the global instructions
 

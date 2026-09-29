@@ -19,8 +19,8 @@ packaged for brew, scoop or PyPI.
 **`uv tool` with Python 3.12, and the user runs it.** This is upstream's own route, with the Python
 version pinned. It is the second choice in this workbench's order for global Python CLIs (Homebrew or
 Scoop, then `uv tool`, then pipx; see [`AGENT-INSTRUCTIONS.md`](../../agent/AGENT-INSTRUCTIONS.md)),
-and neither brew nor scoop packages it. It hasn't been run on Windows. Whatever route a given machine
-used goes in [`../../machines/`](../../machines/), not here.
+and neither brew nor scoop packages it. Whatever route a given machine used, and whether it has been
+run there at all, goes in [`../../machines/`](../../machines/), not here.
 
 **Moving from a pipx install:** run `pipx uninstall unity-gateway` first. Both routes install
 `~/.local/bin/ug`, so leaving the old copy in place makes the two collide. Uninstalling leaves `ug`'s

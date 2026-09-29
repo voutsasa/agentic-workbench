@@ -40,14 +40,16 @@ this replaced still named four skills after the tuple had grown to six.
 ```powershell
 Set-Location C:\path\to\your\agentic-workbench
 $Root = (git rev-parse --show-toplevel)
-python (Join-Path $Root "workstation\scripts\link_config.py") --apply
+python (Join-Path $Root "workstation\scripts\link_config.py") --apply --hooks
 ```
 
 It uses the two link types that need no elevation: a junction per global skill in
-`$HOME\.claude\skills`, and hardlinks for `$HOME\.claude\CLAUDE.md` and `$HOME\.claude\machine.md`.
-A diverged `CLAUDE.md` is reported and skipped rather than overwritten — reconcile it first, per the
-section above. Add `--agent copilot` to link the same skills and `copilot-instructions.md` under
-`~/.copilot`, and `--project` for this repo's own skills.
+`$HOME\.claude\skills`, and hardlinks for `$HOME\.claude\CLAUDE.md` and `$HOME\.claude\machine.md` —
+plus, because of `--hooks`, `hooks/ruff_on_edit.py` into `$HOME\.claude\hooks\` (opt-in, since a hook
+acts on every edit). A diverged `CLAUDE.md` is reported and skipped rather than overwritten —
+reconcile it first, per the section above. Add `--agent copilot` to link the same skills,
+`copilot-instructions.md`, and (with `--hooks`) the Copilot hook registration under `~/.copilot`, and
+`--project` for this repo's own skills.
 
 `settings.json` is not among them, and cannot be: the script refuses to plan a link for it, since a
 link is a replace and not a merge.
@@ -64,7 +66,7 @@ non-sensitive keys.
 List the keys the live file is missing, then add them by hand:
 
 ```powershell
-python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
+uv run python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
 ```
 
 Leave `env` exactly as it is, and do not move it to `settings.local.json`.

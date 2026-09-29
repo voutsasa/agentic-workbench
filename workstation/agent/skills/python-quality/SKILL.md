@@ -99,4 +99,4 @@ Three files, none of them loaded unless you need them:
 | Script | Does |
 |---|---|
 | `scripts/measure.py` | reports current lint, type, coverage and complexity state, and proposes thresholds. Read-only. |
-| `tests/test_measure.py` | `python3 -m unittest discover -s tests` — stdlib only, no dependencies. |
+| `tests/test_measure.py` | `<venv-python> -m unittest discover -s tests -t tests`, where `<venv-python>` is the project's `.venv/bin/python` (macOS) or `.venv\Scripts\python.exe` (Windows) — stdlib only, no dependencies. |

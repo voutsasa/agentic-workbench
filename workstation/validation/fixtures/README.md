@@ -5,7 +5,7 @@ Sample inputs for the conversion checks in [`../macos.md`](../macos.md) and
 
 | File | Holds | Proves |
 |---|---|---|
-| `chartex.docx` | 8 `<w:drawing>`: 6 charts (`c:chart`, six `word/charts/chart*.xml` parts) + 2 pictures | a chart becomes **its data as a pipe table** plus an `Image not available` comment; only the pictures become base64 images |
+| `chartex.docx` | 8 `<w:drawing>`: 6 charts (`c:chart`, six `word/charts/chart*.xml` parts) + 2 pictures | each chart becomes its data as a pipe table; conversion adds an `Image not available` comment for 4 of the 6 (measured — see [`../macos.md`](../macos.md) section C), and the 2 pictures become base64 images |
 | `shapes-with-text.docx` | 11 `wps:wsp` shapes, including a group | a shape becomes **its text as paragraphs**; the shape itself is not rendered |
 
 Both come from [Apache POI's test data](https://github.com/apache/poi) (`test-data/document/`),

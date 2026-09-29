@@ -35,9 +35,9 @@ Two authoring rules for `AGENT-INSTRUCTIONS.md`, kept here because they govern i
 | `hooks/ruff_on_edit.py` | `~/.claude/hooks/` and `~/.copilot/hooks/` | linked with `link_config.py --hooks` |
 | `hooks/ruff-on-edit.copilot.json` | `~/.copilot/hooks/ruff-on-edit.json` | linked with `link_config.py --hooks --agent copilot` |
 
-The last row before this one is the indirection that keeps this directory platform-neutral: one fixed
-path, different content per machine, so `CLAUDE.md` can point at machine truth without naming a
-platform.
+The `../machines/<platform>-<id>.md` row above is the indirection that keeps this directory
+platform-neutral: one fixed path, different content per machine, so `CLAUDE.md` can point at machine
+truth without naming a platform.
 
 `hooks/powershell-tool-prompt.ps1` is a reference copy, same treatment as `settings.json`. The script
 body is portable, but its *registration* — the `hooks.SessionStart`/`hooks.PreToolUse` block naming
@@ -94,7 +94,7 @@ Copy-Item ~/.claude/settings.json ~/.claude/settings.json.bak
 **2. Print the delta.** Run from the repo root. This reads both files and writes neither:
 
 ```
-python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
+uv run python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
 ```
 
 The comparison is **one level deep**, so a key whose value is an object — `enabledPlugins`,
@@ -119,15 +119,19 @@ confuse:
 Leave every other member of `env` — `CLAUDE_CODE_USE_BEDROCK`, `AWS_REGION`, `AWS_PROFILE` — exactly as
 it is.
 
-**5. Prove the file is still valid JSON and still has its `env` block.** An editor can leave a trailing
-comma that Claude Code reports only as a silent fallback to another provider:
+**5. Prove the file is still valid JSON, and — only on a provider-bound machine — that it still has its
+`env` block.** Check this machine's file under [`../machines/`](../machines/) first: only a
+provider-bound machine (Bedrock) is required to carry an `env` block at all; a subscription machine has
+none, and that is correct, not a failure — see *Settings are merged, never linked* above. An editor can
+leave a trailing comma that Claude Code reports only as a silent fallback to another provider:
 
 ```powershell
-python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());print('valid JSON'); print('env keys:', sorted(d.get('env',{}))); print('BEDROCK:', d.get('env',{}).get('CLAUDE_CODE_USE_BEDROCK'))"
+uv run python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());print('valid JSON'); print('env keys:', sorted(d.get('env',{}))); print('BEDROCK:', d.get('env',{}).get('CLAUDE_CODE_USE_BEDROCK'))"
 ```
 
-`env keys:` must be non-empty and `BEDROCK:` must not be `None`. If either fails, restore the `.bak`
-from step 1 and start again.
+On a provider-bound machine, `env keys:` must be non-empty and `BEDROCK:` must not be `None`; if either
+fails, restore the `.bak` from step 1 and start again. On a machine that is not provider-bound, an empty
+`env keys:` is expected — skip the rest of this step.
 
 **6. Re-run step 2, and check the model IDs separately.** `in sync` on its own does **not** mean the
 merge is complete, because step 2 compares only the keys the repo copy has — and the repo copy has no
@@ -135,7 +139,7 @@ merge is complete, because step 2 compares only the keys the repo copy has — a
 printed `in sync` while `env.ANTHROPIC_MODEL` was still a superseded model ID. So run both:
 
 ```powershell
-python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());e=d.get('env',{});print('model        :',d.get('model'));print('ANTHROPIC_MODEL:',e.get('ANTHROPIC_MODEL'));print('HAIKU        :',e.get('ANTHROPIC_DEFAULT_HAIKU_MODEL'),'| legacy SMALL_FAST:',e.get('ANTHROPIC_SMALL_FAST_MODEL'))"
+uv run python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());e=d.get('env',{});print('model        :',d.get('model'));print('ANTHROPIC_MODEL:',e.get('ANTHROPIC_MODEL'));print('HAIKU        :',e.get('ANTHROPIC_DEFAULT_HAIKU_MODEL'),'| legacy SMALL_FAST:',e.get('ANTHROPIC_SMALL_FAST_MODEL'))"
 ```
 
 `ANTHROPIC_SMALL_FAST_MODEL` is **deprecated** — `ANTHROPIC_DEFAULT_HAIKU_MODEL` replaces it. The probe

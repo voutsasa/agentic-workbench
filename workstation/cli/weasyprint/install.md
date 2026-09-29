@@ -15,7 +15,7 @@ Binary: `weasyprint`. Product: WeasyPrint. Python tool, but packaged for brew an
 | macOS | `brew install weasyprint` |
 | Windows | `scoop install main/weasyprint` |
 
-Verify with `weasyprint --version`; it prints `WeasyPrint version 69.x`.
+Verify with `weasyprint --version`; it prints `WeasyPrint version <x.y>`.
 
 ## Traps
 

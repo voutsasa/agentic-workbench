@@ -61,7 +61,7 @@ GRAPHVIZ_DOT="/opt/homebrew/opt/graphviz/bin/dot" exec "/opt/homebrew/opt/openjd
   -Djava.awt.headless=true -jar .../plantuml.jar "$@"
 ```
 
-It pins the JDK to Homebrew's own rather than whatever `java` resolves to — which on a machine running a version manager is often a shim for a different release — points Graphviz at an absolute `dot` rather than trusting `PATH`, and forces headless mode. `PLANTUML_JAR=/opt/homebrew/opt/plantuml/libexec/plantuml.jar` gives up all three and re-introduces the `PATH` dependency for both `java` and `dot`. It does render on this workstation, but only because both happen to resolve; that is the fragility, not a reason to use it.
+It pins the JDK to Homebrew's own rather than whatever `java` resolves to — which on a machine running a version manager is often a shim for a different release — points Graphviz at an absolute `dot` rather than trusting `PATH`, and forces headless mode. `PLANTUML_JAR=/opt/homebrew/opt/plantuml/libexec/plantuml.jar` gives up all three and re-introduces the `PATH` dependency for both `java` and `dot`. Whether it renders on a given machine then depends on both happening to resolve there — that dependency on ambient `PATH` state is the fragility, not a reason to use it.
 
 Use `/opt/homebrew/opt/plantuml/...` if you ever do need the jar path — the `Cellar/plantuml/1.2026.6/...` path inside the wrapper is version-pinned and breaks on upgrade.
 

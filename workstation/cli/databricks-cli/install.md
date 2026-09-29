@@ -17,9 +17,9 @@ and [`ug`](../unity-gateway/install.md) use to authenticate.
 | Windows | `winget install Databricks.DatabricksCLI` |
 
 **The user runs it, never the agent.** Both routes come from the
-[Databricks install page](https://docs.databricks.com/aws/en/dev-tools/cli/install). The macOS
-route matches this machine's install (`brew info databricks` → `databricks/tap/databricks`).
-The Windows route has not been run on a Windows machine here.
+[Databricks install page](https://docs.databricks.com/aws/en/dev-tools/cli/install). Which route a
+given machine actually used, and which Homebrew or winget version fetched it, is install status —
+recorded in that machine's file under [`../../machines/`](../../machines/), not here.
 
 Verify with `databricks --version`. It prints `Databricks CLI v<x.y.z>`, and Databricks requires
 **0.205.0 or later**.
@@ -38,8 +38,7 @@ password or token goes in that file. How to use the login is in
 ## Traps
 
 - **Homebrew 6.0.0 and later refuse to load third-party taps until they are trusted.** Without
-  `brew trust databricks/tap`, the install fails even though the tap was added. (This machine runs
-  Homebrew 7.)
+  `brew trust databricks/tap`, the install fails even though the tap was added.
 - **PyPI `databricks-cli` is the legacy Python CLI and not this tool.** It stopped at 0.18.x and
   also installs a `databricks` command. If it is on `PATH` ahead of the Go binary,
   the version check shows a 0.x version below 0.205, and don't expect the `auth` commands

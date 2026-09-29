@@ -49,17 +49,18 @@ Claude subscription, no provider configuration.
 1. **Record the machine** — a machine note is what every later session reads for paths and blockers:
 
    ```sh
-   python3 workstation/scripts/inventory.py --host <id>
+   python workstation/scripts/inventory.py --host <id>   # python3 on macOS
    ```
 
    Paste the table it prints into `workstation/machines/macos-<id>.md` and add a row to
    [`../../machines/README.md`](../../machines/README.md).
 
 2. **Link the config** — follow [`macos.md` § *Link it*](macos.md#link-it), which carries the
-   commands.
+   commands, and pass `--hooks` there so the ruff post-edit hook is linked too.
 
-   What it puts in place: one symlink per skill, plus `AGENT-INSTRUCTIONS.md` → `~/.claude/CLAUDE.md`
-   and the machine note → `~/.claude/machine.md`. `settings.json` is not among them, by design.
+   What it puts in place: one symlink per skill, `AGENT-INSTRUCTIONS.md` → `~/.claude/CLAUDE.md`,
+   the machine note → `~/.claude/machine.md`, and (with `--hooks`) `hooks/ruff_on_edit.py` →
+   `~/.claude/hooks/`. `settings.json` is not among them, by design.
 
 3. **Settings — merge by hand, never link.** (**user**) `settings.json` is excluded from the plan by
    design; `link_config.py` raises rather than emit it. Merge the keys you want from
@@ -144,7 +145,7 @@ the region came from your AWS config rather than `AWS_REGION`. Region resolution
 Then confirm the `env` block survived the settings merge:
 
 ```powershell
-python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());e=d.get('env',{});print('env keys:',sorted(e));print('BEDROCK:',e.get('CLAUDE_CODE_USE_BEDROCK'))"
+uv run python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());e=d.get('env',{});print('env keys:',sorted(e));print('BEDROCK:',e.get('CLAUDE_CODE_USE_BEDROCK'))"
 ```
 
 `env keys:` must be non-empty and `BEDROCK:` must not be `None`.
@@ -211,7 +212,7 @@ A project already carrying `.claude/skills/` needs nothing further. For the pers
 the global instructions and skills rather than copying them:
 
 ```sh
-python3 workstation/scripts/link_config.py --agent copilot --apply
+python workstation/scripts/link_config.py --agent copilot --apply   # python3 on macOS
 ```
 
 That creates `~/.copilot/copilot-instructions.md` for the CLI, and `~/.claude/machine.md`, the one
@@ -289,7 +290,7 @@ The routes above mix observed fact with vendor documentation. Which is which:
 
 | Claim | Status |
 |---|---|
-| macOS Claude link route, `link_config.py` behaviour, 8 of 8 linked | **observed** on the macOS workstation |
+| macOS Claude link route, `link_config.py` behaviour, N of N linked | **observed** on the macOS workstation — the count moves as the `SKILLS`/hooks lists grow; see that machine's note under [`../../machines/`](../../machines/) for the count last measured there |
 | Copilot CLI loads `~/.copilot/copilot-instructions.md` | **observed** — listed by Copilot CLI 1.0.85 under `/instructions` help |
 | VS Code user settings path; `chat.useClaudeMdFile` / `useAgentsMdFile` exist | **observed** — VS Code 1.137.0, bundled `copilot-chat` 0.65.0 |
 | `chat.useClaudeMdFile`, `chat.useAgentsMdFile`, `github.copilot.chat.codeGeneration.useInstructionFiles` default to on | **observed** — `default:!0` in the VS Code 1.138.0 build, 2026-09-18; that a Chat session then loads the files is not |

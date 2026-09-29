@@ -12,6 +12,7 @@ record the result anywhere — a project that wants those decisions made for it 
 makes them itself. If the request did not name a destination path, ask for one before fetching.
 
 `<skill>` below is this skill's own directory; `<dest>` is the destination path the caller gave.
+Commands are written `python`, the interpreter's name on Windows; **on macOS it is `python3`**.
 
 ## 1. Classify the source, then route it
 
@@ -92,8 +93,8 @@ Then:
 
 ```sh
 curl -sL <url>.md -o <tmp>/served.md
-python3 <skill>/scripts/clean_publisher_md.py <tmp>/served.md "<dest>.md" <url>
-python3 <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
+python <skill>/scripts/clean_publisher_md.py <tmp>/served.md "<dest>.md" <url>
+python <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
 ```
 
 **Pass the page's own URL, not the site root**, as in the server-rendered route and for the same
@@ -117,9 +118,9 @@ the corpus.
 
 ```sh
 curl -sL -A "Mozilla/5.0" <url> -o <tmp>/page.html
-python3 <skill>/scripts/extract_article.py <tmp>/page.html <tag|tag.class|tag#id|tag[attr=value]> <url> \
+python <skill>/scripts/extract_article.py <tmp>/page.html <tag|tag.class|tag#id|tag[attr=value]> <url> \
   | pandoc -f html -t gfm -o "<dest>.md"
-python3 <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
+python <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
 ```
 
 **Always pass the page's own URL as the third argument.** It resolves relative `href`/`src` targets
@@ -239,7 +240,7 @@ Conversions from PDF or `.docx` inline figures as base64 data URIs, which bloats
 point any diff or reviewer can work with it:
 
 ```sh
-python3 <skill>/scripts/clean_md_images.py "<dest>.md"
+python <skill>/scripts/clean_md_images.py "<dest>.md"
 ```
 
 It writes `<dest>-no-base64.md` beside the original and the extracted images into a sibling `<dest>/` folder.
@@ -255,9 +256,9 @@ record and where. Do not edit a register, index or catalogue from inside this sk
 
 ## Scripts
 
-All but `render_page.py` are stdlib-only and run under bare `python3` before any venv exists;
-`render_page.py` needs `playwright` and runs under the uv tool venv's interpreter. Every test is
-stdlib-only — the browser is faked. Tests: `python3 -m unittest discover -s <skill>/tests`.
+All but `render_page.py` are stdlib-only and run under the bare interpreter before any venv exists,
+as `AGENT-INSTRUCTIONS.md` allows for a global skill's scripts; `render_page.py` needs `playwright` and runs under the uv tool venv's interpreter. Every test is
+stdlib-only — the browser is faked. Tests: `python -m unittest discover -s <skill>/tests`.
 
 | Script | Does |
 |---|---|

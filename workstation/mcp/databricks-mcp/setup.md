@@ -4,7 +4,6 @@ package: none — hosted endpoints (Copilot CLI bridge: unity-gateway `ug mcp-pr
 transport: http
 version_observed: n/a (hosted, no local version)
 verified: 2026-09-29
-registered: true
 pinned: false
 ---
 
@@ -35,9 +34,9 @@ It selects only names shaped as `mcp-services/system.ai.<service>` whose configu
 services are excluded because they need separate per-user sign-in. If a named service is absent or no
 longer internal, the generator refuses to print an add command rather than producing a broken entry.
 
-On `EMA-PF5N4XE7` on 29 September 2026, the live catalog contained eight services and only
-`genie_one_mcp` was internal. Do not treat that observation as a portable service list; run the
-generator against your own profile.
+The catalog's shape and size are workspace-specific and change over time; a snapshot from one machine
+is recorded in that machine's file under [`../../machines/`](../../machines/), never here — run the
+generator against your own profile rather than assuming a fixed service list.
 
 ## Parameters
 
@@ -170,8 +169,8 @@ setup commands on Claude Code:
   `headersHelper not run — this workspace has no persisted trust` and then `✘ Failed to connect`.
   Open Claude Code there once and accept the dialog.
 - **`401 … Credential was not sent or was of an unsupported type`** means a static
-  `headers.Authorization` holds something that isn't a valid token. On this machine it was the
-  literal `Bearer ~`. Remove the entry and register it again from the script's output.
+  `headers.Authorization` holds something that isn't a valid token — e.g. the literal string `Bearer ~`
+  left over from a bad paste. Remove the entry and register it again from the script's output.
 - **Everything fails after the CLI login expires.** `databricks auth profiles` then shows
   `Valid NO`. Run `databricks auth login -p "$DBX_PROFILE"` again.
 - **Keep the `?o=<workspace-id>` query string.** Every endpoint was verified with it, and the form

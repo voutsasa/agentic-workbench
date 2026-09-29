@@ -18,7 +18,7 @@ Verify with `tesseract --version`; the first line is `tesseract 5.x.y`, followed
 
 ## Workstation configuration
 
-**English-only language data — chosen.** The base package ships English only, and the additional packs have not been taken. This workstation carries `eng`, `osd` and `snum`; confirm with `tesseract --list-langs`.
+**English-only language data — chosen.** The base package ships English only, and the additional packs have not been taken by default. Confirm what a given machine carries with `tesseract --list-langs`; that list is install status and belongs in that machine's file under [`../../machines/`](../../machines/), not here.
 
 This holds because every OCR job here so far has been English. The gap announces itself rather than degrading quietly — `-l deu` or `-l fra` fails with a missing-tessdata error, not poor output. When that happens:
 
