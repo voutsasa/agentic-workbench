@@ -214,6 +214,21 @@ See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command �
 
 Third-party MCP servers configured into this machine's agent clients. Each has a folder at [`workstation/mcp/`](workstation/mcp/README.md) holding its setup and ingested page.
 
-* [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/) — Official draw.io MCP server; opens generated XML, CSV, or Mermaid diagrams in the draw.io editor.
+**Remote** — hosted by the vendor or by your own deployment; the client only registers the endpoint.
+
 * [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server) — Microsoft's hosted Azure DevOps MCP Server; org-scoped Entra OAuth over HTTP, no local install.
 * [databricks-mcp](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/managed-mcp) — Azure Databricks' hosted MCP servers (Genie, AI Search, SQL, sandbox), authenticated through the Databricks CLI login.
+* [fabric-mcp-overview](https://learn.microsoft.com/en-us/rest/api/fabric/articles/mcp-servers/fabric-mcp-servers-list) — Microsoft's table of every Fabric MCP server, remote or local, with its use and setup page.
+* [fabric-iq-mcp](https://learn.microsoft.com/en-us/fabric/iq/connectors/fabric-iq-mcp) — Fabric IQ remote server: discover reports and query data across Fabric from an agent.
+* [fabric-ontology-mcp](https://learn.microsoft.com/en-us/fabric/iq/ontology/how-to-use-ontology-mcp-server) — Remote server giving agents an ontology's business entities, relationships and definitions; preview.
+* [fabric-warehouse-mcp](https://learn.microsoft.com/en-us/fabric/data-warehouse/data-warehouse-mcp-server) — Remote server running T-SQL against a Fabric warehouse or SQL analytics endpoint.
+* [fabric-data-agent-mcp](https://learn.microsoft.com/en-us/fabric/data-science/data-agent-mcp-server) — A published Fabric data agent exposed as an MCP server, answering from its data sources.
+* [powerbi-remote-mcp](https://learn.microsoft.com/en-us/power-bi/developer/mcp/remote-mcp-server-get-started) — Remote Power BI server querying existing semantic models with DAX.
+
+**Local** — runs on this machine; its `setup.md` carries the install route as well as the registration.
+
+* [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/) — Official draw.io MCP server; opens generated XML, CSV, or Mermaid diagrams in the draw.io editor.
+* [fabric-onelake-mcp](https://learn.microsoft.com/en-us/fabric/onelake/onelake-local-mcp) — Local MCP route letting AI agents work with OneLake data.
+* [powerbi-modeling-mcp](https://github.com/microsoft/powerbi-modeling-mcp) — Local server creating, editing and validating Power BI semantic models.
+* [sql-mcp-server](https://learn.microsoft.com/en-us/azure/data-api-builder/mcp/overview) — Data API builder's SQL MCP Server: permissioned tools over SQL databases, run locally through the `dab` CLI.
+* [cosmos-db-shell-mcp](https://learn.microsoft.com/en-us/azure/cosmos-db/shell/model-context-protocol-setup) — Azure Cosmos DB Shell's built-in MCP server, listening on localhost.

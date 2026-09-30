@@ -364,22 +364,37 @@ _ATTR = re.compile(r"""([^\s=/>]+)(?:\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s"'=<>`]+
 #: The only link attributes pandoc's gfm writer can express; any other one —
 #: `target`, `rel`, `id` (measured, pandoc 3.11) — makes it emit raw `<a …>`.
 KEPT_LINK_ATTRS = ("href", "title")
+#: One whole `<img …>` tag, and the attributes pandoc's gfm writer maps onto
+#: `![alt](src "title")`; any other one — Microsoft Learn's `data-linktype`
+#: (measured, 7 in the Fabric IQ MCP page) — makes it emit raw `<img …>`.
+IMG_TAG = re.compile(r"<img\s[^>]*>", re.IGNORECASE)
+KEPT_IMG_ATTRS = ("src", "alt", "title")
+
+
+def _keep_attributes(tag: str, opening: str, kept_names: tuple[str, ...]) -> str:
+    body = opening[len(tag) + 1 : -1].rstrip("/")
+    found: dict[str, str] = {}
+    for attr in _ATTR.finditer(body):
+        name = attr.group(1).lower()
+        if name in kept_names and name not in found:
+            value = next((g for g in attr.group(2, 3, 4) if g is not None), "")
+            found[name] = value.replace('"', "&quot;")
+    kept = "".join(f' {n}="{found[n]}"' for n in kept_names if n in found)
+    return f"<{tag}{kept}>"
 
 
 def trim_link_attributes(html: str) -> str:
     """Rewrite each `<a …>` to keep only ``href`` and ``title``, quoted."""
+    return LINK_OPEN.sub(
+        lambda m: _keep_attributes("a", m.group(0), KEPT_LINK_ATTRS), html
+    )
 
-    def rewrite(match: re.Match[str]) -> str:
-        found: dict[str, str] = {}
-        for attr in _ATTR.finditer(match.group(0)[2:-1]):
-            name = attr.group(1).lower()
-            if name in KEPT_LINK_ATTRS and name not in found:
-                value = next((g for g in attr.group(2, 3, 4) if g is not None), "")
-                found[name] = value.replace('"', "&quot;")
-        kept = "".join(f' {n}="{found[n]}"' for n in KEPT_LINK_ATTRS if n in found)
-        return f"<a{kept}>"
 
-    return LINK_OPEN.sub(rewrite, html)
+def trim_image_attributes(html: str) -> str:
+    """Rewrite each `<img …>` to keep only ``src``, ``alt`` and ``title``, quoted."""
+    return IMG_TAG.sub(
+        lambda m: _keep_attributes("img", m.group(0), KEPT_IMG_ATTRS), html
+    )
 
 
 def main() -> int:
@@ -411,6 +426,7 @@ def main() -> int:
     article = SVG_TAG.sub("", article)
     article = DIV_TAG.sub("", article)
     article = trim_link_attributes(article)
+    article = trim_image_attributes(article)
     if base_url:
         article = absolutise(article, base_url)
     sys.stdout.buffer.write(article.encode("utf-8"))

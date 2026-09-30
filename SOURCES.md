@@ -283,6 +283,21 @@ Third-party MCP servers configured into this machine's agent clients. Each has a
 
 Servers **authored** in this workbench are project output, not workstation tooling, and do not belong here.
 
-* [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/)
+**Remote** — hosted by the vendor or by your own deployment; the client only registers the endpoint.
+
 * [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server)
 * [databricks-mcp](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/managed-mcp)
+* [fabric-mcp-overview](https://learn.microsoft.com/en-us/rest/api/fabric/articles/mcp-servers/fabric-mcp-servers-list)
+* [fabric-iq-mcp](https://learn.microsoft.com/en-us/fabric/iq/connectors/fabric-iq-mcp)
+* [fabric-ontology-mcp](https://learn.microsoft.com/en-us/fabric/iq/ontology/how-to-use-ontology-mcp-server)
+* [fabric-warehouse-mcp](https://learn.microsoft.com/en-us/fabric/data-warehouse/data-warehouse-mcp-server)
+* [fabric-data-agent-mcp](https://learn.microsoft.com/en-us/fabric/data-science/data-agent-mcp-server)
+* [powerbi-remote-mcp](https://learn.microsoft.com/en-us/power-bi/developer/mcp/remote-mcp-server-get-started)
+
+**Local** — runs on this machine; its `setup.md` carries the install route as well as the registration.
+
+* [drawio-mcp](https://www.drawio.com/docs/manual/generate/drawio-mcp-server/)
+* [fabric-onelake-mcp](https://learn.microsoft.com/en-us/fabric/onelake/onelake-local-mcp)
+* [powerbi-modeling-mcp](https://github.com/microsoft/powerbi-modeling-mcp)
+* [sql-mcp-server](https://learn.microsoft.com/en-us/azure/data-api-builder/mcp/overview)
+* [cosmos-db-shell-mcp](https://learn.microsoft.com/en-us/azure/cosmos-db/shell/model-context-protocol-setup)

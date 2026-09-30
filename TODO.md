@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-29
+updated: 2026-09-30
 verified: never
 ---
 
@@ -16,6 +16,29 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 45. Nine Fabric-family MCP entries are registered but not ingested
+
+Opened 2026-09-30. `SOURCES.md` → *MCP servers* gained eleven entries; the pilot ingested two
+(`fabric-iq-mcp`, `powerbi-modeling-mcp`). These nine have no `reference.md`, no `setup.md` and no
+row in `workstation/mcp/README.md`: remote `fabric-mcp-overview`, `fabric-ontology-mcp`,
+`fabric-warehouse-mcp`, `fabric-data-agent-mcp`, `powerbi-remote-mcp`; local `fabric-onelake-mcp`,
+`sql-mcp-server`, `cosmos-db-shell-mcp`. Each local `setup.md` must carry its install route as well as
+the Claude and Copilot registration. Held for the user's review of the pilot.
+
+**Closes when:** `repo_check.py --corpus` lists all nine as ingested and each has a `setup.md` and a
+README row.
+
+### 44. The fabric-iq-mcp and powerbi-modeling-mcp setups are intended, not observed
+
+Opened 2026-09-30. Both `setup.md` files were written from the ingested docs and the npm registry;
+nothing has been installed, registered or run. Unproven: the `X-Variants` header on both CLIs'
+`mcp add`; Claude's `--client-id`/`--callback-port` flow against a Power BI Service app registration;
+that `npx -y @microsoft/powerbi-modeling-mcp@latest --start --readonly` starts on Windows and blocks
+until the EULA is accepted.
+
+**Closes when:** each server answers one read-only tool call from Claude Code and from Copilot CLI,
+recorded in the machine note, and each `setup.md` drops its *Intended setup* banner.
 
 ### 41. No `/api/2.0/mcp/` Databricks server has connected yet
 

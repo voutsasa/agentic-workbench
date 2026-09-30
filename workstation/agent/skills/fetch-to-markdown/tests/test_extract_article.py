@@ -470,6 +470,25 @@ class LinkAttributeTests(unittest.TestCase):
         )
 
 
+class ImageAttributeTests(unittest.TestCase):
+    """Microsoft Learn puts `data-linktype` on every screenshot, and pandoc's gfm
+    writer then keeps the image as raw `<img …>`: 7 in the Fabric IQ MCP page."""
+
+    def test_only_src_alt_and_title_survive(self):
+        html = (
+            '<p><img src="https://x/a.png" data-linktype="relative-path" '
+            'class="c" alt="Shot" title="T" /></p>'
+        )
+        self.assertEqual(
+            extract_article.trim_image_attributes(html),
+            '<p><img src="https://x/a.png" alt="Shot" title="T"></p>',
+        )
+
+    def test_links_are_left_to_the_link_trimmer(self):
+        html = '<a href="/x" target="_blank">X</a>'
+        self.assertEqual(extract_article.trim_image_attributes(html), html)
+
+
 class AbsolutiseTests(unittest.TestCase):
     """The third argument resolves relative targets against the page's own URL.
 
