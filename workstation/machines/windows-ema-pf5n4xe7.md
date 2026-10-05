@@ -296,6 +296,28 @@ link-creation docstring.
 hardlinks sever constantly* below; all three carried only stale text the repo had since superseded,
 nothing live-only, so the overwrite was safe.
 
+### The plugin route is also installed and verified, 5 October 2026
+
+A second, independent route to the same nine `SKILLS` tuple skills: `workstation/agent/` is now a
+plugin root for both tools (`workstation/agent/README.md` § *Install the skills as a plugin
+instead*). Verified live on this machine, not just file-shape:
+
+```powershell
+claude plugin marketplace add ./workstation/agent
+claude plugin install workbench-skills@agentic-workbench
+copilot plugin marketplace add ./workstation/agent
+copilot plugin install workbench-skills@agentic-workbench
+```
+
+Both succeeded. `claude plugin details workbench-skills` reported all 9 skills (`confluence-export`,
+`confluence-publish`, `fetch-to-markdown`, `fix-findings`, `pdf-deliverable`, `python-quality`,
+`review`, `setup-mcp-servers`, `verify-docs`), enabled, v0.1.0. `copilot plugin list` reported the
+same, noting it is "loaded live from `…\workstation\agent`, so edits take effect on the next
+session — nothing was copied." Both installs are **kept** on this machine, by choice, alongside the
+`link_config.py` route above rather than replacing it. One real bug surfaced in the process: both
+`marketplace.json` files were missing the required `owner` field — both tools refused to add the
+marketplace until it was added (fixed in `7852ced`).
+
 ### Copilot MCP servers validated end to end on 29 September 2026
 
 Copilot CLI reloaded four MCP servers. `ado-remote-mcp` successfully listed **165** accessible private
