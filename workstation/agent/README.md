@@ -237,14 +237,18 @@ manifests:
 Both pairs' `version` fields track `[project] version` in `pyproject.toml`, checked by
 `workstation/scripts/tests/test_plugin_manifest.py`.
 
+Run from the repo root, so the relative path resolves:
+
 ```sh
 # Claude Code
 claude plugin marketplace add ./workstation/agent
 claude plugin install workbench-skills@agentic-workbench
+claude plugin details workbench-skills      # confirm: 9 skills, enabled
 
 # Copilot CLI
 copilot plugin marketplace add ./workstation/agent
 copilot plugin install workbench-skills@agentic-workbench
+copilot plugin list                         # confirm: workbench-skills, enabled
 ```
 
 Hooks, MCP servers and `settings.json` are deliberately **not** part of this plugin — they stay on
