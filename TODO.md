@@ -17,21 +17,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 47. The plugin manifests are written but not installed anywhere
-
-Opened 2026-10-05, following the comparison with `Work/Development/agentic-coding/superpowers`:
-`workstation/agent/` is now a plugin root for both Claude Code (`.claude-plugin/plugin.json`,
-`.claude-plugin/marketplace.json`) and Copilot CLI (`plugin.json`, `marketplace.json`, Agent Plugins
-1.0), both pointing at the existing `skills/` folder — no skill content moved.
-`test_plugin_manifest.py` proves the four manifests' `version` fields agree with `pyproject.toml`,
-but nothing has proven `claude plugin marketplace add ./workstation/agent` +
-`claude plugin install workbench-skills@agentic-workbench`, or the equivalent `copilot` pair, actually
-install and surface the 9 skills in a real session.
-
-**Closes when:** both installs are run in this clone, `claude plugin list` / `copilot plugin list`
-(or `/plugin`) shows `workbench-skills` with its 9 skills for each, and the result — kept installed or
-removed again — is recorded here or in the machine note.
-
 ### 46. The first release has not been tagged
 
 Opened 2026-10-05, with `cliff.toml` and `VERSIONING.md`: this repository adopted SemVer 2.0.0,
