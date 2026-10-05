@@ -34,18 +34,19 @@ session has confirmed it since the edit landed in the same session that made it.
 content (not truncated or mis-rendered), and a fresh Copilot CLI session shows the same for
 `copilot-instructions.md`.
 
-### 46. The first release has not been tagged
+### 46. The bump rule has not been spot-checked against this repo's own cliff.toml
 
-Opened 2026-10-05, with `cliff.toml` and `VERSIONING.md`: this repository adopted SemVer 2.0.0,
-Conventional Commits and a git-cliff changelog, following `Work/Development/EMA/ea-data-model`'s
-approach. `pyproject.toml` already carries `version = "0.1.0"`. git-cliff is now a `dev`-group
-dependency (`uv add --dev git-cliff`, verified running at 2.14.2 via `uv run git-cliff --version`),
-so every clone gets it from `uv sync` with no separate machine install. Still unproven: the bump
-rule has not been spot-checked against this repository's own `cliff.toml` with a throwaway
-`feat:`/`fix:` commit, no `CHANGELOG.md` has been generated, and no `v0.1.0` tag exists.
+Opened 2026-10-05, with `cliff.toml` and `VERSIONING.md`; narrowed 2026-10-05 once `v0.1.0` shipped.
+`CHANGELOG.md` is generated and `v0.1.0` is tagged (annotated) and pushed — `6cc7a39..e6d33e7`,
+`[new tag] v0.1.0`. One real bug found and fixed along the way: `git-cliff --bumped-version` errors
+with no prior tag (`WARN ... using 0.1.0 as the next version` then `ERROR: Next version (0.1.0) does
+not match the tag pattern: v[0-9].*`, since it suggests the bare number but validates it against the
+`v`-prefixed pattern) — the first release was tagged directly instead, bypassing `--bumped-version`.
+Still unproven: whether `--bumped-version` behaves correctly for the *next* release, where a prior
+`v*` tag exists and the bug's precondition no longer holds.
 
-**Closes when:** `uv run git-cliff --bumped-version` gives the expected answer after a throwaway
-`feat:`/`fix:` commit, `CHANGELOG.md` is generated, and `v0.1.0` is tagged (annotated) and pushed.
+**Closes when:** a throwaway `feat:`/`fix:` commit after `v0.1.0` makes
+`uv run git-cliff --bumped-version` suggest the expected `v0.1.1`/`v0.2.0`.
 
 ### 45. Eight Fabric-family MCP entries are registered but not ingested
 
