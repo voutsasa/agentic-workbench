@@ -117,6 +117,9 @@ allow_context = [
   "over the network genuinely is a download",
   "imagemagick.org",
   "jqlang.org",
+  "the package downloads on first launch",
+  "vsix download",
+  "rename the download",
 ]
 
 [checks.metadata_header]

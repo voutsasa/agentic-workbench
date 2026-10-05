@@ -17,16 +17,16 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 45. Nine Fabric-family MCP entries are registered but not ingested
+### 45. Eight Fabric-family MCP entries are registered but not ingested
 
-Opened 2026-09-30. `SOURCES.md` → *MCP servers* gained eleven entries; the pilot ingested two
-(`fabric-iq-mcp`, `powerbi-modeling-mcp`). These nine have no `reference.md`, no `setup.md` and no
+Opened 2026-09-30. `SOURCES.md` → *MCP servers* gained ten entries; the pilot ingested two
+(`fabric-iq-mcp`, `powerbi-modeling-mcp`). These eight have no `reference.md`, no `setup.md` and no
 row in `workstation/mcp/README.md`: remote `fabric-mcp-overview`, `fabric-ontology-mcp`,
 `fabric-warehouse-mcp`, `fabric-data-agent-mcp`, `powerbi-remote-mcp`; local `fabric-onelake-mcp`,
 `sql-mcp-server`, `cosmos-db-shell-mcp`. Each local `setup.md` must carry its install route as well as
 the Claude and Copilot registration. Held for the user's review of the pilot.
 
-**Closes when:** `repo_check.py --corpus` lists all nine as ingested and each has a `setup.md` and a
+**Closes when:** `repo_check.py --corpus` lists all eight as ingested and each has a `setup.md` and a
 README row.
 
 ### 44. The fabric-iq-mcp and powerbi-modeling-mcp setups are intended, not observed
