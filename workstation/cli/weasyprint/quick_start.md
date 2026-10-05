@@ -2,6 +2,8 @@
 tool: weasyprint
 command: weasyprint
 updated: 2026-08-01
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # weasyprint — quick start

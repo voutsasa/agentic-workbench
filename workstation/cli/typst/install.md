@@ -4,6 +4,8 @@ command: typst
 product: Typst
 used_by: pdf-deliverable
 verified: 2026-09-18
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # typst — install

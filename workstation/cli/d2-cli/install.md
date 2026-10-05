@@ -3,6 +3,8 @@ tool: d2-cli
 command: d2
 product: D2 (Terrastruct)
 verified: 2026-08-20
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # d2-cli — install

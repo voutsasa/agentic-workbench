@@ -3,6 +3,8 @@ tool: sem-cli
 command: sem
 product: Sem (Ataraxy Labs)
 verified: 2026-08-24
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # sem-cli — install

@@ -2,6 +2,8 @@
 tool: pandoc
 command: pandoc
 updated: 2026-08-01
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # pandoc — quick start

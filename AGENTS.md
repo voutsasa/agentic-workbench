@@ -1,3 +1,8 @@
+---
+author: Achilleas Voutsas
+version: 0.1.0
+---
+
 # Agentic-workbench
 
 Enables engineers to set up their workstation and work in an agent-enabled environment: AI coding assistants configured consistently, on a toolchain that is known to work.

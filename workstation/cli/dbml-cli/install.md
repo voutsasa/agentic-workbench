@@ -3,6 +3,8 @@ tool: dbml-cli
 command: dbml2sql, sql2dbml, db2dbml
 product: DBML CLI
 verified: 2026-08-20
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # dbml-cli — install

@@ -3,6 +3,8 @@ tool: jq
 command: jq
 product: jq
 verified: 2026-09-28
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # jq — install

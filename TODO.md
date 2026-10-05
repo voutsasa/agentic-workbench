@@ -2,6 +2,8 @@
 role: Open work carried between sessions — committed new work and unproven existing gaps
 updated: 2026-10-05
 verified: never
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # TODO
@@ -16,6 +18,21 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 48. Frontmatter on `AGENTS.md` and `AGENT-INSTRUCTIONS.md` is unverified live
+
+Opened 2026-10-05. Both files gained an `author`/`version` frontmatter block for the first time, so
+that every applicable skill, guide, machine note, key document and the harness itself carries the
+same metadata. Every other file this applies to has a schema in `checks.toml` and passing tests;
+these two have neither, since they are read as live instructions, not documents a schema checks.
+Unverified: whether Claude Code's `@AGENTS.md` import and Copilot CLI's direct read of
+`AGENT-INSTRUCTIONS.md` (as `copilot-instructions.md`) load the content after a leading `---`
+frontmatter block the same as before — plain text is the overwhelmingly likely case, but no fresh
+session has confirmed it since the edit landed in the same session that made it.
+
+**Closes when:** a fresh Claude Code session's `/context` shows `AGENTS.md` loaded with its real
+content (not truncated or mis-rendered), and a fresh Copilot CLI session shows the same for
+`copilot-instructions.md`.
 
 ### 46. The first release has not been tagged
 

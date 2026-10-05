@@ -6,6 +6,8 @@ shell: zsh
 python: 3.14.6 (.venv)
 repo: ~/Development/agentic-coding/agentic-workbench
 verified: 2026-09-13
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # macOS workstation

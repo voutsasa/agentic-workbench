@@ -15,12 +15,15 @@ called on Windows and inside an activated venv; **on macOS outside a venv it is 
 | [`status.py`](status.py) | Check the resolved machine's prerequisite profile and CLI toolchain, then report corrective actions |
 | [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude`, and its skills in `~/.copilot/skills` |
 | [`databricks_mcp.py`](databricks_mcp.py) | Read available internal Databricks MCP services, or take named Genie Agent, AI Search and SQL servers, then print Claude Code and Copilot CLI registration commands — runs none of them |
+| [`bump_frontmatter_version.py`](bump_frontmatter_version.py) | Report (or, with `--apply`, write) the `version:` frontmatter field across skills, guides, machine notes and key documents, to match a new release — see [`VERSIONING.md`](../../VERSIONING.md) |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
-`../agent/skills/*/tests/`. Two of them test no script in this folder: `test_readme_skills.py` fails when the skill
+`../agent/skills/*/tests/`. Four of them test no script in this folder: `test_readme_skills.py` fails when the skill
 table in the root `README.md` stops matching `link_config.py`'s `SKILLS` tuple and the `skills/`
-folders, and `test_python_version.py` fails when `.python-version` stops satisfying
-`requires-python` in `pyproject.toml`. The pre-push hook runs this folder on every push, because the root `.pre-push-tests`
+folders; `test_python_version.py` fails when `.python-version` stops satisfying
+`requires-python` in `pyproject.toml`; `test_plugin_manifest.py` and `test_frontmatter_version.py`
+fail when, respectively, the plugin manifests under `workstation/agent/` or any skill/guide/machine
+note/key document's `version:` field drifts from `pyproject.toml`'s. The pre-push hook runs this folder on every push, because the root `.pre-push-tests`
 names it. Run them by hand from the repo root:
 
 ```
@@ -223,3 +226,20 @@ itself. The reasoning, authentication and traps are in
 The profile, host, workspace ID, Genie space ID and AI Search path are checked against strict patterns before anything is printed,
 because the profile ends up inside a shell command (the `headersHelper`). Connection-backed services
 such as `github` are rejected by design.
+
+## `bump_frontmatter_version.py`
+
+```
+python workstation/scripts/bump_frontmatter_version.py 0.2.0            # report only — writes nothing
+python workstation/scripts/bump_frontmatter_version.py 0.2.0 --apply    # write the new version everywhere
+```
+
+Part of [`VERSIONING.md`](../../VERSIONING.md)'s *Cutting a release* step. Walks the same file list
+`test_frontmatter_version.py` checks — every CLI tool's `install.md` and `quick_start.md` under
+[`../cli/`](../cli/), every machine note under [`../machines/`](../machines/), every MCP server's
+`setup.md` under [`../mcp/`](../mcp/), every `SKILL.md`, the key documents
+(`SOURCES.md`, `SOURCE_CATALOGUE.md`, `TODO.md`, `docs/guidance/DEVELOPMENT-PLAN.md`) and the agent
+harness (`AGENTS.md`, `AGENT-INSTRUCTIONS.md`) — and rewrites each one's `version:` frontmatter line
+in place. The two share one list, imported by the test from this script, so they cannot drift apart.
+A file with no frontmatter, or frontmatter with no `version:` field, is left alone and reported as
+such rather than guessed at.

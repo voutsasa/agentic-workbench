@@ -2,6 +2,8 @@
 tool: dbml-cli
 command: dbml2sql, sql2dbml, db2dbml
 updated: 2026-08-01
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # dbml-cli — quick start

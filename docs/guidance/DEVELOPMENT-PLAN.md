@@ -2,6 +2,8 @@
 role: Phased capability curriculum, doubling as a prioritised ingestion backlog
 updated: 2026-09-29
 verified: never
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # Development Plan — Agentic Engineering & SDD Capability

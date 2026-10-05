@@ -1,6 +1,8 @@
 ---
 name: pdf-deliverable
 description: Produce a PDF from markdown or HTML without LaTeX — pandoc via typst for a working note, WeasyPrint with a print stylesheet when the page format is specified (page size, margins, running headers, page numbers, PDF/A/UA archival profiles). Use when asked to make, export, render or hand over a PDF, when `pandoc -o out.pdf` has failed with `'pdflatex' not found`, or when a deliverable has to meet a submission format. Not for how a markdown source document is written.
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # PDF deliverables

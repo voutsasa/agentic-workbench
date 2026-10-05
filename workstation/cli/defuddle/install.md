@@ -4,6 +4,8 @@ command: defuddle
 product: Defuddle
 used_by: fetch-to-markdown
 verified: 2026-08-20
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # defuddle — install

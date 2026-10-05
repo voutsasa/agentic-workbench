@@ -1,6 +1,8 @@
 ---
 name: ingest-source
 description: Pull a source registered in SOURCES.md into this workbench — resolve where the entry lands and what it is named, fetch and convert it with the fetch-to-markdown skill, then record it in SOURCE_CATALOGUE.md. Use when asked to ingest, re-ingest or convert a registered source, when a bracket-link entry has no file in docs/landing-zone/, or when adding a CLI tool or MCP server to workstation/. Not for general web research — this writes the corpus.
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # Ingest a source

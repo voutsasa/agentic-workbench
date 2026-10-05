@@ -5,6 +5,8 @@ transport: http
 version_observed: n/a (hosted; tool contract pinned by header, Fabric.Routing.FabricIQ.V1)
 verified: 2026-09-30
 pinned: false
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # fabric-iq-mcp — setup

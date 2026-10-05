@@ -4,6 +4,8 @@ command: pandoc
 product: Pandoc
 used_by: fetch-to-markdown, pdf-deliverable
 verified: 2026-08-20
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # pandoc — install

@@ -5,6 +5,8 @@ transport: stdio
 version_observed: 1.5.0
 verified: 2026-08-05
 pinned: false
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # drawio-mcp — setup

@@ -4,6 +4,8 @@ command: playwright
 product: Playwright
 used_by: fetch-to-markdown
 verified: 2026-09-27
+author: Achilleas Voutsas
+version: 0.1.0
 ---
 
 # playwright — install
