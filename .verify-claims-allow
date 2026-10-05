@@ -67,6 +67,21 @@ CLAUDE.md
 Scripts/python.exe
 bin/python
 
+# Same category, for git-cliff: VERSIONING.md names both venv layouts
+# ("run it with ... the venv's own binary") because a dev-group uv dependency
+# installs into whichever one the machine has.
+.venv/Scripts/git-cliff.exe
+.venv/bin/git-cliff
+Scripts/git-cliff.exe
+bin/git-cliff
+
+# VERSIONING.md's opening line names ea-data-model's own guide,
+# `Work/Development/EMA/ea-data-model`'s `docs/repo-versioning-guide.md`, as the
+# source this file was adapted from. The bare path is in that repo, not this
+# one — this repo has no `docs/repo-versioning-guide.md` by design, since the
+# policy lives in VERSIONING.md at the root instead.
+docs/repo-versioning-guide.md
+
 # Scratch outputs in the validation steps: /tmp/v.md, /tmp/val/, /tmp/r.html and
 # the rest are what those commands *create* when someone runs them. A validation
 # step whose output already existed would be proving nothing.
