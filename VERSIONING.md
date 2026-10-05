@@ -10,9 +10,9 @@ which was written for exactly that purpose. Two parts:
    commit history decides the next version and generates the changelog.
 
 This covers the version of the **repository**: workstation scripts, skills, the register schema and
-the agent harness, released together. There is nothing else versioned separately here — unlike
-`ea-data-model`, no file repeats the version number, so there is no second track and no drift test
-to maintain.
+the agent harness, released together. There is nothing else versioned separately here. Four files do
+repeat the version number — the Claude Code and Copilot CLI plugin manifests under
+`workstation/agent/` — and `workstation/scripts/tests/test_plugin_manifest.py` is their drift test.
 
 # Part 1: the standard
 
@@ -142,9 +142,10 @@ Check: `git-cliff --version` (or `uv run git-cliff --version`).
 
 Put the version in one file, and have every other place derive from it or be checked against it.
 Here that file is `[project] version` in `pyproject.toml`, set with `uv version X.Y.Z` (also updates
-`uv.lock`). No other tracked file repeats it — confirmed by searching for a `version:` field in every
-`SKILL.md`, which found none, unlike `ea-data-model`'s skills. If a future file does repeat it, add a
-test that fails when the two drift, the same way `ea-data-model`'s `tests/test_skills.py` does.
+`uv.lock`). No `SKILL.md` repeats it (confirmed by searching for a `version:` field in every one,
+unlike `ea-data-model`'s skills), but the Claude Code and Copilot CLI plugin manifests under
+`workstation/agent/` do — `workstation/scripts/tests/test_plugin_manifest.py` fails when any of the
+four drift from it, the same way `ea-data-model`'s `tests/test_skills.py` does for its skills.
 
 ### 3. Add `cliff.toml`
 
@@ -265,6 +266,14 @@ and [`.pre-push-tests`](.pre-push-tests).
 NEXT=$(uv run git-cliff --bumped-version)   # e.g. v0.2.0; override by hand if needed
 uv version "${NEXT#v}"                      # source of truth, and uv.lock
 uv run git-cliff --tag "$NEXT" -o CHANGELOG.md   # regenerates the whole changelog
+# Edit the `version` field (an editor task, not a sed one-liner — see VERSIONING.md's own
+# pitfalls) to "${NEXT#v}" in all four:
+#   workstation/agent/.claude-plugin/plugin.json
+#   workstation/agent/.claude-plugin/marketplace.json      (plugins[0].version)
+#   workstation/agent/plugin.json
+#   workstation/agent/marketplace.json                     (plugins[0].version)
+.venv\Scripts\python.exe -m unittest discover -s workstation/scripts/tests -t workstation/scripts/tests
+# ^ re-run after the manifest edit: test_plugin_manifest.py now checks the new version
 git commit -am "chore(release): $NEXT"
 git tag -a "$NEXT" -m "$NEXT"               # annotated, on the release commit
 git push --follow-tags origin main
@@ -275,6 +284,7 @@ git push --follow-tags origin main
 | `${NEXT#v}` | git tags carry the `v`; `pyproject.toml` does not |
 | `--tag "$NEXT"` | git-cliff writes the unreleased commits under the new version, before the tag exists |
 | `-o CHANGELOG.md` | regenerates the whole file from history, so a hand edit would be lost: never edit it |
+| the four manifest edits | `test_plugin_manifest.py` fails the gate otherwise — these are the files that repeat the version, per *Choose the single source of truth* above |
 | `chore(release): …` | the parser skips it, so the release commit does not list itself |
 | `git tag -a` | annotated tags carry a tagger and date; `--follow-tags` does not push a lightweight tag |
 | `--follow-tags` | pushes the branch and the annotated tags reachable from it in one go |

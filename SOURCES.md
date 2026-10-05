@@ -243,6 +243,7 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 * [Best practices for Claude Code](https://code.claude.com/docs/en/best-practices)
 * [Extend Claude with skills](https://code.claude.com/docs/en/skills)
 * [Claude Code plugins overview](https://code.claude.com/docs/en/plugins)
+* [About GitHub Copilot plugins](https://docs.github.com/en/copilot/concepts/agents/about-plugins)
 
 #### Background and legacy material
 

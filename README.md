@@ -39,6 +39,10 @@ python workstation/scripts/status.py
 
 Then start the assistant in the repo — restart it if a session was already open, since instructions are read at session start — and run the [`setup-agents`](skills/setup-agents/SKILL.md) skill. It finds the AI assistants on your machine and sets them up with the shared instructions and skills. Re-run either command without `--apply` to check: it exits non-zero unless everything reads `linked`.
 
+For the global skills only, [`workstation/agent/README.md` § *Install the skills as a plugin
+instead*](workstation/agent/README.md#install-the-skills-as-a-plugin-instead) covers a one-command,
+OS-independent alternative via Claude Code's and Copilot CLI's own plugin mechanism.
+
 ## Executive summary
 
 The first two capabilities deliver the agent-enabled workstation; the last two keep it trustworthy.

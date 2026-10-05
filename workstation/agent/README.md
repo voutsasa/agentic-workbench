@@ -218,6 +218,39 @@ Nothing here detects it. The check is `/context` inside a Cowork session: if `CL
 under **Memory files**, this is why. The documented way round it is an `@` import from a real file
 rather than a link, which is also the route Windows users are pointed at when symlinks need admin.
 
+## Install the skills as a plugin instead
+
+**For the `SKILLS` tuple only** — the register-free skills, not this repo's own `skills/`. Both
+Claude Code and Copilot CLI can install this directory as a plugin from a local-path marketplace,
+with one command, OS-independent — no symlink-vs-junction branch, no `--apply`/`--force` cycle. This
+is an *additional* route, not a replacement: `link_config.py` still serves this repo's own skills and
+every machine that already relies on the linked route.
+
+This directory is a plugin root for both tools at once, holding one shared `skills/` and two pairs of
+manifests:
+
+| File | For |
+|---|---|
+| `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` | Claude Code |
+| `plugin.json`, `marketplace.json` | Copilot CLI (Agent Plugins 1.0 — same `skills/`, no `.claude-plugin/` prefix) |
+
+Both pairs' `version` fields track `[project] version` in `pyproject.toml`, checked by
+`workstation/scripts/tests/test_plugin_manifest.py`.
+
+```sh
+# Claude Code
+claude plugin marketplace add ./workstation/agent
+claude plugin install workbench-skills@agentic-workbench
+
+# Copilot CLI
+copilot plugin marketplace add ./workstation/agent
+copilot plugin install workbench-skills@agentic-workbench
+```
+
+Hooks, MCP servers and `settings.json` are deliberately **not** part of this plugin — they stay on
+the hand-merge/link route above, since folding them in would touch the provider-bound `env` block
+area this file already treats as sensitive.
+
 ## Deliberately not tracked
 
 - `.env` in this directory — holds `ANTHROPIC_API_KEY`. Excluded by the repo's

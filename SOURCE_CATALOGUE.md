@@ -178,6 +178,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [Best practices for Claude Code](https://code.claude.com/docs/en/best-practices) — Anthropic's guide to working effectively with Claude Code: instruction files, workflows, tooling and context discipline.
 * [Extend Claude with skills](https://code.claude.com/docs/en/skills) — How Claude Code discovers and loads skills, and where `SKILL.md` folders live.
 * [Claude Code plugins overview](https://code.claude.com/docs/en/plugins) — Packaging skills, agents, hooks and MCP servers as installable plugins, distributed through marketplaces.
+* [About GitHub Copilot plugins](https://docs.github.com/en/copilot/concepts/agents/about-plugins) — Copilot's own plugin manifest, marketplace and install-source formats.
 
 #### Background and legacy material
 

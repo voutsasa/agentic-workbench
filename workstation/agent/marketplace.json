@@ -1,0 +1,11 @@
+{
+  "name": "agentic-workbench",
+  "plugins": [
+    {
+      "name": "workbench-skills",
+      "source": "./",
+      "description": "The agentic-workbench's global, register-free skills: review, python-quality, verify-docs, fix-findings, pdf-deliverable, fetch-to-markdown, confluence-publish, confluence-export, setup-mcp-servers.",
+      "version": "0.1.0"
+    }
+  ]
+}
