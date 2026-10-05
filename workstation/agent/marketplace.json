@@ -1,5 +1,8 @@
 {
   "name": "agentic-workbench",
+  "owner": {
+    "name": "Agentic Workbench"
+  },
   "plugins": [
     {
       "name": "workbench-skills",

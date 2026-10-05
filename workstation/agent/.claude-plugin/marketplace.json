@@ -1,6 +1,9 @@
 {
   "name": "agentic-workbench",
   "description": "Local marketplace for this workbench's global, register-free skills.",
+  "owner": {
+    "name": "Agentic Workbench"
+  },
   "plugins": [
     {
       "name": "workbench-skills",
