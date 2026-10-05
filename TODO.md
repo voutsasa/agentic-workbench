@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-09-30
+updated: 2026-10-05
 verified: never
 ---
 
@@ -16,6 +16,19 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 46. The first release has not been tagged
+
+Opened 2026-10-05, with `cliff.toml` and `VERSIONING.md`: this repository adopted SemVer 2.0.0,
+Conventional Commits and a git-cliff changelog, following `Work/Development/EMA/ea-data-model`'s
+approach. `pyproject.toml` already carries `version = "0.1.0"`, but git-cliff is not installed on
+this machine (`scoop install git-cliff`, per `VERSIONING.md`), so no changelog has been generated,
+no bump rule has been spot-checked against this repository's own `cliff.toml`, and no `v0.1.0` tag
+exists.
+
+**Closes when:** `git-cliff --version` succeeds here, `git-cliff --bumped-version` gives the
+expected answer after a throwaway `feat:`/`fix:` commit, `CHANGELOG.md` is generated, and `v0.1.0`
+is tagged (annotated) and pushed.
 
 ### 45. Eight Fabric-family MCP entries are registered but not ingested
 

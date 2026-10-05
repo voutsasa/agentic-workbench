@@ -1,0 +1,51 @@
+# git-cliff configuration: CHANGELOG.md from Conventional Commits.
+# Versioning policy: VERSIONING.md.
+
+[changelog]
+header = """
+# Changelog
+
+All notable changes to this project are documented here. Versions follow
+[Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
+"""
+body = """
+{% if version %}\
+## [{{ version | trim_start_matches(pat="v") }}] - {{ timestamp | date(format="%Y-%m-%d") }}
+{% else %}\
+## [Unreleased]
+{% endif %}\
+{% for group, commits in commits | group_by(attribute="group") %}
+### {{ group | striptags | trim | upper_first }}
+{% for commit in commits %}
+- {% if commit.scope %}**{{ commit.scope }}:** {% endif %}\
+{% if commit.breaking %}**BREAKING** {% endif %}\
+{{ commit.message | split(pat="\n") | first | upper_first | trim }} ({{ commit.id | truncate(length=7, end="") }})\
+{% endfor %}
+{% endfor %}
+"""
+trim = false
+
+[git]
+conventional_commits = true
+# Commits before this convention was adopted land under "Other" rather than
+# being dropped or forced to fit a type they never declared.
+filter_unconventional = false
+commit_parsers = [
+  { message = "^chore\\(release\\)", skip = true },
+  { message = "^feat", group = "<!-- 0 -->Added" },
+  { message = "^fix", group = "<!-- 1 -->Fixed" },
+  { message = "^perf", group = "<!-- 2 -->Performance" },
+  { message = "^refactor", group = "<!-- 3 -->Changed" },
+  { message = "^docs", group = "<!-- 4 -->Documentation" },
+  { message = "^test", group = "<!-- 5 -->Tests" },
+  { message = "^(build|ci|chore)", group = "<!-- 6 -->Maintenance" },
+  { message = ".*", group = "<!-- 9 -->Other" },
+]
+filter_commits = false
+tag_pattern = "v[0-9].*"
+sort_commits = "oldest"
+
+[bump]
+# While on 0.x a breaking change bumps MINOR, not MAJOR (SemVer 2.0.0 §4).
+features_always_bump_minor = true
+breaking_always_bump_major = false

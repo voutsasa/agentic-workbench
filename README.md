@@ -108,6 +108,8 @@ scripts/                  	headless verify-docs runner.
 azure-pipelines/          	the same audit for Azure DevOps — written, not yet run.   
 
 pyproject.toml            	Python project metadata.   
+cliff.toml                	git-cliff config generating CHANGELOG.md from commits.   
+VERSIONING.md             	the versioning policy and release steps.   
 ```
 
 The top-level split is **`docs/` is what the workbench reads, `workstation/` is what it runs on, `skills/` is what it does.**
@@ -176,6 +178,25 @@ Because these are links into a git repo, check `git status` here before overwrit
 | `.github/workflows/verify-docs.yml` | Weekly documentation audit on GitHub Actions, opening a pull request with the reports. **Dormant:** the repo is hosted on Azure DevOps, where it does not run — its port is the next row. |
 | `azure-pipelines/verify-docs.yml` | The same weekly audit for Azure DevOps, opening a pull request with `az repos pr create`. Its header lists the one-time setup in ADO. **Written, not yet run** — [`TODO.md`](TODO.md) #9. |
 | `scripts/verify-docs.sh` | Headless `verify-docs` run through `claude -p`, writing a report and editing no documentation. Called by the dormant workflow above; runnable by hand with `ANTHROPIC_API_KEY` set. |
+| [`cliff.toml`](cliff.toml) | git-cliff configuration: how commits are grouped into `CHANGELOG.md` and how the next version is suggested. Tune this file, not the generated changelog. |
+| [`VERSIONING.md`](VERSIONING.md) | The versioning policy — SemVer 2.0.0, Conventional Commits, the public API table — and the steps to cut a release. |
+
+## Versioning
+
+This repository follows [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html). One
+version for the whole repository — workstation scripts, skills and the agent harness together —
+`[project] version` in [`pyproject.toml`](pyproject.toml) is the source of truth, released as an
+annotated tag `vX.Y.Z`. `CHANGELOG.md` is **generated** by [git-cliff](https://git-cliff.org) from
+[`cliff.toml`](cliff.toml); it is never edited by hand.
+
+Commits follow [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/):
+`type(scope)!: summary`, e.g. `feat(skills): add the python-quality skill`. While the repository is
+at `0.x`, a `feat` or a breaking change (`!`) bumps MINOR and anything else bumps PATCH; a breaking
+change is still marked **BREAKING** in the changelog.
+
+The full policy — the public API table defining what counts as breaking, the road to `1.0.0`, and
+the exact release steps — is in [`VERSIONING.md`](VERSIONING.md). No release has been tagged yet;
+`git-cliff` is not installed on every machine — see [`TODO.md`](TODO.md).
 
 ## What is tracked in git
 
