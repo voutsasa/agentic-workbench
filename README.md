@@ -11,7 +11,7 @@ Enables engineers to set up their workstation and work in an agent-enabled envir
 
 A fresh clone loads nothing on its own: the venv, the pre-push hook, the repo skills and Claude Code's `CLAUDE.md` are all per-clone and gitignored. Run these from the repo root before the first session. Use `python3` on macOS and `python` on Windows; the scripts are stdlib-only, so they run before a venv exists.
 
-**1. Create the venv and install the development tools.** `uv sync` creates `.venv` on the Python pinned by `.python-version` (fetching it if missing) and installs the `dev` group — `pytest`, `ruff`, `pyright` — from `uv.lock`. The pre-push hook runs ruff, Pyright through the venv interpreter, and the test suites on this venv.
+**1. Create the venv and install the development tools.** `uv sync` creates `.venv` on the Python pinned by `.python-version` (fetching it if missing) and installs the `dev` group — `pytest`, `ruff`, `pyright`, `git-cliff` — from `uv.lock`. The pre-push hook runs ruff, Pyright through the venv interpreter, and the test suites on this venv.
 
 ```sh
 uv sync
@@ -195,8 +195,9 @@ at `0.x`, a `feat` or a breaking change (`!`) bumps MINOR and anything else bump
 change is still marked **BREAKING** in the changelog.
 
 The full policy — the public API table defining what counts as breaking, the road to `1.0.0`, and
-the exact release steps — is in [`VERSIONING.md`](VERSIONING.md). No release has been tagged yet;
-`git-cliff` is not installed on every machine — see [`TODO.md`](TODO.md).
+the exact release steps — is in [`VERSIONING.md`](VERSIONING.md). `git-cliff` is a `dev`-group
+dependency, installed by `uv sync` like the rest of the toolchain; no release has been tagged yet —
+see [`TODO.md`](TODO.md).
 
 ## What is tracked in git
 

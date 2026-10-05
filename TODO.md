@@ -21,14 +21,14 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 Opened 2026-10-05, with `cliff.toml` and `VERSIONING.md`: this repository adopted SemVer 2.0.0,
 Conventional Commits and a git-cliff changelog, following `Work/Development/EMA/ea-data-model`'s
-approach. `pyproject.toml` already carries `version = "0.1.0"`, but git-cliff is not installed on
-this machine (`scoop install git-cliff`, per `VERSIONING.md`), so no changelog has been generated,
-no bump rule has been spot-checked against this repository's own `cliff.toml`, and no `v0.1.0` tag
-exists.
+approach. `pyproject.toml` already carries `version = "0.1.0"`. git-cliff is now a `dev`-group
+dependency (`uv add --dev git-cliff`, verified running at 2.14.2 via `uv run git-cliff --version`),
+so every clone gets it from `uv sync` with no separate machine install. Still unproven: the bump
+rule has not been spot-checked against this repository's own `cliff.toml` with a throwaway
+`feat:`/`fix:` commit, no `CHANGELOG.md` has been generated, and no `v0.1.0` tag exists.
 
-**Closes when:** `git-cliff --version` succeeds here, `git-cliff --bumped-version` gives the
-expected answer after a throwaway `feat:`/`fix:` commit, `CHANGELOG.md` is generated, and `v0.1.0`
-is tagged (annotated) and pushed.
+**Closes when:** `uv run git-cliff --bumped-version` gives the expected answer after a throwaway
+`feat:`/`fix:` commit, `CHANGELOG.md` is generated, and `v0.1.0` is tagged (annotated) and pushed.
 
 ### 45. Eight Fabric-family MCP entries are registered but not ingested
 

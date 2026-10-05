@@ -95,6 +95,7 @@ is set for this yet.
 | Commit messages | [Conventional Commits 1.0.0](https://www.conventionalcommits.org/en/v1.0.0/): `type(scope)!: summary` |
 | Changelog | `CHANGELOG.md`, **generated** by [git-cliff](https://git-cliff.org) from [`cliff.toml`](cliff.toml); never edited by hand |
 | Next version | worked out by git-cliff from the commit types since the last tag (`--bumped-version`), then confirmed by a person |
+| git-cliff itself | a `dev`-group dependency in `pyproject.toml`, installed by `uv sync` like `pytest`/`ruff`/`pyright` — PyPI ships prebuilt wheels for it, so no separate machine install is needed here |
 | What a "breaking change" means | defined per surface in the public API table below |
 | Enforcement | none yet. Conventional Commits are followed by convention — reviewers and the assistant check them — not enforced by a hook. Add one later if drift shows up |
 
@@ -116,14 +117,26 @@ about either by hand.
 
 ### 1. Install git-cliff
 
-Once per machine. It is a standalone binary, not a project dependency:
+PyPI carries prebuilt wheels for it (`git-cliff` on [pypi.org](https://pypi.org/project/git-cliff/)),
+so in a `uv`-managed Python repo it is just another `dev`-group dependency — the route this
+repository uses:
+
+```sh
+uv add --dev git-cliff
+```
+
+`uv sync` then installs it into `.venv` alongside `pytest`/`ruff`/`pyright`; run it with
+`uv run git-cliff ...` or the venv's own binary (`.venv\Scripts\git-cliff.exe` on Windows,
+`.venv/bin/git-cliff` on macOS).
+
+In a repository with no Python toolchain, it is a standalone binary instead:
 
 | OS | Command |
 |---|---|
 | macOS | `brew install git-cliff` |
 | Windows | `scoop install git-cliff` |
 
-Check: `git-cliff --version`.
+Check: `git-cliff --version` (or `uv run git-cliff --version`).
 
 ### 2. Choose the single source of truth
 
@@ -217,8 +230,8 @@ In words:
 - **1.0.0 is never suggested:** set it by hand when the public API is declared stable.
 
 These rules are `ea-data-model`'s own, carried over with its `cliff.toml`; they have not yet been
-re-run against a throwaway repo with *this* repository's `cliff.toml`; that is `TODO.md`'s open item
-for cutting the first release — do that spot-check once git-cliff is installed here.
+re-run against a throwaway repo with *this* repository's `cliff.toml` — that spot-check is `TODO.md`'s
+open item for cutting the first release.
 
 The suggestion is only as good as the commit messages. If a change broke a surface in the public API
 table but was not committed with `!`, set the version by hand.
@@ -226,8 +239,8 @@ table but was not committed with `!`, set the version by hand.
 ## Day to day
 
 ```sh
-git-cliff --unreleased        # the changelog of what is not yet released
-git-cliff --bumped-version    # the version the next release would get
+uv run git-cliff --unreleased        # the changelog of what is not yet released
+uv run git-cliff --bumped-version    # the version the next release would get
 ```
 
 Neither writes anything. Run them before a release, or to check that commits are being classified
@@ -249,9 +262,9 @@ and [`.pre-push-tests`](.pre-push-tests).
 # plus every suite named in .pre-push-tests, via
 #   .venv\Scripts\python.exe -m unittest discover -s <dir> -t <dir>
 
-NEXT=$(git-cliff --bumped-version)          # e.g. v0.2.0; override by hand if needed
+NEXT=$(uv run git-cliff --bumped-version)   # e.g. v0.2.0; override by hand if needed
 uv version "${NEXT#v}"                      # source of truth, and uv.lock
-git-cliff --tag "$NEXT" -o CHANGELOG.md     # regenerates the whole changelog
+uv run git-cliff --tag "$NEXT" -o CHANGELOG.md   # regenerates the whole changelog
 git commit -am "chore(release): $NEXT"
 git tag -a "$NEXT" -m "$NEXT"               # annotated, on the release commit
 git push --follow-tags origin main
@@ -273,7 +286,7 @@ For a release candidate, set the version by hand: `--bumped-version` does not pr
 ```sh
 NEXT=v0.2.0-rc.1
 uv version 0.2.0-rc.1        # stored in PEP 440 form: 0.2.0rc1
-git-cliff --tag "$NEXT" -o CHANGELOG.md
+uv run git-cliff --tag "$NEXT" -o CHANGELOG.md
 ```
 
 The tag keeps the SemVer form (`v0.2.0-rc.1`); Python packaging stores the normalised form

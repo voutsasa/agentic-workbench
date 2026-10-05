@@ -9,6 +9,7 @@ dependencies = []
 
 [dependency-groups]
 dev = [
+    "git-cliff>=2.14.2",
     "pyright>=1.1.414",
     "pytest>=9.1.1",
     "ruff",
