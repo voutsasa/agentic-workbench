@@ -26,15 +26,6 @@ the CLI mocked; no non-Claude, non-Copilot assistant (e.g. Kiro) is installed on
 Closed by a run on a machine that has one, quoting the id, e.g.
 `python workstation/agent/skills/session-signature/scripts/signature.py --model <id> --harness kiro --harness-command <kiro-cli>`.
 
-### 49. `session-signature` is not linked into the global skills directories
-
-Opened 2026-10-06. The skill is in `link_config.py`'s `SKILLS` tuple, but on `EMA-PF5N4XE7` the dry
-run reads `missing` for `skills/session-signature` and `copilot/skills/session-signature` — 21 of 23
-linked. Closed when the user runs
-`python workstation\scripts\link_config.py --agent claude --agent copilot --apply`, the dry run then
-reads 23 of 23, and the link table in `workstation/machines/windows-ema-pf5n4xe7.md` is refreshed
-from that run (and likewise on macOS).
-
 ### 48. Frontmatter on `AGENTS.md` and `AGENT-INSTRUCTIONS.md` is unverified live
 
 Opened 2026-10-05. Both files gained an `author`/`version` frontmatter block for the first time, so

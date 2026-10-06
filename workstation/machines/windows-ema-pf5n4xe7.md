@@ -271,20 +271,20 @@ config, not repo config — a fresh clone here needs it again.
 
 ## Claude Code config — installed
 
-**21 of 21 linked**, re-checked 29 September 2026 by
-`python workstation\scripts\link_config.py --agent claude --agent copilot`, exit 0 — up from 15 of 15
-as the `SKILLS` tuple grew.
+**23 of 23 linked**, re-checked 6 October 2026 by
+`python workstation\scripts\link_config.py --agent claude --agent copilot`, exit 0 — up from 21 of 21
+as the `SKILLS` tuple grew to add `session-signature`.
 
 | Artefact | Kind | Status |
 |---|---|---|
-| `skills/review`, `skills/python-quality`, `skills/verify-docs`, `skills/fix-findings`, `skills/pdf-deliverable`, `skills/fetch-to-markdown`, `skills/confluence-publish`, `skills/confluence-export`, `skills/setup-mcp-servers` | dir | linked |
-| `copilot/skills/review`, `copilot/skills/python-quality`, `copilot/skills/verify-docs`, `copilot/skills/fix-findings`, `copilot/skills/pdf-deliverable`, `copilot/skills/fetch-to-markdown`, `copilot/skills/confluence-publish`, `copilot/skills/confluence-export`, `copilot/skills/setup-mcp-servers` | dir | linked |
+| `skills/review`, `skills/python-quality`, `skills/verify-docs`, `skills/fix-findings`, `skills/pdf-deliverable`, `skills/fetch-to-markdown`, `skills/confluence-publish`, `skills/confluence-export`, `skills/setup-mcp-servers`, `skills/session-signature` | dir | linked |
+| `copilot/skills/review`, `copilot/skills/python-quality`, `copilot/skills/verify-docs`, `copilot/skills/fix-findings`, `copilot/skills/pdf-deliverable`, `copilot/skills/fetch-to-markdown`, `copilot/skills/confluence-publish`, `copilot/skills/confluence-export`, `copilot/skills/setup-mcp-servers`, `copilot/skills/session-signature` | dir | linked |
 | `CLAUDE.md` | file | linked |
 | `copilot/copilot-instructions.md` | file | linked |
 | `machine.md` | file | linked |
 | `settings.json` | — | excluded by design; merged by hand — see below |
 
-**21 of 21 linked.** `settings.json` is excluded by design — it is merged by hand.
+**23 of 23 linked.** `settings.json` is excluded by design — it is merged by hand.
 
 Re-check with the same command. Do not edit this table by hand. `Kind` says what the source is, not how
 it is linked — `dir` if the source is a directory, else `file` (`link_config.py`, the `kind =` line in
