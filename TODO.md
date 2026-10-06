@@ -26,20 +26,6 @@ the CLI mocked; no non-Claude, non-Copilot assistant (e.g. Kiro) is installed on
 Closed by a run on a machine that has one, quoting the id, e.g.
 `python workstation/agent/skills/session-signature/scripts/signature.py --model <id> --harness kiro --harness-command <kiro-cli>`.
 
-### 46. The bump rule has not been spot-checked against this repo's own cliff.toml
-
-Opened 2026-10-05, with `cliff.toml` and `VERSIONING.md`; narrowed 2026-10-05 once `v0.1.0` shipped.
-`CHANGELOG.md` is generated and `v0.1.0` is tagged (annotated) and pushed — `6cc7a39..e6d33e7`,
-`[new tag] v0.1.0`. One real bug found and fixed along the way: `git-cliff --bumped-version` errors
-with no prior tag (`WARN ... using 0.1.0 as the next version` then `ERROR: Next version (0.1.0) does
-not match the tag pattern: v[0-9].*`, since it suggests the bare number but validates it against the
-`v`-prefixed pattern) — the first release was tagged directly instead, bypassing `--bumped-version`.
-Still unproven: whether `--bumped-version` behaves correctly for the *next* release, where a prior
-`v*` tag exists and the bug's precondition no longer holds.
-
-**Closes when:** a throwaway `feat:`/`fix:` commit after `v0.1.0` makes
-`uv run git-cliff --bumped-version` suggest the expected `v0.1.1`/`v0.2.0`.
-
 ### 45. Eight Fabric-family MCP entries are registered but not ingested
 
 Opened 2026-09-30. `SOURCES.md` → *MCP servers* gained ten entries; the pilot ingested two
@@ -105,6 +91,9 @@ Also 2026-09-29, in a later Windows Claude Code session: `drawio-mcp` connected 
 offered, while `ado-remote-mcp` failed to connect with "Incompatible auth server: does not support
 dynamic client registration" — the same failure item 28 already tracks. No Draw.io tool was actually
 invoked in that session, so the connection is observed but unproven.
+
+2026-10-06: back to `CONNECT_TIMEOUT` ("MCP server drawio-mcp connection timed out after 30000ms"),
+re-checked twice in one session. Intermittent, not fixed — still no tool ever invoked.
 
 **Closes when:** Claude successfully invokes one Draw.io tool from the Windows setup — a reported
 connection alone does not close this.
