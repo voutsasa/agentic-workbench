@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-10-05
+updated: 2026-10-06
 verified: never
 author: Achilleas Voutsas
 version: 0.1.0
@@ -18,6 +18,19 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 51. The cross-platform gate fixes have not run on Windows
+
+Opened 2026-10-06. Three gate failures that passed on Windows and failed on macOS were fixed and the
+full gate passes on macos-workstation: `test_link_config`'s persist tests now glob the host's
+platform token, `test_pre_push` copies the hook with `shutil.copy` so it keeps its mode, and
+`discover.py` is `100755`. The new `test_script_modes.py` reads git's index mode so a shebang script
+committed as `100644` fails on every platform, not only where ruff's `EXE001` fires. None of this has
+run on Windows.
+
+**Closes when:** on windows-ema-pf5n4xe7 every directory in `.pre-push-tests` passes under
+`.venv\Scripts\python.exe -m unittest discover -s <dir> -t <dir>`, and `ruff check .` and
+`.venv\Scripts\python.exe -m pyright` report clean.
 
 ### 50. `session-signature` has not probed a harness other than Claude CLI and Copilot live
 
@@ -63,6 +76,10 @@ row in `workstation/mcp/README.md`: remote `fabric-mcp-overview`, `fabric-ontolo
 `fabric-warehouse-mcp`, `fabric-data-agent-mcp`, `powerbi-remote-mcp`; local `fabric-onelake-mcp`,
 `sql-mcp-server`, `cosmos-db-shell-mcp`. Each local `setup.md` must carry its install route as well as
 the Claude and Copilot registration. Held for the user's review of the pilot.
+
+2026-10-06: all eight `reference.md` files ingested on macos-workstation via Microsoft Learn's
+`Accept: text/markdown` route (markup-noise 0, no relative links); `repo_check.py --corpus` no longer
+lists them. The `setup.md` files and README rows are still missing.
 
 **Closes when:** `repo_check.py --corpus` lists all eight as ingested and each has a `setup.md` and a
 README row.
@@ -208,8 +225,10 @@ Opened 2026-09-21 at **0 of 76**, with `docs/landing-zone/` absent. On 2026-09-2
 `ado-remote-mcp` was ingested through the server-rendered route (`div.content`, the page's second
 one; markup-noise 0, no relative links). The register has grown since — per-machine and register
 counts are not tracked here, because both drift independently and this file is not the ledger for
-either. The known-outstanding gap is `confluence-sync-md`, blocked on the Azure DevOps sign-in in
-item 28.
+either. The known-outstanding gaps are `confluence-sync-md`, blocked on the Azure DevOps sign-in in
+item 28 (an unauthenticated `curl` of its README returns `302`), and DPACT on macos-workstation, which
+SSRN serves only to a browser — closed by the user saving its PDF to
+`docs/landing-zone/DPACT - A Framework for Identity, Accountability, and Task-Scoped Authority in Autonomous AI Agent Systems.pdf`.
 
 **Closes when:** every entry is ingested on each machine — `repo_check.py --corpus` reports N of N.
 

@@ -196,7 +196,8 @@ class HookRepoCase(unittest.TestCase):
         scripts = base / "skills" / "review" / "scripts"
         scripts.mkdir(parents=True)
         self.hook = scripts / "pre-push"
-        shutil.copyfile(HOOK, self.hook)
+        # copy, not copyfile: the hook is exec'd, so it needs its mode bits.
+        shutil.copy(HOOK, self.hook)
         # A stub that passes, so the hook reaches the unit-test step. There is
         # no verifier, so the hook exits straight after that step.
         self.checker = scripts / "repo_check.py"

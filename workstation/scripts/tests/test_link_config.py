@@ -528,7 +528,8 @@ class TestMain(TempTree):
                     "--csv",
                 ]
             )
-        written = next(self.repo.glob("link-config-windows-*-*.csv"))
+        token = lc.platform_token(sys.platform)
+        written = next(self.repo.glob(f"link-config-{token}-*-*.csv"))
         self.assertEqual(exit_code, 1)
         self.assertTrue(written.is_file())
         self.assertTrue(
@@ -549,7 +550,8 @@ class TestMain(TempTree):
                     "--persist",
                 ]
             )
-        written = next(self.repo.glob("link-config-windows-*-*.md"))
+        token = lc.platform_token(sys.platform)
+        written = next(self.repo.glob(f"link-config-{token}-*-*.md"))
         self.assertEqual(exit_code, 1)
         self.assertTrue(
             written.read_text(encoding="utf-8").startswith(
