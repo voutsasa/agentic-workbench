@@ -198,6 +198,19 @@ class FallbackFields(unittest.TestCase):
         line = next(x for x in block(html).splitlines() if x.startswith("title:"))
         self.assertEqual(line, 'title: "The \\"best\\" C:\\\\path tool"')
 
+    def test_an_svg_icon_title_does_not_run_on_after_the_real_title(self):
+        """A nav icon's <title> (GitHub's social links) is not <head><title>."""
+        html = (
+            "<html><head><title>Trace GitHub Copilot with Langfuse - Langfuse</title>"
+            "</head><body>"
+            "<svg><title>GitHub</title></svg><svg><title>Discord</title></svg>"
+            "</body></html>"
+        )
+        self.assertEqual(
+            fields(block(html))["title"],
+            "Trace GitHub Copilot with Langfuse - Langfuse",
+        )
+
     def test_a_multiline_description_becomes_one_line(self):
         html = PAGE.replace(
             '"Next generation testing framework powered by Vite"',

@@ -20,8 +20,12 @@ not have.
 Usage: python clean_publisher_md.py <served.md> <dest.md> <page-url>
 
 `<page-url>` is the page's own URL, which every relative link target resolves
-against — `/x`, `./x`, `../x` and a bare `x/y` alike. Frontmatter is not this script's job —
-run `add_frontmatter.py` over the result, as the other routes do.
+against — `/x`, `./x`, `../x` and a bare `x/y` alike. A publisher's own leading
+YAML frontmatter (Mintlify's `title`/`description`/`logo` block) is metadata
+about the page, not body content, so it is dropped here too — left in place,
+`add_frontmatter.py` mistakes it for the corpus's own block and leaves it
+untouched instead of writing `source`/`domain`/`word_count`. Run
+`add_frontmatter.py` over the result, as the other routes do.
 
 Standard library only: this runs on a fresh clone before any venv exists.
 """
@@ -62,6 +66,18 @@ KBD = re.compile(r"<kbd>(.*?)</kbd>")
 RELATIVE_LINK = re.compile(r"\]\((?![a-zA-Z][a-zA-Z0-9+.-]*:|#)([^)\s]+)\)")
 FENCE = re.compile(r"^\s*(```|~~~)")
 BLANK_RUN = re.compile(r"\n{3,}")
+FRONTMATTER = re.compile(r"\A---\n.*?\n---\n", re.DOTALL)
+
+
+def strip_frontmatter(text: str) -> str:
+    """Drop the publisher's own leading YAML frontmatter block, if there is one.
+
+    Only a block that opens the file counts — a `---` further down is either a
+    thematic break or inside a fence, and `strip_preamble`/`convert` handle
+    those. Mintlify and GitHub Docs both open served markdown this way.
+    """
+    match = FRONTMATTER.match(text)
+    return text[match.end() :] if match else text
 
 
 def strip_preamble(text: str) -> str:
@@ -133,7 +149,7 @@ def convert(text: str, page_url: str) -> str:
     """Clean a whole document. Fenced code blocks pass through byte-identical."""
     out: list[str] = []
     in_code = False
-    for line in strip_preamble(text).splitlines():
+    for line in strip_preamble(strip_frontmatter(text)).splitlines():
         if FENCE.match(line):
             in_code = not in_code
             out.append(line)

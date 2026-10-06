@@ -60,6 +60,35 @@ class FencedCodeIsUntouched(unittest.TestCase):
         self.assertIn("<Note>kept</Note>", result)
 
 
+class Frontmatter(unittest.TestCase):
+    def test_mintlify_frontmatter_is_dropped(self):
+        source = (
+            "---\n"
+            'title: "Trace GitHub Copilot with Langfuse"\n'
+            "sidebarTitle: GitHub Copilot\n"
+            "---\n\n"
+            "# Trace GitHub Copilot with Langfuse\n\nBody.\n"
+        )
+        result = convert(source)
+        self.assertTrue(result.startswith("# Trace GitHub Copilot with Langfuse"))
+        self.assertNotIn("sidebarTitle", result)
+
+    def test_a_page_without_frontmatter_is_untouched(self):
+        source = "# Title\n\nBody.\n"
+        self.assertEqual(convert(source).strip(), source.strip())
+
+    def test_a_horizontal_rule_mid_document_is_not_mistaken_for_frontmatter(self):
+        source = "# Title\n\nAbove.\n\n---\n\nBelow.\n"
+        result = convert(source)
+        self.assertIn("Above.", result)
+        self.assertIn("---", result)
+        self.assertIn("Below.", result)
+
+    def test_frontmatter_then_blockquote_preamble_both_go(self):
+        source = "---\ntitle: X\n---\n\n> ## Documentation Index\n\n# Title\n\nBody.\n"
+        self.assertTrue(convert(source).startswith("# Title"))
+
+
 class Preamble(unittest.TestCase):
     def test_mintlify_index_blockquote_is_dropped(self):
         source = (

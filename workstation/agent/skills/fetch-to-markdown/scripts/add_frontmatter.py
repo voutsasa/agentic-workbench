@@ -67,7 +67,14 @@ META_FIELDS = {
 
 
 class PageMetadata(HTMLParser):
-    """`<title>`, `<html lang>` and the meta tags, pulled in one pass."""
+    """`<title>`, `<html lang>` and the meta tags, pulled in one pass.
+
+    Only the first `<title>` counts as the document's own. An inline SVG icon
+    carries its own `<title>` for accessibility — GitHub's page serves nav
+    icons titled "GitHub", "Discord", "X" and so on — and HTMLParser has no
+    notion of nesting to tell those apart from `<head><title>`, so without this
+    guard every icon's label runs on after the real title.
+    """
 
     def __init__(self) -> None:
         super().__init__(convert_charrefs=True)
@@ -75,13 +82,15 @@ class PageMetadata(HTMLParser):
         self.language = ""
         self.meta: dict[str, str] = {}
         self._in_title = False
+        self._title_done = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         values = {k.lower(): (v or "") for k, v in attrs}
         if tag == "html" and values.get("lang"):
             self.language = self.language or values["lang"].strip()
         elif tag == "title":
-            self._in_title = True
+            if not self._title_done:
+                self._in_title = True
         elif tag == "meta":
             key = (values.get("name") or values.get("property") or "").strip().lower()
             content = values.get("content", "").strip()
@@ -89,8 +98,9 @@ class PageMetadata(HTMLParser):
                 self.meta.setdefault(key, content)
 
     def handle_endtag(self, tag: str) -> None:
-        if tag == "title":
+        if tag == "title" and self._in_title:
             self._in_title = False
+            self._title_done = True
 
     def handle_data(self, data: str) -> None:
         if self._in_title:
