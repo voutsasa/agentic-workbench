@@ -19,6 +19,17 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 57. The `python`-to-`python3` fallback in `verify_claims.py` is unproven on Windows
+
+Opened 2026-10-06. `verify_cli_flag` and `verify_cli_invocation` now accept the running interpreter
+for a doc's `python`/`python3` when that name is not on `PATH`. On macOS a whole-repo run moved 36
+`python is not on PATH` claims to 0 with 0 refuted. Windows, where `python` resolves first, should be
+unchanged, but no run there has shown it.
+
+**Closes when:** on windows-ema-pf5n4xe7,
+`.venv\Scripts\python.exe workstation\agent\skills\verify-docs\scripts\verify_claims.py --repo .`
+reports 0 refuted and no `python3 is not on PATH` line that the previous version did not also report.
+
 ### 50. `session-signature` has not probed a harness other than Claude CLI and Copilot live
 
 Opened 2026-10-06. `--harness <label> --harness-command <cli>` is covered only by a unit test with

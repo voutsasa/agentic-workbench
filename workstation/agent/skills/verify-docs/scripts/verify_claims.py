@@ -433,6 +433,7 @@ class ManifestIndex:
 # — the argv prefix whose --help should list the flag.
 
 INTERPRETERS = {"python", "python3", "node", "ruby", "perl"}
+PYTHONS = {"python", "python3"}
 SCRIPT_SUFFIXES = (".py", ".js", ".mjs", ".rb", ".pl", ".sh")
 # Would fetch and install a package to answer a question. Never in a push gate.
 NEVER_RUN = {"npx", "pnpx", "bunx"}
@@ -926,7 +927,9 @@ class Verifier:
         if PLACEHOLDER_RE.search(argv[0]):
             return ("help_text", f"`{argv[0]}` is a placeholder", UNVERIFIABLE)
 
-        if not shutil.which(argv[0]):
+        # `_run` starts a Python script under the interpreter running this check,
+        # so a doc's `python x.py` is checkable where only `python3` exists (macOS).
+        if not shutil.which(sys.executable if argv[0] in PYTHONS else argv[0]):
             return ("help_text", f"{argv[0]} is not on PATH here", UNVERIFIABLE)
         hit = self.find_flag(argv, flag)
         if hit:
@@ -970,7 +973,10 @@ class Verifier:
         head = claim.claim.split()[0] if claim.claim.split() else ""
         if not head or PLACEHOLDER_RE.search(head):
             return ("binary_present", f"`{head}` is a placeholder", UNVERIFIABLE)
-        found = shutil.which(head)
+        # Any Python stands in for `python`/`python3`, as in `verify_cli_flag`.
+        found = shutil.which(head) or (
+            shutil.which(sys.executable) if head in PYTHONS else None
+        )
         if found:
             return ("binary_present", found, VERIFIED)
         return ("binary_present", f"{head} is not on PATH here", UNVERIFIABLE)

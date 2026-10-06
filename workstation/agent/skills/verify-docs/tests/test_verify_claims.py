@@ -402,6 +402,43 @@ class TestHelpSubject(unittest.TestCase):
             self.assertEqual(UNVERIFIABLE, verdict)
             self.assertIn("script this repo does not hold", evidence)
 
+    def test_a_python_script_is_checked_where_only_python3_is_on_path(self):
+        """macOS ships `python3` alone; a doc's `python x.py` still runs its script."""
+        script = (
+            "import argparse\n"
+            "argparse.ArgumentParser().add_argument('--out')\n"
+            "argparse.ArgumentParser(add_help=True).print_help()\n"
+            "print('  --out OUT')\n"
+        )
+        real_which = shutil.which
+        with (
+            TempRepo(
+                {"tool.py": script, "doc.md": "```sh\npython tool.py --out x\n```\n"}
+            ) as root,
+            mock.patch(
+                "verify_claims.shutil.which",
+                side_effect=lambda name: None if name == "python" else real_which(name),
+            ),
+        ):
+            _n, evidence, verdict = Verifier(root).verify_cli_flag(
+                claim("cli_flag", "python supports --out", line=2)
+            )
+            self.assertEqual(VERIFIED, verdict, evidence)
+
+    def test_a_python_invocation_is_present_where_only_python3_is_on_path(self):
+        real_which = shutil.which
+        with (
+            TempRepo({"doc.md": "x\n"}) as root,
+            mock.patch(
+                "verify_claims.shutil.which",
+                side_effect=lambda name: None if name == "python" else real_which(name),
+            ),
+        ):
+            result = Verifier(root).verify(
+                claim("cli_invocation", "python workstation/scripts/status.py")
+            )
+            self.assertEqual(VERIFIED, result.verdict, result.evidence)
+
     def test_npx_is_never_run_because_it_would_install(self):
         self.assertIsNone(
             help_subject(Path("/repo"), "doc.md", ["npx", "mmdc", "-i"], "-i")
