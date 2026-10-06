@@ -262,6 +262,18 @@ gate refused with `repo_check: ERROR — cannot read …/CLAUDE.md`, which is ho
 
 ## Known blockers
 
+### The Azure Databricks workspace is out of reach
+
+`adb-1279343764318407` — the workspace [`../mcp/databricks-mcp/setup.md`](../mcp/databricks-mcp/setup.md)
+registers — accepts traffic only through the VPN, which this machine does not use (stated by the user,
+2026-10-06; not measurable without credentials, since the workspace rejects an unsigned request with
+`401` before any network check). Its MCP servers cannot be validated from here. This machine's only
+Databricks CLI profile is a different, AWS-hosted workspace: `grep -E '^\[|^host' ~/.databrickscfg` →
+`[dbc-5223e681-f77d]`, `host = https://dbc-5223e681-f77d.cloud.databricks.com`. Claude Code's
+`databricks-dbsql`, `databricks-genie_one_mcp`, `databricks-sandbox` and `databricks-web_search`
+point at that host and failed to connect at session start on 2026-10-06 (`Error dialing …`), although
+the host itself answers (`curl` → `303`).
+
 ### Full Disk Access is unrecorded
 
 Carried over from the pre-2026-08-25 global `CLAUDE.md`, which instructed: *verify file access before

@@ -109,6 +109,9 @@ re-login, both profiles were `Valid YES` for the same user; `genie list-spaces` 
 `vector-search-endpoints list-endpoints` returned `[]`. Nothing to register until a Genie space is
 shared with this identity or an AI Search index exists.
 
+The run has to happen on the Windows machine: the Azure workspace is reachable only through the VPN,
+which macos-workstation does not use (`workstation/machines/macos-workstation.md` § *Known blockers*).
+
 **Closes when:** one Genie Agent and one AI Search server each answer a read-only tool call from
 Claude Code and from Copilot CLI, and the generator is corrected for whatever that run shows.
 
