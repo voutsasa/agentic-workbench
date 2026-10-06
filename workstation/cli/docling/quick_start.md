@@ -32,10 +32,11 @@ docling exposes `convert` and `convert-remote` subcommands. The project README s
 | `--enrich-code`, `--enrich-formula`, `--enrich-picture-*` | optional per-element enrichment passes, off by default |
 | `--device`, `--num-threads` | compute placement and parallelism |
 
-## Figures in a `.docx` need LibreOffice, or they vanish silently
+## Shapes in a `.docx` need LibreOffice, or their images vanish silently
 
-A `.docx` carrying DrawingML — diagrams, drawn shapes, most pasted figures — converts **at exit 0 with
-every figure dropped** unless `soffice` resolves on `PATH`. The only signal is one `WARNING` line in the
+A `.docx` carrying DrawingML shapes — diagrams, drawn shapes, grouped shapes — converts **at exit 0 with
+every shape's image dropped** unless `soffice` resolves on `PATH`; the text in them survives, and
+embedded pictures and chart data need no LibreOffice at all. The only signal is one `WARNING` line in the
 log, so **check the image count, not the exit code**:
 
 ```powershell

@@ -61,8 +61,11 @@ pipe tables, and every shape's text from `shapes-with-text.docx`. The figure cou
 read with any unzip tool — `Expand-Archive` to a temp folder, then search `word\document.xml` for
 `<pic:pic`, `<c:chart` and `<wps:wsp`.
 
-**Unknown on Windows:** whether docling's output is byte-identical to macOS's. On macOS it was
-identical with and without `soffice` on `PATH`; that comparison has not been made here.
+**With and without `soffice` on `PATH` differ here**, measured on docling 2.131.0, 2026-10-06:
+`chartex.docx` is byte-identical either way, but `shapes-with-text.docx` gains 1 rendered image only
+with LibreOffice's `program` directory on `PATH`, and prints the DrawingML `WARNING` without it. macOS
+showed no difference because docling falls back to `/Applications/LibreOffice.app` there. Byte
+identity with macOS's output has not been compared.
 
 ## D. The JS-hydrated route
 

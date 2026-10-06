@@ -19,18 +19,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 55. Whether a `.docx` loses its figures without LibreOffice is contradicted
-
-Opened 2026-10-06. `workstation/cli/docling/install.md` § *Embedded images need LibreOffice* (docling
-2.122.0) says a `.docx` carrying DrawingML converts with every image dropped unless `soffice` is on
-`PATH`, and its `quick_start.md` repeats it. `workstation/agent/skills/fetch-to-markdown/SKILL.md` § 2
-(docling 2.115.0, measured 2026-09-20) says three fixtures converted byte-identically with and without
-`soffice`, so LibreOffice plays no part. This machine runs docling 2.131.0.
-
-**Closes when:** `workstation/validation/fixtures/chartex.docx` and `shapes-with-text.docx` are
-converted on the current docling with and without `soffice` on `PATH`, the image counts are compared,
-and whichever text is wrong is corrected to the measured result.
-
 ### 52. The machine note has not been re-linked to `~/.agentic-workbench/` on macOS
 
 Opened 2026-10-06. `link_config.py` now links the machine note to `~/.agentic-workbench/machine.md` and

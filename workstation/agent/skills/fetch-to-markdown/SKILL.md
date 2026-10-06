@@ -204,16 +204,20 @@ A conversion that exits 0 is not evidence. Run these:
 for** — the same failure mode as the base64-icon and hash-link cases `extract_article.py` exists to
 strip.
 
-**The `.docx` figure rule, measured on docling 2.115.0, 2026-09-20.** Three source files, each
-converted twice — with `soffice` on `PATH` and with it removed — gave byte-identical output both
-times, so **on this version the LibreOffice round-trip plays no part in a `.docx` conversion** and
-there is no `WARNING` to watch for. What each kind of figure becomes:
+**The `.docx` figure rule, measured on docling 2.131.0 on Windows, 2026-10-06.** Both fixture
+documents below were converted with `soffice` on `PATH` and without it. **Only a
+shape needs LibreOffice**: pictures and charts came out byte-identical both ways, and a shape's text
+survives either way, but the shape itself becomes an image only when `soffice` resolves. Without it,
+docling prints one `WARNING … Found DrawingML elements in document, but no DOCX to PDF converters` and
+exits 0. An earlier macOS run (docling 2.115.0, 2026-09-20) found no difference at all. That is expected there:
+docling also falls back to a hard-coded `/Applications/LibreOffice.app` when `PATH` has no `soffice`,
+so removing it from `PATH` on macOS changes nothing. What each kind of figure becomes:
 
 | In the source | In the markdown |
 |---|---|
-| `<w:drawing>` holding `pic:pic` (an embedded picture) | a base64 image, read straight from `word/media/` — pixel-identical to the source (`magick compare -metric AE` → 0) |
-| A chart (`c:chart`, a `word/charts/chart*.xml` part) | **its data as a pipe table**, plus `<!-- 🖼️❌ Image not available … -->` where the picture would be. `--image-export-mode embedded` does not change this |
-| A shape (`wps:wsp`), including grouped shapes | **its text as paragraphs**; the shape itself is not rendered |
+| `<w:drawing>` holding `pic:pic` (an embedded picture) | a base64 image, read straight from `word/media/` — pixel-identical to the source (`magick compare -metric AE` → 0). No LibreOffice needed |
+| A chart (`c:chart`, a `word/charts/chart*.xml` part) | **its data as a pipe table**, plus `<!-- 🖼️❌ Image not available … -->` where the picture would be. `--image-export-mode embedded` does not change this, nor does LibreOffice |
+| A shape (`wps:wsp`), including grouped shapes | **its text as paragraphs** either way, plus **one rendered image** with `soffice` on `PATH`. Without it, no image — only the `WARNING` |
 
 So the figure count check compares base64 images against the source's *picture* count, not every
 `<w:drawing>`: `unzip -p <file>.docx word/document.xml | grep -o "<pic:pic" | wc -l`. Count the other
@@ -221,11 +225,12 @@ two kinds separately — `grep -o "<c:chart" | wc -l` against the tables and the
 and `grep -o "<wps:wsp" | wc -l` against the loose paragraphs. **`grep -c` is wrong here** and
 silently answers 1: `word/document.xml` is a single line, so it counts lines, not tags. Evidence: `chartex.docx` (Apache POI test data,
 8 drawings = 6 charts + 2 pictures) gave 2 images, 4 placeholders and the chart data as tables;
-`shapes-with-text.docx` (11 shapes) gave every shape's text and 1 image; a two-picture document gave
-2 of 2. Put
-LibreOffice's `program` directory on `PATH` for that one conversion — each figure is a separate
-headless round-trip, roughly 100× the conversion time — and do not set `DOCLING_LIBREOFFICE_CMD`,
-which docling names in the warning but never reads.
+`shapes-with-text.docx` (11 shapes, no pictures) gave every shape's text, plus 1 image only with
+`soffice` on `PATH`. The first of three runs with it gave a placeholder comment instead; the next two
+gave the image. A two-picture document gave 2 of 2. **When the source has shapes, put LibreOffice's
+`program` directory on `PATH` for that one conversion** — each figure is a separate headless
+round-trip, roughly 100× the conversion time — and do not set `DOCLING_LIBREOFFICE_CMD`, which docling
+names in the warning but never reads.
 
 **`<table` is the one with a different remedy.** pandoc's gfm writer cannot put block content — a
 list, two paragraphs, several `<br>`-separated links — inside a pipe-table cell, so it emits the whole

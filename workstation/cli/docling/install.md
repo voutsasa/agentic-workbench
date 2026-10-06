@@ -74,8 +74,12 @@ here.
 
 ## Embedded images need LibreOffice
 
-A `.docx` carrying DrawingML — diagrams, drawn shapes, most pasted figures — converts **at exit 0 with
-every image silently dropped** unless LibreOffice is reachable. The only signal is a warning in the log:
+A `.docx` carrying DrawingML shapes — diagrams, drawn shapes, grouped shapes — converts **at exit 0 with
+every shape's image silently dropped** unless LibreOffice is reachable; the shapes' text survives.
+Embedded pictures and chart data do not need it: on docling 2.131.0, 2026-10-06, `chartex.docx` (2
+pictures, 6 charts) converted byte-identically with and without `soffice` on `PATH`, while
+`shapes-with-text.docx` (11 shapes) gained its 1 image only with it. The only signal is a warning in the
+log:
 
 ```
 WARNING docling.backend.msword_backend: Found DrawingML elements in document, but no
