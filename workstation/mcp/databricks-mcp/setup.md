@@ -284,6 +284,10 @@ setup commands on Claude Code:
   left over from a bad paste. Remove the entry and register it again from the script's output.
 - **Everything fails after the CLI login expires.** `databricks auth profiles` then shows
   `Valid NO`. Run `databricks auth login -p "$DBX_PROFILE"` again.
+  Claude Code does not say the login is the cause: `claude mcp list` shows every
+  `databricks-<service>` as `✘ Failed to connect — Error dialing https://<workspace-host>…`, though
+  the host answers. Observed on macos-workstation on 2026-10-06 — all four servers failed with
+  `Valid NO`, and all four showed `✔ Connected` after `databricks auth login -p dbc-5223e681-f77d`.
 - **Keep the `?o=<workspace-id>` query string.** Every endpoint was verified with it, and the form
   without it hasn't been tested here.
 - **Never commit a token**, in `.mcp.json` or anywhere else. Neither route needs one written down.

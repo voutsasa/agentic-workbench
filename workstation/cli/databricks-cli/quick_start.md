@@ -1,7 +1,7 @@
 ---
 tool: databricks-cli
 command: databricks
-updated: 2026-09-27
+updated: 2026-10-06
 author: Achilleas Voutsas
 version: 0.1.0
 ---
@@ -16,10 +16,17 @@ out short-lived tokens** to the tools that call Databricks for you, which are th
 ## Log in, and check the login
 
 ```sh
-databricks auth login --host https://<workspace-host>     # browser OAuth; saves a profile
+databricks auth login --host https://<workspace-host>     # first time: browser OAuth; saves a profile
+databricks auth login -p <workspace name>                  # every time after: re-login to that profile
 databricks auth profiles                                   # Name | Host | Valid
 databricks auth describe -p <profile>                      # host, workspace_id, auth_type
 ```
+
+`<workspace name>` is the profile's name in the `Name` column of `databricks auth profiles` — the first
+login names it after the workspace host, e.g. `dbc-5223e681-f77d` for
+`https://dbc-5223e681-f77d.cloud.databricks.com`. **Re-login whenever that column says `Valid NO`**,
+then reconnect the MCP servers (`/mcp` in a running Claude Code session) and confirm with
+`claude mcp list`.
 
 `auth describe` is where the Databricks MCP setup, and `workstation/scripts/databricks_mcp.py`, get
 `DBX_HOST` and `DBX_WORKSPACE_ID`. To get them as plain values:
