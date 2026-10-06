@@ -82,8 +82,11 @@ Entra sign-in in the browser.
 For a personal, every-repo registration instead of the shared file:
 
 ```
-copilot mcp add --transport http ado-remote-mcp https://mcp.dev.azure.com/euemadev
+copilot mcp add --transport http --header "X-MCP-Readonly: true" ado-remote-mcp https://mcp.dev.azure.com/euemadev
 ```
+
+Keep the `X-MCP-Readonly` header in every route: it restricts the server to its read-only tools
+(`reference.md` § *Read-only tools*), and the shared catalog sets it.
 
 ### Claude Code
 
@@ -105,7 +108,7 @@ self-serve step**, and the admin-consent part may require a tenant administrator
 Then, replacing `{client-id}`:
 
 ```
-claude mcp add --transport http -s project ado-remote-mcp https://mcp.dev.azure.com/euemadev --client-id {client-id} --callback-port 3118
+claude mcp add --transport http -s project ado-remote-mcp https://mcp.dev.azure.com/euemadev --header "X-MCP-Readonly: true" --client-id {client-id} --callback-port 3118
 ```
 
 `-s project` writes the same tracked `.mcp.json` the catalog generates, with one extra
@@ -117,6 +120,9 @@ field Claude needs and Copilot doesn't:
     "ado-remote-mcp": {
       "type": "http",
       "url": "https://mcp.dev.azure.com/euemadev",
+      "headers": {
+        "X-MCP-Readonly": "true"
+      },
       "oauth": {
         "clientId": "{client-id}",
         "callbackPort": 3118
