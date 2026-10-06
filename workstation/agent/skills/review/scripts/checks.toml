@@ -171,11 +171,11 @@ fields = [
 [[checks.metadata_header.schemas]]
 name = "cli-quick-start"
 paths = ["workstation/cli/*/quick_start.md"]
-# Deliberately no version or status: those live in install.md, and duplicating
-# them across the pair manufactures the drift this check exists to prevent.
+# Deliberately no version, status or command: those live in install.md, whose
+# `command` is the one inventory.py reads, and duplicating them across the pair
+# manufactures the drift this check exists to prevent.
 fields = [
   { name = "tool", equals_directory = true },
-  { name = "command" },
   { name = "updated", format = "date" },
 ]
 

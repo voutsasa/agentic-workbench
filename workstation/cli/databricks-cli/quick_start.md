@@ -1,6 +1,5 @@
 ---
 tool: databricks-cli
-command: databricks
 updated: 2026-10-06
 author: Achilleas Voutsas
 version: 0.1.0

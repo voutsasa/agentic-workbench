@@ -1213,6 +1213,8 @@ class TestConfigAndExitCodes(unittest.TestCase):
         names = {f["name"] for f in qs["fields"]}
         self.assertNotIn("version_observed", names)
         self.assertNotIn("status", names)
+        # `command` is install.md's, the one inventory.py reads; a second copy drifted.
+        self.assertNotIn("command", names)
 
     def test_shipped_config_has_the_five_deterministic_checks(self):
         cfg = repo_check.load_config(repo_check.DEFAULT_CONFIG)

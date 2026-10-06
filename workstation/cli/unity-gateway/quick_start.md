@@ -1,6 +1,5 @@
 ---
 tool: unity-gateway
-command: ug
 updated: 2026-09-27
 author: Achilleas Voutsas
 version: 0.1.0

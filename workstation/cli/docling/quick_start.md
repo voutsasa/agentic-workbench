@@ -1,6 +1,5 @@
 ---
 tool: docling
-command: docling
 updated: 2026-08-26
 author: Achilleas Voutsas
 version: 0.1.0
