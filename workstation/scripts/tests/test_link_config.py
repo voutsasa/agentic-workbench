@@ -486,46 +486,6 @@ class TestMain(TempTree):
         self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
         self.assertFalse((self.home / ".claude" / "skills").exists())
 
-    def legacy_note(self) -> Path:
-        legacy = self.home / ".claude" / "machine.md"
-        legacy.write_text("state\n", encoding="utf-8")
-        return legacy
-
-    def test_a_legacy_machine_note_is_reported(self) -> None:
-        self.machine_file()
-        self.legacy_note()
-        buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            lc.main(["--repo", str(self.repo), "--home", str(self.home)])
-        self.assertIn("legacy", buf.getvalue())
-        self.assertIn(".claude", buf.getvalue())
-
-    def test_a_legacy_machine_note_is_listed_in_json(self) -> None:
-        self.machine_file()
-        legacy = self.legacy_note()
-        buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            lc.main(["--repo", str(self.repo), "--home", str(self.home), "--json"])
-        self.assertEqual(json.loads(buf.getvalue())["legacy"], [str(legacy)])
-
-    def test_no_legacy_note_means_an_empty_legacy_list(self) -> None:
-        self.machine_file()
-        buf = io.StringIO()
-        with contextlib.redirect_stdout(buf):
-            lc.main(["--repo", str(self.repo), "--home", str(self.home), "--json"])
-        self.assertEqual(json.loads(buf.getvalue())["legacy"], [])
-
-    def test_apply_never_deletes_the_legacy_note_and_it_does_not_fail_the_run(
-        self,
-    ) -> None:
-        self.machine_file()
-        legacy = self.legacy_note()
-        lc.main(["--repo", str(self.repo), "--home", str(self.home), "--apply"])
-        self.assertTrue(legacy.exists())
-        with contextlib.redirect_stdout(io.StringIO()):
-            code = lc.main(["--repo", str(self.repo), "--home", str(self.home)])
-        self.assertEqual(code, 0)
-
     def test_an_inherited_copilot_home_cannot_redirect_a_scratch_home(self) -> None:
         elsewhere = self.base / "elsewhere"
         with mock.patch.dict(os.environ, {"COPILOT_HOME": str(elsewhere)}):

@@ -50,24 +50,16 @@ class DiscoveryTest(unittest.TestCase):
             note.write_text("repo: x\n", encoding="utf-8")
             (home / ".claude").mkdir()
             (home / ".claude" / "machine.md").write_text("repo: y\n", encoding="utf-8")
-            self.assertEqual(discover.default_machine_note(home), (note, None))
+            self.assertEqual(discover.default_machine_note(home), note)
 
-    def test_legacy_note_is_used_with_a_warning(self) -> None:
+    def test_an_old_claude_note_is_never_read(self) -> None:
         with tempfile.TemporaryDirectory() as temp:
             home = Path(temp)
-            legacy = home / ".claude" / "machine.md"
-            legacy.parent.mkdir()
-            legacy.write_text("repo: y\n", encoding="utf-8")
-            path, warning = discover.default_machine_note(home)
-            self.assertEqual(path, legacy)
-            self.assertIn("link_config.py --apply", warning or "")
-
-    def test_no_note_anywhere_names_the_new_path(self) -> None:
-        with tempfile.TemporaryDirectory() as temp:
-            home = Path(temp)
+            (home / ".claude").mkdir()
+            (home / ".claude" / "machine.md").write_text("repo: y\n", encoding="utf-8")
             self.assertEqual(
                 discover.default_machine_note(home),
-                (home / ".agentic-workbench" / "machine.md", None),
+                home / ".agentic-workbench" / "machine.md",
             )
 
     def test_discovery_does_not_query_databricks_without_a_profile(self) -> None:

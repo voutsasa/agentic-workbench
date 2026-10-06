@@ -82,24 +82,20 @@ which version that is; this file does not repeat it.
 
 ## Claude Code config
 
-**15 of 15 linked**, reported 2026-09-22 by
-`python3 workstation/scripts/link_config.py --agent claude --agent copilot`, exit 0; every link is a
-symlink into this repo. `--project` reports the repo's own skills separately, **3 of 3 linked** — the
-two runs together are the `18 of 18` that `setup-agents` quotes below.
-
-**This count is dated and needs a re-run on this machine.** The `SKILLS` tuple has since grown —
-`windows-ema-pf5n4xe7.md` reported **21 of 21** on 2026-09-29 with three more skills
-(`confluence-publish`, `confluence-export`, `setup-mcp-servers`) — and the figure below has not been
-re-measured here since 2026-09-22.
+**23 of 23 linked**, reported 2026-10-06 by
+`python3 workstation/scripts/link_config.py --agent claude --agent copilot`, exit 0, after
+`--apply` added `setup-mcp-servers`, `session-signature` and `~/.agentic-workbench/machine.md`, and
+the old `~/.claude/machine.md` link was deleted by hand. Every link is a symlink into this repo.
+`--project` reports the repo's own skills separately; its `3 of 3 linked` dates from 2026-09-22.
 
 | Artefact | Kind | Status |
 |---|---|---|
-| `skills/review`, `skills/python-quality`, `skills/verify-docs`, `skills/fix-findings`, `skills/pdf-deliverable`, `skills/fetch-to-markdown` | dir | linked |
-| `copilot/skills/review`, `copilot/skills/python-quality`, `copilot/skills/verify-docs`, `copilot/skills/fix-findings`, `copilot/skills/pdf-deliverable`, `copilot/skills/fetch-to-markdown` | dir | linked |
-| `CLAUDE.md` | file | linked |
+| `skills/review`, `skills/python-quality`, `skills/verify-docs`, `skills/fix-findings`, `skills/pdf-deliverable`, `skills/fetch-to-markdown`, `skills/confluence-publish`, `skills/confluence-export`, `skills/setup-mcp-servers`, `skills/session-signature` | dir | linked |
+| `copilot/skills/review`, `copilot/skills/python-quality`, `copilot/skills/verify-docs`, `copilot/skills/fix-findings`, `copilot/skills/pdf-deliverable`, `copilot/skills/fetch-to-markdown`, `copilot/skills/confluence-publish`, `copilot/skills/confluence-export`, `copilot/skills/setup-mcp-servers`, `copilot/skills/session-signature` | dir | linked |
 | `copilot/copilot-instructions.md` | file | linked |
+| `CLAUDE.md` | file | linked |
 | `machine.md` | file | linked |
-| `project/skills/get-workstation-status`, `project/skills/ingest-source`, `project/skills/setup-agents` | dir | linked (`--project`) |
+| `project/skills/get-workstation-status`, `project/skills/ingest-source`, `project/skills/setup-agents` | dir | linked (`--project`, 2026-09-22) |
 
 Re-check with the same commands, which write nothing. Do not edit this table by hand.
 

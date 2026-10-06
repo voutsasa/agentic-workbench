@@ -153,9 +153,7 @@ lacks reads `missing` and is added; a matching one reads `linked`; one with a di
 
 Checks every link the agent config needs: each skill named in the script's `SKILLS` tuple,
 `CLAUDE.md`, and the machine note at `~/.agentic-workbench/machine.md`. Exits non-zero unless all of
-them are live, so it works as a check as well as a fixer. A machine note still at the old
-`~/.claude/machine.md` is reported as `legacy` (and listed under `legacy` in `--json`); it is never
-deleted and never changes the exit code. Adding a skill means adding it to `SKILLS` and
+them are live, so it works as a check as well as a fixer. Adding a skill means adding it to `SKILLS` and
 nothing else — the count is derived, never written down.
 
 **The machine note is resolved, not derived**, so a machine file need not be named after a hostname:

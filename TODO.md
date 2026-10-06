@@ -32,20 +32,6 @@ current docling. `workstation/agent/skills/fetch-to-markdown/SKILL.md` § 2 and
 on `PATH`, the image and placeholder counts are recorded in the macOS note's *Validation* table (section
 C), and the two documents above are corrected if the result differs.
 
-### 52. The machine note has not been re-linked to `~/.agentic-workbench/` on macOS
-
-Opened 2026-10-06. `link_config.py` now links the machine note to `~/.agentic-workbench/machine.md` and
-reports a remaining `~/.claude/machine.md` as `legacy`; `AGENT-INSTRUCTIONS.md` and `discover.py` fall
-back to the legacy path. Done on windows-ema-pf5n4xe7 on 2026-10-06: `link_config.py --agent claude
---agent copilot` → `23 of 23 linked`, no `legacy` line, and the live hook matches the repo copy. Not yet
-done on macos-workstation. Neither machine note's link table shows the new path yet — editing the
-Windows note in place severs its hardlink, so its table is replaced in the same session as a re-link.
-
-**Closes when:** on macos-workstation the same command reports every row `linked` with no `legacy`
-line, after re-linking and deleting `~/.claude/machine.md`; each machine note's link table is replaced
-with its output; and the legacy fallbacks in `AGENT-INSTRUCTIONS.md`, `discover.py` and
-`link_config.py` are then removed.
-
 ### 50. `session-signature` has not probed a harness other than Claude CLI and Copilot live
 
 Opened 2026-10-06. `--harness <label> --harness-command <cli>` is covered only by a unit test with
@@ -146,14 +132,6 @@ no Copilot session has been observed editing a `.py` file on Windows.
 
 **Closes when:** a Windows Copilot CLI edit to a `.py` file shows ruff running, or the registration
 gains a `powershell` entry that is observed running.
-
-### 35. The macOS link table is stale
-
-Opened 2026-09-29. `workstation/machines/macos-workstation.md` still shows the 15-row table, from
-before `SKILLS` grew and before the machine note moved to `~/.agentic-workbench/machine.md` (item 52).
-
-**Closes when:** `workstation/scripts/link_config.py --agent claude --agent copilot` is run on the macOS
-machine after item 52's re-link and its output replaces that table.
 
 ### 34. The symlinked pre-push hook path is untested
 

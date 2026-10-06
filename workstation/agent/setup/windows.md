@@ -66,8 +66,7 @@ link is a replace and not a merge.
 `~/.agentic-workbench/machine.md`. The `link_config.py --apply` command in *Link it* creates that
 hardlink alongside the skills and resolves the right file in
 [`../../machines/`](../../machines/), including an explicitly named `--machine` file or
-the sole Windows machine file. A `~/.claude/machine.md` left from before the move is reported as
-`legacy`; delete it by hand once `machine.md` reads `linked`.
+the sole Windows machine file.
 
 If it reports `no_source`, create the machine file first — see
 [`../../machines/README.md`](../../machines/README.md#adding-a-machine). Do not link the macOS file as

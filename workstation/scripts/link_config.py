@@ -7,8 +7,7 @@ Standard library only, so it runs on a fresh clone before anything is installed.
 ``~/.claude``. ``--agent copilot`` links the same skills and
 ``copilot-instructions.md`` into ``~/.copilot``. The machine note goes to
 ``~/.agentic-workbench/machine.md`` whichever agent is selected — the workbench's
-own home, named by no assistant — and a ``~/.claude/machine.md`` left from before
-the move is reported as legacy, never deleted. VS Code can also read the Claude
+own home, named by no assistant. VS Code can also read the Claude
 destination when ``chat.useClaudeMdFile`` is enabled.
 ``--project`` links this repo's own ``skills/<name>/`` into ``<repo>/.claude/skills``,
 where both agents load them at project scope; ``.claude/`` is gitignored, so every
@@ -113,10 +112,6 @@ CLAUDE_MD_IMPORT = "@AGENTS.md\n"
 #: Assistant-discovered files (instructions, skills, hooks) stay in each
 #: assistant's home, where it looks for them.
 WORKBENCH_HOME = ".agentic-workbench"
-
-#: Where the machine note lived before ``WORKBENCH_HOME``, relative to the home.
-#: Reported while present so the user can remove it; never touched here.
-LEGACY_MACHINE_NOTES = (Path(".claude") / "machine.md",)
 
 
 @dataclass(frozen=True)
@@ -564,12 +559,6 @@ def inspect(link: Link) -> LinkState:
     return LinkState(link, DIVERGED, "plain copy, content differs — reconcile first")
 
 
-def legacy_machine_notes(home: Path) -> list[Path]:
-    """Machine notes still at a pre-``WORKBENCH_HOME`` path, a dangling link included."""
-    paths = (home / rel for rel in LEGACY_MACHINE_NOTES)
-    return [p for p in paths if p.exists() or p.is_symlink()]
-
-
 def inspect_all(links: list[Link]) -> Report:
     return Report([inspect(link) for link in links])
 
@@ -801,9 +790,6 @@ def main(argv: list[str] | None = None) -> int:
     if args.mcp and args.apply:
         mcp_states = apply_mcp(args.repo, mcp_states)
     mcp_ok = all(s.status == LINKED for s in mcp_states)
-    # Informational only: a legacy note harms nothing while the new one is linked,
-    # and removing it is the user's step, so it never changes the exit code.
-    legacy = legacy_machine_notes(args.home) if agents else []
 
     format_ = "json" if args.json else "csv" if args.csv else "md"
     if args.json:
@@ -816,7 +802,6 @@ def main(argv: list[str] | None = None) -> int:
                 "mcp": args.mcp,
                 "ok": report.ok and mcp_ok,
                 "status": report.status,
-                "legacy": [str(p) for p in legacy],
                 "mcp_servers": [
                     {
                         "name": s.name,
@@ -846,11 +831,6 @@ def main(argv: list[str] | None = None) -> int:
         rendered = render(report)
         if args.mcp:
             rendered += "\n\n" + render_mcp(mcp_states)
-        for path in legacy:
-            rendered += (
-                f"\n\n**legacy:** `{path}` is the machine note's old path. Remove it by"
-                " hand once `machine.md` above reads `linked`."
-            )
         if not (report.ok and mcp_ok) and not args.apply:
             rendered += (
                 "\n\nRe-run with `--apply` to repair what is missing or detached."
