@@ -21,7 +21,7 @@ Commands are written `python`, the interpreter's name on Windows; **on macOS it 
 | The source is | Route | Command |
 |---|---|---|
 | `github.com/<owner>/<repo>` | **Raw README only. Never clone.** | `curl -s https://raw.githubusercontent.com/<owner>/<repo>/<branch>/README.md` |
-| **A page whose publisher serves its own markdown** — Mintlify (`code.claude.com`, `platform.claude.com`, `modelcontextprotocol.io`), GitHub Docs. **Probe for this first**, whatever else the page looks like | `curl <url>.md` → clean the publisher's components | see below |
+| **A page whose publisher serves its own markdown** — Mintlify (`code.claude.com`, `platform.claude.com`, `modelcontextprotocol.io`), GitHub Docs, Microsoft Learn (`learn.microsoft.com`, by `Accept` header). **Probe for this first**, whatever else the page looks like | `curl <url>.md`, or `curl -H "Accept: text/markdown" <url>` → clean the publisher's components | see below |
 | A direct `.pdf` | Fetch the file itself, never scrape a rendered viewer | `curl -sL -o "<dest>.pdf" <url>` |
 | A local or fetched PDF / Office document | `docling` — real layout understanding, ahead of pandoc | `docling convert <input> --to md --output <dir>` |
 | A legacy binary `.doc` or `.ppt` | Two-step — neither docling nor pandoc reads the old binary format | see below |
@@ -86,15 +86,24 @@ already resolves it.
 a file and lose more doing it:
 
 ```sh
-curl -sLI <url>.md | grep -i "^content-type: text/markdown"
+curl -sLI <url>.md | grep -i "^content-type: text/markdown"                          # suffix
+curl -sLI -H "Accept: text/markdown" <url> | grep -i "^content-type: text/markdown"  # negotiated
 ```
+
+**Run both probes.** Publishers expose the source two ways: Mintlify and GitHub Docs at `<url>.md`;
+Microsoft Learn only by content negotiation on the page's own URL — its `<url>.md` is a 404, and its
+HTML wraps the article in sign-in notices, "Ask Learn" and "Add to Plans" chrome that no single
+selector excludes (measured on `learn.microsoft.com/en-us/fabric/iq/connectors/fabric-iq-mcp`,
+2026-10-06).
 
 A hit means the platform serves the page's own markdown source, which is the text itself rather than
 a conversion of it — no selector to choose, no pandoc writer to lose a table to, no model anywhere.
-Then:
+Then fetch it the way the probe hit:
 
 ```sh
-curl -sL <url>.md -o <tmp>/served.md
+curl -sL <url>.md -o <tmp>/served.md                                 # suffix
+curl -sL -H "Accept: text/markdown" <url> -o <tmp>/served.md         # negotiated
+curl -sL -A "Mozilla/5.0" <url> -o <tmp>/page.html
 python <skill>/scripts/clean_publisher_md.py <tmp>/served.md "<dest>.md" <url>
 python <skill>/scripts/add_frontmatter.py "<dest>.md" <tmp>/page.html <url>
 ```

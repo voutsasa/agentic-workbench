@@ -90,6 +90,13 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 
 ## 4. Technical architecture
 
+### Software Development Lifecycle practices
+
+#### Source code versioning
+
+* [Semantic Versioning](https://semver.org/)
+* [Git](https://git-scm.com/docs)
+
 ### Experimentation stack
 
 #### Backend and API
@@ -193,7 +200,6 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 * [MCP architecture overview](https://modelcontextprotocol.io/docs/learn/architecture)
 * [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server)
 * [MCP specification](https://modelcontextprotocol.io/specification)
-* [MCP authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization)
 
 **Gaps — not yet sourced**
 
@@ -233,6 +239,7 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 * [DPACT - A Framework for Identity, Accountability, and Task-Scoped Authority in Autonomous AI Agent Systems](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7307799)
 * [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f)
 * [Agent Skills](https://agentskills.io/home)
+* [Agent Skills specification](https://agentskills.io/specification)
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models)
 * [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents)
 * [Using Claude Code: The unreasonable effectiveness of HTML](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html)
@@ -265,6 +272,7 @@ An entry here means a route has been resolved and written down, **not** that the
 
 Each tool has a folder at `workstation/cli/<tool>/` with install commands, a quick start, and its ingested page — see [`workstation/cli/README.md`](workstation/cli/README.md).
 
+* [git-cliff](https://git-cliff.org/docs/)
 * [playwright](https://playwright.dev/docs/intro)
 * [pandoc](https://github.com/jgm/pandoc)
 * [docling](https://github.com/docling-project/docling)
@@ -280,7 +288,7 @@ Each tool has a folder at `workstation/cli/<tool>/` with install commands, a qui
 * [typst](https://github.com/typst/typst)
 * [databricks-cli](https://docs.databricks.com/aws/en/dev-tools/cli/install)
 * [unity-gateway](https://github.com/databricks/unity-gateway)
-* [jq](https://jqlang.org/)
+* [jq](https://jqlang.org/manual/)
 * [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md)
 
 #### MCP servers

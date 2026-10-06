@@ -48,6 +48,13 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 
 ## 4. Technical architecture
 
+### Software Development Lifecycle practices
+
+#### Source code versioning
+
+* [Semantic Versioning](https://semver.org/) — Specification for MAJOR.MINOR.PATCH version numbers and the compatibility promise each increment signals.
+* [Git](https://git-scm.com/docs) — Reference documentation for every git command, plus guides and the Pro Git book.
+
 ### Experimentation stack
 
 #### Backend and API
@@ -151,7 +158,6 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [MCP architecture overview](https://modelcontextprotocol.io/docs/learn/architecture) — How MCP clients, servers and transports fit together, and what resources, tools and prompts each are.
 * [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server) — The canonical tutorial for building an MCP server, from tool definitions to transport.
 * [MCP specification](https://modelcontextprotocol.io/specification) — The protocol specification: versions, base protocol, and the client and server feature surface.
-* [MCP authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization) — OAuth 2.1 authorization for MCP servers beyond stdio: flows, tokens and metadata discovery.
 
 ## 5. Implementation architecture
 
@@ -168,6 +174,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [DPACT - A Framework for Identity, Accountability, and Task-Scoped Authority in Autonomous AI Agent Systems](https://papers.ssrn.com/sol3/papers.cfm?abstract_id=7307799) — Framework for establishing agent identity, accountability, and task-scoped authority in autonomous AI systems.
 * [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — Karpathy's pattern for LLM-maintained knowledge bases layering raw sources, an evolving wiki, and a governing schema.
 * [Agent Skills](https://agentskills.io/home) — Open standard for packaging reusable, on-demand agent capabilities as portable `SKILL.md` folders.
+* [Agent Skills specification](https://agentskills.io/specification) — The `SKILL.md` format: required frontmatter fields, directory layout, and progressive-disclosure rules for portable skills.
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — Anthropic on why newer models need fewer explicit constraints, cutting Claude Code's system prompt over 80%.
 * [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — Anthropic's guide to designing agent-friendly tool interfaces, refined using agents themselves.
 * [Using Claude Code: The unreasonable effectiveness of HTML](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html) — Claude blog post on HTML as a surprisingly versatile agent output and interaction format.
@@ -198,6 +205,7 @@ Tools and MCP servers used to ingest and process sources into this repo. An entr
 
 See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command → product → folder` map. Each tool below has its own folder at `workstation/cli/<tool>/` holding the install commands, a quick start, and the packaging traps worth knowing before you run it.
 
+* [git-cliff](https://git-cliff.org/docs/) — Changelog generator that builds release notes from conventional commits, configured by `cliff.toml`.
 * [playwright](https://playwright.dev/docs/intro) — Browser automation library for testing, scraping, and driving web pages programmatically.
 * [pandoc](https://github.com/jgm/pandoc) — Universal document converter supporting dozens of markup and file formats.
 * [docling](https://github.com/docling-project/docling) — Converts PDFs, Office docs, and more into structured, LLM-ready formats.
@@ -213,7 +221,7 @@ See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command �
 * [typst](https://github.com/typst/typst) — Markup-based typesetting system; the PDF engine pandoc uses here in place of LaTeX.
 * [databricks-cli](https://docs.databricks.com/aws/en/dev-tools/cli/install) — Databricks' Go CLI; holds the OAuth login and issues tokens for the Genie MCP server.
 * [unity-gateway](https://github.com/databricks/unity-gateway) — Databricks' `ug` CLI; runs coding agents through AI Gateway and registers Databricks MCP servers.
-* [jq](https://jqlang.org/) — Lightweight command-line JSON processor used by Claude’s Databricks MCP token-header helper.
+* [jq](https://jqlang.org/manual/) — Lightweight command-line JSON processor used by Claude’s Databricks MCP token-header helper.
 * [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md) — Publishes Markdown to Confluence Cloud with md2conf and exports pages back with cme.
 
 #### MCP servers

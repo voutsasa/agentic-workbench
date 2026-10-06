@@ -342,7 +342,7 @@ This was one month in earlier drafts and could not fit: twelve register entries 
 
 | | Importance | Reading / tutorial |
 |---|---|---|
-| ✓ | ★★★★★ | [MCP Authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization) — OAuth 2.1; essential the moment a server stops being stdio-only, irrelevant until then |
+| ➕ | ★★★★★ | [MCP Authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization) — OAuth 2.1; essential the moment a server stops being stdio-only, irrelevant until then |
 | ➕ | ★★★★☆ | OWASP ASVS — for the MCP tool surface, once ingested |
 | ✓ | ★★★☆☆ | Revisit context-engineering material against a year of real traces |
 
