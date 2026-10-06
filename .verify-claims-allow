@@ -99,3 +99,6 @@ docs/renderers.md
 # `CONFLUENCE_PATH='/wiki/'` in confluence-sync-md/install.md is the URL path of
 # a Confluence Cloud site, not a filesystem path.
 /wiki/
+# "No `/api/2.0/mcp/` Databricks server" in TODO.md item 41 is the URL path of the
+# Databricks managed MCP endpoints, not a filesystem path.
+/api/2.0/mcp/
