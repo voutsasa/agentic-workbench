@@ -68,6 +68,63 @@ clone. [`workstation/agent/README.md` § *Install the skills as a plugin
 instead*](workstation/agent/README.md#install-the-skills-as-a-plugin-instead) has the manifest layout
 and the verify step.
 
+**5. Optional — observe sessions in Langfuse.** Only Claude Code has a marketplace plugin; GitHub
+Copilot CLI has no plugin mechanism for this and is wired instead through its own built-in
+OpenTelemetry export, pointed at Langfuse's OTLP endpoint; Kiro has neither, and is wired through a
+pair of hook files copied into the project. All three need a Langfuse project and its public/secret
+API keys first.
+
+*Claude Code — plugin:*
+
+```sh
+claude plugin marketplace add langfuse/Claude-Observability-Plugin
+claude plugin install langfuse-observability@langfuse-observability
+```
+
+Restart Claude Code, then set the keys from inside a session (the secret key is held in the OS
+keychain, not a file):
+
+```text
+/plugin configure langfuse-observability@langfuse-observability
+```
+
+Switch it on/off without uninstalling:
+
+```sh
+claude plugin enable langfuse-observability@langfuse-observability
+claude plugin disable langfuse-observability@langfuse-observability
+```
+
+Needs `uv` on `PATH` (falls back to `python3` 3.10+ with `langfuse>=4.7,<5`). Troubleshooting log:
+`~/.claude/state/langfuse_hook.log`; set `CC_LANGFUSE_DEBUG` for verbose output.
+
+*GitHub Copilot CLI — OTEL export, no install step:*
+
+```sh
+export COPILOT_OTEL_ENABLED=true
+export OTEL_EXPORTER_OTLP_ENDPOINT="https://cloud.langfuse.com/api/public/otel"
+export OTEL_EXPORTER_OTLP_HEADERS="Authorization=Basic <base64 of pk-lf-...:sk-lf-...>,x-langfuse-ingestion-version=4"
+export OTEL_INSTRUMENTATION_GENAI_CAPTURE_MESSAGE_CONTENT=true
+```
+
+Switch off with `export COPILOT_OTEL_ENABLED=false` (or unset the variable). Put the exports in your
+shell profile to persist them; a shell restart (or re-sourcing the profile) is what turns tracking on
+or off, since the CLI reads these at startup.
+
+*Kiro — project hooks, no plugin:*
+
+```sh
+git clone https://github.com/langfuse/langfuse-examples.git
+cp -r langfuse-examples/applications/kiro-langfuse/.kiro/hooks/ your-project/.kiro/hooks/
+cp -r langfuse-examples/applications/kiro-langfuse/hooks/ your-project/hooks/
+cd your-project/hooks && npm install
+```
+
+Then put `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` (and, outside the EU, `LANGFUSE_BASE_URL`)
+in a `.env` file at the project root. Switch tracking on/off per hook, not globally: open the Hook UI
+(`Cmd/Ctrl+Shift+P` → "Kiro: Open Kiro Hook UI") and toggle each of the 10 hooks under
+`.kiro/hooks/`, or edit `"enabled": true`/`false` directly in each hook's `.kiro.hook` file.
+
 ## Executive summary
 
 The first two capabilities deliver the agent-enabled workstation; the last two keep it trustworthy.

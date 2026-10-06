@@ -246,6 +246,9 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 * [Extend Claude with skills](https://code.claude.com/docs/en/skills)
 * [Claude Code plugins overview](https://code.claude.com/docs/en/plugins)
 * [About GitHub Copilot plugins](https://docs.github.com/en/copilot/concepts/agents/about-plugins)
+* [Langfuse Claude Code Observability Plugin](https://github.com/langfuse/Claude-Observability-Plugin)
+* [Langfuse GitHub Copilot integration](https://langfuse.com/integrations/developer-tools/github-copilot)
+* [Langfuse Kiro integration](https://langfuse.com/integrations/developer-tools/kiro)
 
 #### Background and legacy material
 
