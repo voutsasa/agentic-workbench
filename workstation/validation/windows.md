@@ -64,8 +64,8 @@ read with any unzip tool — `Expand-Archive` to a temp folder, then search `wor
 **With and without `soffice` on `PATH` differ here**, measured on docling 2.131.0, 2026-10-06:
 `chartex.docx` is byte-identical either way, but `shapes-with-text.docx` gains 1 rendered image only
 with LibreOffice's `program` directory on `PATH`, and prints the DrawingML `WARNING` without it. macOS
-showed no difference because docling falls back to `/Applications/LibreOffice.app` there. Byte
-identity with macOS's output has not been compared.
+shows no difference — re-measured on docling 2.134.0, 2026-10-06 — because docling falls back to
+`/Applications/LibreOffice.app` there. Byte identity with macOS's output has not been compared.
 
 ## D. The JS-hydrated route
 

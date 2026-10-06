@@ -292,7 +292,7 @@ Probed on `workstation` (Darwin Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:5
 | `databricks` | Databricks CLI | installed | 1.19.0 | — |
 | `dbml2sql`, `sql2dbml`, `db2dbml` | DBML CLI | installed | 10.2.0 | — |
 | `defuddle` | Defuddle | installed | 0.19.4 | — |
-| `docling` | Docling | installed | 2.130.0 | — |
+| `docling` | Docling | installed | 2.134.0 | — |
 | `jq` | jq | installed | 1.7.1-apple | — |
 | `magick` | ImageMagick | installed | 7.1.2-32 | — |
 | `mmdc` | Mermaid CLI | installed | 12.0.0 | — |
@@ -311,7 +311,7 @@ Probed on `workstation` (Darwin Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:5
 |---|---|---|
 | `rsvg-convert` (librsvg) | 2.62.3, `/opt/homebrew/bin` | `magick` cannot rasterise SVG through brew's MSVG renderer, so every SVG-to-raster job goes through this. The whole diagram toolchain — d2, PlantUML, Mermaid — emits SVG. Route recorded in [`../cli/magick/install.md`](../cli/magick/install.md). |
 | LibreOffice | `/Applications/LibreOffice.app`, and `soffice` **is** on `PATH` at `/opt/homebrew/bin/soffice` | docling's Office conversion finds it. Note this differs from the Windows box, where it is installed but deliberately kept off `PATH` — see [`../cli/docling/install.md`](../cli/docling/install.md). |
-| Global Python CLIs via `uv tool`, Python 3.12 | `docling` 2.130.0, `playwright` 1.63.0 and `unity-gateway` 0.2.0+29 are in `$(uv tool dir)`, each on Python 3.12.14; moved from pipx on 2026-09-27. `confluence-sync-md` 0.6.0 is there too, on Python 3.14.6 (its `requires-python` floor), from Azure DevOps `main`, with `md2conf` and `cme` exposed through `--with-executables-from`. `pipx list` keeps only `huggingface-hub`, which isn't a workbench tool | `render_page.py` runs under `$(uv tool dir)/playwright/bin/python`. Playwright's Chromium is build 1243, and `mmdc` resolves to it through `PUPPETEER_EXECUTABLE_PATH`. Builds 1234 stay in `~/Library/Caches/ms-playwright`, because `~/Development/ieee-reader/.venv` still links to them. |
+| Global Python CLIs via `uv tool`, Python 3.12 | `docling` 2.134.0 (upgraded with `uv tool upgrade docling`, 2026-10-06), `playwright` 1.63.0 and `unity-gateway` 0.2.0+29 are in `$(uv tool dir)`, each on Python 3.12.14; moved from pipx on 2026-09-27. `confluence-sync-md` 0.6.0 is there too, on Python 3.14.6 (its `requires-python` floor), from Azure DevOps `main`, with `md2conf` and `cme` exposed through `--with-executables-from`. `pipx list` keeps only `huggingface-hub`, which isn't a workbench tool | `render_page.py` runs under `$(uv tool dir)/playwright/bin/python`. Playwright's Chromium is build 1243, and `mmdc` resolves to it through `PUPPETEER_EXECUTABLE_PATH`. Builds 1234 stay in `~/Library/Caches/ms-playwright`, because `~/Development/ieee-reader/.venv` still links to them. |
 | `databricks` (Databricks CLI) | Homebrew 7, via `brew info databricks` → `databricks/tap/databricks` | Confirms this machine took the macOS route in [`../cli/databricks-cli/install.md`](../cli/databricks-cli/install.md), not a stray PyPI `databricks-cli`. |
 | `tesseract` language data | `eng`, `osd`, `snum` (`tesseract --list-langs`) | English-only, by choice — see [`../cli/tesseract/install.md`](../cli/tesseract/install.md). A job asking for another language fails with a missing-tessdata error, not poor output. |
 
@@ -327,6 +327,6 @@ Probed on `workstation` (Darwin Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:5
 |---|---|
 | A. Config links and instruction loading | *Claude Code config* above |
 | B. The toolchain, and the machine note it feeds | *CLI toolchain* above |
-| C. Document conversion | **not run** — no result recorded |
+| C. Document conversion | docling 2.134.0, 2026-10-06, with `soffice` on `PATH` and with `/opt/homebrew/bin` removed: byte-identical both ways. `chartex.docx` → 2 images, 4 `Image not available`; `shapes-with-text.docx` → 1 image, 0 placeholders, all five lines of shape text; no DrawingML `WARNING` either way, 0 HTML tags. The `/Applications/LibreOffice.app` fallback explains it. The `clean_md_images.py` split was not run |
 | D. The JS-hydrated route | **not run** — no result recorded |
 | E. The repo's own gates | the pre-push gate is installed (*Claude Code config*, 2026-09-13); no full section E run recorded |

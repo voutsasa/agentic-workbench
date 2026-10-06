@@ -19,19 +19,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 56. The `.docx` LibreOffice comparison has not been re-run on macOS with docling 2.131.0
-
-Opened 2026-10-06. On Windows, docling 2.131.0 renders `shapes-with-text.docx`'s shapes as an image
-only with `soffice` on `PATH`. macOS showed no difference on docling 2.115.0 (2026-09-20), which docling's
-`/Applications/LibreOffice.app` fallback explains, but that explanation has not been checked on the
-current docling. `workstation/agent/skills/fetch-to-markdown/SKILL.md` § 2 and
-`workstation/validation/windows.md` § C both rest on it.
-
-**Closes when:** on macos-workstation, `chartex.docx` and `shapes-with-text.docx` from
-`workstation/validation/fixtures/` are converted on docling 2.131.0 or later with and without `soffice`
-on `PATH`, the image and placeholder counts are recorded in the macOS note's *Validation* table (section
-C), and the two documents above are corrected if the result differs.
-
 ### 50. `session-signature` has not probed a harness other than Claude CLI and Copilot live
 
 Opened 2026-10-06. `--harness <label> --harness-command <cli>` is covered only by a unit test with

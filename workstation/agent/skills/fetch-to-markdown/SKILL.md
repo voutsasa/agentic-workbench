@@ -209,9 +209,11 @@ documents below were converted with `soffice` on `PATH` and without it. **Only a
 shape needs LibreOffice**: pictures and charts came out byte-identical both ways, and a shape's text
 survives either way, but the shape itself becomes an image only when `soffice` resolves. Without it,
 docling prints one `WARNING … Found DrawingML elements in document, but no DOCX to PDF converters` and
-exits 0. An earlier macOS run (docling 2.115.0, 2026-09-20) found no difference at all. That is expected there:
-docling also falls back to a hard-coded `/Applications/LibreOffice.app` when `PATH` has no `soffice`,
-so removing it from `PATH` on macOS changes nothing. What each kind of figure becomes:
+exits 0. On macOS (docling 2.134.0, 2026-10-06) both ways gave byte-identical output, the shape image
+included, and no `WARNING`: docling falls back to a hard-coded
+`/Applications/LibreOffice.app/Contents/MacOS/soffice` when `PATH` has none
+(`get_libreoffice_cmd` in `docling/backend/docx/drawingml/utils.py`), so removing `soffice` from
+`PATH` there changes nothing. What each kind of figure becomes:
 
 | In the source | In the markdown |
 |---|---|
