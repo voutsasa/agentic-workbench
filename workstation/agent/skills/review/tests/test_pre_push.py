@@ -393,6 +393,20 @@ class RefListTests(HookRepoCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(sorted(self.verified()), ["b.md", "c.md"])
 
+    def test_first_push_whose_tip_is_the_default_branch_checks_its_files(
+        self,
+    ) -> None:
+        """Regression: pushing `main` itself to a brand-new remote diffed main
+        against itself — the remote has no HEAD, so default_ref() fell back to
+        local refs/heads/main, which *is* the branch being pushed. merge-base
+        of a commit with its own branch is itself, so the diff found nothing.
+        """
+        self.git("symbolic-ref", "HEAD", "refs/heads/main")
+        sha = self.commit("a.md")
+        result = self.run_hook(refs=f"refs/heads/main {sha} refs/heads/main {ZERO}\n")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(self.verified(), ["a.md"])
+
     def test_a_diff_that_cannot_run_refuses_the_push(self) -> None:
         sha = self.commit("a.md")
         unknown = "1" * 40

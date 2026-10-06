@@ -284,7 +284,12 @@ while read -r local_ref local_sha _remote_ref remote_sha; do
     base=""
     ref="$(default_ref)"
     [ -n "$ref" ] && base="$(git merge-base "$local_sha" "$ref" 2>/dev/null)"
-    if [ -z "$base" ]; then
+    # default_ref() falls back to a local ref when the remote has none yet —
+    # pushing main itself to a brand-new remote resolves it to refs/heads/main,
+    # which the pushed commit already is. merge-base of a commit with its own
+    # branch is itself, so that diff is empty. Treat it the same as no base
+    # found, rather than reporting nothing changed.
+    if [ -z "$base" ] || [ "$base" = "$local_sha" ]; then
       if git rev-parse -q --verify "$local_sha^" > /dev/null; then
         base="$local_sha^"
       else

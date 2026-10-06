@@ -19,38 +19,12 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 57. The `python`-to-`python3` fallback in `verify_claims.py` is unproven on Windows
-
-Opened 2026-10-06. `verify_cli_flag` and `verify_cli_invocation` now accept the running interpreter
-for a doc's `python`/`python3` when that name is not on `PATH`. On macOS a whole-repo run moved 36
-`python is not on PATH` claims to 0 with 0 refuted. Windows, where `python` resolves first, should be
-unchanged, but no run there has shown it.
-
-**Closes when:** on windows-ema-pf5n4xe7,
-`.venv\Scripts\python.exe workstation\agent\skills\verify-docs\scripts\verify_claims.py --repo .`
-reports 0 refuted and no `python3 is not on PATH` line that the previous version did not also report.
-
 ### 50. `session-signature` has not probed a harness other than Claude CLI and Copilot live
 
 Opened 2026-10-06. `--harness <label> --harness-command <cli>` is covered only by a unit test with
 the CLI mocked; no non-Claude, non-Copilot assistant (e.g. Kiro) is installed on either machine.
 Closed by a run on a machine that has one, quoting the id, e.g.
 `python workstation/agent/skills/session-signature/scripts/signature.py --model <id> --harness kiro --harness-command <kiro-cli>`.
-
-### 48. Frontmatter on `AGENTS.md` and `AGENT-INSTRUCTIONS.md` is unverified live
-
-Opened 2026-10-05. Both files gained an `author`/`version` frontmatter block for the first time, so
-that every applicable skill, guide, machine note, key document and the harness itself carries the
-same metadata. Every other file this applies to has a schema in `checks.toml` and passing tests;
-these two have neither, since they are read as live instructions, not documents a schema checks.
-Unverified: whether Claude Code's `@AGENTS.md` import and Copilot CLI's direct read of
-`AGENT-INSTRUCTIONS.md` (as `copilot-instructions.md`) load the content after a leading `---`
-frontmatter block the same as before — plain text is the overwhelmingly likely case, but no fresh
-session has confirmed it since the edit landed in the same session that made it.
-
-**Closes when:** a fresh Claude Code session's `/context` shows `AGENTS.md` loaded with its real
-content (not truncated or mis-rendered), and a fresh Copilot CLI session shows the same for
-`copilot-instructions.md`.
 
 ### 46. The bump rule has not been spot-checked against this repo's own cliff.toml
 
@@ -112,24 +86,6 @@ which macos-workstation does not use (`workstation/machines/macos-workstation.md
 
 **Closes when:** one Genie Agent and one AI Search server each answer a read-only tool call from
 Claude Code and from Copilot CLI, and the generator is corrected for whatever that run shows.
-
-### 37. A first push whose tip is already on the default branch verifies nothing
-
-Opened 2026-09-29. The pre-push hook diffs a new branch against the remote default branch, else `main`,
-else `master`. When the pushed tip is that branch's tip — `main` to a new, empty remote — the diff is
-empty, so `verify_claims.py` never runs. Measured in a throwaway repo pushing to a local bare remote.
-
-**Closes when:** the hook checks the pushed markdown in that case too, with a test in
-`workstation/agent/skills/review/tests/test_pre_push.py`.
-
-### 36. The Copilot ruff hook may never run on Windows
-
-Opened 2026-09-29. `workstation/agent/hooks/ruff-on-edit.copilot.json` has only a `bash` command.
-If Copilot CLI on Windows runs the `powershell` field, the hook is silently inactive there. Unverified:
-no Copilot session has been observed editing a `.py` file on Windows.
-
-**Closes when:** a Windows Copilot CLI edit to a `.py` file shows ruff running, or the registration
-gains a `powershell` entry that is observed running.
 
 ### 34. The symlinked pre-push hook path is untested
 
@@ -225,7 +181,7 @@ SSRN serves only to a browser — closed by the user saving its PDF to
 
 **Closes when:** every entry is ingested on each machine — `repo_check.py --corpus` reports N of N.
 
-### 9. The Azure DevOps pipeline has never run
+### 9. The Azure DevOps pipeline has never run, and its model auth needs a design, not a secret
 
 Opened 2026-09-14: the only pipeline was `.github/workflows/verify-docs.yml`, which never runs for this
 repo's only remote, `https://euemadev@dev.azure.com/euemadev/EA/_git/agentic-workbench`, an
@@ -244,9 +200,61 @@ Microsoft Learn on 2026-09-14; none has run yet:
 | `gh pr create` with `GITHUB_TOKEN` | `az repos pr create` (the `azure-devops` CLI extension), authenticated by `AZURE_DEVOPS_EXT_PAT: $(System.AccessToken)` |
 | workflow `permissions: contents/pull-requests: write` | on the repo, `<project> Build Service (<org>)` needs *Contribute*, *Create branch* and *Contribute to pull requests* — or `Project Collection Build Service (<org>)` if the job authorization scope is collection |
 
-**Closes when:** the user has done the header's setup and `azure-pipelines/verify-docs.yml` has run
-once on the ADO project, both reports were produced, and either a pull request was opened or the run logged *No
-documentation drift found* — with the run URL recorded here before the item is deleted.
+2026-10-06: `az pipelines list` and `az pipelines runs list` against `organization=https://dev.azure.com/euemadev project=EA` show one pipeline, `ea-blueprints-web` (id 2010) — unrelated. None of the header's three setup steps has happened yet; this is still at square one on the ADO side. The user chose to create the pipeline through the ADO portal rather than `az pipelines create`.
+
+2026-10-06, narrowed from a mechanical "add a secret" item to a design item: the model-auth question
+turned out not to be a one-line swap. `az devops service-endpoint list` for `EA` returns `[]` — no AWS
+or Azure OpenAI credential of any kind exists in this ADO project yet, so whichever provider is picked,
+the credential plumbing is new, not a reuse.
+
+Three constraints, gathered in order:
+
+1. The workstation's AWS Bedrock mandate (`workstation/machines/windows-ema-pf5n4xe7.md`) **extends to
+   this pipeline** — confirmed by the user, reversing an initial "workstation-only" answer. Recorded in
+   assistant memory as `bedrock-scope-ci`.
+2. The user's actual requirement is broader than Bedrock: **work runs need an Azure OpenAI key; private
+   runs need an OpenAI or Anthropic key** — three provider families, not one.
+3. Azure AI Foundry (`CLAUDE_CODE_USE_FOUNDRY`, which would have kept this inside the Anthropic family
+   on Azure infrastructure) does not offer Anthropic models in the EU, so it cannot substitute for
+   Bedrock or for a real OpenAI/Azure OpenAI path.
+
+Checked empirically, not assumed: neither Claude Code CLI nor GitHub Copilot CLI can reach OpenAI or
+Azure OpenAI at all — `grep` over both installed binaries (`claude.exe`, `copilot.exe`) finds zero
+`OPENAI`/`AZURE_OPENAI` strings in either. Claude Code's only four backends are direct Anthropic API,
+AWS Bedrock, Google Vertex AI, and Azure AI Foundry (all four run Anthropic models). The catalogued
+`workstation/cli/` toolchain has no OpenAI-capable tool either. So an Azure OpenAI/OpenAI path is not a
+config change: `scripts/verify-docs.sh`'s model-driven phase is built entirely on `claude -p`'s own
+tool implementations (Read/Glob/Grep/Write/Bash) and its budget/sandbox flags
+(`--max-budget-usd`, `--allowedTools`) — none of which exist for a raw OpenAI/Azure OpenAI SDK call.
+
+Supporting the OpenAI family means building a second, parallel driver (e.g.
+`scripts/verify-docs-openai.py` on the official `openai` SDK's `AzureOpenAI`/`OpenAI` client), which
+would need to: reuse `extract_claims.py`/`verify_claims.py` unchanged (they are model-agnostic); reuse
+or share the existing report prompt; implement its own read/grep/write(`$OUT`-only)/bash tool handlers
+and request→tool-call→result loop; enforce its own token/cost budget cap (no `--max-budget-usd`
+equivalent); and pick `OpenAI` vs `AzureOpenAI` by which secret is populated, mirroring how
+`CLAUDE_CODE_USE_BEDROCK` presence already selects Bedrock over direct Anthropic. The hand-rolled Bash
+tool is the real risk, not just the effort: a model-controlled shell-exec path implemented by us is a
+materially larger attack surface than delegating to Claude Code's own hardened tool sandbox, and needs
+its own scoping (allowlist, timeout, no writes outside `$OUT`) before it exists at all.
+
+This is now two separable pieces of work, not one:
+
+**Closes when**, for the ADO run (unblocks today, no new engineering):
+the user has done the header's setup with AWS Bedrock credentials (Option A — a scoped IAM user's
+`AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` as ADO secret variables, `CLAUDE_CODE_USE_BEDROCK=1`,
+`AWS_REGION=eu-central-1`, `ANTHROPIC_MODEL=eu.anthropic.claude-sonnet-5`), and
+`azure-pipelines/verify-docs.yml` has run once on the ADO project, both reports were produced, and
+either a pull request was opened or the run logged *No documentation drift found* — with the run URL
+recorded here.
+
+**Closes when**, for the Azure OpenAI/OpenAI driver (separate, needs its own design pass before any
+code): a versioned design decides the tool allowlist and sandboxing for the hand-rolled Bash tool, the
+budget-accounting approach, and the provider-selection convention across both `verify-docs.sh` and the
+new script; the new driver passes its own test suite mirroring `review`'s `test_pre_push.py` style
+(model call stubbed out, no real spend in tests); and one real run against each of an `OPENAI_API_KEY`
+and an Azure OpenAI credential produces the same two reports the Anthropic path does. Until that design
+exists, do not start writing the driver.
 
 ### 12. `review`'s Apply mode approve-each step has not run
 
