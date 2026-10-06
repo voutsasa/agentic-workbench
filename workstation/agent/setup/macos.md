@@ -37,7 +37,7 @@ python3 workstation/scripts/link_config.py --apply --hooks
 ```
 
 It creates one symlink per global skill in `~/.claude/skills/`, `AGENT-INSTRUCTIONS.md` →
-`~/.claude/CLAUDE.md`, the machine note → `~/.claude/machine.md` (see *The machine note*), and — because
+`~/.claude/CLAUDE.md`, the machine note → `~/.agentic-workbench/machine.md` (see *The machine note*), and — because
 of `--hooks` — `hooks/ruff_on_edit.py` into `~/.claude/hooks/` (opt-in, since a hook acts on every edit).
 Re-running is safe: a live link is left alone, a stale one is replaced, and a destination holding content
 the repo lacks is reported and skipped. Add `--agent copilot` to link the same skills,
@@ -49,24 +49,13 @@ symlink is not a merge.
 
 ## Settings: merge, do not link
 
-`~/.claude/settings.json` is **edited in place and never replaced**, because Claude Code writes to it
-itself and a link or a copy would drop whatever it had written. On a machine that is provider-bound it
-also carries an `env` block — `CLAUDE_CODE_USE_BEDROCK`, `AWS_REGION`, `AWS_PROFILE` and the
-provider-prefixed model IDs — which this repo does not hold; whether this machine is one of those is in
-its file under [`../../machines/`](../../machines/), not here. The repo copy holds only the shared,
-non-sensitive keys.
-
-List the keys the live file is missing, then add them by hand:
-
-```sh
-uv run python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
-```
-
-Leave `env` exactly as it is, and do not move it to `settings.local.json`.
+`~/.claude/settings.json` is **edited in place and never replaced**. Follow
+[`../README.md` § *The merge procedure*](../README.md#the-merge-procedure); its delta is
+`uv run python workstation/scripts/settings_delta.py`.
 
 ## The machine note
 
-[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) tells the agent to read `~/.claude/machine.md`. Point it at
+[`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) tells the agent to read `~/.agentic-workbench/machine.md`. Point it at
 this machine's file in [`../../machines/`](../../machines/) — `link_config.py` will do it, and finds the
 right file without being told when there is only one for this platform:
 
@@ -112,7 +101,7 @@ and skipped rather than overwritten. It never touches `settings.json`.
 By hand, every path should print as `->` pointing into your clone:
 
 ```sh
-ls -l ~/.claude/CLAUDE.md ~/.claude/machine.md ~/.claude/skills/
+ls -l ~/.claude/CLAUDE.md ~/.agentic-workbench/machine.md ~/.claude/skills/
 ```
 
 **A symlink into a renamed directory still prints, but resolves to nothing.** This repo's config used to

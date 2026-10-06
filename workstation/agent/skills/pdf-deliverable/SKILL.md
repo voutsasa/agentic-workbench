@@ -120,8 +120,8 @@ A `0` from that grep on a *compressed* file is not evidence the variant was igno
 Every claim here is about **tool behaviour**, so it holds only where those tools are installed. Two
 things to check on an unfamiliar machine, in this order:
 
-1. **The machine note** — `~/.claude/machine.md` records which of the CLI toolchain actually runs
-   there. A tool named here and missing there is a blocker to report, not to route around.
+1. **The machine note** — `~/.agentic-workbench/machine.md`, where one exists, records which of the
+   CLI toolchain actually runs there. A tool named here and missing there is a blocker to report, not to route around.
 2. **`typst` is not part of pandoc.** It is a separate binary that pandoc shells out to, and it is not
    probed by the standard inventory. `command -v typst` settles it. Route 1 fails without it exactly
    the way the LaTeX default does.

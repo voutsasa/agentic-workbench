@@ -69,7 +69,7 @@ would be a dozen unverified claims, which is worse than an absent row.
 ## How the agent reads this
 
 Nothing here is loaded automatically. [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md) tells
-the agent to read `~/.claude/machine.md`, which is a path that is **identical on every
+the agent to read `~/.agentic-workbench/machine.md`, which is a path that is **identical on every
 machine while its content differs** — that indirection is what lets the shared file point at
 per-machine truth without naming a platform.
 

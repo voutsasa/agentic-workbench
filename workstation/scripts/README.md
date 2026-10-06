@@ -16,6 +16,7 @@ called on Windows and inside an activated venv; **on macOS outside a venv it is 
 | [`link_config.py`](link_config.py) | Report — or repair — the links that put [`../agent/`](../agent/) in `~/.claude`, and its skills in `~/.copilot/skills` |
 | [`databricks_mcp.py`](databricks_mcp.py) | Read available internal Databricks MCP services, or take named Genie Agent, AI Search and SQL servers, then print Claude Code and Copilot CLI registration commands — runs none of them |
 | [`bump_frontmatter_version.py`](bump_frontmatter_version.py) | Report (or, with `--apply`, write) the `version:` frontmatter field across skills, guides, machine notes and key documents, to match a new release — see [`VERSIONING.md`](../../VERSIONING.md) |
+| [`settings_delta.py`](settings_delta.py) | Print what the live `~/.claude/settings.json` lacks from [`../agent/settings.json`](../agent/settings.json), and with `--env` check the edited file — writes neither |
 
 Tests live in [`tests/`](tests/) and use `unittest`, matching the skill scripts under
 `../agent/skills/*/tests/`. Four of them test no script in this folder: `test_readme_skills.py` fails when the skill
@@ -141,8 +142,10 @@ registration is the `hooks` block in `workstation/agent/settings.json`, merged b
 never writes a settings file.
 
 Checks every link the agent config needs: each skill named in the script's `SKILLS` tuple,
-`CLAUDE.md`, and the machine note at `~/.claude/machine.md`. Exits non-zero unless all of them are
-live, so it works as a check as well as a fixer. Adding a skill means adding it to `SKILLS` and
+`CLAUDE.md`, and the machine note at `~/.agentic-workbench/machine.md`. Exits non-zero unless all of
+them are live, so it works as a check as well as a fixer. A machine note still at the old
+`~/.claude/machine.md` is reported as `legacy` (and listed under `legacy` in `--json`); it is never
+deleted and never changes the exit code. Adding a skill means adding it to `SKILLS` and
 nothing else — the count is derived, never written down.
 
 **The machine note is resolved, not derived**, so a machine file need not be named after a hostname:
@@ -243,3 +246,19 @@ harness (`AGENTS.md`, `AGENT-INSTRUCTIONS.md`) — and rewrites each one's `vers
 in place. The two share one list, imported by the test from this script, so they cannot drift apart.
 A file with no frontmatter, or frontmatter with no `version:` field, is left alone and reported as
 such rather than guessed at.
+
+## `settings_delta.py`
+
+```
+python workstation/scripts/settings_delta.py         # what ~/.claude/settings.json lacks from ../agent/settings.json
+python workstation/scripts/settings_delta.py --env   # valid JSON? env key names, provider, model IDs
+```
+
+Steps 2, 5 and 6 of [`../agent/README.md` § *The merge procedure*](../agent/README.md#the-merge-procedure).
+Reads both files and writes neither — the live file is merged by hand. The default prints one
+`add <key>: <value>` line per difference, going one level into an object-valued key
+(`permissions.defaultMode`, not the whole of `permissions`); a list reports only the items the live
+one lacks, so extra local `permissions.allow` entries are not drift. `env` is never compared.
+`--env` prints `env` key names but no values except `CLAUDE_CODE_USE_BEDROCK` and the model IDs,
+including the deprecated `ANTHROPIC_SMALL_FAST_MODEL`. Exit 0 in sync (or readable, with `--env`),
+1 keys to add, 2 a file missing or not a JSON object. `--home` and `--repo` point it at another tree.

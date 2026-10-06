@@ -44,7 +44,7 @@ python (Join-Path $Root "workstation\scripts\link_config.py") --apply --hooks
 ```
 
 It uses the two link types that need no elevation: a junction per global skill in
-`$HOME\.claude\skills`, and hardlinks for `$HOME\.claude\CLAUDE.md` and `$HOME\.claude\machine.md` —
+`$HOME\.claude\skills`, and hardlinks for `$HOME\.claude\CLAUDE.md` and `$HOME\.agentic-workbench\machine.md` —
 plus, because of `--hooks`, `hooks/ruff_on_edit.py` into `$HOME\.claude\hooks\` (opt-in, since a hook
 acts on every edit). A diverged `CLAUDE.md` is reported and skipped rather than overwritten —
 reconcile it first, per the section above. Add `--agent copilot` to link the same skills,
@@ -56,28 +56,18 @@ link is a replace and not a merge.
 
 ## Settings: merge, do not link
 
-`~/.claude/settings.json` is **edited in place and never replaced**, because Claude Code writes to it
-itself and a link or a copy would drop whatever it had written. On a machine that is provider-bound it
-also carries an `env` block — `CLAUDE_CODE_USE_BEDROCK`, `AWS_REGION`, `AWS_PROFILE` and the
-provider-prefixed model IDs — which this repo does not hold; whether this machine is one of those is in
-its file under [`../../machines/`](../../machines/), not here. The repo copy holds only the shared,
-non-sensitive keys.
-
-List the keys the live file is missing, then add them by hand:
-
-```powershell
-uv run python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
-```
-
-Leave `env` exactly as it is, and do not move it to `settings.local.json`.
+`~/.claude/settings.json` is **edited in place and never replaced**. Follow
+[`../README.md` § *The merge procedure*](../README.md#the-merge-procedure); its delta is
+`uv run python workstation/scripts/settings_delta.py`.
 
 ## The machine note
 
 [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) tells the agent to read
-`~/.claude/machine.md`. The `link_config.py --apply` command in *Link it* creates that
+`~/.agentic-workbench/machine.md`. The `link_config.py --apply` command in *Link it* creates that
 hardlink alongside the skills and resolves the right file in
 [`../../machines/`](../../machines/), including an explicitly named `--machine` file or
-the sole Windows machine file.
+the sole Windows machine file. A `~/.claude/machine.md` left from before the move is reported as
+`legacy`; delete it by hand once `machine.md` reads `linked`.
 
 If it reports `no_source`, create the machine file first — see
 [`../../machines/README.md`](../../machines/README.md#adding-a-machine). Do not link the macOS file as
@@ -190,7 +180,7 @@ request. `core.pager` and `GIT_PAGER` do not control the HTML-help browser behav
   never linked — edit that one in `~/.claude/` only.
 - **A `machine.md` reported `diverged` after a repo doc update is usually pure staleness, not a
   conflicting edit.** Diff it against the repo source first; if the only differences trace to the repo
-  side, `Copy-Item <repo path> ~/.claude/machine.md -Force` is safe. Still diff before copying —
+  side, `Copy-Item <repo path> ~/.agentic-workbench/machine.md -Force` is safe. Still diff before copying —
   `link_config.py` cannot tell repo drift apart from a local note you added, so it skips either way.
 - **Assume every configured file hardlink is broken and check.** The default Claude route has
   `CLAUDE.md` and `machine.md`; adding Copilot adds `~/.copilot/copilot-instructions.md`. Between git
@@ -219,7 +209,7 @@ is live and an **empty string** when the path is a plain copy — that empty str
 severed hardlink looks like, and is how the drift above was found.
 
 ```powershell
-foreach ($p in "$HOME\.claude\CLAUDE.md","$HOME\.claude\machine.md") {
+foreach ($p in "$HOME\.claude\CLAUDE.md","$HOME\.agentic-workbench\machine.md") {
   "{0,-45} LinkType=[{1}]" -f $p, (Get-Item $p -ErrorAction SilentlyContinue).LinkType
 }
 Get-ChildItem "$HOME\.claude\skills" | Select-Object Name, LinkType

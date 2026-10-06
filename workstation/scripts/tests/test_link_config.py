@@ -120,9 +120,14 @@ class TestPlan(TempTree):
         self.assertEqual(link.source.name, "macos-air.md")
         self.assertEqual(link.dest.name, "machine.md")
 
-    def test_every_destination_is_under_dot_claude(self) -> None:
+    def test_every_destination_but_the_machine_note_is_under_dot_claude(self) -> None:
         for link in self.plan():
-            self.assertEqual(link.dest.parts[len(self.home.parts)], ".claude")
+            if link.label != "machine.md":
+                self.assertEqual(link.dest.parts[len(self.home.parts)], ".claude")
+
+    def test_machine_note_goes_to_the_assistant_neutral_home(self) -> None:
+        link = next(l for l in self.plan() if l.label == "machine.md")
+        self.assertEqual(link.dest, self.home / ".agentic-workbench" / "machine.md")
 
     def test_a_never_link_destination_raises(self) -> None:
         """The guard is structural: widen it and plan() refuses to emit that link."""
@@ -476,9 +481,50 @@ class TestMain(TempTree):
             (self.home / ".copilot" / "skills" / "review" / "SKILL.md").exists()
         )
         self.assertTrue((self.home / ".copilot" / "copilot-instructions.md").exists())
-        self.assertTrue((self.home / ".claude" / "machine.md").exists())
+        self.assertTrue((self.home / ".agentic-workbench" / "machine.md").exists())
+        self.assertFalse((self.home / ".claude" / "machine.md").exists())
         self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
         self.assertFalse((self.home / ".claude" / "skills").exists())
+
+    def legacy_note(self) -> Path:
+        legacy = self.home / ".claude" / "machine.md"
+        legacy.write_text("state\n", encoding="utf-8")
+        return legacy
+
+    def test_a_legacy_machine_note_is_reported(self) -> None:
+        self.machine_file()
+        self.legacy_note()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            lc.main(["--repo", str(self.repo), "--home", str(self.home)])
+        self.assertIn("legacy", buf.getvalue())
+        self.assertIn(".claude", buf.getvalue())
+
+    def test_a_legacy_machine_note_is_listed_in_json(self) -> None:
+        self.machine_file()
+        legacy = self.legacy_note()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            lc.main(["--repo", str(self.repo), "--home", str(self.home), "--json"])
+        self.assertEqual(json.loads(buf.getvalue())["legacy"], [str(legacy)])
+
+    def test_no_legacy_note_means_an_empty_legacy_list(self) -> None:
+        self.machine_file()
+        buf = io.StringIO()
+        with contextlib.redirect_stdout(buf):
+            lc.main(["--repo", str(self.repo), "--home", str(self.home), "--json"])
+        self.assertEqual(json.loads(buf.getvalue())["legacy"], [])
+
+    def test_apply_never_deletes_the_legacy_note_and_it_does_not_fail_the_run(
+        self,
+    ) -> None:
+        self.machine_file()
+        legacy = self.legacy_note()
+        lc.main(["--repo", str(self.repo), "--home", str(self.home), "--apply"])
+        self.assertTrue(legacy.exists())
+        with contextlib.redirect_stdout(io.StringIO()):
+            code = lc.main(["--repo", str(self.repo), "--home", str(self.home)])
+        self.assertEqual(code, 0)
 
     def test_an_inherited_copilot_home_cannot_redirect_a_scratch_home(self) -> None:
         elsewhere = self.base / "elsewhere"
@@ -586,9 +632,9 @@ class TestCopilotPlan(TempTree):
                 self.assertTrue(link.dest.is_relative_to(self.home / ".copilot"))
 
     def test_machine_note_goes_to_the_one_fixed_path(self) -> None:
-        # AGENT-INSTRUCTIONS.md names ~/.claude/machine.md for every assistant.
+        # AGENT-INSTRUCTIONS.md names ~/.agentic-workbench/machine.md for every assistant.
         link = next(l for l in self.copilot() if l.label == "machine.md")
-        self.assertEqual(link.dest, self.home / ".claude" / "machine.md")
+        self.assertEqual(link.dest, self.home / ".agentic-workbench" / "machine.md")
 
     def test_global_instructions_use_copilots_native_user_path(self) -> None:
         link = next(

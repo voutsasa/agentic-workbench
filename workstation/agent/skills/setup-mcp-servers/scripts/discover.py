@@ -16,6 +16,19 @@ MCP_SERVICES_PATH = (
     "/api/2.1/unity-catalog/mcp-services?parent=schemas/system.ai&view=BASIC"
 )
 SERVICE_RE = re.compile(r"^[A-Za-z0-9_]+$")
+MACHINE_NOTE = Path(".agentic-workbench") / "machine.md"
+LEGACY_MACHINE_NOTE = Path(".claude") / "machine.md"
+
+
+def default_machine_note(home: Path) -> tuple[Path, str | None]:
+    """The machine note to read, and a warning when only the legacy one exists."""
+    note, legacy = home / MACHINE_NOTE, home / LEGACY_MACHINE_NOTE
+    if not note.exists() and legacy.exists():
+        return legacy, (
+            f"read the legacy {legacy}; run workstation/scripts/link_config.py "
+            f"--apply to link {note}"
+        )
+    return note, None
 
 
 def machine_repo(note: Path) -> Path:
@@ -129,16 +142,22 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--machine-note",
         type=Path,
-        default=Path.home() / ".claude" / "machine.md",
-        help="linked machine note used when --repo is omitted",
+        help="linked machine note used when --repo is omitted "
+        "(default: ~/.agentic-workbench/machine.md, else the legacy "
+        "~/.claude/machine.md)",
     )
     parser.add_argument(
         "--databricks-profile",
         help="opt into one read-only Databricks MCP-service catalog query",
     )
     args = parser.parse_args(argv)
+    note: Path | None = args.machine_note
+    if note is None and args.repo is None:
+        note, warning = default_machine_note(Path.home())
+        if warning:
+            print(f"setup-mcp-servers: warning: {warning}", file=sys.stderr)
     try:
-        root = args.repo or machine_repo(args.machine_note)
+        root: Path = args.repo or machine_repo(note or Path())
         result = discover(root, databricks_profile=args.databricks_profile)
     except (OSError, TypeError, ValueError, json.JSONDecodeError) as exc:
         print(f"setup-mcp-servers: {exc}", file=sys.stderr)

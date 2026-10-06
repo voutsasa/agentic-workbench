@@ -3,10 +3,12 @@
 
 Standard library only, so it runs on a fresh clone before anything is installed.
 
-``--agent claude`` (the default) links the skills, ``CLAUDE.md`` and the machine
-note into ``~/.claude``. ``--agent copilot`` links the same skills and
-``copilot-instructions.md`` into ``~/.copilot``; the machine note goes to
-``~/.claude/machine.md`` whichever agent is selected. VS Code can also read the Claude
+``--agent claude`` (the default) links the skills and ``CLAUDE.md`` into
+``~/.claude``. ``--agent copilot`` links the same skills and
+``copilot-instructions.md`` into ``~/.copilot``. The machine note goes to
+``~/.agentic-workbench/machine.md`` whichever agent is selected — the workbench's
+own home, named by no assistant — and a ``~/.claude/machine.md`` left from before
+the move is reported as legacy, never deleted. VS Code can also read the Claude
 destination when ``chat.useClaudeMdFile`` is enabled.
 ``--project`` links this repo's own ``skills/<name>/`` into ``<repo>/.claude/skills``,
 where both agents load them at project scope; ``.claude/`` is gitignored, so every
@@ -106,6 +108,15 @@ AGENTS = ("claude", "copilot")
 #: ``AGENTS.md`` detaches on the first checkout that replaces it, and an import
 #: cannot go stale.
 CLAUDE_MD_IMPORT = "@AGENTS.md\n"
+
+#: The workbench's own directory under the home, for files no assistant defines.
+#: Assistant-discovered files (instructions, skills, hooks) stay in each
+#: assistant's home, where it looks for them.
+WORKBENCH_HOME = ".agentic-workbench"
+
+#: Where the machine note lived before ``WORKBENCH_HOME``, relative to the home.
+#: Reported while present so the user can remove it; never touched here.
+LEGACY_MACHINE_NOTES = (Path(".claude") / "machine.md",)
 
 
 @dataclass(frozen=True)
@@ -270,7 +281,7 @@ def machine_file(
     hostname: str | None = None,
     machine: str | None = None,
 ) -> Path:
-    """The ``machines/`` file this box should link as ``~/.claude/machine.md``.
+    """The ``machines/`` file this box should link as ``~/.agentic-workbench/machine.md``.
 
     Resolved rather than derived, because a machine file is *named* by whoever
     writes it and a hostname is not always a name you want in git. In order:
@@ -411,14 +422,14 @@ def plan(
                 is_dir=False,
             )
         )
-    # One fixed path for every agent: AGENT-INSTRUCTIONS.md names ~/.claude/machine.md
-    # whichever assistant loads it, so a Copilot-only machine needs it too.
+    # One fixed path for every agent: AGENT-INSTRUCTIONS.md names
+    # ~/.agentic-workbench/machine.md whichever assistant loads it.
     if agents:
         links.append(
             Link(
                 "machine.md",
                 machine_file(repo_root, platform, hostname, machine),
-                home / ".claude" / "machine.md",
+                home / WORKBENCH_HOME / "machine.md",
                 is_dir=False,
             )
         )
@@ -553,6 +564,12 @@ def inspect(link: Link) -> LinkState:
     return LinkState(link, DIVERGED, "plain copy, content differs — reconcile first")
 
 
+def legacy_machine_notes(home: Path) -> list[Path]:
+    """Machine notes still at a pre-``WORKBENCH_HOME`` path, a dangling link included."""
+    paths = (home / rel for rel in LEGACY_MACHINE_NOTES)
+    return [p for p in paths if p.exists() or p.is_symlink()]
+
+
 def inspect_all(links: list[Link]) -> Report:
     return Report([inspect(link) for link in links])
 
@@ -681,7 +698,7 @@ def main(argv: list[str] | None = None) -> int:
         "--home",
         type=Path,
         default=Path.home(),
-        help="home directory holding .claude (default: your home)",
+        help="home directory holding .claude and .agentic-workbench (default: your home)",
     )
     parser.add_argument(
         "--agent",
@@ -720,7 +737,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--machine",
         metavar="ID",
-        help="machines/<ID>.md to link as ~/.claude/machine.md "
+        help="machines/<ID>.md to link as ~/.agentic-workbench/machine.md "
         "(default: <platform>-<hostname>.md, else the only "
         "file for this platform)",
     )
@@ -784,6 +801,9 @@ def main(argv: list[str] | None = None) -> int:
     if args.mcp and args.apply:
         mcp_states = apply_mcp(args.repo, mcp_states)
     mcp_ok = all(s.status == LINKED for s in mcp_states)
+    # Informational only: a legacy note harms nothing while the new one is linked,
+    # and removing it is the user's step, so it never changes the exit code.
+    legacy = legacy_machine_notes(args.home) if agents else []
 
     format_ = "json" if args.json else "csv" if args.csv else "md"
     if args.json:
@@ -796,6 +816,7 @@ def main(argv: list[str] | None = None) -> int:
                 "mcp": args.mcp,
                 "ok": report.ok and mcp_ok,
                 "status": report.status,
+                "legacy": [str(p) for p in legacy],
                 "mcp_servers": [
                     {
                         "name": s.name,
@@ -825,6 +846,11 @@ def main(argv: list[str] | None = None) -> int:
         rendered = render(report)
         if args.mcp:
             rendered += "\n\n" + render_mcp(mcp_states)
+        for path in legacy:
+            rendered += (
+                f"\n\n**legacy:** `{path}` is the machine note's old path. Remove it by"
+                " hand once `machine.md` above reads `linked`."
+            )
         if not (report.ok and mcp_ok) and not args.apply:
             rendered += (
                 "\n\nRe-run with `--apply` to repair what is missing or detached."

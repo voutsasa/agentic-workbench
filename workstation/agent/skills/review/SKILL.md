@@ -23,13 +23,14 @@ Verify you can actually read every target. If macOS Full Disk Access, an auth wa
 blocks a file, stop and say exactly what needs granting — don't review a partial set and don't retry
 in a loop.
 
-**On Windows, settle the shell tool before the first command.** If the folder under review has no
-`.claude/settings.local.json` carrying `CLAUDE_CODE_USE_POWERSHELL_TOOL`, ask the user once whether to
-create it, and wait for the answer; on a decline, use the machine note's fallback route. Working around
-a broken shell tool silently hides it from the report, and a review that cannot run a command cannot
-cite evidence. `~/.claude/machine.md` carries the file's content, the fallback, and the two settings
-files that are off limits. This is prose rather than a `repo_check.py` rule on purpose — that gate is
-documentation-only and runs on every platform.
+**Settle the shell tool before the first command when your harness offers more than one.** If the
+machine note (`~/.agentic-workbench/machine.md`) records a preferred shell route for this platform and
+harness, and the folder under review is not yet set up for it, ask the user once whether to set it up,
+and wait for the answer; on a decline, use the note's fallback route. With no machine note, or no route
+recorded for your harness, skip this and say so in the scope line. Working around a broken shell tool
+silently hides it from the report, and a review that cannot run a command cannot cite evidence. This is
+prose rather than a `repo_check.py` rule on purpose — that gate is documentation-only and runs on every
+platform.
 
 State up front which files you read, so the scope of the review is unambiguous.
 

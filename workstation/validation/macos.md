@@ -3,7 +3,7 @@
 Five sections, in order. Each says what to run and what it should print. Record the results in this
 machine's file under [`../machines/`](../machines/README.md), not here.
 
-`$R` below is the clone, the `repo:` field of `~/.claude/machine.md`. `<tool-python>` is
+`$R` below is the clone, the `repo:` field of `~/.agentic-workbench/machine.md`. `<tool-python>` is
 `"$(uv tool dir)/playwright/bin/python"`.
 
 ## A. Config links and instruction loading

@@ -17,7 +17,7 @@ of the tree is arranged around, and it has three consequences:
 Two authoring rules for `AGENT-INSTRUCTIONS.md`, kept here because they govern its edits, not a session:
 
 - **Nothing machine-specific goes in it.** A shell quirk, an absolute path, a version number or a tool
-  inventory written there is a defect; its *This machine* section points at `~/.claude/machine.md`
+  inventory written there is a defect; its *This machine* section points at `~/.agentic-workbench/machine.md`
   instead.
 - **`REPLY_CEILING`'s number is written once**, in its *How to answer me* bullet. Skills refer to it by
   name, so change the number there alone.
@@ -30,7 +30,7 @@ Two authoring rules for `AGENT-INSTRUCTIONS.md`, kept here because they govern i
 | `AGENT-INSTRUCTIONS.md` | `~/.copilot/copilot-instructions.md` | linked for Copilot CLI |
 | `settings.json` | `~/.claude/settings.json` | **merged by hand — never linked** |
 | `skills/<skill>/` | `~/.claude/skills/<skill>` | linked — one per name in [`../scripts/link_config.py`](../scripts/link_config.py)'s `SKILLS` tuple |
-| `../machines/<platform>-<id>.md` | `~/.claude/machine.md` | linked for every agent, Copilot included — the instructions name this one path |
+| `../machines/<platform>-<id>.md` | `~/.agentic-workbench/machine.md` | linked for every agent — the instructions name this one path, under the workbench's own home rather than any assistant's |
 | `hooks/powershell-tool-prompt.ps1` | `~/.claude/hooks/powershell-tool-prompt.ps1` | **reference copy — copied by hand, never linked** |
 | `hooks/ruff_on_edit.py` | `~/.claude/hooks/` and `~/.copilot/hooks/` | linked with `link_config.py --hooks` |
 | `hooks/ruff-on-edit.copilot.json` | `~/.copilot/hooks/ruff-on-edit.json` | linked with `link_config.py --hooks --agent copilot` |
@@ -43,7 +43,7 @@ truth without naming a platform.
 body is portable, but its *registration* — the `hooks.SessionStart`/`hooks.PreToolUse` block naming
 `pwsh.exe`'s absolute path and this script's absolute path — is Windows-specific and user-specific, so
 it stays in the live `~/.claude/settings.json` only. See "There is a PowerShell tool" in
-`~/.claude/machine.md`.
+`~/.agentic-workbench/machine.md`.
 
 `hooks/ruff_on_edit.py` is the opposite case: portable script *and* portable registration, so it is
 linked. The registration checks `.venv/bin/python` and `.venv/Scripts/python.exe`, covering POSIX and
@@ -94,12 +94,13 @@ Copy-Item ~/.claude/settings.json ~/.claude/settings.json.bak
 **2. Print the delta.** Run from the repo root. This reads both files and writes neither:
 
 ```
-uv run python -c "import json,pathlib;L=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());R=json.loads(pathlib.Path('workstation/agent/settings.json').read_text());print('\n'.join(f'add {k}: {json.dumps(v)}' for k,v in R.items() if L.get(k)!=v) or 'in sync')"
+uv run python workstation/scripts/settings_delta.py
 ```
 
-The comparison is **one level deep**, so a key whose value is an object — `enabledPlugins`,
-`permissions` — reports as a whole even when only one member differs. Read it as *"reconcile this key"*,
-not *"replace this key"*.
+It prints one `add <key>: <value>` line per difference, or `in sync`, and exits 1 or 0 to match. An
+object-valued key — `enabledPlugins`, `permissions` — is compared member by member, so
+`permissions.defaultMode` is reported on its own. A list reports only the items the live one lacks.
+[`../scripts/README.md`](../scripts/README.md#settings_deltapy) has the full contract.
 
 **3. Add each reported key by hand**, in an editor, at the **top level** of the JSON object — a sibling
 of `env`, never inside it. For an object-valued key, add the missing *members* and leave the rest alone.
@@ -125,26 +126,25 @@ provider-bound machine (Bedrock) is required to carry an `env` block at all; a s
 none, and that is correct, not a failure — see *Settings are merged, never linked* above. An editor can
 leave a trailing comma that Claude Code reports only as a silent fallback to another provider:
 
-```powershell
-uv run python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());print('valid JSON'); print('env keys:', sorted(d.get('env',{}))); print('BEDROCK:', d.get('env',{}).get('CLAUDE_CODE_USE_BEDROCK'))"
+```
+uv run python workstation/scripts/settings_delta.py --env
 ```
 
-On a provider-bound machine, `env keys:` must be non-empty and `BEDROCK:` must not be `None`; if either
+It exits 2 if the file is not valid JSON. On a provider-bound machine, `env keys` must be non-empty and
+`CLAUDE_CODE_USE_BEDROCK` must not be `None`; if either
 fails, restore the `.bak` from step 1 and start again. On a machine that is not provider-bound, an empty
 `env keys:` is expected — skip the rest of this step.
 
 **6. Re-run step 2, and check the model IDs separately.** `in sync` on its own does **not** mean the
 merge is complete, because step 2 compares only the keys the repo copy has — and the repo copy has no
 `env` block at all. **Step 4 is invisible to it.** Measured on `EMA-PF5N4XE7` on 26 August 2026: step 2
-printed `in sync` while `env.ANTHROPIC_MODEL` was still a superseded model ID. So run both:
-
-```powershell
-uv run python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());e=d.get('env',{});print('model        :',d.get('model'));print('ANTHROPIC_MODEL:',e.get('ANTHROPIC_MODEL'));print('HAIKU        :',e.get('ANTHROPIC_DEFAULT_HAIKU_MODEL'),'| legacy SMALL_FAST:',e.get('ANTHROPIC_SMALL_FAST_MODEL'))"
-```
+printed `in sync` while `env.ANTHROPIC_MODEL` was still a superseded model ID. So read the model rows
+of step 5's `--env` output too: `model`, `ANTHROPIC_MODEL`, `ANTHROPIC_DEFAULT_HAIKU_MODEL` and
+`ANTHROPIC_SMALL_FAST_MODEL`.
 
 `ANTHROPIC_SMALL_FAST_MODEL` is **deprecated** — `ANTHROPIC_DEFAULT_HAIKU_MODEL` replaces it. The probe
 prints both so a settings file still carrying the old key is visible rather than silently ignored; a
-machine showing a value under `legacy SMALL_FAST` has a key to migrate. See
+machine showing a value under `ANTHROPIC_SMALL_FAST_MODEL` has a key to migrate. See
 [`setup/README.md`](setup/README.md#2-claude-on-bedrock-windows).
 
 Read the two IDs and confirm they name the models you intend — nothing can check that for you, since
@@ -251,7 +251,7 @@ long as you happen to run from the repo root, and silently breaks the first time
 # Claude Code
 claude plugin marketplace add <agentic-workbench>/workstation/agent
 claude plugin install workbench-skills@agentic-workbench
-claude plugin details workbench-skills      # confirm: 9 skills, enabled
+claude plugin details workbench-skills      # confirm: every skill in .claude-plugin/plugin.json, enabled
 
 # Copilot CLI
 copilot plugin marketplace add <agentic-workbench>/workstation/agent
@@ -260,7 +260,7 @@ copilot plugin list                         # confirm: workbench-skills, enabled
 ```
 
 Verified on Windows by removing and re-adding the marketplace at its absolute path: both tools
-re-installed `workbench-skills` with the same 9 skills, enabled, `v0.1.0`.
+re-installed `workbench-skills` with every skill then in the manifest, enabled, `v0.1.0`.
 
 Hooks, MCP servers and `settings.json` are deliberately **not** part of this plugin — they stay on
 the hand-merge/link route above, since folding them in would touch the provider-bound `env` block

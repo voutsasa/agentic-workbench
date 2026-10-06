@@ -54,6 +54,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 
 * [Semantic Versioning](https://semver.org/) — Specification for MAJOR.MINOR.PATCH version numbers and the compatibility promise each increment signals.
 * [Git](https://git-scm.com/docs) — Reference documentation for every git command, plus guides and the Pro Git book.
+* [git-cliff](https://git-cliff.org/docs/) — Changelog generator that builds release notes from conventional commits, configured by `cliff.toml`.
 
 ### Experimentation stack
 
@@ -205,7 +206,6 @@ Tools and MCP servers used to ingest and process sources into this repo. An entr
 
 See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command → product → folder` map. Each tool below has its own folder at `workstation/cli/<tool>/` holding the install commands, a quick start, and the packaging traps worth knowing before you run it.
 
-* [git-cliff](https://git-cliff.org/docs/) — Changelog generator that builds release notes from conventional commits, configured by `cliff.toml`.
 * [playwright](https://playwright.dev/docs/intro) — Browser automation library for testing, scraping, and driving web pages programmatically.
 * [pandoc](https://github.com/jgm/pandoc) — Universal document converter supporting dozens of markup and file formats.
 * [docling](https://github.com/docling-project/docling) — Converts PDFs, Office docs, and more into structured, LLM-ready formats.

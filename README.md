@@ -44,7 +44,7 @@ skills, all linked per clone:
 
 Then start the assistant in the repo — restart it if a session was already open, since instructions are read at session start — and run the [`setup-agents`](skills/setup-agents/SKILL.md) skill. It finds the AI assistants on your machine and sets them up with the shared instructions and skills. Re-run either command without `--apply` to check: it exits non-zero unless everything reads `linked`.
 
-**Plugin route — just the 9 global skills**, one OS-independent command per tool, no Python step, no
+**Plugin route — just the global skills**, one OS-independent command per tool, no Python step, no
 symlink-vs-junction branch. Use the **absolute path** to your clone — both tools resolve it again on
 every later command, so a relative path only works for as long as you happen to run from the repo
 root. Replace `<agentic-workbench>` with where you cloned this repo (e.g.
@@ -227,7 +227,7 @@ What the workbench runs on — the machines, not an architecture.
 | [`workstation/cli/`](workstation/cli/README.md) | The CLI toolchain. One folder per tool: authored `install.md` and `quick_start.md`, plus an ingested `reference.md`. Read `quick_start.md` before invoking a tool you haven't used this session. |
 | [`workstation/mcp/`](workstation/mcp/README.md) | Third-party MCP servers. One folder per server: authored `setup.md` plus an ingested `reference.md`. |
 | [`workstation/machines/`](workstation/machines/README.md) | One file per machine: paths, shell, which tools actually run, what is broken. **The only place a machine-specific fact belongs.** |
-| [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `status.py` reports whether the machine meets its prerequisites; `link_config.py` reports or repairs the `~/.claude` links and, with `--agent copilot`, the global instruction and skill links under `~/.copilot`. All three are read-only unless told otherwise. `databricks_mcp.py` prints the Claude Code and Copilot CLI registration commands for the Databricks MCP services, and runs none of them. `bump_frontmatter_version.py` reports (or, with `--apply`, writes) the `version:` frontmatter field across skills, guides, machine notes and key documents to match a new release; see [`VERSIONING.md`](VERSIONING.md). |
+| [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `status.py` reports whether the machine meets its prerequisites; `link_config.py` reports or repairs the `~/.claude` links and, with `--agent copilot`, the global instruction and skill links under `~/.copilot`. All three are read-only unless told otherwise. `databricks_mcp.py` prints the Claude Code and Copilot CLI registration commands for the Databricks MCP services, and runs none of them. `bump_frontmatter_version.py` reports (or, with `--apply`, writes) the `version:` frontmatter field across skills, guides, machine notes and key documents to match a new release; see [`VERSIONING.md`](VERSIONING.md). `settings_delta.py` prints what the live `~/.claude/settings.json` lacks from the repo's reference copy, for the hand merge. |
 | `workstation/agent/` | Claude Code configuration, **linked into `~/.claude/`** so it is versioned rather than scattered across a home directory. See below. |
 
 **The split is by lifetime, not by platform** — policy, route and machine state live in different

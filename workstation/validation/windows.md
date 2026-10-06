@@ -7,7 +7,7 @@ note can cite *validation C* whichever box ran it. Record results in that machin
 Where a step's Windows behaviour is genuinely unknown, it says so. Correct this file from the run
 rather than trusting it.
 
-`$Root` below is the clone, the `repo:` field of `~/.claude/machine.md`. `<tool-python>` is the
+`$Root` below is the clone, the `repo:` field of `~/.agentic-workbench/machine.md`. `<tool-python>` is the
 Playwright uv tool venv's `Scripts\python.exe`, under the directory `uv tool dir` prints.
 
 ## A. Config links and instruction loading

@@ -12,7 +12,7 @@
 # with permissionDecision "allow" — it does not grant any permission itself, existing deny/ask
 # rules still apply on top; it only attaches context to the tool result.
 #
-# The rule this enforces is in ~/.claude/machine.md, "There is a PowerShell tool".
+# The rule this enforces is in ~/.agentic-workbench/machine.md, "There is a PowerShell tool".
 #
 # This copy is the tracked reference — see workstation/agent/README.md. The registration
 # itself (the hooks block naming this script's absolute path and pwsh.exe location) stays
@@ -89,7 +89,7 @@ unasked. On a yes, write the file — merging into an existing env block rather 
 tell them it takes effect only when they restart the session in this folder. On a no, do not ask again
 this session and call binaries by absolute POSIX path instead.
 
-The full rule, including the two settings files that are off limits, is in ~/.claude/machine.md under
+The full rule, including the two settings files that are off limits, is in ~/.agentic-workbench/machine.md under
 "There is a PowerShell tool".
 '@
 

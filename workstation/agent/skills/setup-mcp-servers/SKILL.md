@@ -8,8 +8,9 @@ version: 0.1.0
 # Set up MCP servers
 
 This skill sets up the documented workstation MCP routes: `drawio-mcp`, `ado-remote-mcp`, and
-Databricks managed MCP services. It reads the workbench root from `~/.claude/machine.md` and never
-assumes the current repository is the workbench.
+Databricks managed MCP services. It reads the workbench root from `~/.agentic-workbench/machine.md`
+(falling back, with a warning, to the legacy `~/.claude/machine.md`) and never assumes the current
+repository is the workbench.
 
 ## Never
 

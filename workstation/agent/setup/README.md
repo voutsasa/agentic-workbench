@@ -59,7 +59,7 @@ Claude subscription, no provider configuration.
    commands, and pass `--hooks` there so the ruff post-edit hook is linked too.
 
    What it puts in place: one symlink per skill, `AGENT-INSTRUCTIONS.md` → `~/.claude/CLAUDE.md`,
-   the machine note → `~/.claude/machine.md`, and (with `--hooks`) `hooks/ruff_on_edit.py` →
+   the machine note → `~/.agentic-workbench/machine.md`, and (with `--hooks`) `hooks/ruff_on_edit.py` →
    `~/.claude/hooks/`. `settings.json` is not among them, by design.
 
 3. **Settings — merge by hand, never link.** (**user**) `settings.json` is excluded from the plan by
@@ -144,11 +144,11 @@ the region came from your AWS config rather than `AWS_REGION`. Region resolution
 
 Then confirm the `env` block survived the settings merge:
 
-```powershell
-uv run python -c "import json,pathlib;d=json.loads((pathlib.Path.home()/'.claude/settings.json').read_text());e=d.get('env',{});print('env keys:',sorted(e));print('BEDROCK:',e.get('CLAUDE_CODE_USE_BEDROCK'))"
+```
+uv run python workstation/scripts/settings_delta.py --env
 ```
 
-`env keys:` must be non-empty and `BEDROCK:` must not be `None`.
+`env keys` must be non-empty and `CLAUDE_CODE_USE_BEDROCK` must not be `None`.
 
 ### Windows traps
 
@@ -215,7 +215,7 @@ the global instructions and skills rather than copying them:
 python workstation/scripts/link_config.py --agent copilot --apply   # python3 on macOS
 ```
 
-That creates `~/.copilot/copilot-instructions.md` for the CLI, and `~/.claude/machine.md`, the one
+That creates `~/.copilot/copilot-instructions.md` for the CLI, and `~/.agentic-workbench/machine.md`, the one
 path the instructions name for machine state whichever agent reads them. For VS Code, also run the Claude link
 route once so `~/.claude/CLAUDE.md` exists, then enable `chat.useClaudeMdFile`; Claude Code itself does
 not need to be installed for that file to serve as VS Code's instruction source.
