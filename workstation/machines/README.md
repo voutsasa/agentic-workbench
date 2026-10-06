@@ -32,8 +32,8 @@ stale), and why a machine's tool table is measured by `../scripts/inventory.py` 
 
 | Machine | Prerequisites | Platform | Repo path | Inventory verified |
 |---|---|---|---|---|
-| [`windows-ema-pf5n4xe7.md`](windows-ema-pf5n4xe7.md) | [`windows-ema-pf5n4xe7.prerequisites.toml`](windows-ema-pf5n4xe7.prerequisites.toml) | Windows 11 (build 26200) | `C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench` | 29 September 2026 |
-| [`macos-workstation.md`](macos-workstation.md) | [`macos-workstation.prerequisites.toml`](macos-workstation.prerequisites.toml) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 18 September 2026 |
+| [`windows-ema-pf5n4xe7.md`](windows-ema-pf5n4xe7.md) | [`windows-ema-pf5n4xe7.prerequisites.toml`](windows-ema-pf5n4xe7.prerequisites.toml) | Windows 11 (build 26200) | `C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench` | 6 October 2026 |
+| [`macos-workstation.md`](macos-workstation.md) | [`macos-workstation.prerequisites.toml`](macos-workstation.prerequisites.toml) | macOS 26.6.2 (arm64) | `~/Development/agentic-coding/agentic-workbench` | 6 October 2026 |
 
 The filename is `<platform>-<id>.md`, lowercased. The id is usually the hostname —
 `workstation/scripts/inventory.py --json` prints that form under `suggested_id` — but it does

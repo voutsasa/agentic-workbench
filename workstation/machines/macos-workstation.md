@@ -324,3 +324,13 @@ Probed on `workstation` (Darwin Darwin Kernel Version 25.6.0: Fri Jul 31 19:18:5
 | What | Consequence |
 |---|---|
 | _(nothing outstanding)_ | `pytest`, `ruff` and the pre-push hook all landed on 2026-09-13 |
+
+## Validation ([`../validation/macos.md`](../validation/macos.md))
+
+| Section | Recorded on this machine |
+|---|---|
+| A. Config links and instruction loading | *Claude Code config* above |
+| B. The toolchain, and the machine note it feeds | *CLI toolchain* above |
+| C. Document conversion | **not run** — no result recorded |
+| D. The JS-hydrated route | **not run** — no result recorded |
+| E. The repo's own gates | the pre-push gate is installed (*Claude Code config*, 2026-09-13); no full section E run recorded |

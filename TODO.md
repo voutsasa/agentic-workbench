@@ -19,34 +19,24 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 54. Review findings from 2026-10-06 not yet applied
+### 54. Three review findings from 2026-10-06 wait on a decision
 
-Opened 2026-10-06. The whole-repo documentation review's decisions 1, 2 and 4 and the machine-note
-move were applied; these findings were not:
+Opened 2026-10-06. The other findings of the whole-repo documentation review are applied. These three
+each have two defensible fixes, so they wait for the owner:
 
-- `workstation/mcp/ado-remote-mcp/setup.md:108-127` — the Claude command and its JSON omit the
-  `X-MCP-Readonly: true` header the tracked `.mcp.json` carries, and `:85`'s personal
-  `copilot mcp add` omits it too.
-- `README.md:257` — the `pyproject.toml` row omits `git-cliff` from the `dev` group.
-- `workstation/scripts/README.md` — `link_config.py --mcp`, `inventory.py --cli-dir`, and
-  `status.py --timeout`/`--quiet` are undocumented.
-- `workstation/machines/README.md`, line 36 — macOS "Inventory verified" reads 18 September 2026; the note's
-  probe is 2026-10-06.
-- `workstation/machines/macos-workstation.md` — validation sections C and D are neither recorded nor
-  marked unrun.
-- `workstation/machines/windows-ema-pf5n4xe7.md`, lines 454 and 461 — the tool table shows `databricks` 1.18.0 and
-  `pandoc` 3.11; a probe on 2026-10-06 measured 1.19.0 and 3.12.
-- `README.md:190` and `:231` — `scripts/` is described as three tools, and `workstation/agent/` as
-  Claude Code configuration only.
-- `workstation/cli/plantuml-cli/quick_start.md`, line 44, requires `rsvg-convert` unconditionally;
-  `magick/quick_start.md:22` says it is build-dependent.
-- `workstation/cli/confluence-sync-md/` — `install.md:3` and `quick_start.md:3` list different `command:`
-  frontmatter.
-- The ingestion invariant is restated in `AGENTS.md`, `SOURCES.md` § *Conventions* and
-  `skills/ingest-source/SKILL.md` §1; the docling timing table is in both its `install.md` and
-  `quick_start.md`.
+- **`quick_start.md`'s `command:` frontmatter has no stated meaning.** `inventory.py` reads only
+  `install.md`'s field. The `quick_start.md` copies sometimes list every binary (`dbml-cli`) and sometimes
+  only the main one (`confluence-sync-md` omits `md2conf`; `unity-gateway` omits `ucode`).
+  Either mirror `install.md` exactly, or drop the field from `quick_start.md`.
+- **The ingestion invariant is restated** in `AGENTS.md` § *Ingestion invariant*, `SOURCES.md`
+  § *Conventions* and `skills/ingest-source/SKILL.md` §1. Either keep it in full only in `SOURCES.md`
+  and point to it from the other two, or keep the copies. `AGENTS.md` is loaded by every session in this
+  repo, so shortening it changes what an agent reads at start-up.
+- **The docling LibreOffice timing table** is in both `workstation/cli/docling/install.md` and its
+  `quick_start.md`. Either keep it in `install.md` and link to it, or keep both copies because
+  `quick_start.md` is the one read before invoking the tool.
 
-**Closes when:** each bullet is fixed or recorded as declined, and `repo_check.py` passes.
+**Closes when:** each bullet is decided and applied (or declined), and `repo_check.py` passes.
 
 ### 52. The machine note has not been re-linked to `~/.agentic-workbench/` on macOS
 

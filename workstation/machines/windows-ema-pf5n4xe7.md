@@ -438,27 +438,25 @@ for that reason.
 
 ## CLI toolchain
 
-Probed on `EMA-PF5N4XE7` (Windows 10.0.26200, Python 3.12.10) by
-[`../scripts/inventory.py`](../scripts/inventory.py) on 29 September 2026.
+Probed on `EMA-PF5N4XE7` (Windows 10.0.26200, Python 3.14.8) by
+[`../scripts/inventory.py`](../scripts/inventory.py) on 6 October 2026.
 
-**17 of 17 usable.** This probe ran from the fresh-clone validation venv; its Python version identifies
-the probe, not the machine's default Python. **That 3.12.10 figure is inconsistent** with the 3.14.7
-pin recorded in *Python scaffolding* above and in the *Fresh-clone install validated* note below, both
-also dated around this session; which environment actually ran this probe was not reconciled here.
-Treat 3.12.10 as superseded until the probe is re-run and the discrepancy is resolved.
+**17 of 17 usable.** This probe ran from the repo's `.venv`, on the 3.14 pin; its Python version
+identifies the probe, not the machine's default Python. The 3.12.10 the 29 September probe recorded
+matched no environment recorded here; this probe supersedes it.
 
 | Command | Product | Status | Version | Detail |
 |---|---|---|---|---|
 | `confluence-sync-md`, `md2conf` | confluence-sync-md | installed | 0.6.0 | — |
 | `d2` | D2 (Terrastruct) | installed | 0.9.0 | — |
-| `databricks` | Databricks CLI | installed | 1.18.0 | — |
+| `databricks` | Databricks CLI | installed | 1.19.0 | — |
 | `dbml2sql`, `sql2dbml`, `db2dbml` | DBML CLI | installed | 9.0.0 | — |
 | `defuddle` | Defuddle | installed | 0.19.4 | — |
 | `docling` | Docling | installed | 2.131.0 | — |
 | `jq` | jq | installed | 1.8.2 | — |
 | `magick` | ImageMagick | installed | 7.1.2-32 | — |
 | `mmdc` | Mermaid CLI | installed | 11.16.0 | — |
-| `pandoc` | Pandoc | installed | 3.11 | — |
+| `pandoc` | Pandoc | installed | 3.12 | — |
 | `plantuml` | PlantUML | installed | 1.2026.8 | — |
 | `playwright` | Playwright | installed | 1.63.0 | — |
 | `sem` | Sem (Ataraxy Labs) | installed | 0.13.0 | — |
