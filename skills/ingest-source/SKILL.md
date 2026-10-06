@@ -21,38 +21,21 @@ below first, then invoke that skill with the URL and the resolved path.
 
 ## 1. Where it lands
 
-```
-docs/landing-zone/<topic name>.{md,pdf}
-```
-
-One flat directory. No per-section subfolders and no per-layer folders — a source can feed more than
-one layer, and a physical folder would force a false single home. Layer grouping lives in `SOURCES.md`
-alone.
-
-`<topic name>` is **the exact link text between the `[ ]`**, not the repo name, not the page title:
-`[Pydantic AI](...)` → `docs/landing-zone/Pydantic AI.md`.
-
-**The one permitted deviation** — a `: ` in the title, the colon *together with the space after it*,
-is written as ` - ` in the filename, so the result has single spaces around the dash rather than a
-doubled one:
+The destination rule — path, filename, the ` - ` for a `: `, and the workstation-tooling exception — is
+stated once, in [`SOURCES.md` § *Conventions*](../../SOURCES.md#conventions), *Ingestion invariant*.
+Don't apply it by hand: `repo_check.py --corpus` prints the resolved destination of every entry not
+yet ingested, so read this entry's line there — an entry it does not list is already on disk:
 
 ```
-[Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl]
-  → Understanding Spec-Driven-Development - Kiro, spec-kit, and Tessl.md
+python workstation/agent/skills/review/scripts/repo_check.py --corpus
 ```
 
-**One destination exception.** Entries under *Cross-cutting aspects → 2. Workstation tooling* land
-beside their authored guidance instead, and carry extra work — read
-[`references/workstation-tooling.md`](references/workstation-tooling.md) when, and only when, the entry
-sits there:
+The name is the link text between the `[ ]`, never the repo name or page title. `docs/landing-zone/`
+is one flat directory, because a source can feed more than one layer; layer grouping lives in
+`SOURCES.md` alone.
 
-```
-#### CLI tools    → workstation/cli/<topic name>/reference.md
-#### MCP servers  → workstation/mcp/<topic name>/reference.md
-```
-
-Italic *see also* cross-references are not entries. Every real entry carries exactly one bracket link
-with an `http(s)` target, which is what keeps the register-to-corpus mapping one-to-one.
+When the entry sits under *Cross-cutting aspects → 2. Workstation tooling*, it also carries extra work:
+read [`references/workstation-tooling.md`](references/workstation-tooling.md) then, and only then.
 
 ## 2. Fetch and convert
 

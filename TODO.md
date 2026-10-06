@@ -19,24 +19,17 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 54. Three review findings from 2026-10-06 wait on a decision
+### 55. Whether a `.docx` loses its figures without LibreOffice is contradicted
 
-Opened 2026-10-06. The other findings of the whole-repo documentation review are applied. These three
-each have two defensible fixes, so they wait for the owner:
+Opened 2026-10-06. `workstation/cli/docling/install.md` § *Embedded images need LibreOffice* (docling
+2.122.0) says a `.docx` carrying DrawingML converts with every image dropped unless `soffice` is on
+`PATH`, and its `quick_start.md` repeats it. `workstation/agent/skills/fetch-to-markdown/SKILL.md` § 2
+(docling 2.115.0, measured 2026-09-20) says three fixtures converted byte-identically with and without
+`soffice`, so LibreOffice plays no part. This machine runs docling 2.131.0.
 
-- **`quick_start.md`'s `command:` frontmatter has no stated meaning.** `inventory.py` reads only
-  `install.md`'s field. The `quick_start.md` copies sometimes list every binary (`dbml-cli`) and sometimes
-  only the main one (`confluence-sync-md` omits `md2conf`; `unity-gateway` omits `ucode`).
-  Either mirror `install.md` exactly, or drop the field from `quick_start.md`.
-- **The ingestion invariant is restated** in `AGENTS.md` § *Ingestion invariant*, `SOURCES.md`
-  § *Conventions* and `skills/ingest-source/SKILL.md` §1. Either keep it in full only in `SOURCES.md`
-  and point to it from the other two, or keep the copies. `AGENTS.md` is loaded by every session in this
-  repo, so shortening it changes what an agent reads at start-up.
-- **The docling LibreOffice timing table** is in both `workstation/cli/docling/install.md` and its
-  `quick_start.md`. Either keep it in `install.md` and link to it, or keep both copies because
-  `quick_start.md` is the one read before invoking the tool.
-
-**Closes when:** each bullet is decided and applied (or declined), and `repo_check.py` passes.
+**Closes when:** `workstation/validation/fixtures/chartex.docx` and `shapes-with-text.docx` are
+converted on the current docling with and without `soffice` on `PATH`, the image counts are compared,
+and whichever text is wrong is corrected to the measured result.
 
 ### 52. The machine note has not been re-linked to `~/.agentic-workbench/` on macOS
 
