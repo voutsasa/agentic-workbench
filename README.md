@@ -30,7 +30,12 @@ uv sync
 python workstation/scripts/status.py
 ```
 
-**4. Load the skills and instructions.**
+**4. Set up Claude Code and/or GitHub Copilot CLI.** Two routes, not mutually exclusive — the full
+route for working *in* this repo, the plugin for just picking up its global skills elsewhere.
+
+**Full route — everything this repo gives an assistant**: this repo's own skills
+(`get-workstation-status`, `ingest-source`, `setup-agents`), the shared instructions, and the global
+skills, all linked per clone:
 
 | You use | Run | It puts in place |
 |---|---|---|
@@ -39,9 +44,25 @@ python workstation/scripts/status.py
 
 Then start the assistant in the repo — restart it if a session was already open, since instructions are read at session start — and run the [`setup-agents`](skills/setup-agents/SKILL.md) skill. It finds the AI assistants on your machine and sets them up with the shared instructions and skills. Re-run either command without `--apply` to check: it exits non-zero unless everything reads `linked`.
 
-For the global skills only, [`workstation/agent/README.md` § *Install the skills as a plugin
-instead*](workstation/agent/README.md#install-the-skills-as-a-plugin-instead) covers a one-command,
-OS-independent alternative via Claude Code's and Copilot CLI's own plugin mechanism.
+**Plugin route — just the 9 global skills**, one OS-independent command per tool, no Python step, no
+symlink-vs-junction branch. Run from the repo root:
+
+```sh
+# Claude Code
+claude plugin marketplace add ./workstation/agent
+claude plugin install workbench-skills@agentic-workbench
+
+# Copilot CLI
+copilot plugin marketplace add ./workstation/agent
+copilot plugin install workbench-skills@agentic-workbench
+```
+
+This gets you `review`, `verify-docs`, `fetch-to-markdown`, `python-quality`, `pdf-deliverable`,
+`fix-findings`, `confluence-publish`, `confluence-export` and `setup-mcp-servers` — not this repo's
+own `SOURCES.md`/register-aware skills, and not the shared instructions, since both assume the full
+clone. [`workstation/agent/README.md` § *Install the skills as a plugin
+instead*](workstation/agent/README.md#install-the-skills-as-a-plugin-instead) has the manifest layout
+and the verify step.
 
 ## Executive summary
 
