@@ -40,6 +40,7 @@ extraPaths = [
     "workstation/agent/skills/fetch-to-markdown/scripts",
     "workstation/agent/skills/python-quality/scripts",
     "workstation/agent/skills/review/scripts",
+    "workstation/agent/skills/session-signature/scripts",
     "workstation/agent/skills/verify-docs/scripts",
 ]
 # Setting `exclude` replaces pyright's defaults, so they are restated first. The

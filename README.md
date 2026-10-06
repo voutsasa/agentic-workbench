@@ -62,7 +62,7 @@ copilot plugin install workbench-skills@agentic-workbench
 ```
 
 This gets you `review`, `verify-docs`, `fetch-to-markdown`, `python-quality`, `pdf-deliverable`,
-`fix-findings`, `confluence-publish`, `confluence-export` and `setup-mcp-servers` — not this repo's
+`fix-findings`, `confluence-publish`, `confluence-export`, `setup-mcp-servers` and `session-signature` — not this repo's
 own `SOURCES.md`/register-aware skills, and not the shared instructions, since both assume the full
 clone. [`workstation/agent/README.md` § *Install the skills as a plugin
 instead*](workstation/agent/README.md#install-the-skills-as-a-plugin-instead) has the manifest layout
@@ -98,6 +98,7 @@ Repo skills serve this workbench; global skills work in any repo. The authoritat
 | [`confluence-publish`](workstation/agent/skills/confluence-publish/SKILL.md) | global | Publishes Markdown to a Confluence Cloud page under a target page you name, with confluence-sync-md and md2conf. |
 | [`confluence-export`](workstation/agent/skills/confluence-export/SKILL.md) | global | Retrieves Confluence pages, subtrees or spaces as Markdown with cme, previewing the destination for approval first. |
 | [`setup-mcp-servers`](workstation/agent/skills/setup-mcp-servers/SKILL.md) | global | Guides safe setup of documented MCP servers, collecting non-secret choices and handing registration commands to the user. |
+| [`session-signature`](workstation/agent/skills/session-signature/SKILL.md) | global | Stamps an output with a signature id — workstation, user, AI assistant and workbench versions, model, UTC time — or the full JSON as the extended signature. |
 
 ## Layout
 
