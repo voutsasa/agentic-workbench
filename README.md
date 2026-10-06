@@ -187,7 +187,7 @@ workstation/              	this machine's setup — serves the repo, never a del
   mcp/<server>/           	per-server MCP guidance       — authored files in git.   
   agent/                  	agent config + global skills, symlinked into ~/.claude/.   
   machines/               	per-machine measured state and readiness profiles.
-  scripts/                	the inventory probe, the readiness report and the ~/.claude link checker.   
+  scripts/                	the inventory probe, readiness report, link checker and other stdlib helpers.   
   validation/             	steps and fixtures that prove a machine works.   
 
 scripts/                  	headless verify-docs runner.   
@@ -228,7 +228,7 @@ What the workbench runs on — the machines, not an architecture.
 | [`workstation/mcp/`](workstation/mcp/README.md) | Third-party MCP servers. One folder per server: authored `setup.md` plus an ingested `reference.md`. |
 | [`workstation/machines/`](workstation/machines/README.md) | One file per machine: paths, shell, which tools actually run, what is broken. **The only place a machine-specific fact belongs.** |
 | [`workstation/scripts/`](workstation/scripts/README.md) | Scripts maintaining this tree. `inventory.py` probes the toolchain and generates a machine's tool table; `status.py` reports whether the machine meets its prerequisites; `link_config.py` reports or repairs the `~/.claude` links and, with `--agent copilot`, the global instruction and skill links under `~/.copilot`. All three are read-only unless told otherwise. `databricks_mcp.py` prints the Claude Code and Copilot CLI registration commands for the Databricks MCP services, and runs none of them. `bump_frontmatter_version.py` reports (or, with `--apply`, writes) the `version:` frontmatter field across skills, guides, machine notes and key documents to match a new release; see [`VERSIONING.md`](VERSIONING.md). `settings_delta.py` prints what the live `~/.claude/settings.json` lacks from the repo's reference copy, for the hand merge. |
-| `workstation/agent/` | Claude Code configuration, **linked into `~/.claude/`** so it is versioned rather than scattered across a home directory. See below. |
+| `workstation/agent/` | Claude Code and GitHub Copilot configuration, **linked into `~/.claude/` and `~/.copilot/`** so it is versioned rather than scattered across a home directory. See below. |
 
 **The split is by lifetime, not by platform** — policy, route and machine state live in different
 files. [`workstation/machines/README.md`](workstation/machines/README.md) has the table and the test.
@@ -254,7 +254,7 @@ Because these are links into a git repo, check `git status` here before overwrit
 | Path | Role |
 |---|---|
 | [`skills/README.md`](skills/README.md) | Index of this repo's own skills, the line dividing them from the global ones in `workstation/agent/skills/`, and the per-clone links that make them load — Claude Code and Copilot discover `.claude/skills/`, not `skills/`. |
-| `pyproject.toml` | Project metadata. No runtime dependencies; the `dev` dependency group supplies `pytest`, `ruff` and `pyright` for repository quality checks. |
+| `pyproject.toml` | Project metadata. No runtime dependencies; the `dev` dependency group supplies `pytest`, `ruff` and `pyright` for repository quality checks, and `git-cliff` for the changelog. |
 | `.python-version` | Pins the interpreter for `uv` — currently 3.14. |
 | `.verify-claims-allow` | Path claims the documentation gate is to leave alone, one glob per line with a reason above each. Repo-local on purpose: the pre-push hook is shared by every repo that links it, so exemptions must not travel with it. |
 | `.verify-flags-allow` | Its sibling for flag claims, one `<command> <flag>` per line: a flag that works but that no help text documents, such as `git diff --staged`. It only ever downgrades a refutation. |

@@ -44,7 +44,8 @@ python workstation/scripts/inventory.py --persist --csv
 `--host` exists because the output is pasted into a **committed** file and a hostname is often a
 person's name. It changes the provenance line and `suggested_id`; it changes nothing that was probed.
 `--persist` writes `inventory-<machine>-<user>-<timestamp>.md` under `--repo`; adding `--csv` writes
-the inventory rows as CSV instead.
+the inventory rows as CSV instead. `--cli-dir` reads the `<tool>/install.md` files from another
+directory than [`../cli/`](../cli/).
 
 Reads `../cli/*/install.md` frontmatter for each tool's `command` (comma-separated if it ships more than
 one) and optional `version_flag`, resolves each command on `PATH`, and runs its version probe. Adding a
@@ -93,7 +94,8 @@ Authentication is deliberately not probed.
 `--persist` also writes the Markdown report under the repository root as
 `status-<workstation>-<user>-<timestamp>.md`; adding `--csv` writes the same
 rows as CSV with a `.csv` extension. The timestamp uses the local timezone and
-contains no filename-unsafe characters.
+contains no filename-unsafe characters. `--timeout` sets the per-probe wait, as in `inventory.py`;
+`--quiet` drops the `[n/total] Probing ...` progress lines on stderr.
 
 A tool's *Requirement* cell names the skills that need it, read from the optional `used_by` key
 (comma-separated skill names) in its `install.md` frontmatter — so a missing tool says which skills it
@@ -111,6 +113,7 @@ python workstation/scripts/link_config.py --agent copilot       # instructions +
 python workstation/scripts/link_config.py --agent claude --agent copilot  # both
 python workstation/scripts/link_config.py --project             # this repo's skills, into .claude/skills
 python workstation/scripts/link_config.py --hooks --agent claude --agent copilot  # also the post-edit hooks
+python workstation/scripts/link_config.py --mcp --apply         # merge the MCP catalog into <repo>/.mcp.json
 python workstation/scripts/link_config.py --persist
 python workstation/scripts/link_config.py --persist --csv
 ```
@@ -140,6 +143,13 @@ on its own it touches the repo only.
 Copilot also `<name>.copilot.json` as `hooks/<name>.json`, which is Copilot's registration. Claude's
 registration is the `hooks` block in `workstation/agent/settings.json`, merged by hand — this script
 never writes a settings file.
+
+**`--mcp` merges the MCP catalog** — [`../mcp/.mcp.json`](../mcp/.mcp.json), every server this repo
+documents — into `<repo>/.mcp.json`, the **tracked** file Claude Code (project scope) and Copilot CLI
+(workspace scope) both read, so an `--apply` here is a change to commit. A catalog entry the live file
+lacks reads `missing` and is added; a matching one reads `linked`; one with a different value reads
+`diverged` and is left alone, `--force` or not. A server only the live file has is never touched. Like
+`--project`, on its own it touches the repo only.
 
 Checks every link the agent config needs: each skill named in the script's `SKILLS` tuple,
 `CLAUDE.md`, and the machine note at `~/.agentic-workbench/machine.md`. Exits non-zero unless all of

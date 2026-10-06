@@ -41,6 +41,6 @@ Accepts files, directories, or glob patterns. `**` recurses — **quote the patt
 - **A rendering failure is usually Graphviz, not your syntax.** Run `plantuml --check-graphviz` before debugging the diagram. See [install.md](install.md).
 - **Embedding tools do not use this wrapper.** md2conf and similar look for `java` plus a `plantuml.jar`, never for a `plantuml` executable, so they need `PLANTUML_CMD='plantuml'` in `~/.zshenv` — see [install.md](install.md).
 - **`--extract-source` recovers lost sources.** PlantUML embeds the source in image metadata, so a diagram whose `.puml` went missing is not lost.
-- **For PNG, prefer rendering SVG then rasterising** with `rsvg-convert | magick`, as with the other diagram tools — it gives control over scale and trimming that PlantUML's own PNG output does not.
+- **For PNG, prefer rendering SVG then rasterising** with `magick`, as with the other diagram tools — it gives control over scale and trimming that PlantUML's own PNG output does not. Put `rsvg-convert` in front only on a build that needs it: [`../magick/quick_start.md`](../magick/quick_start.md) § *SVG input*.
 
 Docs: [Starting with PlantUML](https://plantuml.com/starting) · full page ingest: [reference.md](reference.md)
