@@ -45,15 +45,19 @@ skills, all linked per clone:
 Then start the assistant in the repo — restart it if a session was already open, since instructions are read at session start — and run the [`setup-agents`](skills/setup-agents/SKILL.md) skill. It finds the AI assistants on your machine and sets them up with the shared instructions and skills. Re-run either command without `--apply` to check: it exits non-zero unless everything reads `linked`.
 
 **Plugin route — just the 9 global skills**, one OS-independent command per tool, no Python step, no
-symlink-vs-junction branch. Run from the repo root:
+symlink-vs-junction branch. Use the **absolute path** to your clone — both tools resolve it again on
+every later command, so a relative path only works for as long as you happen to run from the repo
+root. Replace `<agentic-workbench>` with where you cloned this repo (e.g.
+`/Users/<you>/Development/agentic-coding/agentic-workbench` on macOS,
+`C:\Users\<you>\...\agentic-workbench` on Windows):
 
 ```sh
 # Claude Code
-claude plugin marketplace add ./workstation/agent
+claude plugin marketplace add <agentic-workbench>/workstation/agent
 claude plugin install workbench-skills@agentic-workbench
 
 # Copilot CLI
-copilot plugin marketplace add ./workstation/agent
+copilot plugin marketplace add <agentic-workbench>/workstation/agent
 copilot plugin install workbench-skills@agentic-workbench
 ```
 

@@ -237,19 +237,30 @@ manifests:
 Both pairs' `version` fields track `[project] version` in `pyproject.toml`, checked by
 `workstation/scripts/tests/test_plugin_manifest.py`.
 
-Run from the repo root, so the relative path resolves:
+**Use the absolute path to your clone, not a relative one.** Both tools store whatever path you give
+`marketplace add` and resolve it again on every later command — a relative path only works for as
+long as you happen to run from the repo root, and silently breaks the first time you don't. Replace
+`<agentic-workbench>` below with where you cloned this repo:
+
+| Platform | Example |
+|---|---|
+| macOS | `/Users/<you>/Development/agentic-coding/agentic-workbench` |
+| Windows | `C:\Users\<you>\Work\Development\agentic-coding\agentic-workbench` |
 
 ```sh
 # Claude Code
-claude plugin marketplace add ./workstation/agent
+claude plugin marketplace add <agentic-workbench>/workstation/agent
 claude plugin install workbench-skills@agentic-workbench
 claude plugin details workbench-skills      # confirm: 9 skills, enabled
 
 # Copilot CLI
-copilot plugin marketplace add ./workstation/agent
+copilot plugin marketplace add <agentic-workbench>/workstation/agent
 copilot plugin install workbench-skills@agentic-workbench
 copilot plugin list                         # confirm: workbench-skills, enabled
 ```
+
+Verified on Windows by removing and re-adding the marketplace at its absolute path: both tools
+re-installed `workbench-skills` with the same 9 skills, enabled, `v0.1.0`.
 
 Hooks, MCP servers and `settings.json` are deliberately **not** part of this plugin — they stay on
 the hand-merge/link route above, since folding them in would touch the provider-bound `env` block
