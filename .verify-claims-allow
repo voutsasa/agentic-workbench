@@ -105,3 +105,8 @@ docs/renderers.md
 # The same path's per-service endpoints, e.g. `/api/2.0/mcp/genie` in
 # workstation/mcp/databricks-mcp/setup.md.
 /api/2.0/mcp/**
+
+# TODO.md item on an OpenAI/Azure OpenAI verify-docs driver names
+# `scripts/verify-docs-openai.py` as a hypothetical future script ("e.g. ...")
+# in a design discussion, not a path that exists or is claimed to exist here.
+scripts/verify-docs-openai.py
