@@ -206,6 +206,8 @@ Tools and MCP servers used to ingest and process sources into this repo. An entr
 
 See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command → product → folder` map. Each tool below has its own folder at `workstation/cli/<tool>/` holding the install commands, a quick start, and the packaging traps worth knowing before you run it.
 
+* [scoop](https://scoop.sh/) — Command-line installer and package manager for Windows.
+* [brew](https://brew.sh/) — Command-line package manager for macOS, Linux, and WSL.
 * [playwright](https://playwright.dev/docs/intro) — Browser automation library for testing, scraping, and driving web pages programmatically.
 * [pandoc](https://github.com/jgm/pandoc) — Universal document converter supporting dozens of markup and file formats.
 * [docling](https://github.com/docling-project/docling) — Converts PDFs, Office docs, and more into structured, LLM-ready formats.

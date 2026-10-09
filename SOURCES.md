@@ -273,6 +273,8 @@ An entry here means a route has been resolved and written down, **not** that the
 
 Each tool has a folder at `workstation/cli/<tool>/` with install commands, a quick start, and its ingested page — see [`workstation/cli/README.md`](workstation/cli/README.md).
 
+* [scoop](https://scoop.sh/)
+* [brew](https://brew.sh/)
 * [playwright](https://playwright.dev/docs/intro)
 * [pandoc](https://github.com/jgm/pandoc)
 * [docling](https://github.com/docling-project/docling)

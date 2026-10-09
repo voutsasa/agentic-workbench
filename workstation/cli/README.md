@@ -84,6 +84,8 @@ Each row is named by the **command you type**, which is often not the package na
 
 | Command | Product | Guidance |
 |---|---|---|
+| `scoop` | Scoop | [`scoop/`](scoop/) |
+| `brew` | Homebrew | [`brew/`](brew/) |
 | `playwright` | Playwright | [`playwright/`](playwright/) |
 | `pandoc` | Pandoc | [`pandoc/`](pandoc/) |
 | `docling` | Docling | [`docling/`](docling/) |
