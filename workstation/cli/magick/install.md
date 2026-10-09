@@ -4,7 +4,7 @@ command: magick
 product: ImageMagick
 verified: 2026-08-20
 author: Achilleas Voutsas
-version: 0.1.0
+version: 0.2.0
 ---
 
 # magick — install

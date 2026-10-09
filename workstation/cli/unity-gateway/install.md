@@ -4,7 +4,7 @@ command: ug, ucode
 product: Unity Gateway (Databricks)
 verified: 2026-09-27
 author: Achilleas Voutsas
-version: 0.1.0
+version: 0.2.0
 ---
 
 # unity-gateway — install

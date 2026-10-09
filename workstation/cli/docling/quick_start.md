@@ -2,7 +2,7 @@
 tool: docling
 updated: 2026-08-26
 author: Achilleas Voutsas
-version: 0.1.0
+version: 0.2.0
 ---
 
 # docling — quick start

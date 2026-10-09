@@ -2,7 +2,7 @@
 name: fix-findings
 description: Apply the most recent review's findings, under the review skill's Apply mode. Use when a review has produced findings and the user asks for them to be applied.
 author: Achilleas Voutsas
-version: 0.1.0
+version: 0.2.0
 ---
 
 # Fix findings

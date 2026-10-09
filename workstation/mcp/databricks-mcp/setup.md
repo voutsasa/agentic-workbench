@@ -6,7 +6,7 @@ version_observed: n/a (hosted, no local version)
 verified: 2026-09-29
 pinned: false
 author: Achilleas Voutsas
-version: 0.1.0
+version: 0.2.0
 ---
 
 # databricks-mcp — setup

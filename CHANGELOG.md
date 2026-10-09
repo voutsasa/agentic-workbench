@@ -3,6 +3,53 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.2.0] - 2026-10-09
+
+### Added
+
+- **skills:** Add global session-signature skill (eef6df6)
+- **agent:** Move the machine note to ~/.agentic-workbench and add settings_delta.py (e8de848)
+- **workstation:** Add scoop and brew to the CLI tool register (de3bba3)
+
+### Fixed
+
+- **fetch-to-markdown:** Strip publisher frontmatter, ignore nested SVG titles (7eaeb56)
+- **gate:** Make the pre-push suites pass on macOS as well as Windows (ffc032b)
+- **mcp:** Keep X-MCP-Readonly on every ado-remote-mcp route (9ef442d)
+- **verify-docs:** Check python claims where only python3 is on PATH (22e6daf)
+- **pre-push:** Check claims on a first push whose tip is the default branch (24e768f)
+
+### Documentation
+
+- Add author/version frontmatter to every skill, guide and the harness (749afee)
+- **readme:** Guide Claude Code / Copilot CLI setup through both routes (35435a4)
+- **skills:** Use an absolute path in the plugin install commands (f677dc9)
+- Document Langfuse session tracking for Claude Code, Copilot and Kiro (904e69a)
+- **sources:** Register SDLC versioning sources and route Microsoft Learn markdown (b0b23fd)
+- **machines:** Record that the Mac cannot reach the Azure Databricks workspace (1c6603d)
+- **databricks:** Document re-login with databricks auth login -p (bf545da)
+- **machines:** Regenerate the macos-workstation CLI inventory (9223ce4)
+- Correct stale README rows, document missing script flags (82eab28)
+- **machines:** Re-probe the Windows toolchain and record macOS validation gaps (cfb7fe4)
+- **cli:** Drop command from quick_start frontmatter (2e81060)
+- **ingest-source:** Point to the register's ingestion invariant (7ab9669)
+- **docling:** Only DrawingML shapes need LibreOffice in a .docx (3d8f58f)
+- **todo:** Track the macOS re-run of the .docx LibreOffice comparison (d33d0e5)
+- **docling:** Record the macOS .docx LibreOffice re-run on 2.134.0 (cacd2a5)
+- **todo:** Close item 46, record item 33's drawio-mcp re-check (817936f)
+
+### Maintenance
+
+- **verify:** Exempt the Databricks MCP URL path from path claims (d29eadd)
+- **verify:** Exempt the Databricks MCP endpoint subpaths (466250c)
+- **machine-note:** Drop the ~/.claude/machine.md fallback (61f064d)
+
+### Other
+
+- Exempt git-cliff's venv paths and ea-data-model's guide path from verify_claims (442cdfa)
+- Correct TODO 46: v0.1.0 is already tagged and pushed (491ce18)
+- Close TODO 49: session-signature now linked into global skills dirs (749728e)
+
 ## [0.1.0] - 2026-10-05
 
 ### Added
