@@ -218,6 +218,57 @@ Ruff. The resulting persisted status report exited 0; its Pandoc row read `works
 fetch-to-markdown, pdf-deliverable`. The retained report is
 `status-windows-ema-pf5n4xe7-voutsas-20260929T175322+0200.md` in that clone.
 
+### A new venv's console-script launchers can be quarantined: run them through `python -m`
+
+Measured 2026-10-10 in `C:\Users\voutsas\Work\Development\EMA\IPASandbox\ontology-editor\backend\.venv`,
+created by `uv run` on 2026-10-09 19:26. The symptom, for `uv run pytest` and for the project's own
+entry point alike:
+
+```
+error: Failed to spawn: `pytest`
+  Caused by: Access is denied. (os error 5)
+```
+
+Launching the `.exe` directly fails the same way. The readability test that diagnosed `docling`
+(below) separates the cases:
+
+| File | Size | `[IO.File]::ReadAllBytes` | `--version` |
+|---|---|---|---|
+| ontology-editor `.venv\Scripts\pytest.exe` | 46,080 | **access denied** | **access denied** |
+| ontology-editor `.venv\Scripts\ontology-editor.exe` | 46,080 | **access denied** | **access denied** |
+| ontology-editor `.venv\Scripts\ruff.exe`, created the same minute | 26,332,672 | reads | `ruff 0.16.10` |
+| ontology-editor `.venv\Scripts\python.exe` | 255,200 | reads | `Python 3.14.8` |
+| this repo's `.venv\Scripts\pytest.exe` | 46,080 | reads | `pytest 9.1.1` |
+
+Both blocked files grant `EMEA\voutsas` FullControl. An unreadable file with a permissive ACL, while
+the identical 46,080-byte launcher in another venv runs, is the `docling` pattern — a quarantine of
+those specific files — not the `whoami` process-creation rule. It is not machine-wide: 46,080 bytes is
+the size of every console-script launcher uv writes (`docling.exe` and `playwright.exe` below had it
+too), and the ones in this repo's `.venv` run.
+
+**Run Python here through the interpreter, which is never the blocked file:**
+
+| Instead of | Run |
+|---|---|
+| `uv run pytest` | `uv run python -m pytest` |
+| `uv run <project-cli> …` | `uv run python -m <package> …` — the package needs a `__main__.py`; ontology-editor has one since its commit `f4b9148` |
+| `.venv\Scripts\<tool>.exe` | `.venv\Scripts\python.exe -m <tool>` |
+
+This keeps [`../agent/AGENT-INSTRUCTIONS.md`](../agent/AGENT-INSTRUCTIONS.md)'s rule — still the
+project's venv, never the global interpreter. Tools that ship a native binary rather than a launcher,
+such as `ruff`, were not affected.
+
+**When `Failed to spawn … os error 5` appears, read the file before anything else:**
+
+```powershell
+[IO.File]::ReadAllBytes("<venv>\Scripts\<name>.exe").Length
+```
+
+It throws: a quarantine, as here and for `docling`; clearing it is the user's call, as it was for
+`docling` on 26 August. It reads but will not start: the `whoami` case, a process-creation rule.
+Whether recreating the venv avoids the quarantine has not been measured. The two files were still
+blocked on 2026-10-10.
+
 ## Git
 
 `core.autocrlf=true` and `core.symlinks=false`.

@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-10-06
+updated: 2026-10-10
 verified: never
 author: Achilleas Voutsas
 version: 0.2.0
@@ -18,6 +18,18 @@ committed to belongs in a conversation. Delete an item when its evidence exists 
 converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
+
+### 52. The machine probes do not detect a quarantined venv launcher
+
+Opened 2026-10-10. `workstation/machines/windows-ema-pf5n4xe7.md` § *A new venv's console-script
+launchers can be quarantined* records two 46,080-byte uv launchers in another repo's `.venv` that
+could not be read or started, found only when a session hit `Failed to spawn … os error 5`. Neither
+`inventory.py` nor `status.py` reads `.venv\Scripts\*.exe`, so the next occurrence will also surface
+mid-task, and the machine note's account of it is hand-written rather than measured.
+
+**Closes when:** a probe in `workstation/scripts/` reports every `.venv\Scripts\*.exe` of the repo it
+checks that cannot be read, with a unit test for the refused case — or the user decides the
+hand-written section is enough and deletes this item.
 
 ### 51. GitHub Copilot's project-level `.claude/skills/` discovery has never been observed
 
