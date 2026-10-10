@@ -77,6 +77,12 @@ is in the machine note, not here.
 - Python backend; TypeScript/JavaScript frontend with Vue and Tailwind. Node.js and npm are the
   frontend and JavaScript-tooling runtime. A repository using another stack conflicts with this
   mandate: do not migrate it or ignore the conflict unasked.
+- **An app an agent builds stores its local files under the current user's own profile, never a
+  machine-wide folder.** Windows: `%LOCALAPPDATA%\<Application Name>` (caches and large files included).
+  macOS: `~/Library/Application Support/<Application Name>`. Never `%ProgramData%\<Application Name>`
+  (Windows, shared across all users) or `/Library/Application Support/<Application Name>` (macOS,
+  system-wide) — both need elevated/admin rights to write and leak one user's app state into every
+  other account on the machine.
 - Python uses uv + pyproject.toml, always in a venv. The one exception is a global Python CLI tool
   listed in `workstation/cli/`. Its route is Homebrew (macOS) or Scoop (Windows) where a package
   exists; otherwise `uv tool install --python 3.12 <spec>` (or the package's own `requires-python`
