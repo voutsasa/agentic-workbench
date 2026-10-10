@@ -15,6 +15,11 @@ repository that pins the tool (`uv add`), that is the pinned copy in its `.venv`
 the global install from `workstation/cli/confluence-sync-md/install.md`. `--no-sync` keeps it from
 installing or updating anything in the repository, and `--` ends uv's own options.
 
+If that command fails to spawn with `Access is denied`, that is a Windows Defender/EDR quarantine,
+not a credentials problem — see
+[confluence-export's note](../confluence-export/SKILL.md#if-the-exe-fails-to-spawn-with-access-is-denied)
+for the `python -m` substitute.
+
 ## The two inputs
 
 Every publish needs both. **Ask for whichever is missing — never infer either.**
@@ -333,3 +338,4 @@ checks that the copies agree — when one changes, change all of them. Canonical
 | Delete before republishing | `confluence-content/README.md#republishing-a-page-delete-it-first` | this file; `README.md` |
 | What the content root is | the tool's `--help` | this file; `../confluence-export/SKILL.md`; `.env.example` |
 | The token is scoped, and the gateway URL | `confluence-content/README.md#the-token-is-a-scoped-token-and-its-prefix-does-not-say-so` | `README.md`; `.env.example` |
+| The `python -m` fallback for a quarantined exe | the `confluence-sync-md` tool repo's `docs/user_guide.md` | this file; `../confluence-export/SKILL.md` |

@@ -19,6 +19,22 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 51. GitHub Copilot's project-level `.claude/skills/` discovery has never been observed
+
+Opened 2026-10-09, while applying Option B of the skills-location rule in
+`workstation/agent/AGENT-INSTRUCTIONS.md` § *Start local, validate, then scale to global* (skills
+authored under `<repo>/skills/<name>/SKILL.md`, linked back from `.claude/skills/<name>` for
+discovery). That rule asserts Claude Code *and* GitHub Copilot both read
+`.claude/skills/<name>/SKILL.md` at the project level — unlike the global case, where
+`link_config.py` links Copilot to its own `~/.copilot/skills/`. The project-level claim about
+Copilot has not been tested on any machine; it was carried over from the original rule text
+without a run to back it.
+
+**Closes when:** a Copilot CLI session, run from inside a repo that has only
+`.claude/skills/<name>/SKILL.md` (no `~/.copilot/skills/` entry for it), lists or invokes that
+skill — or, if it does not, the rule is corrected to say what Copilot actually needs at project
+scope and `link_config.py --project` is adjusted to match.
+
 ### 50. `session-signature` has not probed a harness other than Claude CLI and Copilot live
 
 Opened 2026-10-06. `--harness <label> --harness-command <cli>` is covered only by a unit test with

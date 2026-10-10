@@ -75,6 +75,15 @@ Run the command exactly as previewed. Two details in it are load-bearing:
 
 The BIAD subtree takes about a minute for 31 pages and 57 attachments.
 
+## If the exe fails to spawn with Access is denied
+
+A Windows Defender/EDR quarantine of the console-script `.exe` the chosen `confluence-sync-md`
+install resolved to, not a permissions bug — full diagnosis and the substitute commands are in the
+`confluence-sync-md` tool repo's `docs/user_guide.md#windows-a-quarantined-console-script-exe`.
+Short version: substitute `<path-to-that-install>\python.exe -m confluence_sync_md <args>` for
+`confluence-sync-md <args>`, and `... -m confluence_markdown_exporter.main <args>` for the printed
+`cme <args>` — `cme` has no package-level `__main__.py`.
+
 ## Rules that must not be inferred
 
 - **`source .env` belongs in the same command** as everything else — shell state does not survive
@@ -112,6 +121,7 @@ checking that the copies agree. When one changes, change all of them:
 | Rule | Canonical | Also stated in |
 |---|---|---|
 | What the content root is | the tool's `--help` | this file; `../confluence-publish/SKILL.md`; `.env.example` |
+| The `python -m` fallback for a quarantined exe | the `confluence-sync-md` tool repo's `docs/user_guide.md` | this file; `../confluence-publish/SKILL.md` |
 | `CME_CONFIG_PATH` must be absolute, and set before the first `cme` | `confluence-content/README.md#credentials` | this file; `.env.example` |
 | A template change invalidates the lock file | `confluence-content/README.md#changing-a-path-template-invalidates-the-lock-file` | this file |
 | Breadcrumb links point outside a subtree export | `confluence-content/README.md#what-an-export-produces` | this file |
