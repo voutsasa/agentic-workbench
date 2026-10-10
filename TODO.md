@@ -107,6 +107,19 @@ Opened 2026-09-29. The hook now finds `repo_check.py` and `verify_claims.py` bes
 location, following symlinks. `test_symlinked_hook_resolves_to_its_real_location` skips on the Windows
 machine, which has no symlink privilege; the Windows shim path is tested and was run end to end.
 
+2026-10-10: reconfirmed directly, outside the test suite. Creating
+`confluence-sync-md-demo/.claude/skills/confluence-setup` as a symlink (to match its
+`confluence-export`/`confluence-publish` siblings, which already are real relative symlinks and are
+committed) failed identically via both `PowerShell`'s `New-Item -ItemType SymbolicLink`
+(`Administrator privilege required for this operation`) and `cmd.exe`'s `mklink /D`
+(`You do not have sufficient privilege to perform this operation`) on `windows-ema-pf5n4xe7` — so this
+is not a PowerShell-specific restriction. Worked around there with a directory junction
+(`New-Item -ItemType Junction`, no privilege needed) instead, gitignored rather than committed because
+a junction's target is an absolute, machine-specific path — committing it would duplicate the skill's
+files as a second literal copy rather than travel as a link. That repo's `.gitignore` carries the
+`mklink /J` command to recreate it per clone, and a note to replace it with a real symlink once this
+item closes.
+
 **Closes when:** that test runs unskipped and passes on macOS, and one real `git push` from a repo other
 than the workbench runs the linked hook there.
 
