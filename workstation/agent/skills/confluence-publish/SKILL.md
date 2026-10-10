@@ -338,4 +338,4 @@ checks that the copies agree — when one changes, change all of them. Canonical
 | Delete before republishing | `confluence-content/README.md#republishing-a-page-delete-it-first` | this file; `README.md` |
 | What the content root is | the tool's `--help` | this file; `../confluence-export/SKILL.md`; `.env.example` |
 | The token is scoped, and the gateway URL | `confluence-content/README.md#the-token-is-a-scoped-token-and-its-prefix-does-not-say-so` | `README.md`; `.env.example` |
-| The `python -m` fallback for a quarantined exe | the `confluence-sync-md` tool repo's `docs/user_guide.md` | this file; `../confluence-export/SKILL.md` |
+| The `python -m` fallback for a quarantined exe | the `confluence-sync-md` tool repo's `docs/user_guide.md#windows-a-quarantined-console-script-exe` | this file; `../confluence-export/SKILL.md` |
