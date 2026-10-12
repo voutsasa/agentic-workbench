@@ -168,7 +168,7 @@ points at them rather than repeating them:
 | Platform | Route | Guide |
 |---|---|---|
 | macOS | symlinks | [`setup/macos.md`](setup/macos.md) |
-| Windows | junctions (directories) + hardlinks (files) — symlinks need admin | [`setup/windows.md`](setup/windows.md) |
+| Windows | junctions (directories) + hardlinks (files) — symlinks need admin or Developer Mode | [`setup/windows.md`](setup/windows.md) |
 | Linux | not written — no machine yet | — |
 
 **Read the *Before you start* section of whichever applies.** Neither route touches
