@@ -3,6 +3,25 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.3.0] - 2026-10-12
+
+### Added
+
+- **scripts:** Generated copies instead of Windows hardlinks for home config, add ~/.agentic-workbench/AGENTS.md (6c4faa9)
+
+### Fixed
+
+- **verify:** Exempt the hypothetical verify-docs-openai.py path (f7fbc42)
+- **docs:** Anchor the confluence-sync-md user_guide.md cross-repo reference (f81b70e)
+
+### Documentation
+
+- Clarify skills-location rule, document the confluence-sync-md exe quarantine (a14f366)
+- **agent:** Restrict agent-built apps to user-local data folders (59787e0)
+- **machines:** Record quarantined venv launchers and the python -m route on windows-ema-pf5n4xe7 (5ba2261)
+- **agent:** Never commit a Windows skill link, after confirming core.symlinks breaks it (8188940)
+- **agent:** Keep machine-specific symlink/junction facts out of the shared instructions (7174186)
+
 ## [0.2.0] - 2026-10-09
 
 ### Added

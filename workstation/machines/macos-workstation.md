@@ -7,7 +7,7 @@ python: 3.14.6 (.venv)
 repo: ~/Development/agentic-coding/agentic-workbench
 verified: 2026-09-13
 author: Achilleas Voutsas
-version: 0.2.0
+version: 0.3.0
 ---
 
 # macOS workstation

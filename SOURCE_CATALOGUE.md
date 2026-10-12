@@ -3,7 +3,7 @@ role: One-sentence capability summary per source, mirroring SOURCES.md
 updated: 2026-09-28
 verified: never
 author: Achilleas Voutsas
-version: 0.2.0
+version: 0.3.0
 ---
 
 # Source Catalogue

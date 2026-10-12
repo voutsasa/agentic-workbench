@@ -2,7 +2,7 @@
 name: session-signature
 description: Generate a session signature id — workstation, username, AI assistant harness version (Claude CLI, GitHub Copilot, Kiro or any other), agentic-workbench version, model ID and UTC timestamp — or, when asked for the extended signature, the full JSON. Use when asked to sign, stamp or attribute an output with who and what produced it.
 author: Achilleas Voutsas
-version: 0.2.0
+version: 0.3.0
 ---
 
 # Session signature

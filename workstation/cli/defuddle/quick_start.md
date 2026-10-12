@@ -2,7 +2,7 @@
 tool: defuddle
 updated: 2026-08-01
 author: Achilleas Voutsas
-version: 0.2.0
+version: 0.3.0
 ---
 
 # defuddle — quick start

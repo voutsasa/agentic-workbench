@@ -2,7 +2,7 @@
 name: fetch-to-markdown
 description: Fetch one web page, PDF or Office document and convert it to clean local markdown — classify the source, route it to the right tool (raw README, curl, HTML node extractor plus pandoc, docling, soffice for legacy binary formats, or Playwright plus defuddle), quality-check the result against the original, and strip embedded base64 images. Use when asked to fetch, retrieve, scrape, ingest or convert a docs page, README, PDF, .docx, .doc, .pptx or .ppt into markdown at a given path. Not for general web research — this writes a file.
 author: Achilleas Voutsas
-version: 0.2.0
+version: 0.3.0
 ---
 
 # Fetch a document to markdown

@@ -5,7 +5,7 @@ product: Pandoc
 used_by: fetch-to-markdown, pdf-deliverable
 verified: 2026-08-20
 author: Achilleas Voutsas
-version: 0.2.0
+version: 0.3.0
 ---
 
 # pandoc — install

@@ -3,7 +3,7 @@ role: Open work carried between sessions — committed new work and unproven exi
 updated: 2026-10-10
 verified: never
 author: Achilleas Voutsas
-version: 0.2.0
+version: 0.3.0
 ---
 
 # TODO

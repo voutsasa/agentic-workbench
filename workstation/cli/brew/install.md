@@ -4,7 +4,7 @@ command: brew
 product: Homebrew
 verified: 2026-10-09
 author: Achilleas Voutsas
-version: 0.2.0
+version: 0.3.0
 ---
 
 # brew — install
