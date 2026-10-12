@@ -68,8 +68,8 @@ clone. [`workstation/agent/README.md` § *Install the skills as a plugin
 instead*](workstation/agent/README.md#install-the-skills-as-a-plugin-instead) has the manifest layout
 and the verify step.
 
-**5. Optional — observe sessions in Langfuse.** Only Claude Code has a marketplace plugin; GitHub
-Copilot CLI has no plugin mechanism for this and is wired instead through its own built-in
+**5. Optional — observe sessions in Langfuse.** Only Claude Code has a Langfuse marketplace plugin;
+GitHub Copilot CLI has no Langfuse plugin and is wired instead through its own built-in
 OpenTelemetry export, pointed at Langfuse's OTLP endpoint; Kiro has neither, and is wired through a
 pair of hook files copied into the project. All three need a Langfuse project and its public/secret
 API keys first.
