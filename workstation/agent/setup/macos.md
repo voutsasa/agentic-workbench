@@ -37,8 +37,10 @@ python3 workstation/scripts/link_config.py --apply --hooks
 ```
 
 It creates one symlink per global skill in `~/.claude/skills/`, `AGENT-INSTRUCTIONS.md` →
-`~/.claude/CLAUDE.md`, the machine note → `~/.agentic-workbench/machine.md` (see *The machine note*), and — because
-of `--hooks` — `hooks/ruff_on_edit.py` into `~/.claude/hooks/` (opt-in, since a hook acts on every edit).
+`~/.claude/CLAUDE.md`, the same file → `~/.agentic-workbench/AGENTS.md` (the one assistant-neutral
+copy, for an integration with no agent-specific route yet), the machine note →
+`~/.agentic-workbench/machine.md` (see *The machine note*), and — because of `--hooks` —
+`hooks/ruff_on_edit.py` into `~/.claude/hooks/` (opt-in, since a hook acts on every edit).
 Re-running is safe: a live link is left alone, a stale one is replaced, and a destination holding content
 the repo lacks is reported and skipped. Add `--agent copilot` to link the same skills,
 `copilot-instructions.md`, and (with `--hooks`) the Copilot hook registration under `~/.copilot`, and

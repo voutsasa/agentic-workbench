@@ -5,9 +5,13 @@ Standard library only, so it runs on a fresh clone before anything is installed.
 
 ``--agent claude`` (the default) links the skills and ``CLAUDE.md`` into
 ``~/.claude``. ``--agent copilot`` links the same skills and
-``copilot-instructions.md`` into ``~/.copilot``. The machine note goes to
-``~/.agentic-workbench/machine.md`` whichever agent is selected — the workbench's
-own home, named by no assistant. VS Code can also read the Claude
+``copilot-instructions.md`` into ``~/.copilot``. Either way, a plain copy of the
+same instructions also lands at ``~/.agentic-workbench/AGENTS.md`` — the one
+assistant-neutral home artefact, named like the repo's own root ``AGENTS.md``
+rather than any assistant, for an integration that doesn't yet have its own
+agent-specific route. The machine note goes to
+``~/.agentic-workbench/machine.md`` whichever agent is selected — the same
+workbench home, named by no assistant. VS Code can also read the Claude
 destination when ``chat.useClaudeMdFile`` is enabled.
 ``--project`` links this repo's own ``skills/<name>/`` into ``<repo>/.claude/skills``,
 where both agents load them at project scope; ``.claude/`` is gitignored, so every
@@ -24,18 +28,24 @@ from the live file is added; one already matching is left alone; one present wit
 *different* value is reported ``diverged`` and skipped, same as a diverged ``CLAUDE.md``.
 A live-only server the catalog doesn't know about is never touched.
 
-Two things make this more than a wrapper around ``ln -s``:
+Three things make this more than a wrapper around ``ln -s``:
 
 * **``settings.json`` is never touched.** The live ``~/.claude/settings.json``
   carries provider configuration required for compliance, and every link
   primitive replaces rather than merges its target. It is excluded structurally
   here — see ``NEVER_LINK`` — not by remembering to leave it out.
-* **A detached link is not the same as a missing one.** On Windows the files are
-  hardlinks, and ``git checkout`` replaces a tracked file rather than editing it
-  in place. That silently detaches the link and freezes ``~/.claude`` at the old
-  content, which is how this repo's config drifted in the first place. Re-running
-  with ``--apply`` is the repair, but a detached copy whose content has *diverged*
-  is reconciliation work, so it is reported and skipped rather than overwritten.
+* **A detached link is not the same as a missing one.** The skill directories are
+  Windows junctions, and ``git checkout`` replaces a tracked file rather than
+  editing it in place — a junction resolves a path, not an inode, so it survives
+  that unharmed. A detached *copy* whose content has since *diverged* is
+  reconciliation work, so it is reported and skipped rather than overwritten.
+* **Every other file is a generated copy on Windows, not a link at all.**
+  ``CLAUDE.md``, ``copilot-instructions.md``, ``machine.md`` and
+  ``agentic-workbench/AGENTS.md`` used to be hardlinks there, and a hardlink
+  severs on ``git checkout`` or any atomic-saving editor, which is how this
+  repo's config drifted in the first place. A generated copy can't sever; it can
+  only go stale, which ``--apply`` already repairs the same way. See
+  ``_file_link``.
 
 Default is read-only. Nothing is written without ``--apply``.
 """
@@ -330,6 +340,24 @@ def repo_skills(repo_root: Path) -> tuple[str, ...]:
     return tuple(sorted(p.parent.name for p in root.glob("*/SKILL.md")))
 
 
+def _file_link(label: str, source: Path, dest: Path) -> Link:
+    """A file-type home link: a generated copy on Windows, a real link elsewhere.
+
+    Windows hardlinks sever on ``git checkout`` and any atomic-saving editor, and
+    Cowork skips a user-scope file that is itself a link resolving outside the
+    working directory. A generated copy has neither failure mode — at the cost of
+    needing a ``--apply`` re-run after an edit, which a Windows hardlink already
+    needed in practice. macOS keeps the real symlink: it has no severance defect,
+    so there is nothing this buys there.
+    """
+    content = (
+        source.read_text(encoding="utf-8")
+        if os.name == "nt" and source.is_file()
+        else None
+    )
+    return Link(label, source, dest, is_dir=False, content=content)
+
+
 def plan(
     repo_root: Path,
     home: Path,
@@ -394,14 +422,24 @@ def plan(
                 content=CLAUDE_MD_IMPORT,
             )
         )
+    # The one assistant-neutral home copy, named like the repo's own root AGENTS.md
+    # rather than any assistant: a future assistant integration reads this instead
+    # of reaching into workstation/agent/ directly.
+    if agents:
+        links.append(
+            _file_link(
+                "agentic-workbench/AGENTS.md",
+                agent / "AGENT-INSTRUCTIONS.md",
+                home / WORKBENCH_HOME / "AGENTS.md",
+            )
+        )
     if "copilot" in agents:
         root = copilot_root if copilot_root is not None else home / ".copilot"
         links.append(
-            Link(
+            _file_link(
                 "copilot/copilot-instructions.md",
                 agent / "AGENT-INSTRUCTIONS.md",
                 root / "copilot-instructions.md",
-                is_dir=False,
             )
         )
     if "claude" in agents:
@@ -410,22 +448,20 @@ def plan(
         # only ever loads ``~/.claude/CLAUDE.md``, so the destination name is fixed.
         # Every label here names the destination artefact, not the source.
         links.append(
-            Link(
+            _file_link(
                 "CLAUDE.md",
                 agent / "AGENT-INSTRUCTIONS.md",
                 home / ".claude" / "CLAUDE.md",
-                is_dir=False,
             )
         )
     # One fixed path for every agent: AGENT-INSTRUCTIONS.md names
     # ~/.agentic-workbench/machine.md whichever assistant loads it.
     if agents:
         links.append(
-            Link(
+            _file_link(
                 "machine.md",
                 machine_file(repo_root, platform, hostname, machine),
                 home / WORKBENCH_HOME / "machine.md",
-                is_dir=False,
             )
         )
     if hooks:
@@ -433,11 +469,10 @@ def plan(
             script = agent / "hooks" / f"{name}.py"
             if "claude" in agents:
                 links.append(
-                    Link(
+                    _file_link(
                         f"hooks/{name}.py",
                         script,
                         home / ".claude" / "hooks" / script.name,
-                        is_dir=False,
                     )
                 )
             if "copilot" in agents:
@@ -446,17 +481,15 @@ def plan(
                 # drops the `.copilot` marker it carries in the repo.
                 dest_json = f"{name.replace('_', '-')}.json"
                 links += [
-                    Link(
+                    _file_link(
                         f"copilot/hooks/{script.name}",
                         script,
                         root / "hooks" / script.name,
-                        is_dir=False,
                     ),
-                    Link(
+                    _file_link(
                         f"copilot/hooks/{dest_json}",
                         agent / "hooks" / f"{name.replace('_', '-')}.copilot.json",
                         root / "hooks" / dest_json,
-                        is_dir=False,
                     ),
                 ]
     for link in links:

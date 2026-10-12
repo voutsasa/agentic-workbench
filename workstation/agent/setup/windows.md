@@ -5,21 +5,27 @@ Puts this repo's [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) and [`..
 
 **`settings.json` is not in that list, and must not be.** See *Settings: merge, do not link* below.
 
-**Route: junctions and hardlinks, not symlinks.** `New-Item -ItemType SymbolicLink` fails with
-*Administrator privilege required* under a standard account, and `ln -s` has no unelevated equivalent.
-The two link types that need no elevation are **junctions** for directories and **hardlinks** for
-files. Both were confirmed working non-elevated on 24 August 2026.
+**Route: junctions for directories, generated copies for files — no symlinks.** `New-Item
+-ItemType SymbolicLink` fails with *Administrator privilege required* under a standard account,
+and `ln -s` has no unelevated equivalent. **Junctions** need no elevation and resolve a *path*
+rather than an inode, so a directory link survives everything below unharmed. A file artefact
+(`CLAUDE.md`, `copilot-instructions.md`, `machine.md`, `agentic-workbench/AGENTS.md`) used to be a
+**hardlink** instead — the one unelevated file-link primitive — but a hardlink shares an inode
+with its source, so it severs the moment anything replaces that inode: `git checkout`, or any
+atomic-saving editor (Zed, VS Code, Claude Code's own `Edit` tool). That severance is what
+produced this repo's config drift, and is why these are now a **generated copy** instead: written
+fresh by `link_config.py --apply`, compared by content rather than by inode, with nothing to
+sever. The cost is the one a hardlink already had in practice — re-run `--apply` after editing the
+source — not a new one.
 
-**Enabling Developer Mode would be a real improvement, and is the one thing worth asking IT for.** It
-permits unelevated symlink creation, and a symlink resolves a *path* rather than an inode, which makes
-it immune to the severance trap below — the trap that produced this repo's config drift. Measured
-2026-08-25 on `EMA-PF5N4XE7`: `AllowDevelopmentWithoutDevLicense` under
+**Enabling Developer Mode is still worth asking IT for**, since it permits unelevated symlink
+creation and would let these files become real, live-updating links too. Measured 2026-08-25 on
+`EMA-PF5N4XE7`: `AllowDevelopmentWithoutDevLicense` under
 `HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\AppModelUnlock` is **unset**, and symlink creation
-fails accordingly. Until that changes, hardlinks are the only option for files and they need
-re-applying.
+fails accordingly — but this is no longer blocking anything, just a convenience foregone.
 
-Requires PowerShell 7. The clone (`$Root` below) must be on the **same volume as `$HOME`** — a hardlink cannot cross
-volumes.
+Requires PowerShell 7. A generated copy has no cross-volume restriction, unlike the hardlink it
+replaced, so the clone no longer needs to sit on the same volume as `$HOME` for these artefacts.
 
 ## Stop: read this before running anything
 
@@ -43,13 +49,14 @@ $Root = (git rev-parse --show-toplevel)
 python (Join-Path $Root "workstation\scripts\link_config.py") --apply --hooks
 ```
 
-It uses the two link types that need no elevation: a junction per global skill in
-`$HOME\.claude\skills`, and hardlinks for `$HOME\.claude\CLAUDE.md` and `$HOME\.agentic-workbench\machine.md` —
-plus, because of `--hooks`, `hooks/ruff_on_edit.py` into `$HOME\.claude\hooks\` (opt-in, since a hook
-acts on every edit). A diverged `CLAUDE.md` is reported and skipped rather than overwritten —
-reconcile it first, per the section above. Add `--agent copilot` to link the same skills,
-`copilot-instructions.md`, and (with `--hooks`) the Copilot hook registration under `~/.copilot`, and
-`--project` for this repo's own skills.
+It uses a junction per global skill in `$HOME\.claude\skills`, and a generated copy for
+`$HOME\.claude\CLAUDE.md`, `$HOME\.agentic-workbench\machine.md` and
+`$HOME\.agentic-workbench\AGENTS.md` — plus, because of `--hooks`, `hooks/ruff_on_edit.py` into
+`$HOME\.claude\hooks\` (opt-in, since a hook acts on every edit; that copy too). A diverged
+`CLAUDE.md` is reported and skipped rather than overwritten — reconcile it first, per the section
+above. Add `--agent copilot` to link the same skills, `copilot-instructions.md`, and (with
+`--hooks`) the Copilot hook registration under `~/.copilot`, and `--project` for this repo's own
+skills.
 
 `settings.json` is not among them, and cannot be: the script refuses to plan a link for it, since a
 link is a replace and not a merge.
@@ -64,7 +71,7 @@ link is a replace and not a merge.
 
 [`../AGENT-INSTRUCTIONS.md`](../AGENT-INSTRUCTIONS.md) tells the agent to read
 `~/.agentic-workbench/machine.md`. The `link_config.py --apply` command in *Link it* creates that
-hardlink alongside the skills and resolves the right file in
+generated copy alongside the skills and resolves the right file in
 [`../../machines/`](../../machines/), including an explicitly named `--machine` file or
 the sole Windows machine file.
 
@@ -72,7 +79,8 @@ If it reports `no_source`, create the machine file first — see
 [`../../machines/README.md`](../../machines/README.md#adding-a-machine). Do not link the macOS file as
 a stand-in.
 
-Being a hardlink, this one is subject to the severance trap below.
+Being a generated copy, this one can go stale after a machine-note edit, but can't sever — see
+*Windows traps* below.
 
 ## The pre-push gate
 
@@ -146,46 +154,24 @@ request. `core.pager` and `GIT_PAGER` do not control the HTML-help browser behav
 
 ## Windows traps
 
-- **`git checkout` severs a hardlink, and freezes the copy at the old content.** This is the trap that
-  matters most, because it fires during ordinary work rather than during editing. Measured in a scratch
-  repo on 2026-08-25:
-
-  ```
-  before checkout: LinkType=[HardLink] content=v1
-  after  checkout: LinkType=[]         f.md=v2  linked.md=v1
-  ```
-
-  git replaces a tracked file rather than writing through it, so the new content lands on a new inode
-  and `~/.claude/CLAUDE.md` keeps pointing at the old one. Nothing warns you, and the stale copy still
-  looks like a valid config file. **Any `git pull`, branch switch or `git stash` that touches
-  `CLAUDE.md` or a machine note detaches it.** Re-run
-  `python workstation\scripts\link_config.py --apply` afterwards from the repo root, which is idempotent and
-  reports what it repaired. Junctions are immune — they resolve a path, not an inode — so the skill directories
-  never need this.
-- **A hardlink is severed by any writer that saves atomically — and which side you edit makes no
-  difference.** Zed, VS Code and Claude Code's own `Edit` tool all write a temp file and rename it over
-  the target. A hardlink is two names for one inode, so whichever name is rewritten that way gets a
-  *new* inode and stops tracking the other. Editing through the repo path does not protect you; that is
-  how `machine.md` was severed on `EMA-PF5N4XE7` on 2026-08-26, minutes after being linked.
-
-  So **do not try to avoid this by choosing where to edit — re-link after editing instead**, from the
-  repo root:
+- **Edit the repo source, then re-run `--apply` — the generated copies don't update themselves.**
+  `CLAUDE.md`, `copilot-instructions.md`, `machine.md` and `agentic-workbench/AGENTS.md` are
+  written once, from whatever `AGENT-INSTRUCTIONS.md` or the machine note held at the time. An
+  edit to the repo source, a `git pull`, a branch switch — anything that changes the source and
+  not yet the destination — leaves the destination reading `diverged` until you run:
 
   ```powershell
   python workstation\scripts\link_config.py --apply
   ```
 
-  Junctions are immune, so the skill directories never need it. `settings.json` is exempt because it is
-  never linked — edit that one in `~/.claude/` only.
+  idempotent, and it reports what it repaired. This is the one step a *real* link (the skill
+  junctions) never needed, and these files don't either, in the sense that matters: nothing can
+  silently break them the way the hardlink they replaced could — see *Settled* in
+  [`../README.md`](../README.md) for why that was true before 2026-10-12 and isn't now.
 - **A `machine.md` reported `diverged` after a repo doc update is usually pure staleness, not a
   conflicting edit.** Diff it against the repo source first; if the only differences trace to the repo
   side, `Copy-Item <repo path> ~/.agentic-workbench/machine.md -Force` is safe. Still diff before copying —
   `link_config.py` cannot tell repo drift apart from a local note you added, so it skips either way.
-- **Assume every configured file hardlink is broken and check.** The default Claude route has
-  `CLAUDE.md` and `machine.md`; adding Copilot adds `~/.copilot/copilot-instructions.md`. Between git
-  operations and atomic saves, they detach during routine work rather than exceptionally. This is why
-  the *Verify* step below is not optional, and why `link_config.py` exists instead of a one-time setup
-  command.
 - **`core.symlinks` is `false`.** A symlink committed to this repo would check out here as a text file
   containing its target path. Nothing in the repo relies on one.
 
@@ -203,45 +189,34 @@ add `--agent copilot`; use `--agent claude --agent copilot` to check both homes.
 diverged `CLAUDE.md` is reported and skipped rather than overwritten, because that is reconciliation
 work.
 
-The underlying checks, if you want them by hand. `LinkType` reports `HardLink` or `Junction` when a link
-is live and an **empty string** when the path is a plain copy — that empty string is exactly what a
-severed hardlink looks like, and is how the drift above was found.
+The underlying check, if you want it by hand. `LinkType` reports `Junction` for a skill directory;
+for `CLAUDE.md`, `copilot-instructions.md`, `machine.md` and `agentic-workbench/AGENTS.md` it is an
+**empty string by design** — they are generated copies, not links, so there is no `LinkType` to
+report. Content is what actually answers "is this current":
 
 ```powershell
-foreach ($p in "$HOME\.claude\CLAUDE.md","$HOME\.agentic-workbench\machine.md") {
-  "{0,-45} LinkType=[{1}]" -f $p, (Get-Item $p -ErrorAction SilentlyContinue).LinkType
-}
 Get-ChildItem "$HOME\.claude\skills" | Select-Object Name, LinkType
-```
-
-Content is the real test, since a link can be live and still point at the wrong file:
-
-```powershell
 (Get-FileHash "$HOME\.claude\CLAUDE.md").Hash -eq (Get-FileHash (Join-Path $Root "workstation\agent\AGENT-INSTRUCTIONS.md")).Hash
 ```
 
+`True` means the copy matches the repo source right now. `link_config.py`'s own report says the
+same thing without the manual hash — `linked` is that comparison already done.
+
 Then start a session and confirm every skill is offered.
 
-### `ls` shows only half of this, and that is not a fault
-
-Unlike the macOS route, where every link is a symlink and prints `->`, the two link kinds here
-look completely different to `ls`:
+### `ls` shows only the junctions, and that is not a fault
 
 ```
 $ ls -la ~/.claude ~/.claude/skills
--rw-r--r-- 2 …  7087 CLAUDE.md                    <- linked, no arrow
--rw-r--r-- 2 … 16019 machine.md                   <- linked, no arrow
--rw-r--r-- 1 …   432 settings.json                <- correctly not linked
-lrwxrwxrwx 1 …    80 review -> /c/Users/…/review  <- linked, with arrow
+-rw-r--r-- 1 …  7087 CLAUDE.md                    <- a generated copy, no arrow, link count 1
+-rw-r--r-- 1 …   432 settings.json                <- correctly not linked, same look
+lrwxrwxrwx 1 …    80 review -> /c/Users/…/review  <- a junction, MSYS `ls` prints it as `->`
 ```
 
-**A hardlink can never print an arrow.** It is a second *name* for one inode, not a pointer to a path, so
-there is no target for `ls` to show. The column that matters is the **link count** immediately after the
-permissions: `2` means linked, `1` means a plain file. Junctions do print `->`, because MSYS `ls` maps
-them onto symlinks.
-
-So *"I ran `ls` and saw no symlinks"* is the expected result at the top level and proves nothing either
-way. `link_config.py`, `LinkType`, or the link count are the checks that answer the question.
+A generated copy and a plain file you created by hand look **identical** to `ls` — same mode, same
+link count. That's expected, not a fault: there's no mechanism difference to show, only content,
+which `ls` doesn't check. `link_config.py` or the hash comparison above are what answer the
+question; `ls` only tells you something is a junction, never that a file is current.
 
 ## Not tracked
 

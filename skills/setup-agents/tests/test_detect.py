@@ -248,9 +248,9 @@ class TestCollect(TempTree):
     def test_link_counts_for_both_agents_from_a_clean_home(self) -> None:
         facts = self.facts({})
         self.assertEqual(facts["claude"]["links"]["linked"], 0)
-        self.assertEqual(facts["claude"]["links"]["total"], len(link_config.SKILLS) + 2)
+        self.assertEqual(facts["claude"]["links"]["total"], len(link_config.SKILLS) + 3)
         self.assertEqual(
-            facts["copilot"]["links"]["total"], len(link_config.SKILLS) + 2
+            facts["copilot"]["links"]["total"], len(link_config.SKILLS) + 3
         )
 
     def test_reports_the_machine_note_as_absent_by_its_conventional_name(self) -> None:

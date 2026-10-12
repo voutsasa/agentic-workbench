@@ -28,6 +28,7 @@ Two authoring rules for `AGENT-INSTRUCTIONS.md`, kept here because they govern i
 |---|---|---|
 | `AGENT-INSTRUCTIONS.md` | `~/.claude/CLAUDE.md` | linked for Claude Code and VS Code with `chat.useClaudeMdFile` |
 | `AGENT-INSTRUCTIONS.md` | `~/.copilot/copilot-instructions.md` | linked for Copilot CLI |
+| `AGENT-INSTRUCTIONS.md` | `~/.agentic-workbench/AGENTS.md` | linked for every agent — the one assistant-neutral home copy, named like this repo's own root `AGENTS.md` rather than any assistant, for an integration that has no agent-specific route of its own yet |
 | `settings.json` | `~/.claude/settings.json` | **merged by hand — never linked** |
 | `skills/<skill>/` | `~/.claude/skills/<skill>` | linked — one per name in [`../scripts/link_config.py`](../scripts/link_config.py)'s `SKILLS` tuple |
 | `../machines/<platform>-<id>.md` | `~/.agentic-workbench/machine.md` | linked for every agent — the instructions name this one path, under the workbench's own home rather than any assistant's |
@@ -37,7 +38,12 @@ Two authoring rules for `AGENT-INSTRUCTIONS.md`, kept here because they govern i
 
 The `../machines/<platform>-<id>.md` row above is the indirection that keeps this directory
 platform-neutral: one fixed path, different content per machine, so `CLAUDE.md` can point at machine
-truth without naming a platform.
+truth without naming a platform. `~/.agentic-workbench/AGENTS.md` is the same indirection applied to
+the *instructions themselves*, not just machine state.
+
+"Linked" for every **file** row above is a symlink on macOS; on Windows it is a generated copy, not a
+hardlink — see *Settled* below for why. The **directory** row (`skills/<skill>/`) stays a junction on
+Windows and a symlink on macOS either way, per `link_config.py`'s `_file_link` vs. plain `Link`.
 
 `hooks/powershell-tool-prompt.ps1` is a reference copy, same treatment as `settings.json`. The script
 body is portable, but its *registration* — the `hooks.SessionStart`/`hooks.PreToolUse` block naming
@@ -360,3 +366,24 @@ From the 2026-07-30 usage report, when `WORKING_PRACTICES.md` was folded into `C
   context. They state the objective and model tier, retain all confirmation gates, and keep
   pushes with the parent agent. A subagent may edit and make a local commit only within its
   explicit scope.
+
+- **Windows file links became generated copies, not hardlinks — 2026-10-12.** `CLAUDE.md`,
+  `copilot-instructions.md`, `machine.md` and the new `~/.agentic-workbench/AGENTS.md` all used
+  `os.link()` on Windows, which severs on `git checkout` or any atomic-saving editor — the
+  defect `link_config.py`'s *detached*/*diverged* split exists to catch. `link_config.py` already
+  had the mechanism this needed, built for the project `CLAUDE.md`'s `@AGENTS.md` import: a
+  `Link.content` field that `inspect()`/`apply()` treat as "this destination must hold exactly
+  this text," generated rather than linked. `_file_link()` generalises it to every home-level
+  file link, Windows only — macOS keeps the real symlink, which has no severance defect. This
+  also lifts the hardlink's same-volume-as-`$HOME` requirement for these artifacts, and (since a
+  plain file is neither a symlink nor a hardlink) sidesteps Cowork's existing skip of a
+  `CLAUDE.md` that is itself a link resolving outside the working directory. Migration was free:
+  an already-live hardlink's destination holds the same bytes as its source, so the moment
+  `plan()` started setting `content=`, the existing copy read `linked` immediately.
+- **Renaming `<repo>/.claude/` to `<repo>/.agentic-workbench/` — declined, 2026-10-12.**
+  `.claude/skills/` and `.claude/CLAUDE.md` are not this repo's naming choice: they are Claude
+  Code's own hardcoded discovery paths, and one of Copilot's three fixed project-scope skill
+  paths. Renaming the folder doesn't make it neutral, it makes both tools stop finding anything
+  there. The assistant-neutral authoring layer this was reaching for already exists —
+  `skills/<name>/SKILL.md`, root `AGENTS.md` — and now has a home-scope counterpart,
+  `~/.agentic-workbench/AGENTS.md`, in the entry above.

@@ -127,6 +127,10 @@ scratch tree cannot be redirected by an inherited variable; `--copilot-home` ove
 `--persist` writes `link-config-<machine>-<user>-<timestamp>.md` under `--repo`; adding `--csv`
 writes link and MCP states as CSV instead.
 
+**Any `--agent` also writes `~/.agentic-workbench/AGENTS.md`** — the same source, as a copy named
+like neither assistant, for an integration that has no agent-specific route yet. It sits beside the
+machine note under the one home path no assistant defines.
+
 **`--project` links this repo's own skills** — every `skills/<name>/SKILL.md` — into
 `<repo>/.claude/skills/`, where Claude Code and Copilot both load them at project scope. `.claude/` is
 gitignored, so a fresh clone has none. On its own it links only those; `--agent` flags alongside it add
@@ -179,27 +183,35 @@ linking it. See [`../agent/README.md`](../agent/README.md#settings-are-merged-ne
 
 The `detached`/`diverged` split is the point of the script. Both look identical to anything comparing
 link type alone, but one is safe to overwrite and the other is reconciliation work — and getting that
-wrong is how a hand-edited `~/.claude/CLAUDE.md` gets silently discarded.
+wrong is how a hand-edited `~/.claude/CLAUDE.md` gets silently discarded. A content-mode link (every
+home-level **file**, generated via `_file_link` — see below) never reads `detached`: there is no "real
+link" underneath for it to be a stale stand-in for, so a non-matching destination is `missing` or
+`diverged`, never in between.
 
 ### Why a script rather than the commands in `setup/`
 
-On Windows the files are **hardlinks**, and `git checkout` replaces a tracked file instead of writing
-through it. The new content lands on a new inode and the link detaches, silently, frozen at the old
-content. Measured 2026-08-25:
+Until 2026-10-12 the home-level files were **hardlinks** on Windows, and `git checkout` replaces a
+tracked file instead of writing through it. The new content landed on a new inode and the link
+detached, silently, frozen at the old content. Measured 2026-08-25:
 
 ```
 before checkout: LinkType=[HardLink] content=v1
 after  checkout: LinkType=[]         f.md=v2  linked.md=v1
 ```
 
-So the Windows route is not one-and-done: every pull or branch switch touching those files needs
-re-linking. A one-off command sequence cannot tell you it has come undone, which is what this reports.
-Junctions resolve a path rather than an inode and are immune, so the skill directories never need it.
+That is why they are generated copies now (`_file_link` in `link_config.py`, written fresh by
+`--apply` rather than linked) — a copy can't detach, it can only go stale, and the comparison that
+decides which is already content-based. **The underlying reason a one-off command sequence still
+isn't enough is unchanged**: whether a destination is a copy or a link, nothing updates it when the
+*source* changes, so every pull or branch switch touching `AGENT-INSTRUCTIONS.md` or a machine note
+needs a re-run, and only a script that re-checks can tell you so. Skill directories are junctions,
+which resolve a path rather than an inode and are immune to all of this — they never needed a repair
+step to begin with.
 
-Link detection is `os.path.samefile`, which compares device and inode. Measured on NTFS with Python
-3.14, that covers all three mechanisms in use: a POSIX symlink, a Windows hardlink (`st_nlink == 2`),
-and a Windows directory junction all report their target's inode, while a plain copy reports neither.
-One predicate, both platforms.
+Link detection, for the directories, is `os.path.samefile`, which compares device and inode. Measured
+on NTFS with Python 3.14, a POSIX symlink and a Windows directory junction both report their target's
+inode, while a plain copy reports neither. For the generated files, detection is a text comparison
+against the source's current content — see `inspect()`'s `link.content is not None` branch.
 
 ### Why measured rather than written
 

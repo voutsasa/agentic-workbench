@@ -99,7 +99,8 @@ class TestPlan(TempTree):
         labels = [link.label for link in self.plan()]
         self.assertEqual(
             labels,
-            [f"skills/{s}" for s in lc.SKILLS] + ["CLAUDE.md", "machine.md"],
+            [f"skills/{s}" for s in lc.SKILLS]
+            + ["agentic-workbench/AGENTS.md", "CLAUDE.md", "machine.md"],
         )
 
     def test_skills_come_first_so_junctions_are_never_blocked(self) -> None:
@@ -120,14 +121,24 @@ class TestPlan(TempTree):
         self.assertEqual(link.source.name, "macos-air.md")
         self.assertEqual(link.dest.name, "machine.md")
 
-    def test_every_destination_but_the_machine_note_is_under_dot_claude(self) -> None:
+    def test_every_destination_but_the_workbench_home_files_is_under_dot_claude(
+        self,
+    ) -> None:
+        workbench_labels = ("machine.md", "agentic-workbench/AGENTS.md")
         for link in self.plan():
-            if link.label != "machine.md":
+            if link.label not in workbench_labels:
                 self.assertEqual(link.dest.parts[len(self.home.parts)], ".claude")
 
     def test_machine_note_goes_to_the_assistant_neutral_home(self) -> None:
         link = next(l for l in self.plan() if l.label == "machine.md")
         self.assertEqual(link.dest, self.home / ".agentic-workbench" / "machine.md")
+
+    def test_agents_md_goes_to_the_assistant_neutral_home(self) -> None:
+        link = next(l for l in self.plan() if l.label == "agentic-workbench/AGENTS.md")
+        self.assertEqual(link.dest, self.home / ".agentic-workbench" / "AGENTS.md")
+        self.assertEqual(
+            link.source, self.repo / "workstation" / "agent" / "AGENT-INSTRUCTIONS.md"
+        )
 
     def test_a_never_link_destination_raises(self) -> None:
         """The guard is structural: widen it and plan() refuses to emit that link."""
@@ -163,12 +174,25 @@ class TestInspect(TempTree):
         self.assertEqual(state.status, lc.NO_SOURCE)
         self.assertIn("no source", state.detail)
 
+    @unittest.skipIf(
+        os.name == "nt",
+        "on Windows CLAUDE.md is a generated copy, not a plain-copy fallback",
+    )
     def test_detached_when_content_matches(self) -> None:
         link = next(l for l in self.plan() if l.label == "CLAUDE.md")
         link.dest.write_text("policy\n", encoding="utf-8")
         state = lc.inspect(link)
         self.assertEqual(state.status, lc.DETACHED)
         self.assertIn("content still matches", state.detail)
+
+    @unittest.skipIf(os.name != "nt", "generated-copy mode is Windows-only")
+    def test_linked_when_a_generated_copy_already_holds_the_right_content(
+        self,
+    ) -> None:
+        link = next(l for l in self.plan() if l.label == "CLAUDE.md")
+        link.dest.write_text("policy\n", encoding="utf-8")
+        state = lc.inspect(link)
+        self.assertEqual(state.status, lc.LINKED)
 
     def test_diverged_when_content_differs(self) -> None:
         link = next(l for l in self.plan() if l.label == "CLAUDE.md")
@@ -258,6 +282,10 @@ class TestApply(TempTree):
         self.assertTrue(second.ok)
         self.assertFalse(any(s.repaired for s in second.states))
 
+    @unittest.skipIf(
+        os.name == "nt",
+        "on Windows CLAUDE.md is a generated copy, never a real link to upgrade to",
+    )
     def test_repairs_a_detached_copy_whose_content_matches(self) -> None:
         self.machine_file()
         link = next(l for l in self.plan() if l.label == "CLAUDE.md")
@@ -265,6 +293,15 @@ class TestApply(TempTree):
         report = lc.apply(lc.inspect_all([link]))
         self.assertEqual(report.states[0].status, lc.LINKED)
         self.assertTrue(lc.same_target(link.source, link.dest))
+
+    @unittest.skipIf(os.name != "nt", "generated-copy mode is Windows-only")
+    def test_a_matching_generated_copy_needs_no_repair(self) -> None:
+        self.machine_file()
+        link = next(l for l in self.plan() if l.label == "CLAUDE.md")
+        link.dest.write_text("policy\n", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([link]))
+        self.assertEqual(report.states[0].status, lc.LINKED)
+        self.assertFalse(report.states[0].repaired)
 
     def test_refuses_a_diverged_copy_without_force(self) -> None:
         link = next(l for l in self.plan() if l.label == "CLAUDE.md")
@@ -433,7 +470,7 @@ class TestMain(TempTree):
         with contextlib.redirect_stdout(buf):
             lc.main(["--repo", str(self.repo), "--home", str(self.home), "--json"])
         payload = json.loads(buf.getvalue())
-        self.assertEqual(len(payload["links"]), len(lc.SKILLS) + 2)
+        self.assertEqual(len(payload["links"]), len(lc.SKILLS) + 3)
         self.assertFalse(payload["ok"])
         self.assertNotIn("settings.json", [l["dest"] for l in payload["links"]])
         self.assertEqual(payload["agents"], ["claude"])
@@ -459,7 +496,7 @@ class TestMain(TempTree):
             )
         payload = json.loads(buf.getvalue())
         self.assertEqual(payload["agents"], ["claude", "copilot"])
-        self.assertEqual(len(payload["links"]), 2 * len(lc.SKILLS) + 3)
+        self.assertEqual(len(payload["links"]), 2 * len(lc.SKILLS) + 4)
 
     def test_copilot_agent_writes_under_dot_copilot_plus_the_machine_note(
         self,
@@ -482,6 +519,7 @@ class TestMain(TempTree):
         )
         self.assertTrue((self.home / ".copilot" / "copilot-instructions.md").exists())
         self.assertTrue((self.home / ".agentic-workbench" / "machine.md").exists())
+        self.assertTrue((self.home / ".agentic-workbench" / "AGENTS.md").exists())
         self.assertFalse((self.home / ".claude" / "machine.md").exists())
         self.assertFalse((self.home / ".claude" / "CLAUDE.md").exists())
         self.assertFalse((self.home / ".claude" / "skills").exists())
@@ -581,14 +619,19 @@ class TestCopilotPlan(TempTree):
         self.assertEqual(
             [link.label for link in self.copilot()],
             [f"copilot/skills/{s}" for s in lc.SKILLS]
-            + ["copilot/copilot-instructions.md", "machine.md"],
+            + [
+                "agentic-workbench/AGENTS.md",
+                "copilot/copilot-instructions.md",
+                "machine.md",
+            ],
         )
 
-    def test_every_destination_but_the_machine_note_is_under_the_copilot_root(
+    def test_every_destination_but_the_workbench_home_files_is_under_the_copilot_root(
         self,
     ) -> None:
+        workbench_labels = ("machine.md", "agentic-workbench/AGENTS.md")
         for link in self.copilot():
-            if link.label != "machine.md":
+            if link.label not in workbench_labels:
                 self.assertTrue(link.dest.is_relative_to(self.home / ".copilot"))
 
     def test_machine_note_goes_to_the_one_fixed_path(self) -> None:
@@ -627,7 +670,12 @@ class TestCopilotPlan(TempTree):
         self.assertTrue(all(link.is_dir for link in links[:dirs]))
         self.assertEqual(
             [link.label for link in links[dirs:]],
-            ["copilot/copilot-instructions.md", "CLAUDE.md", "machine.md"],
+            [
+                "agentic-workbench/AGENTS.md",
+                "copilot/copilot-instructions.md",
+                "CLAUDE.md",
+                "machine.md",
+            ],
         )
 
     def test_applies_cleanly_once_the_machine_note_exists(self) -> None:
@@ -763,6 +811,52 @@ class TestClaudeMd(TempTree):
         self.assertEqual((payload["agents"], payload["claude_md"]), ([], True))
         self.assertTrue((self.repo / "CLAUDE.md").exists())
         self.assertEqual(list((self.home / ".claude").iterdir()), [])
+
+
+@unittest.skipIf(os.name != "nt", "generated-copy mode is Windows-only")
+class TestAgentsMd(TempTree):
+    """~/.agentic-workbench/AGENTS.md: the one assistant-neutral home copy,
+    generated straight from AGENT-INSTRUCTIONS.md like CLAUDE.md is."""
+
+    def link(self) -> lc.Link:
+        return next(l for l in self.plan() if l.label == "agentic-workbench/AGENTS.md")
+
+    def test_absent_reads_missing_and_apply_writes_the_copy(self) -> None:
+        self.machine_file()
+        self.assertEqual(lc.inspect(self.link()).status, lc.MISSING)
+        report = lc.apply(lc.inspect_all([self.link()]))
+        self.assertTrue(report.ok, lc.render(report))
+        self.assertEqual(
+            (self.home / ".agentic-workbench" / "AGENTS.md").read_text(
+                encoding="utf-8"
+            ),
+            "policy\n",
+        )
+        self.assertEqual(lc.inspect(self.link()).status, lc.LINKED)
+
+    def test_a_file_with_other_content_is_diverged_and_kept(self) -> None:
+        self.machine_file()
+        link = self.link()
+        link.dest.parent.mkdir(parents=True, exist_ok=True)
+        link.dest.write_text("my own notes\n", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([link]))
+        self.assertEqual(report.status, lc.DIVERGED)
+        self.assertEqual(link.dest.read_text(encoding="utf-8"), "my own notes\n")
+
+    def test_force_replaces_diverged_content(self) -> None:
+        self.machine_file()
+        link = self.link()
+        link.dest.parent.mkdir(parents=True, exist_ok=True)
+        link.dest.write_text("my own notes\n", encoding="utf-8")
+        report = lc.apply(lc.inspect_all([link]), force=True)
+        self.assertTrue(report.ok, lc.render(report))
+        self.assertEqual(link.dest.read_text(encoding="utf-8"), "policy\n")
+
+    def test_no_instructions_file_is_no_source(self) -> None:
+        self.machine_file()
+        link = self.link()
+        (self.repo / "workstation" / "agent" / "AGENT-INSTRUCTIONS.md").unlink()
+        self.assertEqual(lc.inspect(link).status, lc.NO_SOURCE)
 
 
 class TestHooks(TempTree):
