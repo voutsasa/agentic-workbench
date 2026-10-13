@@ -35,7 +35,7 @@ more credits from the organization's shared Rovo allowance.
 | Transport | Streamable HTTP |
 | Authentication | Browser-based OAuth 2.1, using your existing Atlassian identity |
 | Version | v2, selected by the endpoint path |
-| Configuration in this repo | [`../.mcp.json`](../.mcp.json) catalog, merged into the tracked root `.mcp.json` |
+| Configuration scope | **User**, per client — deliberately not in the [`../.mcp.json`](../.mcp.json) catalog |
 
 ## First-time setup information
 
@@ -51,60 +51,50 @@ API-token authentication and the user deliberately selects it, direct them to At
 The user must follow that guide themselves and use a secure, user-managed MCP configuration; this
 workbench does not record or distribute the key.
 
-## Shared project registration — recommended
+## Workstation registration — user scope
 
-The catalog has the vendor's generic endpoint, so the same project-scoped configuration serves both
-Claude Code and GitHub Copilot CLI. **Run these yourself; they are not run by this guide.**
+Confluence is wanted in every Claude Code and Copilot CLI session on the machine, not only in this
+repository, so the server is registered **once per client at user scope** and is deliberately absent
+from the [`../.mcp.json`](../.mcp.json) catalog. `link_config.py --mcp` therefore does not list it.
+**Run these yourself; they are not run by this guide.** The commands are the same on macOS (zsh) and
+Windows (PowerShell), and neither puts a credential in the configuration.
 
-```powershell
-.\.venv\Scripts\python.exe workstation\scripts\link_config.py --mcp
-.\.venv\Scripts\python.exe workstation\scripts\link_config.py --mcp --apply
-```
+| Client | Command | Writes |
+|---|---|---|
+| Claude Code | `claude mcp add --transport http -s user atlassian-mcp https://mcp.atlassian.com/v2/mcp` | `~/.claude.json` |
+| GitHub Copilot CLI | `copilot mcp add --transport http atlassian-mcp https://mcp.atlassian.com/v2/mcp` | `~/.copilot/mcp-config.json` |
 
-The first command only reports the catalog state. The second adds the missing `atlassian-mcp` entry to
-this repository's tracked `.mcp.json`; it does not alter an existing diverged entry. Both clients read
-that file from this workspace. It contains no credential.
+`copilot mcp add` has no scope flag: its `--help` says it adds the server "to the user configuration"
+(Copilot CLI 1.0.88, 2026-10-13). Atlassian's own Claude Code command omits `-s user` and so
+registers at local (this-project) scope; the flag is what makes it workstation-wide.
+
+These files sit outside the repository, so the commands above are the only reproducibility record.
 
 ### Claude Code
 
-Open Claude Code in this repository, run `/mcp`, select `atlassian-mcp`, and complete the browser
-sign-in. Verify configuration with:
+Open a new Claude Code session, run `/mcp`, select `atlassian-mcp`, and complete the browser sign-in.
+Verify configuration with:
 
-```powershell
+```sh
 claude mcp get atlassian-mcp
 ```
 
 ### GitHub Copilot CLI
 
-Start a new Copilot CLI session in this repository. Confirm the workspace configuration:
+Start a new Copilot CLI session and confirm the configuration:
 
-```powershell
+```sh
 copilot mcp get atlassian-mcp
 ```
 
 Then make a read-only request such as *“Search Confluence for `<page title>` and summarize the
-results.”* Complete the browser sign-in when prompted. `copilot mcp get` proves only that the
-configuration is enabled; a successful read proves the OAuth connection and permissions.
-
-## Personal registration — alternative
-
-Use one of these **instead of** the shared project catalog if the server should apply outside this
-repository. Each command writes a user-specific, untracked configuration; neither command puts a
-credential in the configuration.
-
-```powershell
-claude mcp add --transport http -s user atlassian-mcp https://mcp.atlassian.com/v2/mcp
-```
-
-```powershell
-copilot mcp add --transport http atlassian-mcp https://mcp.atlassian.com/v2/mcp
-```
-
-Claude writes `~/.claude.json`; Copilot CLI writes `~/.copilot/mcp-config.json`. Open a new client
-session and trigger the OAuth flow as above.
+results.”* Complete the browser sign-in when prompted. `mcp get` proves only that the configuration is
+enabled; a successful read proves the OAuth connection and permissions.
 
 ## Traps
 
+- Do not also add `atlassian-mcp` to a repository's `.mcp.json`. A project-scope entry with the same
+  name takes precedence over the user-scope one in Claude Code, leaving two copies to drift.
 - Use the **v2** endpoint above. Atlassian says existing v1 use will begin exposing v2 tools on
   2027-03-01; incompatible clients may need their cached client IDs or `.well-known` credentials
   cleared.
