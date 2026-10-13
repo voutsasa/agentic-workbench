@@ -19,16 +19,6 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 53. No Confluence read has gone through atlassian-mcp yet
-
-Opened 2026-10-13. `atlassian-mcp` is registered at user scope in both clients on the macOS
-workstation: `claude mcp get atlassian-mcp` → `Scope: User config`, `Status: ! Needs authentication`;
-`copilot mcp get atlassian-mcp` → `Source: User`, `Status: Enabled`. Neither proves the OAuth
-connection or the identity's Confluence permissions (`workstation/mcp/atlassian-mcp/setup.md`).
-
-**Closes when:** after the `/mcp` browser sign-in, a read-only Confluence search through
-`atlassian-mcp` returns results in Claude Code and in Copilot CLI.
-
 ### 52. The machine probes do not detect a quarantined venv launcher
 
 Opened 2026-10-10. `workstation/machines/windows-ema-pf5n4xe7.md` § *A new venv's console-script
