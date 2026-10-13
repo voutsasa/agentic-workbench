@@ -18,6 +18,7 @@ Where to find guidance for the MCP servers listed under *Cross-cutting aspects â
 | Server | Product | Transport | Guidance |
 |---|---|---|---|
 | `ado-remote-mcp` | Azure DevOps MCP Server (remote) | http | [`ado-remote-mcp/`](ado-remote-mcp/) |
+| `atlassian-mcp` | Atlassian MCP server (remote) | http | [`atlassian-mcp/`](atlassian-mcp/) |
 | `databricks-<service>` | Azure Databricks managed MCP services (Genie One, DBSQL, sandbox) | http (Claude) Â· stdio bridge (Copilot) | [`databricks-mcp/`](databricks-mcp/) |
 | `fabric-iq-mcp` | Fabric IQ MCP server (remote, read-only Power BI tools) | http | [`fabric-iq-mcp/`](fabric-iq-mcp/) |
 | `drawio-mcp` | draw.io MCP tool server | stdio | [`drawio-mcp/`](drawio-mcp/) |

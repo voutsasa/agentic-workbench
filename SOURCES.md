@@ -302,6 +302,7 @@ Servers **authored** in this workbench are project output, not workstation tooli
 **Remote** — hosted by the vendor or by your own deployment; the client only registers the endpoint.
 
 * [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server)
+* [atlassian-mcp](https://support.atlassian.com/atlassian-ai-gateway/docs/get-started-with-the-atlassian-remote-mcp-server/)
 * [databricks-mcp](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/managed-mcp)
 * [fabric-mcp-overview](https://learn.microsoft.com/en-us/rest/api/fabric/articles/mcp-servers/fabric-mcp-servers-list)
 * [fabric-iq-mcp](https://learn.microsoft.com/en-us/fabric/iq/connectors/fabric-iq-mcp)

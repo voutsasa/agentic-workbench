@@ -233,6 +233,7 @@ Third-party MCP servers configured into this machine's agent clients. Each has a
 **Remote** — hosted by the vendor or by your own deployment; the client only registers the endpoint.
 
 * [ado-remote-mcp](https://learn.microsoft.com/en-us/azure/devops/mcp-server/remote-mcp-server) — Microsoft's hosted Azure DevOps MCP Server; org-scoped Entra OAuth over HTTP, no local install.
+* [atlassian-mcp](https://support.atlassian.com/atlassian-ai-gateway/docs/get-started-with-the-atlassian-remote-mcp-server/) — Atlassian's hosted v2 MCP server; OAuth access to Confluence, Jira, Bitbucket, Loom, and other connected products.
 * [databricks-mcp](https://learn.microsoft.com/en-us/azure/databricks/agents/mcp-tools/managed-mcp) — Azure Databricks' hosted MCP servers (Genie, AI Search, SQL, sandbox), authenticated through the Databricks CLI login.
 * [fabric-mcp-overview](https://learn.microsoft.com/en-us/rest/api/fabric/articles/mcp-servers/fabric-mcp-servers-list) — Microsoft's table of every Fabric MCP server, remote or local, with its use and setup page.
 * [fabric-iq-mcp](https://learn.microsoft.com/en-us/fabric/iq/connectors/fabric-iq-mcp) — Fabric IQ remote server: discover reports and query data across Fabric from an agent.

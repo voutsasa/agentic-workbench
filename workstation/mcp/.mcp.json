@@ -12,6 +12,10 @@
       "headers": {
         "X-MCP-Readonly": "true"
       }
+    },
+    "atlassian-mcp": {
+      "type": "http",
+      "url": "https://mcp.atlassian.com/v2/mcp"
     }
   }
 }
