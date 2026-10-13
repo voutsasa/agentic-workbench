@@ -4,7 +4,7 @@ package: none — hosted endpoint
 transport: http
 version_observed: v2
 verified: 2026-10-13
-pinned: true (v2 endpoint)
+pinned: true
 author: Achilleas Voutsas
 version: 0.3.0
 ---
