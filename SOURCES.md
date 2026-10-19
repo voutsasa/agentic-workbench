@@ -292,6 +292,7 @@ Each tool has a folder at `workstation/cli/<tool>/` with install commands, a qui
 * [unity-gateway](https://github.com/databricks/unity-gateway)
 * [jq](https://jqlang.org/manual/)
 * [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md)
+* [psql](https://www.postgresql.org/docs/current/app-psql.html)
 
 #### MCP servers
 

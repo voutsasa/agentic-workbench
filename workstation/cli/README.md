@@ -103,6 +103,7 @@ Each row is named by the **command you type**, which is often not the package na
 | `ug` / `ucode` | Unity Gateway (Databricks) | [`unity-gateway/`](unity-gateway/) |
 | `jq` | jq | [`jq/`](jq/) |
 | `confluence-sync-md` / `md2conf` / `cme` | confluence-sync-md | [`confluence-sync-md/`](confluence-sync-md/) |
+| `psql` | PostgreSQL client (psql) | [`psql/`](psql/) |
 
 ## Do not cross ecosystems by name
 
