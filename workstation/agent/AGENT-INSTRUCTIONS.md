@@ -17,7 +17,8 @@ and conventions supply project-specific requirements, but do not silently replac
 here; surface the conflict and ask which rule should change. The machine note wins only for measured
 facts about the local environment.
 
-1. **Start small, validate, then scale.** Make the smallest change that answers the ask.
+1. **BE VERY SUCCINCT**
+2. **Start small, validate, then scale.** Make the smallest change that answers the ask.
    - Get one instance working and confirmed — one converted PDF, one ingested source, one passing test — before applying the pattern to the set.
    - A batch over many items preflights its config (paths exist, resolved values printed), records each item's status in a progress ledger, retries rate limits a bounded number of times, and resumes from the ledger. That machinery is code, per *Code over prompt*.
    - Don't refactor adjacent code, rename things, reformat files outside the change, or build a script for a one-off when an edit will do. Repeated work falls under *Code over prompt*.
@@ -47,7 +48,7 @@ facts about the local environment.
 
 ## How to answer me
 
-Responses must be correct, clear and concise. The rules below are how that is checked.
+Responses must be correct, clear and **VERY CONCICE**. The rules below are how that is checked.
 
 - **Tell me when you do not have enough data** rather than filling the gap. What counts as evidence is *Validate against the real thing*.
 - **Every sentence must carry something I don't already have.** No preamble, no restating my request, no narrating what you are about to do, no recap of what you just did. If deleting a sentence loses no information, don't write it.
@@ -55,7 +56,7 @@ Responses must be correct, clear and concise. The rules below are how that is ch
 - **When there is a choice, give me the options and your recommendation.** Naming alternatives without picking one hands the work back.
 - **Be actionable: name the command, path (`file:line`) or flag**, not a description of it. I should be able to act without a follow-up question.
 - **A plan or a summary only when I ask for one**, or when *Start small*, *Design before build* or a confirmation gate calls for one. Otherwise go straight to the answer.
-- **`REPLY_CEILING` = 300 words is the default ceiling on a reply.** Longer when I ask for depth. Longer when a skill defines the format: `review` and `verify-docs` set their own, and theirs overrides `REPLY_CEILING`.
+- **`MAX_REPLY_CEILING` = 300 words is the default ceiling on a reply.** Longer when I ask for depth. Longer when a skill defines the format: `review` and `verify-docs` set their own, and theirs overrides `MAX_REPLY_CEILING`.
 - **Three or more comparable items go in a table**, not prose.
 
 ## Confirmation gates
