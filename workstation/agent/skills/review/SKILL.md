@@ -36,8 +36,8 @@ State up front which files you read, so the scope of the review is unambiguous.
 
 ## Report structure
 
-This structure is the reply, and it **overrides `REPLY_CEILING`** — as long as the findings require,
-no longer. `REPLY_CEILING` is defined in `~/.claude/CLAUDE.md`.
+This structure is the reply, and it **overrides `MAX_REPLY_CEILING`** — as long as the findings require,
+no longer. `MAX_REPLY_CEILING` is defined in `~/.claude/CLAUDE.md`.
 
 ```markdown
 # Review: <target>

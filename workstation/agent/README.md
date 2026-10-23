@@ -19,7 +19,7 @@ Two authoring rules for `AGENT-INSTRUCTIONS.md`, kept here because they govern i
 - **Nothing machine-specific goes in it.** A shell quirk, an absolute path, a version number or a tool
   inventory written there is a defect; its *This machine* section points at `~/.agentic-workbench/machine.md`
   instead.
-- **`REPLY_CEILING`'s number is written once**, in its *How to answer me* bullet. Skills refer to it by
+- **`MAX_REPLY_CEILING`'s number is written once**, in its *How to answer me* bullet. Skills refer to it by
   name, so change the number there alone.
 
 ## Contents

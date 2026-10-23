@@ -136,7 +136,7 @@ Rules that matter more than they look:
 
 ### Phase 4 — Report
 
-One row per claim. The table is the reply and **overrides `REPLY_CEILING`**, which is defined in
+One row per claim. The table is the reply and **overrides `MAX_REPLY_CEILING`**, which is defined in
 `~/.claude/CLAUDE.md`.
 
 ```markdown
