@@ -105,8 +105,8 @@ other format, ask before editing.
 - **One blockquote under the clause it concerns**: `**🔴 Opus Review [n]**`, a bolded one-line claim,
   body in italics. Number them, cross-reference related ones (`see **[3]**`), and add a 🟢 key at the
   top plus a closing note carrying the score.
-- **Never inline `<span style=...>` for colour** — markdown has no colour and Zed's preview prints the
-  raw tag. Keep the `.md` free of raw HTML. The 🔴/🟢 markers plus bold and italics carry the visual
+- **Never inline `<span style=...>` for colour** — markdown has no colour, and a renderer that does not
+  process HTML prints the raw tag. Keep the `.md` free of raw HTML. The 🔴/🟢 markers plus bold and italics carry the visual
   distinction in every renderer; don't offer to generate HTML or PDF unless asked.
 
 ## Apply mode (opt-in)

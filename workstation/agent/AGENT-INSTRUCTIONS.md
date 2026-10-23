@@ -109,11 +109,23 @@ is in the machine note, not here.
     audits follow their skill's reporting rules and do not create TODOs or commits unless explicitly
     switched to an apply mode.
 
+### Classifying TODO items
+
+Classify each TODO item you add or edit on the four dimensions below. A repository whose TODO
+already uses another scheme is a conflict to surface, not to convert unasked.
+
+| Dimension | Values | Rule |
+|---|---|---|
+| Type | `feat`, `fix`, `perf`, `docs`, `test`, `build`, `ci`, `chore`: the Conventional Commits type of the commit that will close it. Not commits: `verify` (a check never run), `decision` (needs my call), `ops` (my action outside the repo) | One per item; an item that needs two is two items |
+| Quality | ISO/IEC 25010: Functional suitability, Security, Reliability, Performance efficiency, Usability, Portability, Maintainability, Compatibility, or `–` | The characteristic it affects; optional |
+| Impact | H: wrong data, or a security gap. M: a workflow broken or misleading. L: cosmetic or convenience | What happens if it is never done |
+| Priority | H: do now (cheap, or it blocks other work). M: within its phase or release. L: when convenient | Impact weighed against cost and the plan's phase; say why when it differs from Impact |
+
 ## Documents
 
 - Use the `review` skill when I ask for a document or code review. Not when I've asked for a code change — there, run the tests.
-- Markdown deliverables must render in Zed's plain preview: no CSS assets, no render scripts. This binds documents you author or hand over, not ingested corpus files, which are sources — a converted page may keep pandoc's multiline tables.
-- Inline HTML is allowed only where it is the only route to a required feature. Include it, then warn me: viewers that do not process inline HTML, Zed's plain preview among them, show the markup as literal text.
+- Markdown deliverables are CommonMark with GitHub tables (GFM): no CSS assets, no render scripts. This binds documents you author or hand over, not ingested corpus files, which are sources — a converted page may keep pandoc's multiline tables.
+- Inline HTML is allowed only where it is the only route to a required feature. Include it, then warn me: viewers that do not process inline HTML show the markup as literal text.
 
 ## Workstation tooling
 

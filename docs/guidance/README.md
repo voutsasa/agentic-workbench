@@ -42,7 +42,7 @@ So the bar has a fourth clause in practice: **a note that tells you what to do w
 
 ## Format
 
-- Renders in Zed's plain preview: **no inline HTML, no CSS assets, no render scripts.**
+- CommonMark with GitHub tables (GFM): **no inline HTML, no CSS assets, no render scripts.**
 - Tables over prose for anything enumerable — an agent scanning for one row should not read paragraphs.
 - Lead with the decision, then the reasoning. A note read under time pressure should be actionable from its first table.
 - Assets a note's commands depend on live beside it, referenced by repo-root path so the commands run as written. A note whose assets have to be reachable from *outside* this repo is a sign it belongs in a skill instead, where they ship with it.
