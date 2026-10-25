@@ -145,7 +145,7 @@ the region came from your AWS config rather than `AWS_REGION`. Region resolution
 Then confirm the `env` block survived the settings merge:
 
 ```
-uv run python workstation/scripts/settings_delta.py --env
+uv run --no-sync python workstation/scripts/settings_delta.py --env
 ```
 
 `env keys` must be non-empty and `CLAUDE_CODE_USE_BEDROCK` must not be `None`.

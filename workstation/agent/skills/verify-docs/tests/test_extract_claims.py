@@ -131,6 +131,34 @@ class TestExtraction(unittest.TestCase):
             ["python workstation/scripts/databricks_mcp.py supports --profile"],
         )
 
+    def test_uv_run_flags_split_between_uv_and_the_wrapped_command(self):
+        """`uv run --no-sync --project R python s.py --repo .`: uv's options end at
+        the first positional; `--repo` belongs to the script, not to `uv run`."""
+        text = (
+            "```\n"
+            'uv run --no-sync --project "$R" python s.py --repo .\n'
+            "uv run --frozen -- confluence-sync-md --help\n"
+            "```\n"
+        )
+        found = [c.claim for c in by_kind(extract_from_text("s.md", text), "cli_flag")]
+        self.assertEqual(
+            found,
+            [
+                "uv run supports --no-sync",
+                "uv run supports --project",
+                "python s.py supports --repo",
+                "uv run supports --frozen",
+            ],
+        )
+
+        snippet = "Run `uv run --no-sync python s.py --apply` first.\n"
+        found = [
+            c.claim for c in by_kind(extract_from_text("s.md", snippet), "cli_flag")
+        ]
+        self.assertEqual(
+            found, ["uv run supports --no-sync", "python s.py supports --apply"]
+        )
+
     def test_subcommand_flags_bind_to_the_complete_command(self):
         text = (
             "```\n"

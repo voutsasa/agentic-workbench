@@ -88,13 +88,13 @@ difference the message has to carry, not assume away.
 
 ```powershell
 Set-Location $Root
-.venv\Scripts\python.exe workstation\agent\skills\review\scripts\repo_check.py
-.venv\Scripts\python.exe workstation\agent\skills\verify-docs\scripts\verify_claims.py --repo .
+uv run --no-sync python workstation\agent\skills\review\scripts\repo_check.py
+uv run --no-sync python workstation\agent\skills\verify-docs\scripts\verify_claims.py --repo .
 foreach ($d in (Get-Content .pre-push-tests | Where-Object { $_ -and $_ -notmatch '^#' })) {
-  .venv\Scripts\python.exe -m unittest discover -s $d -t $d
+  uv run --no-sync python -m unittest discover -s $d -t $d
 }
-.venv\Scripts\ruff.exe check . ; .venv\Scripts\ruff.exe format --check .
-.venv\Scripts\python.exe -m pyright
+uv run --no-sync python -m ruff check . ; uv run --no-sync python -m ruff format --check .
+uv run --no-sync python -m pyright
 ```
 
 **Expect** `all enabled checks passed`, `No claim was refuted`, `OK` from every suite, ruff clean,

@@ -9,7 +9,7 @@ nothing to install, and **no model is called from here**.
 | `checks.toml` | The rules it enforces — glossary terms, header schema, scope. Tune this, not the script. |
 | `pre-push` | Git hook wrapper around `repo_check.py`, optional Ruff and Pyright checks, the repo's own unit tests, **and** `verify-docs`'s `verify_claims.py`. Versioned here; symlinked into `.git/hooks/` — **on Windows `pre-push.windows` is copied there instead**, see below. |
 | `pre-push.windows` | Windows shim: runs the tracked `pre-push` from the working tree — or, in a repo without one, the globally linked review skill's — so its one-time copy never goes stale. |
-| `../tests/test_repo_check.py` | From the repo root, `.venv/bin/python -m unittest discover -s workstation/agent/skills/review/tests -t workstation/agent/skills/review/tests` (`.venv\Scripts\python.exe` on Windows). No network. |
+| `../tests/test_repo_check.py` | From the repo root, `uv run --no-sync python -m unittest discover -s workstation/agent/skills/review/tests -t workstation/agent/skills/review/tests`. No network. |
 | `../tests/test_pre_push.py` | The hook and the Windows shim, same command. It invokes the hook, so the hook skips the unit-test step when `PRE_PUSH_IN_TESTS=1`. |
 
 ## repo_check.py
@@ -221,7 +221,7 @@ recursively, so the hook runs step 1 only, prints that **ruff, Pyright, the unit
 alone is not evidence of a full pass. For step 5 by hand, from the repo root:
 
 ```bash
-.venv/bin/python workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
+uv run --no-sync python workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 ```
 
 Before that guard existed the same command hung indefinitely: the ref loop is a bare `while

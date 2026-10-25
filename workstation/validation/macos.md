@@ -74,7 +74,7 @@ done
 Then the base64 split, which every `.docx` and PDF conversion needs:
 
 ```sh
-$R/.venv/bin/python $R/workstation/agent/skills/fetch-to-markdown/scripts/clean_md_images.py /tmp/val/chartex.md
+uv run --no-sync --project "$R" python $R/workstation/agent/skills/fetch-to-markdown/scripts/clean_md_images.py /tmp/val/chartex.md
 ```
 
 **Expect** `Found 2 embedded images`, a `-no-base64.md` beside the original, and the PNGs in a sibling
@@ -101,7 +101,7 @@ but the uv tool one **must** exit 2 naming the right one — that is the check t
 Where defuddle's output holds a raw `<table>`, finish through the extractor, per the skill's §2:
 
 ```sh
-$R/.venv/bin/python $R/workstation/agent/skills/fetch-to-markdown/scripts/extract_article.py \
+uv run --no-sync --project "$R" python $R/workstation/agent/skills/fetch-to-markdown/scripts/extract_article.py \
   /tmp/r.html section#main_content "$U" > /tmp/article.html
 pandoc -f html -t markdown -o /tmp/r.md /tmp/article.html
 ```
@@ -112,13 +112,13 @@ pandoc -f html -t markdown -o /tmp/r.md /tmp/article.html
 
 ```sh
 cd $R
-.venv/bin/python workstation/agent/skills/review/scripts/repo_check.py
-.venv/bin/python workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
+uv run --no-sync python workstation/agent/skills/review/scripts/repo_check.py
+uv run --no-sync python workstation/agent/skills/verify-docs/scripts/verify_claims.py --repo .
 for d in $(grep -v '^#' .pre-push-tests | grep -v '^$'); do
-  .venv/bin/python -m unittest discover -s $d -t $d
+  uv run --no-sync python -m unittest discover -s $d -t $d
 done
-.venv/bin/ruff check . && .venv/bin/ruff format --check .
-.venv/bin/python -m pyright
+uv run --no-sync python -m ruff check . && uv run --no-sync python -m ruff format --check .
+uv run --no-sync python -m pyright
 ```
 
 **Expect** `all enabled checks passed`, `No claim was refuted`, `OK` from every suite, ruff clean,

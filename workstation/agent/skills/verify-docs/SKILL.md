@@ -35,8 +35,8 @@ sentence you write to the user while running this skill.
 <venv-python> <skill>/scripts/verify_claims.py --repo <repo-root> --online   # + URLs, registries
 ```
 
-`<venv-python>` is the project's venv interpreter — `.venv/bin/python` on macOS,
-`.venv\Scripts\python.exe` on Windows — never a global `python3`.
+`<venv-python>` is `uv run --no-sync python`, run from the project root — the
+project's venv interpreter, never a global `python3`.
 
 `verify_claims.py` settles every claim a command can settle *without a model*:
 paths resolved from the correct base directory, flags found on a bounded help

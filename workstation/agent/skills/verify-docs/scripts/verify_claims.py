@@ -69,6 +69,7 @@ from extract_claims import (
     Claim,
     extract_repo,
     tracked_markdown,
+    uv_run_split,
 )
 
 # --- verdicts and exit codes ---------------------------------------------------
@@ -508,6 +509,13 @@ def help_subject(
 
     ``"no-script"`` when an interpreter names no script this repo holds.
     """
+    # `uv run [options] <command> …`: a flag after uv's options is the wrapped
+    # command's, so its help is asked instead.
+    wrapped = uv_run_split(" ".join(tokens))
+    if wrapped:
+        inner = wrapped[1].split()
+        if any(t == flag or t.startswith(flag + "=") for t in inner):
+            return help_subject(repo_root, doc, inner, flag)
     head = tokens[0]
     if head in NEVER_RUN:
         return None

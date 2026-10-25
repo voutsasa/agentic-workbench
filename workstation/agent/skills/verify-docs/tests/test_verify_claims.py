@@ -386,6 +386,18 @@ class TestHelpSubject(unittest.TestCase):
             self.assertTrue(argv[1].endswith("extract_claims.py"))
             self.assertEqual("python3 extract_claims.py", label)
 
+    def test_uv_run_defers_to_the_wrapped_command(self):
+        """`uv run --no-sync python s.py --repo .`: `--repo` is the script's, and
+        `--no-sync` stays `uv run`'s."""
+        tokens = ["uv", "run", "--no-sync", "--project", "R", "python3", "s.py"]
+        with TempRepo({"s.py": "#!/usr/bin/env python3\n"}) as root:
+            argv, label = subject(root, "doc.md", [*tokens, "--repo", "."], "--repo")
+            self.assertEqual("python3", argv[0])
+            self.assertTrue(argv[1].endswith("s.py"))
+            self.assertEqual("python3 s.py", label)
+            argv, _ = subject(root, "doc.md", [*tokens, "--repo"], "--no-sync")
+            self.assertEqual(["uv", "run"], argv)
+
     def test_an_interpreter_with_no_script_on_disk_is_declined(self):
         with TempRepo({}) as root:
             subject = help_subject(

@@ -277,6 +277,31 @@ def command_subject(command: str) -> str | None:
     return " ".join(subject)
 
 
+#: `uv run [options] <command> …`: uv's options end at the first positional, and
+#: everything from there is the wrapped command's argv. A bare `--` is left to
+#: END_OF_OPTIONS_RE, which stops flag attribution at it as before.
+UV_RUN_RE = re.compile(
+    r"^uv run(?P<options>(?:\s+(?:--(?:project|directory|python|with|group|extra"
+    r"|package|env-file)(?:=\S+|\s+\S+)|(?!--(?:\s|$))-\S+))*)\s+(?P<inner>[^-\s].*)$"
+)
+
+
+def uv_run_split(command: str) -> tuple[str, str] | None:
+    """Split `uv run …` into uv's own options and the wrapped command, if it is one."""
+    wrapped = UV_RUN_RE.match(command)
+    return (wrapped["options"], wrapped["inner"]) if wrapped else None
+
+
+def owned_flags(command: str) -> list[tuple[str | None, str]]:
+    """Each long flag of a command, paired with the command prefix that owns it."""
+    wrapped = uv_run_split(command)
+    if wrapped:
+        options, inner = wrapped
+        return [("uv run", flag) for flag in own_flags(options)] + owned_flags(inner)
+    owner = command_subject(command)
+    return [(owner, flag) for flag in own_flags(command)]
+
+
 def flag_claim(subject: str | None, flag: str) -> tuple[str, str] | None:
     """Build a (claim, command) pair for a flag, or None when no binary is known."""
     if not subject:
@@ -363,8 +388,7 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
             add(
                 line_no, CLI_INVOCATION, command, "binary_present", f"command -v {head}"
             )
-            command_owner = command_subject(command)
-            for flag in own_flags(command):
+            for command_owner, flag in owned_flags(command):
                 built = flag_claim(command_owner, flag)
                 if built:
                     add(line_no, CLI_FLAG, built[0], "help_text", built[1])
@@ -407,15 +431,17 @@ def extract_from_text(path: str, text: str, start_id: int = 1) -> list[Claim]:
                 add(line_no, INSTALL, snippet, "registry_lookup", installed[1])
                 continue
             head = snippet.split()[0]
-            flags = own_flags(snippet)
-            short = SHORT_FLAG_RE.match(head)
-            if short:
-                flags = [head]
             # A snippet that starts with a flag has no binary of its own; it
             # belongs to whatever tool the document is about.
-            binary = subject if head.startswith("-") else command_subject(snippet)
-            if flags and head not in SHELL_NOISE:
-                for flag in flags:
+            if head.startswith("-"):
+                pairs = [(subject, flag) for flag in own_flags(snippet)]
+            else:
+                pairs = owned_flags(snippet)
+            short = SHORT_FLAG_RE.match(head)
+            if short:
+                pairs = [(subject, head)]
+            if pairs and head not in SHELL_NOISE:
+                for binary, flag in pairs:
                     built = flag_claim(binary, flag)
                     if built:
                         add(line_no, CLI_FLAG, built[0], "help_text", built[1])

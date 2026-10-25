@@ -65,7 +65,7 @@ link is a replace and not a merge.
 
 `~/.claude/settings.json` is **edited in place and never replaced**. Follow
 [`../README.md` § *The merge procedure*](../README.md#the-merge-procedure); its delta is
-`uv run python workstation/scripts/settings_delta.py`.
+`uv run --no-sync python workstation/scripts/settings_delta.py`.
 
 ## The machine note
 

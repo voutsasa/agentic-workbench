@@ -19,6 +19,19 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 53. `uv run --no-sync python -m` has not run on Windows
+
+Type `verify` · Quality Portability · Impact M · Priority M
+
+Opened 2026-10-25, when `workstation/agent/AGENT-INSTRUCTIONS.md` made `uv run --no-sync python -m
+<module>` the form for every importable module and tool, so that the interpreter, never a
+console-script launcher, is what starts. The gate ran in that form on macOS only. Whether it gets
+past the quarantined launchers in `workstation/machines/windows-ema-pf5n4xe7.md` has not been
+observed.
+
+**Closes when:** `workstation/validation/windows.md` § *E. The repo's own gates* passes on a Windows
+machine, with its output quoted in that machine's note.
+
 ### 52. The machine probes do not detect a quarantined venv launcher
 
 Opened 2026-10-10. `workstation/machines/windows-ema-pf5n4xe7.md` § *A new venv's console-script

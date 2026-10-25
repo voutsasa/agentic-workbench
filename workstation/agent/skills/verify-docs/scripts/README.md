@@ -8,11 +8,11 @@ reaches a shell — verifiers are built from structured fields and run with
 |---|---|
 | `extract_claims.py` | Finds candidate claims and *proposes* a command for each. Decides nothing. |
 | `verify_claims.py` | Executes a verifier per claim and returns a verdict. Exits non-zero on any `REFUTED`. |
-| `../tests/test_extract_claims.py` | Extractor tests. `<venv-python> -m unittest discover -s tests -t tests` from the skill root. |
+| `../tests/test_extract_claims.py` | Extractor tests. `<venv-python> -m unittest discover -s <skill>/tests -t <skill>/tests` from the project root. |
 | `../tests/test_verify_claims.py` | Verifier tests, including both regression classes below. Same command. |
 
-`<venv-python>` is the calling project's venv interpreter — `.venv/bin/python`
-on macOS, `.venv\Scripts\python.exe` on Windows — never a global `python3`.
+`<venv-python>` is `uv run --no-sync python`, run from the calling project's
+root — its venv interpreter, never a global `python3`.
 
 ## verify_claims.py
 

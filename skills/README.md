@@ -57,5 +57,5 @@ Same shape as the global skills, so a promotion is a move rather than a rewrite:
 <skill>/SKILL.md           name: must equal the folder name, or it does not load
 <skill>/references/        loaded on demand, for branches most runs never take
 <skill>/scripts/           stdlib-only, so they run before any venv exists
-<skill>/tests/             unittest; python -m unittest discover -s skills/<skill>/tests (python3 on macOS)
+<skill>/tests/             unittest; uv run --no-sync python -m unittest discover -s skills/<skill>/tests
 ```

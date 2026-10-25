@@ -127,9 +127,8 @@ repository uses:
 uv add --dev git-cliff
 ```
 
-`uv sync` then installs it into `.venv` alongside `pytest`/`ruff`/`pyright`; run it with
-`uv run git-cliff ...` or the venv's own binary (`.venv\Scripts\git-cliff.exe` on Windows,
-`.venv/bin/git-cliff` on macOS).
+`uv sync` then installs it into `.venv` alongside `pytest`/`ruff`/`pyright`. It ships a binary and
+no importable module, so it runs as `uv run --no-sync git-cliff ...` rather than through `python -m`.
 
 In a repository with no Python toolchain, it is a standalone binary instead:
 
@@ -138,7 +137,7 @@ In a repository with no Python toolchain, it is a standalone binary instead:
 | macOS | `brew install git-cliff` |
 | Windows | `scoop install git-cliff` |
 
-Check: `git-cliff --version` (or `uv run git-cliff --version`).
+Check: `git-cliff --version` (or `uv run --no-sync git-cliff --version`).
 
 ### 2. Choose the single source of truth
 
@@ -243,8 +242,8 @@ table but was not committed with `!`, set the version by hand.
 ## Day to day
 
 ```sh
-uv run git-cliff --unreleased        # the changelog of what is not yet released
-uv run git-cliff --bumped-version    # the version the next release would get
+uv run --no-sync git-cliff --unreleased        # the changelog of what is not yet released
+uv run --no-sync git-cliff --bumped-version    # the version the next release would get
 ```
 
 Neither writes anything. Run them before a release, or to check that commits are being classified
@@ -258,26 +257,26 @@ From `main`, with a clean working tree and everything to be released merged. Thi
 and [`.pre-push-tests`](.pre-push-tests).
 
 ```sh
-# the repository's full gate — Windows paths shown; macOS uses .venv/bin/python
-.venv\Scripts\python.exe workstation\agent\skills\review\scripts\repo_check.py
-.venv\Scripts\python.exe -m ruff check .
-.venv\Scripts\python.exe -m ruff format --check .
-.venv\Scripts\python.exe -m pyright
+# the repository's full gate
+uv run --no-sync python workstation/agent/skills/review/scripts/repo_check.py
+uv run --no-sync python -m ruff check .
+uv run --no-sync python -m ruff format --check .
+uv run --no-sync python -m pyright
 # plus every suite named in .pre-push-tests, via
-#   .venv\Scripts\python.exe -m unittest discover -s <dir> -t <dir>
+#   uv run --no-sync python -m unittest discover -s <dir> -t <dir>
 
-NEXT=$(uv run git-cliff --bumped-version)   # e.g. v0.2.0; override by hand if needed
+NEXT=$(uv run --no-sync git-cliff --bumped-version)   # e.g. v0.2.0; override by hand if needed
 uv version "${NEXT#v}"                      # source of truth, and uv.lock
-uv run git-cliff --tag "$NEXT" -o CHANGELOG.md   # regenerates the whole changelog
+uv run --no-sync git-cliff --tag "$NEXT" -o CHANGELOG.md   # regenerates the whole changelog
 # Edit the `version` field (an editor task, not a sed one-liner — see VERSIONING.md's own
 # pitfalls) to "${NEXT#v}" in all four plugin manifests:
 #   workstation/agent/.claude-plugin/plugin.json
 #   workstation/agent/.claude-plugin/marketplace.json      (plugins[0].version)
 #   workstation/agent/plugin.json
 #   workstation/agent/marketplace.json                     (plugins[0].version)
-.venv\Scripts\python.exe workstation\scripts\bump_frontmatter_version.py "${NEXT#v}" --apply
+uv run --no-sync python workstation/scripts/bump_frontmatter_version.py "${NEXT#v}" --apply
 # ^ every SKILL.md, CLI/MCP guide, machine note, key document and the harness
-.venv\Scripts\python.exe -m unittest discover -s workstation/scripts/tests -t workstation/scripts/tests
+uv run --no-sync python -m unittest discover -s workstation/scripts/tests -t workstation/scripts/tests
 # ^ re-run after both: test_plugin_manifest.py and test_frontmatter_version.py now check the new version
 git commit -am "chore(release): $NEXT"
 git tag -a "$NEXT" -m "$NEXT"               # annotated, on the release commit
@@ -302,7 +301,7 @@ For a release candidate, set the version by hand: `--bumped-version` does not pr
 ```sh
 NEXT=v0.2.0-rc.1
 uv version 0.2.0-rc.1        # stored in PEP 440 form: 0.2.0rc1
-uv run git-cliff --tag "$NEXT" -o CHANGELOG.md
+uv run --no-sync git-cliff --tag "$NEXT" -o CHANGELOG.md
 ```
 
 The tag keeps the SemVer form (`v0.2.0-rc.1`); Python packaging stores the normalised form

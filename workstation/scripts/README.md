@@ -28,7 +28,7 @@ note/key document's `version:` field drifts from `pyproject.toml`'s. The pre-pus
 names it. Run them by hand from the repo root:
 
 ```
-python -m unittest discover -s workstation/scripts/tests -t workstation/scripts/tests
+uv run --no-sync python -m unittest discover -s workstation/scripts/tests -t workstation/scripts/tests
 ```
 
 ## `inventory.py`

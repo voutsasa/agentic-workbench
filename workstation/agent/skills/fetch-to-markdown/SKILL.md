@@ -276,7 +276,7 @@ record and where. Do not edit a register, index or catalogue from inside this sk
 
 All but `render_page.py` are stdlib-only and run under the bare interpreter before any venv exists,
 as `AGENT-INSTRUCTIONS.md` allows for a global skill's scripts; `render_page.py` needs `playwright` and runs under the uv tool venv's interpreter. Every test is
-stdlib-only — the browser is faked. Tests: `python -m unittest discover -s <skill>/tests`.
+stdlib-only — the browser is faked. Tests, from the project root: `uv run --no-sync python -m unittest discover -s <skill>/tests`.
 
 | Script | Does |
 |---|---|

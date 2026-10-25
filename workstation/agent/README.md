@@ -100,7 +100,7 @@ Copy-Item ~/.claude/settings.json ~/.claude/settings.json.bak
 **2. Print the delta.** Run from the repo root. This reads both files and writes neither:
 
 ```
-uv run python workstation/scripts/settings_delta.py
+uv run --no-sync python workstation/scripts/settings_delta.py
 ```
 
 It prints one `add <key>: <value>` line per difference, or `in sync`, and exits 1 or 0 to match. An
@@ -133,7 +133,7 @@ none, and that is correct, not a failure — see *Settings are merged, never lin
 leave a trailing comma that Claude Code reports only as a silent fallback to another provider:
 
 ```
-uv run python workstation/scripts/settings_delta.py --env
+uv run --no-sync python workstation/scripts/settings_delta.py --env
 ```
 
 It exits 2 if the file is not valid JSON. On a provider-bound machine, `env keys` must be non-empty and

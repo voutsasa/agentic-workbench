@@ -17,9 +17,8 @@ provider steps, are in [`workstation/agent/setup/README.md`](../../workstation/a
 The linker is [`workstation/scripts/link_config.py`](../../workstation/scripts/link_config.py). Where
 this file and those disagree, they win — fix this file.
 
-Both scripts are stdlib-only. Every command below writes `<python>`: substitute the repository's
-`.venv` interpreter when it exists — `.venv/bin/python`, or `.venv\Scripts\python.exe` on Windows —
-and otherwise the bootstrap interpreter, `python3` on macOS and `python` on Windows. That fallback is
+Both scripts are stdlib-only. Every command below writes `<python>`: substitute `uv run --no-sync python`
+from the repository root when its `.venv` exists, and otherwise the bootstrap interpreter, `python3` on macOS and `python` on Windows. That fallback is
 recorded in [`workstation/scripts/README.md`](../../workstation/scripts/README.md).
 
 ## Never, whatever the user answers
