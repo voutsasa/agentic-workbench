@@ -19,6 +19,34 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 55. A `/ship` skill: gate, commit and push in one step
+
+Type `decision` · Quality Usability · Impact L · Priority M
+
+Opened 2026-10-27, from the `/insights` report: "commit and push" is the most frequent request, and
+pushes still bounce off the pre-push gate when it is first run at push time. Proposed: a skill whose
+`scripts/` runs the hook's exact gate (`repo_check.py`, `verify_claims.py`, ruff, Pyright, the
+`.pre-push-tests` suites) on the working tree including untracked files, then commits and pushes to
+every remote. A new skill is a *Design before build* trigger, so it starts as a design: deterministic
+gate script versus agent judgement, where it lives (`skills/` or `workstation/agent/skills/`), and how
+it reuses the pre-push hook rather than duplicating its step list.
+
+**Closes when:** the user approves or rejects the design; if approved, a follow-up item tracks the
+build.
+
+### 54. `verify_claims.py` misattributes flags in a command chained with `&&`
+
+Type `fix` · Quality Functional suitability · Impact L · Priority L
+
+Opened 2026-10-27. `extract_claims.py` treats a fenced line as one command, so in
+`uv run --no-sync python -m ruff check . && uv run --no-sync python -m ruff format --check .`
+(`workstation/validation/macos.md:120`) the second `uv run`'s `--no-sync` is attributed to `python`.
+The claim reports UNVERIFIABLE, not REFUTED, so no push is blocked, but the flag goes unchecked.
+Priority L: no false refutation results.
+
+**Closes when:** the extractor splits a line on `&&`, `||` and `;` before attributing flags, with a
+regression test shown failing first, and the full run no longer reports `python supports --no-sync`.
+
 ### 53. `uv run --no-sync python -m` has not run on Windows
 
 Type `verify` · Quality Portability · Impact M · Priority M
