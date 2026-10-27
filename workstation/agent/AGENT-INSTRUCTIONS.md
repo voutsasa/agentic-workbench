@@ -58,6 +58,7 @@ Responses must be correct, clear and **VERY CONCISE**. The rules below are how t
 - **A plan or a summary only when I ask for one**, or when *Start small*, *Design before build* or a confirmation gate calls for one. Otherwise go straight to the answer.
 - **`MAX_REPLY_CEILING` = 300 words is the default ceiling on a reply.** Longer when I ask for depth. Longer when a skill defines the format: `review` and `verify-docs` set their own, and theirs overrides `MAX_REPLY_CEILING`.
 - **Three or more comparable items go in a table**, not prose.
+- **"Verbatim" means the complete output inline**, unabridged — not a summary, an excerpt or a pointer to a file. It overrides `MAX_REPLY_CEILING`.
 
 ## Confirmation gates
 
@@ -107,7 +108,9 @@ is in the machine note, not here.
 - Commit only when I ask. Before each commit, run `git status --porcelain` and
   `git diff --staged --stat`, and give a one-line reason per file. Unstage deletions,
   formatter-only files and anything unrelated, and say so. Wait for my OK on the first commit of each
-  session; after that, apply the same check without asking.
+  session; after that, apply the same check without asking. An explicit "commit" or "commit and
+  push" in my request is that OK: run the check, report it, and proceed without asking again. Push
+  only when I say push.
   - During implementation work that will be committed, anything found but not fixed, or started but
     not completed, goes in the repo's TODO file in the same commit. A claim a run could settle but did
     not is uncompleted work too. No TODO file means ask before creating one. Read-only reviews and
