@@ -281,6 +281,7 @@ Each tool has a folder at `workstation/cli/<tool>/` with install commands, a qui
 * [magick](https://github.com/imagemagick/imagemagick)
 * [defuddle](https://github.com/kepano/defuddle)
 * [tesseract](https://github.com/tesseract-ocr/tesseract)
+* [poppler](https://poppler.freedesktop.org/)
 * [sem-cli](https://github.com/ataraxy-labs/sem)
 * [weasyprint](https://github.com/Kozea/WeasyPrint)
 * [dbml-cli](https://dbml.dbdiagram.io/cli/#prerequisites)

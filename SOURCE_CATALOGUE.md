@@ -214,6 +214,7 @@ See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command �
 * [magick](https://github.com/imagemagick/imagemagick) — Command-line toolkit for creating, editing, and converting images.
 * [defuddle](https://github.com/kepano/defuddle) — Extracts clean, readable article content from cluttered web pages.
 * [tesseract](https://github.com/tesseract-ocr/tesseract) — Open-source OCR engine for extracting text from images.
+* [poppler](https://poppler.freedesktop.org/) — PDF rendering library whose utilities extract a PDF's text, with or without positions and fonts.
 * [sem-cli](https://github.com/ataraxy-labs/sem) — Semantic, entity-level version control providing diffs, blame, and impact analysis across many languages.
 * [weasyprint](https://github.com/Kozea/WeasyPrint) — Renders HTML and CSS into PDF documents.
 * [dbml-cli](https://dbml.dbdiagram.io/cli/#prerequisites) — Command-line converter between DBML schema files and SQL DDL in both directions.
