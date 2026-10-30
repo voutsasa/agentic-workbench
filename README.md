@@ -62,7 +62,7 @@ copilot plugin install workbench-skills@agentic-workbench
 ```
 
 This gets you `review`, `verify-docs`, `fetch-to-markdown`, `python-quality`, `pdf-deliverable`,
-`fix-findings`, `confluence-publish`, `confluence-export`, `setup-mcp-servers` and `session-signature` — not this repo's
+`fix-findings`, `confluence-publish`, `confluence-export`, `setup-mcp-servers`, `session-signature` and `build-html-presentation` — not this repo's
 own `SOURCES.md`/register-aware skills, and not the shared instructions, since both assume the full
 clone. [`workstation/agent/README.md` § *Install the skills as a plugin
 instead*](workstation/agent/README.md#install-the-skills-as-a-plugin-instead) has the manifest layout
@@ -156,6 +156,7 @@ Repo skills serve this workbench; global skills work in any repo. The authoritat
 | [`confluence-export`](workstation/agent/skills/confluence-export/SKILL.md) | global | Retrieves Confluence pages, subtrees or spaces as Markdown with cme, previewing the destination for approval first. |
 | [`setup-mcp-servers`](workstation/agent/skills/setup-mcp-servers/SKILL.md) | global | Guides safe setup of documented MCP servers, collecting non-secret choices and handing registration commands to the user. |
 | [`session-signature`](workstation/agent/skills/session-signature/SKILL.md) | global | Stamps an output with a signature id — workstation, user, AI assistant and workbench versions, model, UTC time — or the full JSON as the extended signature. |
+| [`build-html-presentation`](workstation/agent/skills/build-html-presentation/SKILL.md) | global | Builds Reveal.js presentations under `docs/html-presentations/` with Reveal.js stored locally: checks for a newer release, scaffolds a named deck, writes its slides and render-checks every one. |
 
 ## Layout
 
@@ -171,7 +172,7 @@ docs/                     	the corpus — what the workbench reads.
   landing-zone/           	ingested external sources     — not in git.   
   guidance/               	distilled agent-facing notes  — in git.   
     DEVELOPMENT-PLAN.md   	phased curriculum for agents  — in git.   
-  presentations/          	Reveal.js decks about the workbench — in git.   
+  html-presentations/     	Reveal.js decks and the Reveal.js they load — in git.   
 
 skills/                   	this repo's own skills — what the workbench does.   
   README.md               	the repo-local vs. global line, and how to load these.   
@@ -250,34 +251,34 @@ Edits to `~/.claude/CLAUDE.md` or the `review` skill land here, because those pa
 
 Because these are links into a git repo, check `git status` here before overwriting or regenerating any of them — and if this directory is ever moved or renamed, **repoint the links**, or every session silently loses its global instructions. On Windows `CLAUDE.md`, `machine.md`, and Copilot's `copilot-instructions.md` are hardlinks and any atomic-saving editor severs them silently; [`workstation/agent/setup/windows.md`](workstation/agent/setup/windows.md) carries the detection command.
 
-## Presentations — `docs/presentations/`
+## Presentations — `docs/html-presentations/`
 
-Reveal.js decks about the workbench, one folder per deck. They are hand-edited HTML: nothing to
-install or build to view them.
+Reveal.js decks, one folder per deck, made and maintained with the global
+[`build-html-presentation`](workstation/agent/skills/build-html-presentation/SKILL.md) skill: ask the
+assistant to build a presentation and it checks the stored Reveal.js, asks which deck (or for a new
+deck's name and brief), writes the slides and render-checks every one. Reveal.js is the register's
+choice of HTML presentation framework ([`SOURCES.md`](SOURCES.md), *Frontend*).
 
 | Path | Role |
 |---|---|
-| `docs/presentations/vendor/reveal.js/<version>/` | The Reveal.js release every deck loads — core, the highlight, notes, zoom and search plugins, and its MIT licence. Third-party, committed so decks run offline; never hand-edit it. |
-| `docs/presentations/fetch-reveal.sh` | Fetches one Reveal.js release from cdnjs into `vendor/reveal.js/<version>/`. |
-| `docs/presentations/workbench-briefing/index.html` | The info-session deck: one `<section>` per slide, a nested `<section>` for a vertical stack, `<aside class="notes">` for speaker notes. |
-| `docs/presentations/workbench-briefing/theme.css` | Colours, fonts, backgrounds and code-block styling for that deck. |
-| `docs/presentations/workbench-briefing/build-artifact.sh` | Builds a copy for publishing as a claude.ai Artifact, and warns when npm has a newer Reveal.js release than the vendored one. |
+| `docs/html-presentations/vendor/reveal.js/<version>/` | The Reveal.js release the decks load — core, the highlight, notes, zoom and search plugins, and its MIT licence. Third-party, committed so decks run offline; written only by the skill's `reveal.py fetch`, never by hand. |
+| `docs/html-presentations/workbench-briefing/index.html` | The info-session deck: one `<section>` per slide, a nested `<section>` for a vertical stack, `<aside class="notes">` for speaker notes. |
+| `docs/html-presentations/workbench-briefing/theme.css` | Colours, fonts, backgrounds and code-block styling for that deck. |
 
-**View:** open `index.html` in a browser (`open docs/presentations/workbench-briefing/index.html` on
-macOS, `start` on Windows). Reveal.js loads from `vendor/`, so it works offline; only the fonts come
-from Google Fonts, and fall back to system fonts without internet. Press `Esc` for the overview, `S`
-for speaker notes; the deck's last slide lists the other keys.
+**View:** open a deck's `index.html` in a browser
+(`open docs/html-presentations/workbench-briefing/index.html` on macOS, `start` on Windows). Reveal.js
+loads from `vendor/`, so it works offline; only the fonts come from Google Fonts, and fall back to
+system fonts without internet. Press `Esc` for the overview, `S` for speaker notes.
 
-**Update the deck:** edit `index.html` or `theme.css` and reload the browser. To refresh the
-published Artifact, run `sh docs/presentations/workbench-briefing/build-artifact.sh <out-dir>` and
-publish `<out-dir>/workbench-deck.html` with `reveal.css` and `theme.css` beside it.
+**Edit by hand:** change `index.html` or `theme.css` and reload the browser, then run the skill's
+render check so nothing overflows:
+`"$(uv tool dir)/playwright/bin/python" workstation/agent/skills/build-html-presentation/scripts/render_check.py docs/html-presentations/<name>/index.html`.
 
-**Upgrade Reveal.js** when the build warns that a newer release exists:
-`sh docs/presentations/fetch-reveal.sh <version>`, change the version in the deck's `index.html`
-paths, check every slide, then delete the old `vendor/reveal.js/<old-version>/` folder. A major
-version can change behaviour, so it is a deliberate step, never part of a build.
-
-Both scripts need `sh`, `sed`, `grep` and `curl`: present on macOS; on Windows run them from Git Bash.
+**Upgrade Reveal.js** only on purpose: the skill reports when a newer release exists and asks first,
+because a major version can change behaviour. By hand, from the repo root:
+`python3 workstation/agent/skills/build-html-presentation/scripts/reveal.py fetch <version>`, then
+`… reveal.py use <name> <version>` for each deck, render-check it, and delete the old version folder
+once no deck loads it (`… reveal.py status` lists which version each deck uses).
 
 ## Repo mechanics
 

@@ -72,6 +72,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [vite](https://vite.dev/guide/) — Fast frontend build tool and dev server with instant hot module replacement.
 * [tailwindcss](https://tailwindcss.com/docs/installation/using-vite) — Utility-first CSS framework for building custom designs directly in markup.
 * [streamlit](https://docs.streamlit.io/) — Turns Python scripts into interactive web apps and data dashboards with minimal code.
+* [Reveal.js](https://revealjs.com/) — HTML presentation framework the workbench uses for slide decks, stored locally under docs/html-presentations/vendor/.
 
 #### Testing
 

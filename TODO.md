@@ -19,17 +19,31 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
-### 56. The presentation scripts and deck have not run on Windows
+### 56. `build-html-presentation` has not run on Windows
 
 Type `verify` · Quality Portability · Impact L · Priority L
 
-Opened 2026-10-30 with `docs/presentations/`. `fetch-reveal.sh` and `workbench-briefing/build-artifact.sh`
-are POSIX `sh` and ran only on macOS; the README says to run them from Git Bash on Windows, and to open
-the deck with `start`. Neither route has been observed.
+Opened 2026-10-30 with the skill. `workstation/agent/skills/build-html-presentation/scripts/reveal.py`
+(stdlib) and its sibling `render_check.py` (Playwright) ran only on macOS; the skill tells Windows users to run them with `python` and the uv
+tool venv's `Scripts\python.exe`, and to open decks with `start`. None of that has been observed.
 
-**Closes when:** on a Windows machine, `sh docs/presentations/workbench-briefing/build-artifact.sh <dir>`
-from Git Bash prints `built …`, and `start docs\presentations\workbench-briefing\index.html` shows the
-deck with Reveal.js loaded from `vendor/`.
+**Closes when:** on a Windows machine, from the repo root,
+`python workstation\agent\skills\build-html-presentation\scripts\reveal.py status` prints the JSON
+listing `workbench-briefing`, the `render_check.py` route from the skill's step 6 exits 0 on that deck,
+and `start docs\html-presentations\workbench-briefing\index.html` shows it with Reveal.js loaded from
+`vendor/`.
+
+### 57. `build-html-presentation` has not steered a real session end to end
+
+Type `verify` · Quality Functional suitability · Impact M · Priority M
+
+Opened 2026-10-30. The scripts are tested and were run by hand, but no session has yet loaded the
+skill from `~/.claude/skills/` (or `~/.copilot/skills/`) and followed its flow: status, the version
+question, the no-presentation guidance versus the which-deck question, build, render check.
+
+**Closes when:** after `link_config.py --apply`, a fresh session asked to "build an HTML presentation"
+in a repo without `docs/html-presentations/` gives the brief table, and one asked in this repo lists
+`workbench-briefing` and skips the table.
 
 ### 55. A `/ship` skill: gate, commit and push in one step
 

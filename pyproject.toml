@@ -36,6 +36,7 @@ extend-select = ["E402"]
 # same thing, so those imports resolve.
 extraPaths = [
     "skills/setup-agents/scripts",
+    "workstation/agent/skills/build-html-presentation/scripts",
     "workstation/scripts",
     "workstation/agent/skills/fetch-to-markdown/scripts",
     "workstation/agent/skills/python-quality/scripts",

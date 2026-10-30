@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>{{TITLE}}</title>
+<link rel="stylesheet" href="../vendor/reveal.js/{{VERSION}}/reveal.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<!--
+  Each <section> is a slide; a <section> holding <section>s is a vertical stack (navigate with ↓).
+  Speaker notes go in <aside class="notes">; press S to open them while presenting.
+  Divider slides: class="divider" plus data-background-gradient.
+  Code: static highlights only, e.g. data-line-numbers="2,4" — stepped ones ("1|2") stack copies.
+  Check every slide fits: the skill's scripts/render_check.py.
+-->
+<div class="reveal">
+<div class="slides">
+
+<section class="title-slide divider" data-background-gradient="linear-gradient(135deg, #0f3b46 0%, #1f6f6b 60%, #3a4fb8 130%)">
+  <span class="eyebrow">{{TITLE}}</span>
+  <h1>{{TITLE}}</h1>
+  <p class="lede">One sentence on what the audience will take away.</p>
+  <p class="meta">Presenter · date · press <code>Esc</code> for the overview</p>
+  <aside class="notes">Who the audience is and the outcome this deck is for.</aside>
+</section>
+
+<section>
+  <span class="eyebrow">Section</span>
+  <h2>A slide with up to five bullets</h2>
+  <ul>
+    <li class="fragment fade-up">First point</li>
+    <li class="fragment fade-up">Second point</li>
+    <li class="fragment fade-up">Third point</li>
+  </ul>
+</section>
+
+<section>
+  <span class="eyebrow">Section</span>
+  <h2>Two panels side by side</h2>
+  <div class="cols" style="--n:2">
+    <div class="panel"><h3>Left</h3><ul><li>Point</li><li>Point</li></ul></div>
+    <div class="panel"><h3>Right</h3><ul><li>Point</li><li>Point</li></ul></div>
+  </div>
+  <p class="callout">A one-line conclusion for the slide.</p>
+</section>
+
+<section class="divider" data-background-gradient="linear-gradient(135deg, #0f3b46 0%, #1f6f6b 70%, #3a4fb8 140%)">
+  <span class="eyebrow">Summary</span>
+  <h2>Key takeaways</h2>
+  <ul>
+    <li class="fragment">First takeaway</li>
+    <li class="fragment">Second takeaway</li>
+  </ul>
+</section>
+
+</div>
+</div>
+
+<script src="../vendor/reveal.js/{{VERSION}}/reveal.min.js"></script>
+<script src="../vendor/reveal.js/{{VERSION}}/plugin/highlight.min.js"></script>
+<script src="../vendor/reveal.js/{{VERSION}}/plugin/notes.min.js"></script>
+<script src="../vendor/reveal.js/{{VERSION}}/plugin/zoom.min.js"></script>
+<script src="../vendor/reveal.js/{{VERSION}}/plugin/search.min.js"></script>
+<script>
+  Reveal.initialize({
+    hash: false,
+    controls: true,
+    progress: true,
+    slideNumber: 'h.v',
+    center: false,
+    width: 1280,
+    height: 720,
+    margin: 0.06,
+    autoAnimateDuration: 0.8,
+    backgroundTransition: 'fade',
+    transition: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : 'slide',
+    plugins: [RevealHighlight, RevealNotes, RevealZoom, RevealSearch]
+  });
+</script>
+</body>
+</html>

@@ -102,6 +102,7 @@ SKILLS = (
     "confluence-export",
     "setup-mcp-servers",
     "session-signature",
+    "build-html-presentation",
 )
 
 #: Post-edit hook scripts under ``workstation/agent/hooks/``, linked with ``--hooks``.

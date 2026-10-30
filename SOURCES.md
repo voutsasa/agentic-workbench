@@ -114,6 +114,7 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 * [vite](https://vite.dev/guide/)
 * [tailwindcss](https://tailwindcss.com/docs/installation/using-vite)
 * [streamlit](https://docs.streamlit.io/)
+* [Reveal.js](https://revealjs.com/)
 
 #### Testing
 
