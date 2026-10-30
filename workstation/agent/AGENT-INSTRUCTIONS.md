@@ -119,15 +119,53 @@ is in the machine note, not here.
 
 ### Classifying TODO items
 
-Classify each TODO item you add or edit on the four dimensions below. A repository whose TODO
+Classify each TODO item you add or edit on the six dimensions below. A repository whose TODO
 already uses another scheme is a conflict to surface, not to convert unasked.
 
-| Dimension | Values | Rule |
+| Dimension | Definition | Values | Rule |
+|---|---|---|---|
+| Type | The kind of work that closes the item | `feat`, `fix`, `perf`, `docs`, `test`, `build`, `ci`, `chore`, `verify`, `decision`, `ops` | One per item; an item that needs two is two items |
+| Quality | The ISO/IEC 25010:2011 product quality characteristic the item affects | `Functional suitability`, `Performance efficiency`, `Compatibility`, `Usability`, `Reliability`, `Security`, `Maintainability`, `Portability`, `–` | Optional; the one most affected |
+| Impact | What happens if the item is never done | `H`, `M`, `L` | The highest value whose criterion holds |
+| Priority | When to do it: Impact weighed against Complexity and the plan's phase | `H`, `M`, `L` | Say why when it differs from Impact |
+| Complexity | The effort to close it, not its importance | `S`, `M`, `L` | The highest value whose criterion holds; an unknown effort is at least `M` |
+| Closes when | The evidence that closes the item, stated so a cold session can check it without asking | `command`, `artefact`, `decision`, `observation`, each with its specifics | Required. Name the kind, then the evidence; alternatives joined by *or*, each complete. Tick or delete the item when the evidence exists, never when it feels handled |
+
+| Dimension | Value | Criterion |
 |---|---|---|
-| Type | `feat`, `fix`, `perf`, `docs`, `test`, `build`, `ci`, `chore`: the Conventional Commits type of the commit that will close it. Not commits: `verify` (a check never run), `decision` (needs my call), `ops` (my action outside the repo) | One per item; an item that needs two is two items |
-| Quality | ISO/IEC 25010: Functional suitability, Security, Reliability, Performance efficiency, Usability, Portability, Maintainability, Compatibility, or `–` | The characteristic it affects; optional |
-| Impact | H: wrong data, or a security gap. M: a workflow broken or misleading. L: cosmetic or convenience | What happens if it is never done |
-| Priority | H: do now (cheap, or it blocks other work). M: within its phase or release. L: when convenient | Impact weighed against cost and the plan's phase; say why when it differs from Impact |
+| Type | `feat` | Closed by a commit adding a capability (Conventional Commits 1.0.0) |
+| | `fix` | … correcting a defect |
+| | `perf` | … improving performance without changing behaviour |
+| | `docs` | … changing documentation only |
+| | `test` | … adding or correcting tests only |
+| | `build` | … changing the build system or dependencies |
+| | `ci` | … changing CI configuration |
+| | `chore` | … any other change that touches neither behaviour nor tests |
+| | `verify` | Not a commit: a check never run |
+| | `decision` | Not a commit: needs my call |
+| | `ops` | Not a commit: my action outside the repo |
+| Quality | `Functional suitability` | Functions complete, correct and appropriate to the need |
+| | `Performance efficiency` | Time, resource use or capacity |
+| | `Compatibility` | Coexisting or exchanging information with other systems |
+| | `Usability` | Users reaching their goal: learnability, operability, error protection, accessibility |
+| | `Reliability` | Working over time: availability, fault tolerance, recoverability |
+| | `Security` | Confidentiality, integrity, authenticity, accountability |
+| | `Maintainability` | Ease of change: modularity, analysability, testability |
+| | `Portability` | Moving to another environment: adaptability, installability |
+| | `–` | None of these (e.g. licensing, compliance) |
+| Impact | `H` | Wrong data, or a security gap |
+| | `M` | A workflow broken or misleading |
+| | `L` | Cosmetic or convenience |
+| Priority | `H` | Do now: cheap, or it blocks other work |
+| | `M` | Within its phase or release |
+| | `L` | When convenient |
+| Complexity | `S` | Under half a day, within one module |
+| | `M` | Up to two days, or across several modules |
+| | `L` | More than two days, or crossing a repository or architectural boundary |
+| Closes when | `command` | A command and the output it must give |
+| | `artefact` | A file, record or run URL that must exist, at a named path |
+| | `decision` | My answer, and where it is recorded |
+| | `observation` | A behaviour seen in a named tool or session, and where it is recorded |
 
 ## Documents
 

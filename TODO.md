@@ -1,6 +1,6 @@
 ---
 role: Open work carried between sessions — committed new work and unproven existing gaps
-updated: 2026-10-10
+updated: 2026-10-23
 verified: never
 author: Achilleas Voutsas
 version: 0.3.0
@@ -17,7 +17,63 @@ reconstructing the reasoning.
 committed to belongs in a conversation. Delete an item when its evidence exists — a passing command, a
 converted file, a pipeline run — and not when it merely feels handled.
 
+Each item is classified by `workstation/agent/AGENT-INSTRUCTIONS.md` § *Classifying TODO items*: a
+line of Type, Quality, Impact, Priority and Complexity under its heading, and a **Closes when** that
+names its kind of evidence. Item numbers are never reused.
+
 ## Open
+
+### 60. `verify-docs` has no Azure OpenAI/OpenAI driver, and it needs a design first
+
+*Type:* feat · *Quality:* Compatibility · *Impact:* M · *Priority:* L · *Complexity:* L — Priority L:
+item 9's Bedrock route unblocks the pipeline without it
+
+Split from item 9 on 2026-10-23, whose analysis (the three provider constraints, the empirical check
+of both CLIs, the driver's scope and the hand-rolled Bash tool's risk) applies. Until the design
+exists, do not start writing the driver.
+
+**Closes when** (decision, command and artefact): a versioned design decides the tool allowlist and
+sandboxing for the hand-rolled Bash tool, the budget-accounting approach, and the provider-selection
+convention across both `verify-docs.sh` and the new script; the new driver passes its own test suite
+mirroring `review`'s `test_pre_push.py` style (model call stubbed out, no real spend in tests); and one
+real run against each of an `OPENAI_API_KEY` and an Azure OpenAI credential produces the same two
+reports the Anthropic path does.
+
+### 59. The TODO classification has no `refactor` type
+
+*Type:* decision · *Quality:* Maintainability · *Impact:* L · *Priority:* L · *Complexity:* S
+
+Opened 2026-10-23. `workstation/agent/AGENT-INSTRUCTIONS.md` § *Classifying TODO items* lists eight
+Conventional Commits types but not `refactor`, so restructuring work is typed `chore` (ea-data-model
+`TODO.md` DM-112, removing the v1 taxonomy build, 2026-10-23), although `chore` is defined as a change
+touching neither behaviour nor tests.
+
+**Closes when** (decision): the user's answer is recorded in that section — if yes, `refactor` and
+its criterion are in both of its tables and ea-data-model DM-112 is retyped.
+
+### 58. The Quality dimension is pinned to ISO/IEC 25010:2011, not the 2023 edition
+
+*Type:* decision · *Quality:* Maintainability · *Impact:* L · *Priority:* L · *Complexity:* S
+
+Opened 2026-10-23, when the per-value criteria were added to § *Classifying TODO items*. The 2023
+edition is understood to rename Usability to Interaction capability and Portability to Flexibility,
+and to add Safety; not checked against the standard's text. Moving would reclassify the items already
+rated in ea-data-model (DM-nnn) and ontology-editor (OE-nnn).
+
+**Closes when** (decision): the user picks the edition (recommended: keep 2011) after the 2023
+characteristics are checked against the standard, and that section names it.
+
+### 57. `build-html-presentation` has not steered a real session end to end
+
+Type `verify` · Quality Functional suitability · Impact M · Priority M
+
+Opened 2026-10-30. The scripts are tested and were run by hand, but no session has yet loaded the
+skill from `~/.claude/skills/` (or `~/.copilot/skills/`) and followed its flow: status, the version
+question, the no-presentation guidance versus the which-deck question, build, render check.
+
+**Closes when:** after `link_config.py --apply`, a fresh session asked to "build an HTML presentation"
+in a repo without `docs/html-presentations/` gives the brief table, and one asked in this repo lists
+`workbench-briefing` and skips the table.
 
 ### 56. `build-html-presentation` has not run on Windows
 
@@ -32,18 +88,6 @@ tool venv's `Scripts\python.exe`, and to open decks with `start`. None of that h
 listing `workbench-briefing`, the `render_check.py` route from the skill's step 6 exits 0 on that deck,
 and `start docs\html-presentations\workbench-briefing\index.html` shows it with Reveal.js loaded from
 `vendor/`.
-
-### 57. `build-html-presentation` has not steered a real session end to end
-
-Type `verify` · Quality Functional suitability · Impact M · Priority M
-
-Opened 2026-10-30. The scripts are tested and were run by hand, but no session has yet loaded the
-skill from `~/.claude/skills/` (or `~/.copilot/skills/`) and followed its flow: status, the version
-question, the no-presentation guidance versus the which-deck question, build, render check.
-
-**Closes when:** after `link_config.py --apply`, a fresh session asked to "build an HTML presentation"
-in a repo without `docs/html-presentations/` gives the brief table, and one asked in this repo lists
-`workbench-briefing` and skips the table.
 
 ### 55. A `/ship` skill: gate, commit and push in one step
 
@@ -88,17 +132,21 @@ machine, with its output quoted in that machine's note.
 
 ### 52. The machine probes do not detect a quarantined venv launcher
 
+*Type:* feat · *Quality:* Reliability · *Impact:* M · *Priority:* M · *Complexity:* S
+
 Opened 2026-10-10. `workstation/machines/windows-ema-pf5n4xe7.md` § *A new venv's console-script
 launchers can be quarantined* records two 46,080-byte uv launchers in another repo's `.venv` that
 could not be read or started, found only when a session hit `Failed to spawn … os error 5`. Neither
 `inventory.py` nor `status.py` reads `.venv\Scripts\*.exe`, so the next occurrence will also surface
 mid-task, and the machine note's account of it is hand-written rather than measured.
 
-**Closes when:** a probe in `workstation/scripts/` reports every `.venv\Scripts\*.exe` of the repo it
+**Closes when** (command or decision): a probe in `workstation/scripts/` reports every `.venv\Scripts\*.exe` of the repo it
 checks that cannot be read, with a unit test for the refused case — or the user decides the
 hand-written section is enough and deletes this item.
 
 ### 51. GitHub Copilot's project-level `.claude/skills/` discovery has never been observed
+
+*Type:* verify · *Quality:* Portability · *Impact:* M · *Priority:* M · *Complexity:* S
 
 Opened 2026-10-09, while applying Option B of the skills-location rule in
 `workstation/agent/AGENT-INSTRUCTIONS.md` § *Start local, validate, then scale to global* (skills
@@ -109,19 +157,25 @@ discovery). That rule asserts Claude Code *and* GitHub Copilot both read
 Copilot has not been tested on any machine; it was carried over from the original rule text
 without a run to back it.
 
-**Closes when:** a Copilot CLI session, run from inside a repo that has only
+**Closes when** (observation): a Copilot CLI session, run from inside a repo that has only
 `.claude/skills/<name>/SKILL.md` (no `~/.copilot/skills/` entry for it), lists or invokes that
 skill — or, if it does not, the rule is corrected to say what Copilot actually needs at project
 scope and `link_config.py --project` is adjusted to match.
 
 ### 50. `session-signature` has not probed a harness other than Claude CLI and Copilot live
 
+*Type:* verify · *Quality:* Portability · *Impact:* L · *Priority:* L · *Complexity:* S
+
 Opened 2026-10-06. `--harness <label> --harness-command <cli>` is covered only by a unit test with
 the CLI mocked; no non-Claude, non-Copilot assistant (e.g. Kiro) is installed on either machine.
-Closed by a run on a machine that has one, quoting the id, e.g.
-`python workstation/agent/skills/session-signature/scripts/signature.py --model <id> --harness kiro --harness-command <kiro-cli>`.
+
+**Closes when** (command): on a machine that has one,
+`python workstation/agent/skills/session-signature/scripts/signature.py --model <id> --harness kiro --harness-command <kiro-cli>`
+prints an id naming that harness and its version, quoted here.
 
 ### 45. Eight Fabric-family MCP entries are registered but not ingested
+
+*Type:* docs · *Quality:* Usability · *Impact:* L · *Priority:* L · *Complexity:* M
 
 Opened 2026-09-30. `SOURCES.md` → *MCP servers* gained ten entries; the pilot ingested two
 (`fabric-iq-mcp`, `powerbi-modeling-mcp`). These eight have no `reference.md`, no `setup.md` and no
@@ -134,10 +188,12 @@ the Claude and Copilot registration. Held for the user's review of the pilot.
 `Accept: text/markdown` route (markup-noise 0, no relative links); `repo_check.py --corpus` no longer
 lists them. The `setup.md` files and README rows are still missing.
 
-**Closes when:** `repo_check.py --corpus` lists all eight as ingested and each has a `setup.md` and a
+**Closes when** (command and artefact): `repo_check.py --corpus` lists all eight as ingested and each has a `setup.md` and a
 README row.
 
 ### 44. The fabric-iq-mcp and powerbi-modeling-mcp setups are intended, not observed
+
+*Type:* verify · *Quality:* Functional suitability · *Impact:* M · *Priority:* M · *Complexity:* S
 
 Opened 2026-09-30. Both `setup.md` files were written from the ingested docs and the npm registry;
 nothing has been installed, registered or run. Unproven: the `X-Variants` header on both CLIs'
@@ -145,10 +201,13 @@ nothing has been installed, registered or run. Unproven: the `X-Variants` header
 that `npx -y @microsoft/powerbi-modeling-mcp@latest --start --readonly` starts on Windows and blocks
 until the EULA is accepted.
 
-**Closes when:** each server answers one read-only tool call from Claude Code and from Copilot CLI,
+**Closes when** (observation): each server answers one read-only tool call from Claude Code and from Copilot CLI,
 recorded in the machine note, and each `setup.md` drops its *Intended setup* banner.
 
 ### 41. No `/api/2.0/mcp/` Databricks server has connected yet
+
+*Type:* verify · *Quality:* Functional suitability · *Impact:* M · *Priority:* L · *Complexity:* S —
+Priority L: blocked until a Genie space is shared with this identity or an AI Search index exists
 
 Opened 2026-09-29. `workstation/scripts/databricks_mcp.py` now prints these servers
 (`--genie-space`, `--ai-search`, `--sql`), unit-tested, but no printed command has been run. Two
@@ -165,10 +224,13 @@ shared with this identity or an AI Search index exists.
 The run has to happen on the Windows machine: the Azure workspace is reachable only through the VPN,
 which macos-workstation does not use (`workstation/machines/macos-workstation.md` § *Known blockers*).
 
-**Closes when:** one Genie Agent and one AI Search server each answer a read-only tool call from
+**Closes when** (observation): one Genie Agent and one AI Search server each answer a read-only tool call from
 Claude Code and from Copilot CLI, and the generator is corrected for whatever that run shows.
 
 ### 34. The symlinked pre-push hook path is untested
+
+*Type:* verify · *Quality:* Portability · *Impact:* M · *Priority:* L · *Complexity:* S — Priority
+L: the run is on macOS, and Windows uses the tested shim path
 
 Opened 2026-09-29. The hook now finds `repo_check.py` and `verify_claims.py` beside its own real
 location, following symlinks. `test_symlinked_hook_resolves_to_its_real_location` skips on the Windows
@@ -187,10 +249,12 @@ files as a second literal copy rather than travel as a link. That repo's `.gitig
 `mklink /J` command to recreate it per clone, and a note to replace it with a real symlink once this
 item closes.
 
-**Closes when:** that test runs unskipped and passes on macOS, and one real `git push` from a repo other
+**Closes when** (command and observation): that test runs unskipped and passes on macOS, and one real `git push` from a repo other
 than the workbench runs the linked hook there.
 
 ### 33. Claude has not validated the Windows drawio-mcp connection
+
+*Type:* verify · *Quality:* Reliability · *Impact:* M · *Priority:* M · *Complexity:* S
 
 Opened 2026-09-29. The catalog entry is linked, but Claude's `drawio-mcp` connection timed out after
 30 seconds. This is independent of the Azure DevOps MCP OAuth requirement in item 28.
@@ -203,10 +267,13 @@ invoked in that session, so the connection is observed but unproven.
 2026-10-06: back to `CONNECT_TIMEOUT` ("MCP server drawio-mcp connection timed out after 30000ms"),
 re-checked twice in one session. Intermittent, not fixed — still no tool ever invoked.
 
-**Closes when:** Claude successfully invokes one Draw.io tool from the Windows setup — a reported
+**Closes when** (observation): Claude successfully invokes one Draw.io tool from the Windows setup — a reported
 connection alone does not close this.
 
 ### 30. The DPACT attended-assistant adoption plan has not been ratified or implemented
+
+*Type:* decision · *Quality:* Security · *Impact:* H · *Priority:* L · *Complexity:* L — Priority L:
+weeks of work across owners outside this repo, and no regulated workload depends on it yet
 
 Opened 2026-09-29. The DPACT review identifies this workbench as an attended command-line assistant
 environment, not an identity platform. Adoption therefore begins with a local governance profile and
@@ -227,12 +294,15 @@ evidence model rather than claiming DPACT compliance or adding more prompt rules
    autonomous workloads; this requires IAM, platform, security, and vendor ownership (3–6 weeks,
    excluding approvals).
 
-**Closes when:** the scope and owners are recorded in a versioned architecture decision; stages 1–3
+**Closes when** (decision, command and artefact): the scope and owners are recorded in a versioned architecture decision; stages 1–3
 have passing schema and inventory checks; the item 29 pilot produces allow, deny, and audit evidence;
 the decision to enforce stage 5 or defer it is recorded with its risk rationale; and production-only
 controls are explicitly assigned or excluded.
 
 ### 29. A DPACT-compatible Entra OBO policy-gateway proof of concept has not run
+
+*Type:* feat · *Quality:* Security · *Impact:* H · *Priority:* L · *Complexity:* L — Priority L:
+gated on item 30's architecture decision
 
 Opened 2026-09-29. The DPACT review recommends a repo-local, read-only proof of concept before any
 global assistant enforcement: Microsoft Entra ID remains the identity provider; an open-source
@@ -243,7 +313,7 @@ verifiable agent identity or task-scoped authority, so the gateway must also hol
 task, effect, approval, and expiry record rather than trust agent-supplied headers. No component has
 been selected, installed, or configured.
 
-**Closes when:** a versioned architecture decision selects the gateway and audit store; a read-only
+**Closes when** (decision, artefact and observation): a versioned architecture decision selects the gateway and audit store; a read-only
 route accepts a valid Entra token and obtains only its required downstream delegated token; a
 resource-, operation-, effect-, and expiry-aware policy allows and denies representative calls; one
 correlated audit trace reconstructs the principal, agent, task, policy decision, token exchange, and
@@ -251,6 +321,8 @@ outcome; and a security review confirms that neither the agent nor its prompts c
 gateway's confidential-client credential.
 
 ### 28. Claude has not validated ado-remote-mcp from Windows
+
+*Type:* ops · *Quality:* Functional suitability · *Impact:* M · *Priority:* M · *Complexity:* M
 
 Opened 2026-09-28. `status.py` reports **READY WITH ACTIONS**: all required prerequisites are present;
 the latest observed versions are Claude Code 2.1.284 and GitHub Copilot CLI 1.0.89. The 29 September
@@ -260,11 +332,14 @@ its Entra server does not support dynamic client registration;
 `workstation/mcp/ado-remote-mcp/setup.md` requires an org-wide Entra app registration and the project's
 OAuth client ID.
 
-**Closes when:** the Entra app registration, delegated permissions, and Claude project OAuth client
+**Closes when** (observation): the Entra app registration, delegated permissions, and Claude project OAuth client
 configuration are in place; and Claude successfully invokes an Azure DevOps MCP tool from the Windows
 setup.
 
 ### 20. The corpus is not fully ingested on every machine
+
+*Type:* ops · *Quality:* Functional suitability · *Impact:* M · *Priority:* L · *Complexity:* M —
+Priority L: the remaining gaps are blocked on item 28 and on the user saving DPACT's PDF from a browser
 
 Opened 2026-09-21 at **0 of 76**, with `docs/landing-zone/` absent. On 2026-09-27
 `repo_check.py --corpus` reported 93 of the register's then-94 entries on this machine, after
@@ -276,9 +351,11 @@ item 28 (an unauthenticated `curl` of its README returns `302`), and DPACT on ma
 SSRN serves only to a browser — closed by the user saving its PDF to
 `docs/landing-zone/DPACT - A Framework for Identity, Accountability, and Task-Scoped Authority in Autonomous AI Agent Systems.pdf`.
 
-**Closes when:** every entry is ingested on each machine — `repo_check.py --corpus` reports N of N.
+**Closes when** (command): every entry is ingested on each machine — `repo_check.py --corpus` reports N of N.
 
-### 9. The Azure DevOps pipeline has never run, and its model auth needs a design, not a secret
+### 9. The Azure DevOps pipeline has never run
+
+*Type:* ops · *Quality:* Maintainability · *Impact:* M · *Priority:* M · *Complexity:* M
 
 Opened 2026-09-14: the only pipeline was `.github/workflows/verify-docs.yml`, which never runs for this
 repo's only remote, `https://euemadev@dev.azure.com/euemadev/EA/_git/agentic-workbench`, an
@@ -335,25 +412,19 @@ tool is the real risk, not just the effort: a model-controlled shell-exec path i
 materially larger attack surface than delegating to Claude Code's own hardened tool sandbox, and needs
 its own scoping (allowlist, timeout, no writes outside `$OUT`) before it exists at all.
 
-This is now two separable pieces of work, not one:
+This was two separable pieces of work; the driver is split out as item 60 (2026-10-23).
 
-**Closes when**, for the ADO run (unblocks today, no new engineering):
-the user has done the header's setup with AWS Bedrock credentials (Option A — a scoped IAM user's
+**Closes when** (artefact; unblocks today, no new engineering): the user has done the header's setup with AWS Bedrock credentials (Option A — a scoped IAM user's
 `AWS_ACCESS_KEY_ID`/`AWS_SECRET_ACCESS_KEY` as ADO secret variables, `CLAUDE_CODE_USE_BEDROCK=1`,
 `AWS_REGION=eu-central-1`, `ANTHROPIC_MODEL=eu.anthropic.claude-sonnet-5`), and
 `azure-pipelines/verify-docs.yml` has run once on the ADO project, both reports were produced, and
 either a pull request was opened or the run logged *No documentation drift found* — with the run URL
 recorded here.
 
-**Closes when**, for the Azure OpenAI/OpenAI driver (separate, needs its own design pass before any
-code): a versioned design decides the tool allowlist and sandboxing for the hand-rolled Bash tool, the
-budget-accounting approach, and the provider-selection convention across both `verify-docs.sh` and the
-new script; the new driver passes its own test suite mirroring `review`'s `test_pre_push.py` style
-(model call stubbed out, no real spend in tests); and one real run against each of an `OPENAI_API_KEY`
-and an Azure OpenAI credential produces the same two reports the Anthropic path does. Until that design
-exists, do not start writing the driver.
-
 ### 12. `review`'s Apply mode approve-each step has not run
+
+*Type:* verify · *Quality:* Functional suitability · *Impact:* M · *Priority:* L · *Complexity:* S —
+Priority L: it waits for a review where the user asks to approve each finding
 
 Opened 2026-09-18, with `5949ef5`. Narrowed the same day: the review of `workstation/` applied in
 `e9b3263` exercised failing-test-first (step 4) — `test_link_config.py` failed with 2 failures and 1
@@ -361,10 +432,13 @@ error against the unfixed `link_config.py` before the fix — and recording unfi
 into this file's item 17 and one closed in `d419f95`. Approve-each (step 2) did not run: the user answered the review's
 decisions and then said to go ahead with all of it.
 
-**Closes when:** one review in Apply mode, with the user asking to approve each finding, offers one
+**Closes when** (observation): one review in Apply mode, with the user asking to approve each finding, offers one
 choice per finding with its confidence and applies only the approved ones.
 
 ### 15. The subagent rule has not steered a session
+
+*Type:* verify · *Quality:* Functional suitability · *Impact:* M · *Priority:* L · *Complexity:* S —
+Priority L: it waits for a session that delegates
 
 Opened 2026-09-18, with the rewrite of principle 5 in `workstation/agent/AGENT-INSTRUCTIONS.md` and
 the subagent rule in § *Skills and subagents*. **Principle 5's triggers were observed on 2026-09-19**
@@ -376,11 +450,13 @@ Also seen in that session, twice: a bare one-line request was read as pasted tex
 your own" and the agent asked before acting — on a read-only lookup, which meets no trigger. The typo
 request between them was acted on. Two samples; not yet a reason to change the instructions.
 
-**Closes when:** a session spawns a subagent under the rule and the parent re-checks its result,
+**Closes when** (observation): a session spawns a subagent under the rule and the parent re-checks its result,
 recorded here or in the machine note. The pasted-text reading is dropped after a month of sessions
 without it, or becomes an instruction change if it recurs.
 
 ### 17. The emphasis in `AGENT-INSTRUCTIONS.md` may be over-applied
+
+*Type:* verify · *Quality:* Usability · *Impact:* L · *Priority:* L · *Complexity:* S
 
 Opened 2026-09-18, from the review of `workstation/agent/AGENT-INSTRUCTIONS.md`, as the unapplied
 low-confidence finding: the file carries about thirty bold or "never" emphases, which may make
@@ -390,5 +466,5 @@ The rest of that item closed on 2026-09-19: both assistants resolved a `workstat
 the machine note's `repo:` field from outside this repo, without searching — recorded in
 `workstation/machines/macos-workstation.md`.
 
-**Closes when:** a session is observed over-applying a rule because of the emphasis (then trim), or
+**Closes when** (observation): a session is observed over-applying a rule because of the emphasis (then trim), or
 after a month of sessions without such a case (then drop).
