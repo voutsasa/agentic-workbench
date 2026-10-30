@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Agentic Workbench Briefing</title>
+<link rel="stylesheet" href="../vendor/reveal.js/5.1.0/reveal.min.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<link rel="stylesheet" href="theme.css">
+</head>
+<body>
+<!--
+  Edit slides below. Each <section> is a slide; a <section> holding <section>s is a vertical stack (navigate with ↓).
+  Speaker notes go in <aside class="notes">. Press S to open them while presenting.
+  Divider slides: class="divider" plus data-background-gradient.
+-->
+<div class="reveal">
+<div class="slides">
+
+<!-- 1 · Title -->
+<section class="title-slide divider" data-background-gradient="linear-gradient(135deg, #0f3b46 0%, #1f6f6b 60%, #3a4fb8 130%)">
+  <span class="eyebrow">Agentic Workbench · Info session</span>
+  <h1>One set of rules for every AI assistant, on every machine</h1>
+  <p class="lede">How the workbench organises instructions, skills, MCP servers and CLI tools so that Claude Code and GitHub Copilot behave the same way on Windows and macOS.</p>
+  <p class="meta">agentic-workbench · v0.3.0 · October 2026 · press <code>Esc</code> for the overview</p>
+  <aside class="notes">Audience: IT management. Focus on outcomes: consistency, control, compliance, onboarding time.</aside>
+</section>
+
+<!-- 2 · Outcome -->
+<section>
+  <span class="eyebrow">Why it matters</span>
+  <h2>The business outcome</h2>
+  <div class="cols" style="--n:2">
+    <div class="panel"><h3>Problem without it</h3>
+      <ul>
+        <li>Each engineer configures assistants by hand, so behaviour differs person to person</li>
+        <li>Tool versions drift silently and break work mid-task</li>
+        <li>Compliance settings (e.g. AWS Bedrock) get overwritten</li>
+        <li>New machines take days to become productive</li>
+      </ul></div>
+    <div class="panel fragment fade-left"><h3>What the workbench delivers</h3>
+      <ul>
+        <li><strong>Consistency</strong>: one versioned instruction set, loaded by both assistants</li>
+        <li><strong>Control</strong>: humans install and approve; agents only record and propose</li>
+        <li><strong>Evidence</strong>: claims are backed by a command and its output</li>
+        <li><strong>Faster onboarding</strong>: four documented install steps per clone</li>
+      </ul></div>
+  </div>
+  <aside class="notes">Reveal the right-hand panel after describing the problem.</aside>
+</section>
+
+<!-- 3 · Building blocks -->
+<section>
+  <span class="eyebrow">The concept</span>
+  <h2>Four building blocks</h2>
+  <table>
+    <thead><tr><th>Block</th><th>What it is</th><th>Business analogy</th><th>Where it lives</th></tr></thead>
+    <tbody>
+      <tr class="fragment fade-up"><td>Instructions</td><td>Markdown rules every session loads: how to work, when to stop and ask</td><td>Company policy handbook</td><td><code>AGENT-INSTRUCTIONS.md</code>, <code>AGENTS.md</code></td></tr>
+      <tr class="fragment fade-up"><td>Skills</td><td>Packaged, repeatable procedures an assistant runs on request (review, verify docs, fetch to markdown)</td><td>Standard operating procedures</td><td><code>skills/</code>, <code>workstation/agent/skills/</code></td></tr>
+      <tr class="fragment fade-up"><td>MCP servers</td><td>Connectors giving the assistant governed access to systems (Azure DevOps, Atlassian, Databricks, draw.io)</td><td>Approved system integrations</td><td><code>workstation/mcp/</code>, <code>.mcp.json</code></td></tr>
+      <tr class="fragment fade-up"><td>CLI tools</td><td>Local command-line toolchain (pandoc, docling, playwright, diagram tools)</td><td>The approved toolbox</td><td><code>workstation/cli/</code></td></tr>
+    </tbody>
+  </table>
+</section>
+
+<!-- 4–5 · Organisation (auto-animate pair) -->
+<section data-auto-animate>
+  <span class="eyebrow">Organisation</span>
+  <h2>Write once…</h2>
+  <div class="flow">
+    <div class="node src" data-id="src"><b>workstation/agent/</b>AGENT-INSTRUCTIONS.md<br>10 global skills<br>hooks</div>
+  </div>
+  <p class="callout" data-id="note">One canonical copy, versioned in git and reviewed like code.</p>
+</section>
+<section data-auto-animate>
+  <span class="eyebrow">Organisation</span>
+  <h2>Write once, link everywhere</h2>
+  <div class="flow">
+    <div class="node src" data-id="src"><b>workstation/agent/</b>AGENT-INSTRUCTIONS.md<br>10 global skills<br>hooks</div>
+    <div class="arrow">→ link_config.py →</div>
+    <div class="node" data-id="claude"><b>Claude Code</b>~/.claude/CLAUDE.md<br>~/.claude/skills/</div>
+    <div class="arrow">+</div>
+    <div class="node" data-id="copilot"><b>GitHub Copilot</b>~/.copilot/copilot-instructions.md<br>~/.copilot/skills/</div>
+  </div>
+  <div class="cols" style="--n:3; margin-top:1em">
+    <div class="panel"><h3>docs/</h3>What the workbench reads: the ingested reference corpus</div>
+    <div class="panel"><h3>workstation/</h3>What it runs on: instructions, CLI and MCP routes, machine notes, scripts</div>
+    <div class="panel"><h3>skills/</h3>What it does: this repo's own skills, linked into each clone</div>
+  </div>
+  <p class="callout" data-id="note">Linked rather than copied, so there is no second version that can drift.</p>
+</section>
+
+<!-- 6 · Instruction layers -->
+<section>
+  <span class="eyebrow">Instruction layers</span>
+  <h2>Clear precedence, top to bottom</h2>
+  <div class="stack">
+    <div class="layer fragment fade-right"><span class="tag">1 · Request</span><span>The user's current request overrides everything below</span></div>
+    <div class="layer fragment fade-right"><span class="tag">2 · Global</span><span><code>AGENT-INSTRUCTIONS.md</code>: how the agent works on every machine and project (policy)</span></div>
+    <div class="layer fragment fade-right"><span class="tag">3 · Project</span><span><code>AGENTS.md</code>: repo rules and invariants; conflicts with global rules are surfaced, never silently resolved</span></div>
+    <div class="layer fragment fade-right"><span class="tag">4 · Machine</span><span><code>~/.agentic-workbench/machine.md</code>: measured facts about this box; wins on facts, never relaxes a rule</span></div>
+  </div>
+  <p class="callout">Claude Code reads <code>CLAUDE.md</code> (one line: <code>@AGENTS.md</code>); Copilot reads <code>AGENTS.md</code> directly. Same content, two entry points.</p>
+</section>
+
+<!-- 7 · Install (vertical stack: commands 1–2, then 3–4) -->
+<section>
+  <section>
+    <span class="eyebrow path">README.md § Install · ↓ for steps 3–4</span>
+    <h2>A clone is ready in four commands</h2>
+    <pre><code class="language-bash" data-trim data-line-numbers="2,4">
+# 1. Venv and dev tools
+uv sync
+# 2. Pre-push gate (macOS)
+ln -sfn ../../workstation/agent/skills/review/scripts/pre-push .git/hooks/pre-push
+    </code></pre>
+    <aside class="notes">Commands are highlighted, comments dimmed. On Windows: python instead of python3, and the pre-push shim is copied.</aside>
+  </section>
+  <section>
+    <span class="eyebrow path">README.md § Install</span>
+    <h2>A clone is ready in four commands</h2>
+    <pre><code class="language-bash" data-trim data-line-numbers="2,4" data-ln-start-from="5">
+# 3. Check the workstation ¹
+python workstation/scripts/status.py
+# 4. Link instructions and skills ¹
+python workstation/scripts/link_config.py --project --claude-md --apply
+    </code></pre>
+    <p class="small">Then run the <code>setup-agents</code> skill. Alternative: the plugin route installs only the global skills, one command per assistant.</p>
+    <p class="small footnote">¹ <code>python</code> on Windows, <code>python3</code> on macOS.</p>
+  </section>
+</section>
+
+<!-- 8 · Skills -->
+<section>
+  <span class="eyebrow">Skills</span>
+  <h2>Skills shared by Claude and Copilot</h2>
+  <div class="cols" style="--n:2">
+    <div class="panel"><h3>Global skills (10)</h3>
+      <p class="small" style="margin:0 0 .4em">Usable in any repo; the list is code (<code>link_config.py</code> <code>SKILLS</code> tuple)</p>
+      <ul>
+        <li><code>review</code>, <code>verify-docs</code>, <code>fix-findings</code></li>
+        <li><code>fetch-to-markdown</code>, <code>pdf-deliverable</code>, <code>python-quality</code></li>
+        <li><code>confluence-publish</code>, <code>confluence-export</code></li>
+        <li><code>setup-mcp-servers</code>, <code>session-signature</code></li>
+      </ul></div>
+    <div class="panel"><h3>Repo skills (3)</h3>
+      <p class="small" style="margin:0 0 .4em">Specific to this workbench</p>
+      <ul>
+        <li><code>get-workstation-status</code>: readiness report, installs nothing</li>
+        <li><code>setup-agents</code>: detect assistants, link config</li>
+        <li><code>ingest-source</code>: add a source to the corpus</li>
+      </ul></div>
+  </div>
+  <p class="callout">Two routes: the <strong>full route</strong> (instructions + all skills, per clone) or the <strong>plugin route</strong> (global skills only, same command on both OSes).</p>
+</section>
+
+<!-- 9 · MCP -->
+<section>
+  <span class="eyebrow">MCP servers</span>
+  <h2>Governed connections to enterprise systems</h2>
+  <table>
+    <thead><tr><th>Server</th><th>Connects to</th><th>Transport</th></tr></thead>
+    <tbody>
+      <tr><td>ado-remote-mcp</td><td>Azure DevOps (repos, PRs, work items)</td><td>http</td></tr>
+      <tr><td>atlassian-mcp</td><td>Jira and Confluence</td><td>http</td></tr>
+      <tr><td>databricks-&lt;service&gt;</td><td>Databricks Genie, DBSQL, sandbox</td><td>http (Claude) · stdio bridge (Copilot)</td></tr>
+      <tr><td>fabric-iq-mcp</td><td>Fabric / Power BI, read-only</td><td>http</td></tr>
+      <tr><td>drawio-mcp</td><td>draw.io diagrams</td><td>stdio</td></tr>
+      <tr><td>powerbi-modeling-mcp</td><td>Power BI semantic models (writes)</td><td>stdio</td></tr>
+    </tbody>
+  </table>
+  <p class="callout">One shared file, <code>.mcp.json</code>, is read by both Claude and Copilot. A catalog drives it: missing entries are added, diverged ones reported, never overwritten. Users register servers themselves.</p>
+</section>
+
+<!-- 10 · CLI -->
+<section>
+  <span class="eyebrow">CLI tools</span>
+  <h2>A known-good local toolchain: 19 tools</h2>
+  <div class="cols" style="--n:3">
+    <div class="panel fragment fade-up"><h3>Documents</h3><ul><li><code>pandoc</code>, <code>docling</code>, <code>defuddle</code></li><li><code>poppler</code>, <code>tesseract</code> (OCR)</li><li><code>weasyprint</code>, <code>typst</code> (PDF)</li></ul></div>
+    <div class="panel fragment fade-up"><h3>Diagrams &amp; images</h3><ul><li><code>plantuml</code>, <code>mmdc</code>, <code>d2</code></li><li><code>dbml-cli</code></li><li><code>magick</code></li></ul></div>
+    <div class="panel fragment fade-up"><h3>Platforms &amp; data</h3><ul><li><code>databricks</code>, <code>ug</code></li><li><code>psql</code>, <code>jq</code>, <code>sem</code></li><li><code>playwright</code>, <code>confluence-sync-md</code></li></ul></div>
+  </div>
+  <p class="callout">Package managers: Homebrew on macOS, Scoop on Windows. Readiness of every tool on a machine: <code>workstation/scripts/status.py</code>.</p>
+</section>
+
+<!-- 11 · Windows vs macOS (vertical stack) -->
+<section>
+  <section>
+    <span class="eyebrow">Windows vs macOS · ↓ for each OS</span>
+    <h2>Same policy, different plumbing</h2>
+    <table>
+      <thead><tr><th>Aspect</th><th>macOS</th><th>Windows</th></tr></thead>
+      <tbody>
+        <tr><td>Linking</td><td>Symlinks everywhere, no elevation needed</td><td>Junctions for folders, generated copies for files (no admin rights for symlinks)</td></tr>
+        <tr><td>Package manager</td><td>Homebrew</td><td>Scoop (winget noted where offered)</td></tr>
+        <tr><td>Shell</td><td>zsh; bash 3.2 and BSD <code>sed</code></td><td>PowerShell 7; no <code>sed</code>, <code>awk</code>, <code>head</code></td></tr>
+        <tr><td>Python launcher</td><td><code>python3</code> (no <code>python</code> on PATH)</td><td><code>python</code></td></tr>
+        <tr><td>Claude provider</td><td>Own subscription, not provider-bound</td><td>AWS Bedrock, required for compliance</td></tr>
+        <tr><td>After edits</td><td>Links update live</td><td>Re-run <code>link_config.py --apply</code> to refresh copies</td></tr>
+      </tbody>
+    </table>
+  </section>
+  <section>
+    <span class="eyebrow path">workstation/agent/setup/macos.md</span>
+    <h2>macOS: specific instructions</h2>
+    <ul>
+      <li class="fragment focus">Compare <code>~/.claude/CLAUDE.md</code> with the repo copy first; linking overwrites it</li>
+      <li class="fragment focus">Link: <code>python3 workstation/scripts/link_config.py --apply --hooks</code> (add <code>--agent copilot</code>, <code>--project</code>)</li>
+      <li class="fragment focus">Use <code>python3</code>; avoid modern-bash syntax (<code>declare -A</code>, <code>mapfile</code>), it fails on bash 3.2</li>
+      <li class="fragment focus">BSD <code>sed</code> exits 0 even when nothing matched; confirm edits with <code>git diff --stat</code></li>
+      <li class="fragment focus">A renamed link target leaves a dangling symlink; the verify step catches it</li>
+    </ul>
+  </section>
+  <section>
+    <span class="eyebrow path">workstation/agent/setup/windows.md</span>
+    <h2>Windows: specific instructions</h2>
+    <ul>
+      <li class="fragment focus">Reconcile a drifted <code>CLAUDE.md</code> by hand before linking; keep the union</li>
+      <li class="fragment focus">Requires PowerShell 7; link with <code>python workstation\scripts\link_config.py --apply --hooks</code></li>
+      <li class="fragment focus"><code>&gt;</code> and <code>Out-File</code> write UTF-16 and corrupt markdown; use <code>Set-Content -Encoding utf8</code></li>
+      <li class="fragment focus">The Bash tool cannot resolve PATH; drive commands through <code>pwsh.exe</code></li>
+      <li class="fragment focus">Ask IT for Developer Mode: live symlinks instead of copies (convenience, not a blocker)</li>
+    </ul>
+  </section>
+</section>
+
+<!-- 12 · Key principles (vertical stack, one slide per md file) -->
+<section>
+  <section class="divider" data-background-gradient="linear-gradient(150deg, #0f3b46 0%, #1f6f6b 100%)">
+    <span class="eyebrow">Key principles</span>
+    <h2>Eight instruction files, five rules each</h2>
+    <p>Each slide below distils one markdown file the agents load or follow.</p>
+    <p class="hint">↓ to step through · Esc for the overview</p>
+  </section>
+  <section>
+    <span class="eyebrow path">workstation/agent/AGENT-INSTRUCTIONS.md · global</span>
+    <h2>Global agent instructions</h2>
+    <ul>
+      <li><strong>Be succinct</strong>: lead with the answer, 300-word default ceiling, tables for three or more items</li>
+      <li><strong>Start small, validate, then scale</strong>: one working instance before a batch</li>
+      <li><strong>Validate against the real thing</strong>: every claim closes with command, output and status</li>
+      <li><strong>Code over prompt</strong>: deterministic steps become tested scripts; no model calls in gates</li>
+      <li><strong>Design before build</strong>: stop and ask on effort, impact (push, delete, settings, compliance) or divergence</li>
+    </ul>
+  </section>
+  <section>
+    <span class="eyebrow path">AGENTS.md · project</span>
+    <h2>Project instructions</h2>
+    <ul>
+      <li><code>AGENTS.md</code> is the single copy; <code>CLAUDE.md</code> holds only <code>@AGENTS.md</code></li>
+      <li><code>SOURCES.md</code> is the source of truth, mirrored by <code>SOURCE_CATALOGUE.md</code></li>
+      <li>The ingested corpus is not in git; it is rebuildable from the register</li>
+      <li>The user installs, the agent records: no agent-run installs, upgrades or MCP registrations</li>
+      <li>Gaps go in <code>TODO.md</code> in the same commit, each saying what would close it</li>
+    </ul>
+  </section>
+  <section>
+    <span class="eyebrow path">~/.agentic-workbench/machine.md · machine agent</span>
+    <h2>The machine note</h2>
+    <ul>
+      <li>One fixed path on every machine, different content per machine</li>
+      <li>Generated by probing (<code>inventory.py</code>), not written by hand</li>
+      <li>Read before planning any command: shell, paths, tool versions, what is broken</li>
+      <li>A measured fact beats the policy text, but never relaxes a rule or a gate</li>
+      <li>Records provider binding (e.g. Bedrock on Windows) so it is never guessed</li>
+    </ul>
+  </section>
+  <section>
+    <span class="eyebrow path">workstation/agent/README.md · agent config</span>
+    <h2>Agent configuration</h2>
+    <ul>
+      <li>Everything in <code>workstation/agent/</code> is shared by every machine, unmodified</li>
+      <li><code>settings.json</code> is merged by hand, never linked or overwritten</li>
+      <li>Nothing machine-specific in the instructions: no paths, versions or shell quirks</li>
+      <li>Portable hooks are linked (<code>ruff_on_edit.py</code>); OS-specific ones are copied by hand</li>
+      <li>One assistant-neutral copy at <code>~/.agentic-workbench/AGENTS.md</code> for future tools</li>
+    </ul>
+  </section>
+  <section>
+    <span class="eyebrow path">workstation/machines/README.md · fact placement</span>
+    <h2>Where a fact lives</h2>
+    <ul>
+      <li>Split by lifetime: policy, route, readiness, state</li>
+      <li>Test: <em>would this still be true on the other machine?</em> If not, it is machine state</li>
+      <li>Common requirements in <code>dependencies.toml</code>; per-machine overrides in <code>&lt;machine&gt;.prerequisites.toml</code></li>
+      <li>Policy never names a platform; <code>install.md</code> never states an install status</li>
+      <li>A fact in the wrong file goes stale at the wrong rate</li>
+    </ul>
+  </section>
+  <section>
+    <span class="eyebrow path">workstation/cli/README.md · CLI tools</span>
+    <h2>CLI tools</h2>
+    <ul>
+      <li>Three files per tool: install, quick start, reference; load only the one you need</li>
+      <li>Read <code>quick_start.md</code> before a tool's first use in a session</li>
+      <li>Version behind? Report and stop; upgrading mid-task is the user's call</li>
+      <li>Do not cross ecosystems by name: PyPI <code>d2</code> is not Terrastruct's D2</li>
+      <li>A platform is added only when a real machine of that platform exists</li>
+    </ul>
+  </section>
+  <section>
+    <span class="eyebrow path">workstation/mcp/README.md · MCP servers</span>
+    <h2>MCP servers</h2>
+    <ul>
+      <li>Only third-party servers consumed here; authored servers are project output</li>
+      <li>One <code>setup.md</code> per server: route chosen, verification, silent traps</li>
+      <li>Project-scope <code>.mcp.json</code> is tracked and shared by Claude and Copilot</li>
+      <li>Secrets (OAuth client IDs, PATs) stay out of the catalog</li>
+      <li><code>npx</code> servers are unpinned: record the observed version, pin if unstable</li>
+    </ul>
+  </section>
+  <section>
+    <span class="eyebrow path">skills/README.md · skills</span>
+    <h2>Skills</h2>
+    <ul>
+      <li>Repo skills name this workbench's files; global skills work anywhere</li>
+      <li>Authored once under <code>skills/</code>, linked into <code>.claude/skills/</code> per clone</li>
+      <li>Never commit that link; regenerate it per clone</li>
+      <li>Promoted to global only when register-free, and only on the owner's say-so</li>
+      <li>Deterministic steps live in tested <code>scripts/</code>; prose keeps only judgement</li>
+    </ul>
+  </section>
+</section>
+
+<!-- 13 · Source register and ingestion (vertical stack) -->
+<section>
+  <section>
+    <span class="eyebrow path">SOURCES.md · the register · ↓ for the ingestion process</span>
+    <h2>What the register holds: 118 first-party sources</h2>
+    <div class="cols" style="--n:2">
+      <div class="panel"><h3>Grouped by the architecture layer they feed</h3>
+        <ol>
+          <li>Business domain (e.g. DDD Reference)</li>
+          <li>Solution architecture (viewpoints, ADRs)</li>
+          <li>Data architecture</li>
+          <li>Technical architecture (SDLC, experimentation, enterprise and LLM stacks)</li>
+          <li>Implementation architecture: the per-project <strong>output</strong></li>
+        </ol>
+        <p class="small" style="margin-top:.5em">Cross-cutting: agent working practice; workstation tooling (CLI tools, MCP servers)</p>
+      </div>
+      <div class="panel"><h3>Conventions</h3>
+        <ul>
+          <li><strong>First-party only</strong>: the canonical URL, never a mirror or fork</li>
+          <li><strong>One entry per source</strong>; other layers get a <em>see also</em></li>
+          <li><strong>One entry, one file</strong>: each link resolves to one ingested file</li>
+          <li><strong>Gaps</strong> listed per layer as the collection backlog</li>
+        </ul>
+      </div>
+    </div>
+    <p class="callout"><code>SOURCE_CATALOGUE.md</code> mirrors the register entry for entry, with one ≤20-word line on what each source gives you.</p>
+  </section>
+  <section>
+    <span class="eyebrow path">skills/ingest-source/SKILL.md · the ingestion process</span>
+    <h2>From a register entry to a local file</h2>
+    <div class="pipe">
+      <div class="step fragment fade-up"><span class="n">1 · Register</span><h3>Add the entry</h3><p>Edit <code>SOURCES.md</code> first, with its matching one-line summary in <code>SOURCE_CATALOGUE.md</code> in the same change</p></div>
+      <div class="step fragment fade-up"><span class="n">2 · Resolve</span><h3>Where it lands</h3><p><code>repo_check.py --corpus</code> prints the destination of every entry not yet on disk; only that delta is ingested</p></div>
+      <div class="step fragment fade-up"><span class="n">3 · Convert</span><h3>fetch-to-markdown</h3><p>Routes by type (raw README, pandoc, docling, Playwright + defuddle), quality-checks pass/fail, strips base64 images</p></div>
+      <div class="step fragment fade-up"><span class="n">4 · Record</span><h3>Confirm the catalogue</h3><p>The summary line exists in the same section and position; a failed conversion is not recorded</p></div>
+    </div>
+    <p class="callout">Result: <code>docs/landing-zone/&lt;name&gt;.md</code>, gitignored and rebuildable from the register. The catalogue is written by hand alongside the register and checked for drift, not generated.</p>
+  </section>
+  <section>
+    <span class="eyebrow path">skills/ingest-source/references/workstation-tooling.md</span>
+    <h2>For tools, ingestion also writes the guides</h2>
+    <div class="r-stack">
+      <div class="card fragment fade-in-then-semi-out"><span class="n">reference.md · ingested</span><h3>The vendor's own documentation</h3><p>Fetched by <code>fetch-to-markdown</code> into <code>workstation/cli/&lt;tool&gt;/</code>. Complete but long; not in git.</p></div>
+      <div class="card fragment fade-in-then-semi-out" style="margin-left:3em; margin-top:2.2em"><span class="n">install.md · authored</span><h3>The installation instructions</h3><p>macOS and Windows commands, the version check and its expected output, runtime dependencies, install traps. The package is verified as genuine first.</p></div>
+      <div class="card fragment" style="margin-left:6em; margin-top:4.4em"><span class="n">quick_start.md · authored</span><h3>The user guide</h3><p>What the tool is for, the invocations the workbench uses, key flags, and the traps that fail silently. Checked against the installed tool's <code>--help</code>.</p></div>
+    </div>
+    <p class="callout" style="margin-top:9em">MCP servers get one authored <code>setup.md</code> instead: route chosen, verification, traps. The agent writes the guides; the user runs the install.</p>
+  </section>
+</section>
+
+<!-- 14 · Pros/cons instructions -->
+<section>
+  <span class="eyebrow">Assessment</span>
+  <h2>Pros and cons: the instruction approach</h2>
+  <div class="pc">
+    <div class="pro"><h3>Pros</h3><ul>
+      <li>Consistent behaviour across people, assistants and OSes</li>
+      <li>Versioned and reviewable like code; changes are auditable</li>
+      <li>Human approval gates on risky actions (push, delete, install, settings)</li>
+      <li>Vendor-neutral: Claude and Copilot load the same files</li>
+      <li>Compliance constraints recorded per machine, not lost on update</li>
+    </ul></div>
+    <div class="con fragment fade-left"><h3>Cons</h3><ul>
+      <li>Prose rules are guidance: a model can still misapply them</li>
+      <li>Large instruction files consume context on every session</li>
+      <li>Windows copies go stale unless <code>--apply</code> is re-run</li>
+      <li>Requires discipline to keep facts in the right file</li>
+      <li>More stop-and-ask moments slow routine work</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- 15 · Pros/cons CLI -->
+<section>
+  <span class="eyebrow">Assessment</span>
+  <h2>Pros and cons: local CLI tools</h2>
+  <div class="pc">
+    <div class="pro"><h3>Pros</h3><ul>
+      <li>Data stays on the workstation; no upload to third-party services</li>
+      <li>Deterministic, repeatable output for conversions and diagrams</li>
+      <li>No per-call cost; works offline once installed</li>
+      <li>Documented traps cut failed first attempts</li>
+      <li>One command reports readiness per machine</li>
+    </ul></div>
+    <div class="con fragment fade-left"><h3>Cons</h3><ul>
+      <li>Each engineer installs and upgrades tools themselves</li>
+      <li>Versions differ between machines and can change output</li>
+      <li>Two OS routes to document and test for every tool</li>
+      <li>Corporate restrictions (admin rights, Developer Mode) limit options</li>
+      <li>Toolchain sprawl: 19 tools to keep current</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- 16 · Takeaways -->
+<section class="divider" data-background-gradient="linear-gradient(135deg, #0f3b46 0%, #1f6f6b 70%, #3a4fb8 140%)">
+  <span class="eyebrow">Summary</span>
+  <h2>Key takeaways</h2>
+  <ul>
+    <li class="fragment">AI assistants are governed by versioned, reviewable policy, not individual setup</li>
+    <li class="fragment">Humans keep control of installs, pushes and compliance settings</li>
+    <li class="fragment">Windows and macOS share one policy; only the plumbing differs</li>
+    <li class="fragment"><strong style="color:#fff">Ask</strong>: Developer Mode on Windows workstations would remove the stale-copy risk</li>
+    <li class="fragment"><strong style="color:#fff">Ask</strong>: sponsor a periodic toolchain currency review across machines</li>
+  </ul>
+</section>
+
+<!-- 17 · Presenting -->
+<section>
+  <span class="eyebrow">About this deck</span>
+  <h2>Presenting with Reveal.js</h2>
+  <div class="keys">
+    <div><kbd>→ / Space</kbd><span>Next slide or fragment</span></div>
+    <div><kbd>↓ ↑</kbd><span>Move within a vertical stack</span></div>
+    <div><kbd>Esc / O</kbd><span>Overview of all slides</span></div>
+    <div><kbd>S</kbd><span>Speaker view with notes and timer</span></div>
+    <div><kbd>Alt + click</kbd><span>Zoom into any element</span></div>
+    <div><kbd>Ctrl+Shift+F</kbd><span>Search the deck</span></div>
+    <div><kbd>F</kbd><span>Fullscreen</span></div>
+    <div><kbd>B / .</kbd><span>Pause (blank the screen)</span></div>
+  </div>
+  <p class="callout">Features used here: gradient backgrounds, fragments, auto-animate, vertical stacks, r-stack, code line highlighting, speaker notes, zoom and search plugins. Source: <code>docs/presentations/workbench-briefing/</code>.</p>
+</section>
+
+</div>
+</div>
+
+<script src="../vendor/reveal.js/5.1.0/reveal.min.js"></script>
+<script src="../vendor/reveal.js/5.1.0/plugin/highlight/highlight.min.js"></script>
+<script src="../vendor/reveal.js/5.1.0/plugin/notes/notes.min.js"></script>
+<script src="../vendor/reveal.js/5.1.0/plugin/zoom/zoom.min.js"></script>
+<script src="../vendor/reveal.js/5.1.0/plugin/search/search.min.js"></script>
+<script>
+  Reveal.initialize({
+    hash: false,
+    controls: true,
+    progress: true,
+    slideNumber: 'h.v',
+    center: false,
+    width: 1280,
+    height: 720,
+    margin: 0.06,
+    autoAnimateDuration: 0.8,
+    backgroundTransition: 'fade',
+    transition: window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 'none' : 'slide',
+    plugins: [RevealHighlight, RevealNotes, RevealZoom, RevealSearch]
+  });
+</script>
+</body>
+</html>

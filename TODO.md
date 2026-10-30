@@ -19,6 +19,18 @@ converted file, a pipeline run — and not when it merely feels handled.
 
 ## Open
 
+### 56. The presentation scripts and deck have not run on Windows
+
+Type `verify` · Quality Portability · Impact L · Priority L
+
+Opened 2026-10-30 with `docs/presentations/`. `fetch-reveal.sh` and `workbench-briefing/build-artifact.sh`
+are POSIX `sh` and ran only on macOS; the README says to run them from Git Bash on Windows, and to open
+the deck with `start`. Neither route has been observed.
+
+**Closes when:** on a Windows machine, `sh docs/presentations/workbench-briefing/build-artifact.sh <dir>`
+from Git Bash prints `built …`, and `start docs\presentations\workbench-briefing\index.html` shows the
+deck with Reveal.js loaded from `vendor/`.
+
 ### 55. A `/ship` skill: gate, commit and push in one step
 
 Type `decision` · Quality Usability · Impact L · Priority M

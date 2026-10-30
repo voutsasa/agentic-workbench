@@ -171,6 +171,7 @@ docs/                     	the corpus — what the workbench reads.
   landing-zone/           	ingested external sources     — not in git.   
   guidance/               	distilled agent-facing notes  — in git.   
     DEVELOPMENT-PLAN.md   	phased curriculum for agents  — in git.   
+  presentations/          	Reveal.js decks about the workbench — in git.   
 
 skills/                   	this repo's own skills — what the workbench does.   
   README.md               	the repo-local vs. global line, and how to load these.   
@@ -248,6 +249,35 @@ Edits to `~/.claude/CLAUDE.md` or the `review` skill land here, because those pa
 | `workstation/agent/skills/<skill>/` | The skills promoted to global scope, each linked to `~/.claude/skills/<skill>`. Which skills those are is [`link_config.py`](workstation/scripts/link_config.py)'s `SKILLS` tuple — see [`skills/README.md`](skills/README.md). A skill earns promotion here by working in a repo that is not this one; until then it stays in [`skills/`](skills/). `SKILL.md` is a skill's definition; `scripts/` and `tests/` hold its repeatable actions. |
 
 Because these are links into a git repo, check `git status` here before overwriting or regenerating any of them — and if this directory is ever moved or renamed, **repoint the links**, or every session silently loses its global instructions. On Windows `CLAUDE.md`, `machine.md`, and Copilot's `copilot-instructions.md` are hardlinks and any atomic-saving editor severs them silently; [`workstation/agent/setup/windows.md`](workstation/agent/setup/windows.md) carries the detection command.
+
+## Presentations — `docs/presentations/`
+
+Reveal.js decks about the workbench, one folder per deck. They are hand-edited HTML: nothing to
+install or build to view them.
+
+| Path | Role |
+|---|---|
+| `docs/presentations/vendor/reveal.js/<version>/` | The Reveal.js release every deck loads — core, the highlight, notes, zoom and search plugins, and its MIT licence. Third-party, committed so decks run offline; never hand-edit it. |
+| `docs/presentations/fetch-reveal.sh` | Fetches one Reveal.js release from cdnjs into `vendor/reveal.js/<version>/`. |
+| `docs/presentations/workbench-briefing/index.html` | The info-session deck: one `<section>` per slide, a nested `<section>` for a vertical stack, `<aside class="notes">` for speaker notes. |
+| `docs/presentations/workbench-briefing/theme.css` | Colours, fonts, backgrounds and code-block styling for that deck. |
+| `docs/presentations/workbench-briefing/build-artifact.sh` | Builds a copy for publishing as a claude.ai Artifact, and warns when npm has a newer Reveal.js release than the vendored one. |
+
+**View:** open `index.html` in a browser (`open docs/presentations/workbench-briefing/index.html` on
+macOS, `start` on Windows). Reveal.js loads from `vendor/`, so it works offline; only the fonts come
+from Google Fonts, and fall back to system fonts without internet. Press `Esc` for the overview, `S`
+for speaker notes; the deck's last slide lists the other keys.
+
+**Update the deck:** edit `index.html` or `theme.css` and reload the browser. To refresh the
+published Artifact, run `sh docs/presentations/workbench-briefing/build-artifact.sh <out-dir>` and
+publish `<out-dir>/workbench-deck.html` with `reveal.css` and `theme.css` beside it.
+
+**Upgrade Reveal.js** when the build warns that a newer release exists:
+`sh docs/presentations/fetch-reveal.sh <version>`, change the version in the deck's `index.html`
+paths, check every slide, then delete the old `vendor/reveal.js/<old-version>/` folder. A major
+version can change behaviour, so it is a deliberate step, never part of a build.
+
+Both scripts need `sh`, `sed`, `grep` and `curl`: present on macOS; on Windows run them from Git Bash.
 
 ## Repo mechanics
 
