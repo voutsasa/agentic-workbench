@@ -1,6 +1,6 @@
 ---
 role: Source register — source of truth for what belongs in the project
-updated: 2026-09-28
+updated: 2026-11-01
 verified: never
 author: Achilleas Voutsas
 version: 0.3.0
@@ -41,14 +41,17 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 ## 1. Business domain
 
 * [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf)
+* [EventStorming](https://www.eventstorming.com/)
+* [User Story Mapping](https://jpattonassociates.com/story-mapping/)
+* [INVEST in Good Stories, and SMART Tasks](https://xp123.com/invest-in-good-stories-and-smart-tasks/)
+* [EARS](https://alistairmavin.com/ears/)
+* [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/)
+* [Ardoq Business Capability Modeling](https://www.ardoq.com/knowledge-hub/business-capability-modeling)
 
 *See also:* Rozanski & Woods Viewpoint Catalogue — Context and Functional viewpoints (§2).
 
 **Gaps — not yet sourced**
 
-- Domain discovery method (event storming or equivalent)
-- Business capability modelling
-- Requirements/user-story practice (BDD, story mapping)
 - Process notation (BPMN or similar)
 
 ## 2. Solution architecture
@@ -57,13 +60,17 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 * [Architecture Decision Records](https://github.com/adr/madr)
 * [SOLID Relevance](https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html)
 * [plantuml](https://plantuml.com/component-diagram)
+* [C4 model](https://c4model.com/)
+* [ISO-IEC-IEEE 42010](http://www.iso-architecture.org/42010/)
+* [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
+* [ArchiMate](https://www.opengroup.org/archimate-forum/archimate-overview)
+* [ArchiMate 101](https://archimate-community.pages.opengroup.org/workgroups/archimate-101/)
 
 *See also:* DDD Reference — strategic design and bounded contexts (§1).
 
 **Gaps — not yet sourced**
 
-- C4 model (the notation most teams actually draw in)
-- Integration patterns (EIP) and API design guidance (REST/OpenAPI)
+- Integration patterns (EIP) and REST API design guidance
 - Security architecture — OWASP ASVS/Top 10, threat modelling
 - Well-architected/quality-attribute framework
 
@@ -218,6 +225,8 @@ The per-project output layer: how work is specified, built, verified, and govern
 ### Method
 
 * [Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html)
+* [spec-kit](https://github.com/github/spec-kit)
+* [Kiro Specs](https://kiro.dev/docs/specs/)
  
 **Gaps — not yet sourced**
 

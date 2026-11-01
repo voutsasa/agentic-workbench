@@ -61,3 +61,5 @@ wheels/
 **/.vscode/
 **/.idea/
 **/.zed/
+# Licensed personal copies: never in git
+docs/licensed-sources/

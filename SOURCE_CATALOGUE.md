@@ -1,6 +1,6 @@
 ---
 role: One-sentence capability summary per source, mirroring SOURCES.md
-updated: 2026-09-28
+updated: 2026-11-01
 verified: never
 author: Achilleas Voutsas
 version: 0.3.0
@@ -23,6 +23,12 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 ## 1. Business domain
 
 * [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf) — Eric Evans' condensed reference of Domain-Driven Design patterns, building blocks, and strategic-design vocabulary.
+* [EventStorming](https://www.eventstorming.com/) — Alberto Brandolini's workshop method for discovering a domain through domain events, commands, actors and policies.
+* [User Story Mapping](https://jpattonassociates.com/story-mapping/) — Jeff Patton's practice of arranging user stories along the user's journey to plan releases.
+* [INVEST in Good Stories, and SMART Tasks](https://xp123.com/invest-in-good-stories-and-smart-tasks/) — Bill Wake's checklist for well-formed user stories: independent, negotiable, valuable, estimable, small, testable.
+* [EARS](https://alistairmavin.com/ears/) — Easy Approach to Requirements Syntax: five sentence templates for unambiguous, testable requirements.
+* [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) — Given/When/Then syntax for executable BDD acceptance criteria.
+* [Ardoq Business Capability Modeling](https://www.ardoq.com/knowledge-hub/business-capability-modeling) — Vendor guide to business capability models: a four-step method (needs, required, current, linked applications) and modelling do's and don'ts.
 
 *See also:* Rozanski & Woods Viewpoint Catalogue — Context and Functional viewpoints (§2).
 
@@ -32,6 +38,11 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [Architecture Decision Records](https://github.com/adr/madr) — MADR template system for documenting architectural decisions in structured, version-controlled Markdown.
 * [SOLID Relevance](https://blog.cleancoder.com/uncle-bob/2020/10/18/Solid-Relevance.html) — Uncle Bob revisits whether SOLID principles still hold value in modern software design.
 * [plantuml](https://plantuml.com/component-diagram) — Generates UML and other diagrams from a simple text-based description language.
+* [C4 model](https://c4model.com/) — Simon Brown's hierarchical notation for software architecture: context, containers, components, code.
+* [ISO-IEC-IEEE 42010](http://www.iso-architecture.org/42010/) — The international standard's conceptual model for architecture descriptions: stakeholders, concerns, viewpoints, views.
+* [OpenAPI Specification](https://spec.openapis.org/oas/latest.html) — Language-neutral standard for describing HTTP APIs as machine-readable interface contracts.
+* [ArchiMate](https://www.opengroup.org/archimate-forum/archimate-overview) — The Open Group's enterprise-architecture modelling language: motivation, strategy, business, application and technology elements and their relationships.
+* [ArchiMate 101](https://archimate-community.pages.opengroup.org/workgroups/archimate-101/) — Community-written CC BY-SA introduction to ArchiMate: language, viewpoints, modelling practice, a sample viewpoint library and the Archi tool.
 
 *See also:* DDD Reference — strategic design and bounded contexts (§1).
 
@@ -166,6 +177,8 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 ### Method
 
 * [Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html) — Martin Fowler compares three spec-driven development tools and their approaches.
+* [spec-kit](https://github.com/github/spec-kit) — GitHub's toolkit for spec-driven development: constitution, specification, plan and tasks as staged artefacts.
+* [Kiro Specs](https://kiro.dev/docs/specs/) — Kiro's spec workflow: requirements in EARS notation, a design document and an implementation task list.
 
 ---
 
