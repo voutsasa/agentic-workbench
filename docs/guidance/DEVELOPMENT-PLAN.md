@@ -149,9 +149,9 @@ The order is deliberate — understand the method before touching the tooling.
 | | Importance | Reading / tutorial |
 |---|---|---|
 | ✓ | ★★★★★ | [Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html) — start here; it frames the other three |
-| ➕ | ★★★★★ | [github/spec-kit](https://github.com/github/spec-kit) + [Spec Kit docs](https://github.github.com/spec-kit/) — **tutorial:** run it end-to-end |
+| ✓ | ★★★★★ | [github/spec-kit](https://github.com/github/spec-kit) + [Spec Kit docs](https://github.github.com/spec-kit/) — **tutorial:** run it end-to-end |
 | ➕ | ★★★★☆ | [Exploring Generative AI](https://martinfowler.com/articles/exploring-gen-ai.html) — the series index; read the spec-first / spec-anchored / spec-as-source distinction |
-| ➕ | ★★★★☆ | [Kiro — Specs](https://kiro.dev/docs/specs/) — the requirements/design/tasks triple, plus steering and hooks |
+| ✓ | ★★★★☆ | [Kiro — Specs](https://kiro.dev/docs/specs/) — the requirements/design/tasks triple, plus steering and hooks |
 | ➕ | ★★★☆☆ | [Spec-driven development with AI — GitHub Blog](https://github.blog/ai-and-ml/generative-ai/spec-driven-development-with-ai-get-started-with-a-new-open-source-toolkit/) — announcement-level; largely covered by the spec-kit docs |
 
 **Do:** install spec-kit, run it on one throwaway feature — *not* the real project yet. Note what a spec/plan/tasks triple actually contains in practice.
