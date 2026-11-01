@@ -43,6 +43,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [OpenAPI Specification](https://spec.openapis.org/oas/latest.html) — Language-neutral standard for describing HTTP APIs as machine-readable interface contracts.
 * [ArchiMate](https://www.opengroup.org/archimate-forum/archimate-overview) — The Open Group's enterprise-architecture modelling language: motivation, strategy, business, application and technology elements and their relationships.
 * [ArchiMate 101](https://archimate-community.pages.opengroup.org/workgroups/archimate-101/) — Community-written CC BY-SA introduction to ArchiMate: language, viewpoints, modelling practice, a sample viewpoint library and the Archi tool.
+* [draw.io ArchiMate 3.2 shape library](https://raw.githubusercontent.com/jgraph/drawio/dev/src/main/webapp/js/diagramly/sidebar/Sidebar-ArchiMate3.js) — draw.io's ArchiMate 3.2 palette source: the shape styles for every element and relationship; Apache 2.0.
 
 *See also:* DDD Reference — strategic design and bounded contexts (§1).
 

@@ -65,6 +65,7 @@ The two **cross-cutting aspects** at the end sit outside the layer model deliber
 * [OpenAPI Specification](https://spec.openapis.org/oas/latest.html)
 * [ArchiMate](https://www.opengroup.org/archimate-forum/archimate-overview)
 * [ArchiMate 101](https://archimate-community.pages.opengroup.org/workgroups/archimate-101/)
+* [draw.io ArchiMate 3.2 shape library](https://raw.githubusercontent.com/jgraph/drawio/dev/src/main/webapp/js/diagramly/sidebar/Sidebar-ArchiMate3.js)
 
 *See also:* DDD Reference — strategic design and bounded contexts (§1).
 
