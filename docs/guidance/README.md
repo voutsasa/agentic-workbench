@@ -52,3 +52,4 @@ So the bar has a fourth clause in practice: **a note that tells you what to do w
 | File | Kind | What it gives you |
 |---|---|---|
 | [`DEVELOPMENT-PLAN.md`](DEVELOPMENT-PLAN.md) | Corpus-derived | Phased curriculum on agentic AI coding, Skills, MCP and SDD, each phase ending in an artefact; ✓/➕ markers make it a prioritised ingestion backlog. |
+| [`Using ADT-SE100.md`](Using%20ADT-SE100.md) | Corpus-derived | Harness architecture and open-source implementation options for ASD-STE100 (Simplified Technical English); tool recommendations, core libraries, and reference documentation. |
