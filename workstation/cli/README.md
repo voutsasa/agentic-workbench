@@ -104,6 +104,7 @@ Each row is named by the **command you type**, which is often not the package na
 | `jq` | jq | [`jq/`](jq/) |
 | `confluence-sync-md` / `md2conf` / `cme` | confluence-sync-md | [`confluence-sync-md/`](confluence-sync-md/) |
 | `psql` | PostgreSQL client (psql) | [`psql/`](psql/) |
+| `markdownlint-cli2` | markdownlint-cli2 | [`markdownlint-cli2/`](markdownlint-cli2/) |
 | `pdftohtml` / `pdftotext` | Poppler | [`poppler/`](poppler/) |
 
 ## Do not cross ecosystems by name

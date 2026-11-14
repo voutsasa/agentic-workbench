@@ -305,6 +305,7 @@ Each tool has a folder at `workstation/cli/<tool>/` with install commands, a qui
 * [jq](https://jqlang.org/manual/)
 * [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md)
 * [psql](https://www.postgresql.org/docs/current/app-psql.html)
+* [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2)
 
 #### MCP servers
 

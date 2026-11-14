@@ -242,6 +242,7 @@ See [`workstation/cli/README.md`](workstation/cli/README.md) for the `command �
 * [jq](https://jqlang.org/manual/) — Lightweight command-line JSON processor used by Claude’s Databricks MCP token-header helper.
 * [confluence-sync-md](https://dev.azure.com/euemadev/EA/_git/confluence-sync-md) — Publishes Markdown to Confluence Cloud with md2conf and exports pages back with cme.
 * [psql](https://www.postgresql.org/docs/current/app-psql.html) — PostgreSQL's interactive terminal; runs SQL scripts against PostgreSQL and Databricks Lakebase, and is what `databricks psql` starts.
+* [markdownlint-cli2](https://github.com/DavidAnson/markdownlint-cli2) — Configuration-driven Markdown/CommonMark linter with autofix, built to pair with the markdownlint VS Code extension.
 
 #### MCP servers
 
