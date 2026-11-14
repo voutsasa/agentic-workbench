@@ -280,7 +280,7 @@ uv run --no-sync python -m unittest discover -s workstation/scripts/tests -t wor
 # ^ re-run after both: test_plugin_manifest.py and test_frontmatter_version.py now check the new version
 git commit -am "chore(release): $NEXT"
 git tag -a "$NEXT" -m "$NEXT"               # annotated, on the release commit
-git push --follow-tags origin main
+git push --follow-tags <remote> main        # a name from `git remote -v`; a clone may have no `origin`
 ```
 
 | Step | Why |
@@ -330,4 +330,4 @@ The tag keeps the SemVer form (`v0.2.0-rc.1`); Python packaging stores the norma
 | Editing `CHANGELOG.md` by hand | the next `git-cliff -o` overwrites it; fix the commit messages' effect in `cliff.toml` instead |
 | A commit on the default branch with a wrong message | rewording it would rewrite shared history; add a `commit_preprocessors` entry to `cliff.toml` that matches only that message |
 | Forgetting a file that repeats the version | add a test that compares it with the source of truth |
-| Assuming the remote is `origin` | this repository's is; use the configured name, or `@{upstream}`, if that ever changes |
+| Assuming the remote is `origin` | remote names are set per clone, and a clone may have no `origin`. Check `git remote -v`, then name the remote or use `@{upstream}` |
