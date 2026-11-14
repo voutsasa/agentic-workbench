@@ -1,6 +1,6 @@
 ---
 author: Achilleas Voutsas
-version: 0.6.0
+version: 0.6.1
 ---
 
 # Agentic-workbench

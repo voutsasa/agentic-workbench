@@ -4,7 +4,7 @@ command: sem
 product: Sem (Ataraxy Labs)
 verified: 2026-08-24
 author: Achilleas Voutsas
-version: 0.6.0
+version: 0.6.1
 ---
 
 # sem-cli — install
