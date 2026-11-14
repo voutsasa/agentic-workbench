@@ -2,7 +2,7 @@
 tool: mermaid-cli
 updated: 2026-08-05
 author: Achilleas Voutsas
-version: 0.5.1
+version: 0.6.0
 ---
 
 # mermaid-cli — quick start

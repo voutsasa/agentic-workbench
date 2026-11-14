@@ -2,7 +2,7 @@
 tool: typst
 updated: 2026-09-18
 author: Achilleas Voutsas
-version: 0.5.1
+version: 0.6.0
 ---
 
 # typst — quick start

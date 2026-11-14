@@ -4,7 +4,7 @@ command: markdownlint-cli2
 product: markdownlint-cli2
 verified: 2026-11-14
 author: Achilleas Voutsas
-version: 0.5.1
+version: 0.6.0
 ---
 
 # markdownlint-cli2 — install

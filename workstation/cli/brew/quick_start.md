@@ -2,7 +2,7 @@
 tool: brew
 updated: 2026-10-09
 author: Achilleas Voutsas
-version: 0.5.1
+version: 0.6.0
 ---
 
 # brew — quick start

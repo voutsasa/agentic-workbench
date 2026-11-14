@@ -2,7 +2,7 @@
 tool: confluence-sync-md
 updated: 2026-09-27
 author: Achilleas Voutsas
-version: 0.5.1
+version: 0.6.0
 ---
 
 # confluence-sync-md — quick start

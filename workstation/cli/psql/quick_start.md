@@ -2,7 +2,7 @@
 tool: psql
 updated: 2026-10-20
 author: Achilleas Voutsas
-version: 0.5.1
+version: 0.6.0
 ---
 
 # psql — quick start

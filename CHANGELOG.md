@@ -3,6 +3,16 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.6.0] - 2026-11-14
+
+### Added
+
+- **skills:** Add check-links, a deterministic Markdown link checker (44b7c54)
+
+### Fixed
+
+- **agent:** Name ste-lint.py as the plugin's linter, not a repo path (5455a33)
+
 ## [0.5.1] - 2026-11-14
 
 ### Fixed
