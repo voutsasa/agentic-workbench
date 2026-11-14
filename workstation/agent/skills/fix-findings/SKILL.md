@@ -11,7 +11,8 @@ Apply the findings from the most recent review by running **`review`'s Apply mod
 That section is the only definition of the procedure; this skill exists to start it
 without re-running the review first.
 
-**Read `~/.claude/skills/review/SKILL.md`, section *Apply mode*, and follow it.** No
+**Read the `review` skill's `SKILL.md`, section *Apply mode*, and follow it.** Find it at
+`~/.claude/skills/review/` (Claude Code) or `~/.copilot/skills/review/` (Copilot). No
 summary is given here on purpose — a copy is what an agent reads instead of the
 original, and it is the copy that goes stale.
 

@@ -21,15 +21,19 @@ Both scripts are stdlib-only. Every command below writes `<python>`: substitute 
 from the repository root when its `.venv` exists, and otherwise the bootstrap interpreter, `python3` on macOS and `python` on Windows. That fallback is
 recorded in [`workstation/scripts/README.md`](../../workstation/scripts/README.md).
 
-## Never, whatever the user answers
+## Hold these rules whatever the user answers
 
-- **Write a settings file** — `~/.claude/settings.json`, VS Code's `settings.json`,
-  `~/.copilot/settings.json`. Name the keys; the user merges them.
-- **Pass `--force`** to `link_config.py`, unless the user asks for it after seeing the `diff`.
-- **Install, upgrade or sign in to an assistant.** One not on `PATH` is reported absent, and the skill
-  stops there for that assistant.
-- **Install or upgrade a CLI tool or its dependencies.** Give the user the recorded commands only.
-- **Set up a report-only assistant.** No route is recorded for it. Say so.
+- **Do not write a settings file** — `~/.claude/settings.json`, VS Code's `settings.json`,
+  `~/.copilot/settings.json`. The assistants write these files too, so an overwrite drops their keys.
+  Name the keys instead. The user merges them.
+- **Do not pass `--force`** to `link_config.py`, unless the user asks for it after seeing the `diff`.
+  `--force` replaces a destination that holds content the repo lacks.
+- **Do not install, upgrade or sign in to an assistant.** These change the user's machine and
+  account. Report an assistant that is not on `PATH` as absent, and stop there for that assistant.
+- **Do not install or upgrade a CLI tool or its dependencies.** A version change during a task breaks
+  the work in progress. Give the user the recorded commands instead.
+- **Do not set up a report-only assistant.** No route is recorded for it. Tell the user that no route
+  exists.
 
 ## 1. Detect
 
@@ -67,6 +71,7 @@ One round, with only the questions that apply. Use a structured question tool wh
 | Should Claude Code use AWS Bedrock or your own subscription? | Claude Code selected | Bedrock · Own subscription. Quote detect's current provider in the question, so a switch reads as one. |
 | Should this workbench's instructions and skills be global? | always | Yes — link into `~/.claude` and `~/.copilot` · No — this repo only |
 | Set up documented MCP servers after agent setup? | always | Yes — invoke `setup-mcp-servers` after this skill completes · No — stop after agent setup |
+| If links need changing, should I apply them, or give you the commands to run? | always | Apply · Hand over. Say in the question that the user steps stay the user's either way. Step 4 uses this answer. |
 | Do you want to install missing optional toolchain products? | status reports optional items needing action | All missing items · selected items · none. Give the exact corrective actions from the status report; the user runs them. |
 
 "No" still leaves this repo working for both, through the project links in step 3.
@@ -93,7 +98,7 @@ documents — into `<repo>/.mcp.json`, the file Claude Code (project scope) and 
 | Status | The row says |
 |---|---|
 | `linked` | no change |
-| `missing` | create `dest` → `source`: a symlink on macOS; on Windows a junction for a directory, a hardlink for a file |
+| `missing` | create `dest` → `source`: a symlink on macOS; on Windows a junction for a directory, a generated copy for a file |
 | `detached` | replace what is at `dest` with a link; `detail` names what is there now |
 | `diverged`, `occupied` | **skipped** — `dest` holds content the repo lacks. Give `diff <dest> <source>` or `ls <dest>`; reconciling is the user's |
 | `no_source` | blocked until the machine note exists (step 1) |
@@ -124,14 +129,14 @@ provider matches the answer, VS Code's flag is `true` where it was asked for, an
 has no selected optional action —
 skip step 4.
 Say that nothing needs changing, quote the `N of N linked` line, and give the *Verify* checks below.
-Do not ask *apply or hand over*: both would run a no-op. Step 2's questions are still asked, because
-the answers decide what step 3 checks. If the user selected MCP setup, continue to step 5 instead of
+Step 2's *apply or hand over* answer is not used, because both would run a no-op. Step 2's questions
+are still asked, because the answers decide what step 3 checks. If the user selected MCP setup, continue to step 5 instead of
 ending the interaction.
 
 ## 4. Apply, or hand over
 
-Ask: *should I apply the link changes, or give you the commands to run?* Say in the question that the
-user steps stay theirs either way.
+Follow the *apply or hand over* answer from step 2. Do not ask again. The user steps stay the user's
+either way.
 
 **Apply**
 

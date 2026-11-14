@@ -11,8 +11,9 @@ Read the target, and review for
 - consistency
 - correctness
 - conciseness
-then output a structured markdown report. **Read-only by default**: do not run, edit, or fix
-anything under review — findings only. Two exceptions, both opt-in: **Apply mode**, when the user asks
+then output a structured markdown report. **Read-only by default**: do not edit, fix, or run
+anything that changes the material under review — findings only. Read-only commands that collect
+evidence are expected: reads, searches, `git` queries, and the repo's own check scripts. Two exceptions, both opt-in: **Apply mode**, when the user asks
 in the same breath for the fixes to be applied, and annotating a markdown document in place, which adds
 comments but never alters the text under review. Both are described below; neither is the default, and
 neither is something to offer unprompted.
@@ -102,7 +103,7 @@ other format, ask before editing.
   result. These files are often untracked, so there's no git safety net.
 - **If the markdown was converted from a PDF**, diff it against the PDF text before reporting, so
   conversion artifacts aren't reported as document defects. Comment on them; never silently fix them.
-- **One blockquote under the clause it concerns**: `**🔴 Opus Review [n]**`, a bolded one-line claim,
+- **One blockquote under the clause it concerns**: `**🔴 Review [n]**`, a bolded one-line claim,
   body in italics. Number them, cross-reference related ones (`see **[3]**`), and add a 🟢 key at the
   top plus a closing note carrying the score.
 - **Never inline `<span style=...>` for colour** — markdown has no colour, and a renderer that does not
@@ -133,9 +134,11 @@ above; applying does not replace it.
 6. **Run the project's full gate**: whatever the repo actually has — the full test suite, not just the
    new test, plus lint, type check, link check. Name each one and give its result. If a gate doesn't
    exist in this repo, say that rather than reporting a pass; a docs repo may have no test suite at all.
-7. **Commit each logical group separately**, message per repo convention. Run `git status` and
-   `git diff --staged` first: the staged set is that group and nothing else — no unrelated
-   pre-existing changes, no deletions or formatter churn nobody asked for.
+7. **Stage each logical group separately, and commit only when the request says "commit".** An
+   "apply" request alone does not approve a commit. Run `git status` and `git diff --staged` for each
+   group: the staged set is that group and nothing else — no unrelated pre-existing changes, no
+   deletions or formatter churn nobody asked for. When you commit, follow the repo's message
+   convention and make one commit for each group.
 8. **Record what was found but not fixed** — low confidence, not approved, a decision pending — in the
    repo's TODO file if it keeps one, in the same commit. Where it keeps none, the closing table is
    the record.

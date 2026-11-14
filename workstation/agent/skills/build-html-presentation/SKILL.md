@@ -31,7 +31,8 @@ It prints JSON: `folder_exists`, `stored_versions`, `latest_version` (null when 
   user names, `use <name> <latest>`, and re-run the check in step 6 on each.
 - **`latest_version` null:** say the check could not reach npm and continue with what is stored.
 
-Never fetch or switch versions without the user's yes: a stored release is a dependency change.
+Fetch or switch a version only after the user says yes, because a stored release is a dependency
+change.
 
 ```sh
 python3 <skill>/scripts/reveal.py fetch <version>

@@ -14,12 +14,13 @@ claims and settles each one with a command.
 
 ## The hard rule
 
-**Never state a fact about an installation command, a CLI flag, a file path, git
-state, or API behaviour without first executing a command that proves it. Record
-the command and its real output as evidence.**
+**Before you state a fact about an installation command, a CLI flag, a file path,
+git state, or API behaviour, run a command that proves it. Record the command and
+its real output as evidence.**
 
-This is not a style preference. It applies to every line of the report and every
-sentence you write to the user while running this skill.
+This rule applies to each claim in the report, and to each such claim in your
+messages while this skill runs. A first reading of a document is a hypothesis
+until a command confirms it.
 
 - If a command cannot be run — no network, no credentials, tool not installed —
   the verdict is `UNVERIFIABLE`. It is never `VERIFIED`, and never a guess.
@@ -90,12 +91,16 @@ LaTeX"), ordering and precedence claims, and anything asserting that one tool is
 required for another. Add them as extra rows with a verification method you can
 actually execute.
 
-### Phase 2 — Show the manifest and stop
+### Phase 2 — Show the manifest, and stop if it is large
 
 Present the manifest summary — totals by kind and by file, the claims you added
-by hand, and anything you judge unverifiable before trying. **Do not run a single
-verification command until the user approves the manifest.** They may want the
-scope cut, and verification is the expensive half. The one exemption is the
+by hand, and anything you judge unverifiable before trying.
+
+- **More than 50 claims:** stop. Run verification commands only after the user
+  approves the manifest. The user may want the scope cut, and verification is the
+  expensive half.
+- **50 claims or fewer:** continue to phase 3 in the same turn. The request to
+  verify already approves this scope. The one exemption is the
 deterministic pass above (`verify_claims.py`): it writes nothing and runs only
 local `--help`/`--version` probes — plus reads, under `--online` — so it has
 already run by now.

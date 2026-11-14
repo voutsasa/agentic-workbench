@@ -37,7 +37,7 @@ Say plainly where each number came from: "complexity 7 — the highest any funct
 nothing fails; `page_index` and `_subtree` sit exactly there, and one more branch in either turns
 the build red." The ratchet is a follow-up, not a compromise to hide.
 
-**Measure complexity with ruff, never radon.** They count differently — on the project this came
+**Measure gated complexity with ruff, not radon. Radon stays advisory.** They count differently — on the project this came
 from, radon scored a function 20 where ruff scored it 5. ruff is what gates, so ruff's number is the
 only one that can set the gate; radon's average is a trend line beside it.
 
@@ -53,7 +53,8 @@ Copy from `templates/`, adjusting the thresholds to the approved numbers:
 | `docs` generators, if the project has a CLI or a public API | `templates/cli_reference.py` |
 | link gate, if the project is mostly prose | `templates/check_links.py` |
 
-Dependencies: `uv add --dev ruff pyright pytest pytest-cov` — and `pdoc` too if docs are generated,
+Dependencies: hand the user `uv add --dev ruff pyright pytest pytest-cov` to run, and wait. The user
+installs dependencies. Add `pdoc` to that line if docs are generated,
 because it imports the code it documents and so cannot run under `uvx`. Leave `pip-audit` and
 `radon` on `uvx`, so they never enter the lock file.
 
@@ -74,7 +75,7 @@ user rather than silencing it. When a rule must be suppressed, the `noqa` carrie
 return subprocess.run(command, check=False).returncode  # noqa: S603
 ```
 
-**Never report a gate as passing without running it.** Quote the output.
+**Run each gate and quote its output before you report it as passing.** Report a red gate as red.
 
 ## The tools, and what each replaces
 
@@ -88,11 +89,11 @@ return subprocess.run(command, check=False).returncode  # noqa: S603
 
 ## References
 
-Three files, none of them loaded unless you need them:
+Three files. Read `traps.md` before phase 1. Read the other two only when the row says so:
 
 | File | Read it when |
 |---|---|
-| `references/traps.md` | **Before phase 1, always.** Five failure modes that report success while being wrong; two silently weaken the gates you just installed. |
+| `references/traps.md` | Before phase 1. It lists five failure modes that report success while being wrong; two silently weaken the gates you just installed. |
 | `references/decisions.md` | Why each tool, where the thresholds came from, what stays out of the lock file, and how documentation and contract tests are gated. |
 | `references/design-rules.md` | The work is structural rather than mechanical — five rules about abstractions, layer boundaries and explicit inputs. |
 

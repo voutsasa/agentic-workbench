@@ -174,7 +174,7 @@ points at them rather than repeating them:
 | Platform | Route | Guide |
 |---|---|---|
 | macOS | symlinks | [`setup/macos.md`](setup/macos.md) |
-| Windows | junctions (directories) + hardlinks (files) — symlinks need admin or Developer Mode | [`setup/windows.md`](setup/windows.md) |
+| Windows | junctions (directories) + generated copies (files) — symlinks need admin or Developer Mode | [`setup/windows.md`](setup/windows.md) |
 | Linux | not written — no machine yet | — |
 
 **Read the *Before you start* section of whichever applies.** Neither route touches
@@ -205,8 +205,8 @@ Pass `--agent copilot` to check or apply Copilot's global skills and
 `~/.copilot/copilot-instructions.md`. Pass both agents to maintain both homes in one run.
 
 **On Windows this is routine, not exceptional.** `CLAUDE.md`, `machine.md`, and Copilot's
-`copilot-instructions.md` are hardlinks there, and a hardlink is severed both by `git checkout` and by
-any atomic-saving editor — Zed, VS Code, and Claude Code's own `Edit` tool included. So **re-run
+`copilot-instructions.md` are generated copies there, and a copy does not update when its source
+changes. So **re-run
 `--apply` for each configured agent after editing a linked file, and after any merge, branch switch or
 pull that touches one.** Which side you edited makes no difference. The skill junctions are immune, as
 is every symlink on macOS. Details in

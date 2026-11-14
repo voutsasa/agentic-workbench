@@ -11,13 +11,18 @@ This skill sets up the documented workstation MCP routes: `drawio-mcp`, `ado-rem
 Databricks managed MCP services. It reads the workbench root from `~/.agentic-workbench/machine.md`
 and never assumes the current repository is the workbench.
 
-## Never
+## Rules that hold on every route
 
-- Ask for, display, store, or place a PAT, OAuth client secret, access token, or credential in a
-  command.
-- Run `mcp add`, `mcp remove`, `link_config.py --apply`, an installation, or a sign-in command.
-- Write a client configuration, `.mcp.json`, settings file, or machine note.
-- Use `ug configure` or `ug claude`; those can redirect model traffic.
+- Do not ask for, display, store, or put in a command a PAT, OAuth client secret, access token, or
+  other credential. A credential in the transcript or in shell history leaks. Tell the user where the
+  client reads the credential, and let the user enter it there.
+- Do not run `mcp add`, `mcp remove`, `link_config.py --apply`, an installation, or a sign-in command.
+  These change the user's machine or account. Give the user the exact command to run.
+- Do not write a client configuration, `.mcp.json`, settings file, or machine note. The user merges
+  these files. Name the keys and values to add.
+- Do not use `ug configure` or `ug claude` from Unity Gateway
+  ([`workstation/cli/unity-gateway/`](../../../cli/unity-gateway/install.md)). These commands can send
+  model traffic to a different endpoint. Use only the `ug` commands that the route's `setup.md` names.
 
 The user runs every registration and authentication command. This skill only discovers state and
 hands over commands from the recorded setup routes.

@@ -11,7 +11,7 @@ on top of the per-platform link route.
 | 4 | GitHub Copilot | Windows | GitHub | [Copilot on Windows](#4-copilot-on-windows) |
 
 **This file carries only what differs by agent and provider.** The mechanics of putting the links in
-place — symlinks on macOS, junctions plus hardlinks on Windows — stay in [`macos.md`](macos.md) and
+place — symlinks on macOS, junctions plus generated copies on Windows — stay in [`macos.md`](macos.md) and
 [`windows.md`](windows.md), which each route points at rather than repeating. A command written twice
 is a command that drifts.
 
@@ -108,9 +108,8 @@ the half that can fail for reasons outside this repo.
 1. **Record the machine**, as route 1 step 1, into `workstation/machines/windows-<id>.md`.
 
 2. **Link the config** — follow [`windows.md`](windows.md). Read its *Stop: read this before running
-   anything* section first. Directories become junctions and files become hardlinks, both of which
-   work unelevated; the clone must sit on the **same volume as `$HOME`**, because a hardlink cannot
-   cross volumes.
+   anything* section first. Directories become junctions and files become generated copies. Both
+   work unelevated, and neither needs the clone on the same volume as `$HOME`.
 
 3. **Configure Bedrock.** (**user**) Run `claude`, choose **3rd-party platform → Amazon Bedrock**, and
    follow the wizard. In an existing session the command is `/setup-bedrock`; type it in full, since
@@ -152,9 +151,9 @@ uv run --no-sync python workstation/scripts/settings_delta.py --env
 
 ### Windows traps
 
-- **Hardlinks are severed silently by any atomic-saving editor.** `CLAUDE.md` and `machine.md` are
-  hardlinks, not junctions. [`windows.md`](windows.md) carries the detection command; run it after
-  editing either file outside the repo.
+- **The generated copies go stale.** `CLAUDE.md` and `machine.md` are generated copies, not
+  junctions. Run `link_config.py --apply` again after you edit the repo source, merge or switch
+  branch. [`windows.md`](windows.md) § *Windows traps* has the details.
 - **`/logout` is unavailable on Bedrock** — authentication is AWS's, not Claude's.
 - **The WebSearch tool is not available on Bedrock.**
 - **Line endings.** `core.autocrlf=true` would break the `pre-push` hook with *bad interpreter*;
@@ -297,7 +296,7 @@ The routes above mix observed fact with vendor documentation. Which is which:
 | Skills paths `.github/skills/`, `.agents/skills/`, `.claude/skills/` | **observed** — literal table in the VS Code 1.137.0 build |
 | `~/.copilot/` layout, `COPILOT_HOME`, token precedence, `powershellFlags` | **observed** — `copilot help config`, `copilot help environment` on macOS |
 | `gh copilot` is a launcher | **observed** — `gh copilot --help` |
-| Windows link route, junctions and hardlinks | documented in [`windows.md`](windows.md), last measured on the Windows machine — see [`../../machines/README.md`](../../machines/README.md) |
+| Windows link route, junctions and generated copies | documented in [`windows.md`](windows.md), last measured on the Windows machine — see [`../../machines/README.md`](../../machines/README.md) |
 | Bedrock steps, IAM actions, model pinning, region order | **vendor documentation**, not executed in this repo |
 | Copilot CLI paths **on Windows** | **not measured** — the CLI states `$HOME/.copilot` and was verified on macOS only |
 | The standalone CLI reads `~/.copilot/skills/` outside a plugin | **observed** on the macOS workstation, Copilot CLI 1.0.63, 2026-09-13 — `/skills` in a session listed the skills `link_config.py --agent copilot` had linked there; see [`../../machines/macos-workstation.md`](../../machines/macos-workstation.md#copilot-cli) |
