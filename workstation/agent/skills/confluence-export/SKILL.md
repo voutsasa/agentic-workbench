@@ -11,6 +11,8 @@ version: 0.4.2
 **cache** of what Confluence already holds, not source — `confluence-content/spaces/*/export/` is
 gitignored, so nothing in it is backed up by this repository.
 
+Paths such as `confluence-content/` and `README.md` are relative to the content repository you publish from, not to agentic-workbench.
+
 **Which `confluence-sync-md` runs.** Every command below is `uv run --no-sync -- confluence-sync-md`: in a
 repository that pins the tool (`uv add`), that is the pinned copy in its `.venv`; anywhere else it is
 the global install from `workstation/cli/confluence-sync-md/install.md`. `--no-sync` keeps it from
@@ -111,17 +113,6 @@ Short version: substitute `<path-to-that-install>\python.exe -m confluence_sync_
 | Topic | Where |
 |---|---|
 | Verbs, layout, credentials, the lock file | `confluence-content/README.md` |
-| What `cme` handles, and why not the REST API's own Markdown | `README.md` |
+| What `cme` handles, and why not the REST API's own Markdown | the content repository's `README.md` |
 
-### Kept in sync by hand
-
-A skill has to be readable on its own, so some rules are stated here *and* elsewhere, with nothing
-checking that the copies agree. When one changes, change all of them:
-
-| Rule | Canonical | Also stated in |
-|---|---|---|
-| What the content root is | the tool's `--help` | this file; `../confluence-publish/SKILL.md`; `.env.example` |
-| The `python -m` fallback for a quarantined exe | the `confluence-sync-md` tool repo's `docs/user_guide.md#windows-a-quarantined-console-script-exe` | this file; `../confluence-publish/SKILL.md` |
-| `CME_CONFIG_PATH` must be absolute, and set before the first `cme` | `confluence-content/README.md#credentials` | this file; `.env.example` |
-| A template change invalidates the lock file | `confluence-content/README.md#changing-a-path-template-invalidates-the-lock-file` | this file |
-| Breadcrumb links point outside a subtree export | `confluence-content/README.md#what-an-export-produces` | this file |
+Maintainers: see [references/maintenance.md](references/maintenance.md) for the rules that exist in several places.

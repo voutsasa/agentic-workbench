@@ -36,9 +36,7 @@ sentence from the page>"` — and if it is, this route works whatever built the 
 ### The JS-hydrated route
 
 Confirm the route is needed first with the same `curl | grep -c` test as above — most doc sites
-server-render, and agentskills.io, once the example here, now does too (2026-09-18). The register's
-one hydrated page is `retirejs.github.io/retire.js/`: 206 words in the raw HTML, **15,121 rendered**,
-because its vulnerability list is built client-side. Then:
+server-render (evidence: [references/evidence.md](references/evidence.md)). Then:
 
 ```sh
 "$(uv tool dir)/playwright/bin/python" \
@@ -58,13 +56,10 @@ measured on agentskills.io on 2026-09-18:
 
 **A raw `<table>` in defuddle's output is the §2 table case**, and the remedy below applies to the
 rendered HTML: feed `<tmp>/rendered.html` to `extract_article.py` with the article's selector and
-convert with `pandoc -t markdown`. On retire.js (`section#main_content`, 2026-09-20) defuddle alone
-gave 15,137 words with one raw `<table>`; the extractor plus pandoc gave 37,297 words, markup 0,
-every advisory link intact.
+convert with `pandoc -t markdown` (evidence: [references/evidence.md](references/evidence.md)).
 
 **A 404 in a JS app looks exactly like a hydrated page** to the `curl | grep -c` test — both have no
-text in the raw HTML. Check the rendered `<title>` before trusting the conversion: *"Page Not Found"*
-is what two candidate URLs turned out to be on 2026-09-20.
+text in the raw HTML. Check the rendered `<title>` before trusting the conversion (evidence: [references/evidence.md](references/evidence.md)).
 
 ### The legacy `.doc` / `.ppt` route
 
@@ -91,10 +86,7 @@ curl -sLI -H "Accept: text/markdown" <url> | grep -i "^content-type: text/markdo
 ```
 
 **Run both probes.** Publishers expose the source two ways: Mintlify and GitHub Docs at `<url>.md`;
-Microsoft Learn only by content negotiation on the page's own URL — its `<url>.md` is a 404, and its
-HTML wraps the article in sign-in notices, "Ask Learn" and "Add to Plans" chrome that no single
-selector excludes (measured on `learn.microsoft.com/en-us/fabric/iq/connectors/fabric-iq-mcp`,
-2026-10-06).
+Microsoft Learn only by content negotiation on the page's own URL (evidence: [references/evidence.md](references/evidence.md)).
 
 A hit means the platform serves the page's own markdown source, which is the text itself rather than
 a conversion of it — no selector to choose, no pandoc writer to lose a table to, no model anywhere.
@@ -114,11 +106,7 @@ leaves the sibling links `modelcontextprotocol.io` writes between its own docs p
 nothing — the script's docstring spells the four forms out. `add_frontmatter.py` still needs the
 rendered HTML, so fetch that too.
 
-**What the cleaner removes** — measured on `code.claude.com` and `docs.github.com`, 2026-09-26:
-Mintlify's component tags (`<Note>`, `<Tabs>`, `<Tab title="…">`, `<Steps>`, `<Frame>`), GitHub Docs'
-per-IDE `<div class="ghd-tool …">` wrappers, anchor-only `<a id="…" />`, raw `<ul><li>` inside table
-cells, and site-relative link targets. **Fenced code blocks pass through untouched** — a `<Note>` in
-an example is that example's content.
+**The cleaner removes** publisher component tags, per-IDE wrappers, anchor-only tags, raw lists inside table cells and site-relative link targets. **Fenced code blocks pass through untouched** (evidence: [references/evidence.md](references/evidence.md)).
 
 Two things it cannot fix, both properties of the source rather than the conversion: a code sample the
 site itself stores without line breaks comes out on one line whichever route you take, and a relative
@@ -144,14 +132,10 @@ pandoc's gfm writer cannot map cleanly — `div`, `header`, `span`, `section`, i
 Antora's breadcrumbs and pagination, an "On this page" aside. The source's own text passes through
 untouched.
 
-Two more passes, both measured on docs.databricks.com (2026-09-27):
+Two more passes (evidence: [references/evidence.md](references/evidence.md)):
 
-- **It writes back end tags the source left out.** Minified pages omit the optional `</td>`, `</tr>`,
-  `</li>` and `</p>`. That is valid HTML5, but pandoc's HTML reader then flattens every table cell into
-  its own paragraph, and no markup check can see it. The extractor closes each element where HTML5
-  implies it, so the curl route keeps the table without a Playwright render.
-- **It keeps only `href` and `title` on a link.** pandoc's gfm writer emits a link carrying `target`,
-  `rel` or `id` as raw `<a …>` (23 on the Databricks CLI page).
+- **It writes back end tags the source left out.** Minified pages omit optional end tags, and pandoc then flattens every table cell into its own paragraph. The extractor closes each element where HTML5 implies it.
+- **It keeps only `href` and `title` on a link.** pandoc's gfm writer emits a link carrying `target`, `rel` or `id` as raw `<a …>`.
 
 `add_frontmatter.py` then prepends the corpus frontmatter block — `title`, `site`, `source`, `domain`,
 `language`, `description`, `word_count` — that defuddle writes itself with `--frontmatter` on the
@@ -169,11 +153,7 @@ grep -oE "<(main|article|div|section)[^>]{0,120}" <tmp>/page.html \
   | grep -iE "class=|id=" | sort | uniq -c | sort -rn | head -20
 ```
 
-A generator's own class name is a shortcut when the page has one — Docusaurus puts
-`theme-doc-markdown` and `docMainContainer_` in the raw HTML (playwright.dev, dbml.dbdiagram.io,
-d2lang.com, drawio.com). Where it does not, the grep above is the answer: plantuml.com's article sits
-in `<main id="D7">` → `main#D7`; rdi.berkeley.edu's Jekyll syllabus in `<section class="main-content">`
-→ `section.main-content`.
+A generator's own class name is a shortcut when the page has one, for example Docusaurus's `theme-doc-markdown`. Where it does not, the grep above is the answer (evidence: [references/evidence.md](references/evidence.md)).
 
 **Pick the narrowest node that still holds everything you want.** Too wide drags in nav and footer,
 which §2's noise check catches; too narrow silently drops content, which it does not — so confirm the
@@ -181,11 +161,7 @@ last section of the page survived.
 
 ### Do not use WebFetch for this
 
-Verified 2026-09-04: WebFetch paraphrases the source through its own small model **even under an
-explicit "verbatim, do not summarize" instruction** — the real text *"is an end-to-end test
-framework"* came back as *"serves as an end-to-end testing framework"*. That fails §2 outright, and
-its own description says it processes content through "a small, fast model", so this is a property of
-the tool and not of any one site. The extractor route puts no model in the loop at all.
+WebFetch paraphrases the source through its own small model **even under an explicit "verbatim" instruction**. That fails §2 outright. The extractor route puts no model in the loop at all (evidence: [references/evidence.md](references/evidence.md)).
 
 ## 2. Quality-check before calling it converted
 
@@ -197,23 +173,14 @@ A conversion that exits 0 is not evidence. Run these:
 | Tables are still tables, not run-on text — the usual docling/pandoc failure on complex layouts | read one |
 | No leftover markup noise: nav bars, cookie banners, JSX source, "Edit this page" | `grep -c "<div\|<header\|<span\|<svg\|<style\|<table\|<img\|<a " <dest>.md` → **must be 0** |
 | Every link resolves off-site | `grep -oE "\]\(\.{0,2}/?[^):]+\)" <dest>.md \| grep -v "^](#"` → **must be empty**; a relative target means the URL argument was omitted. In-page `#` anchors are fine |
-| PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries. Runs of tabs and spaces between words, and a table of contents rendered as a dot-leader table, are **accepted** (2026-09-18, DDD Reference): they come from the PDF's own text layer, change no meaning, and are not normalised |
+| PDF-to-text: page breaks did not split sentences or merge columns | spot-check two page boundaries. Runs of tabs and spaces between words, and a dot-leader table of contents, are **accepted** and not normalised (evidence: [references/evidence.md](references/evidence.md)) |
 | **A `.docx` with diagrams: count the figures** | `grep -c "data:image/[a-z]*;base64" <dest>.md` against the source's *picture* count, `unzip -p <file>.docx word/document.xml \| grep -c "<pic:pic"`. Charts and shapes are counted differently — see below |
 
 **Any hit from the markup grep is a tag pandoc's gfm writer could not map and fell back to raw HTML
 for** — the same failure mode as the base64-icon and hash-link cases `extract_article.py` exists to
 strip.
 
-**The `.docx` figure rule, measured on docling 2.131.0 on Windows, 2026-10-06.** Both fixture
-documents below were converted with `soffice` on `PATH` and without it. **Only a
-shape needs LibreOffice**: pictures and charts came out byte-identical both ways, and a shape's text
-survives either way, but the shape itself becomes an image only when `soffice` resolves. Without it,
-docling prints one `WARNING … Found DrawingML elements in document, but no DOCX to PDF converters` and
-exits 0. On macOS (docling 2.134.0, 2026-10-06) both ways gave byte-identical output, the shape image
-included, and no `WARNING`: docling falls back to a hard-coded
-`/Applications/LibreOffice.app/Contents/MacOS/soffice` when `PATH` has none
-(`get_libreoffice_cmd` in `docling/backend/docx/drawingml/utils.py`), so removing `soffice` from
-`PATH` there changes nothing. What each kind of figure becomes:
+**The `.docx` figure rule: only a shape needs LibreOffice.** A shape becomes an image only when `soffice` resolves. Without it, docling prints one `WARNING` and exits 0 (evidence: [references/evidence.md](references/evidence.md)). What each kind of figure becomes:
 
 | In the source | In the markdown |
 |---|---|
@@ -225,11 +192,7 @@ So the figure count check compares base64 images against the source's *picture* 
 `<w:drawing>`: `unzip -p <file>.docx word/document.xml | grep -o "<pic:pic" | wc -l`. Count the other
 two kinds separately — `grep -o "<c:chart" | wc -l` against the tables and the placeholder comments,
 and `grep -o "<wps:wsp" | wc -l` against the loose paragraphs. **`grep -c` is wrong here** and
-silently answers 1: `word/document.xml` is a single line, so it counts lines, not tags. Evidence: `chartex.docx` (Apache POI test data,
-8 drawings = 6 charts + 2 pictures) gave 2 images, 4 placeholders and the chart data as tables;
-`shapes-with-text.docx` (11 shapes, no pictures) gave every shape's text, plus 1 image only with
-`soffice` on `PATH`. The first of three runs with it gave a placeholder comment instead; the next two
-gave the image. A two-picture document gave 2 of 2. **When the source has shapes, put LibreOffice's
+silently answers 1: `word/document.xml` is a single line, so it counts lines, not tags (evidence: [references/evidence.md](references/evidence.md)). **When the source has shapes, put LibreOffice's
 `program` directory on `PATH` for that one conversion** — each figure is a separate headless
 round-trip, roughly 100× the conversion time — and do not set `DOCLING_LIBREOFFICE_CMD`, which docling
 names in the warning but never reads.
@@ -243,9 +206,7 @@ the problem. Convert to pandoc's own markdown, which has multiline tables:
 pandoc -f html -t markdown -o "<dest>.md" <tmp>/article.html
 ```
 
-Measured on rdi.berkeley.edu/llm-agents/f24, a Jekyll syllabus: `-t gfm` gave 377 lines with one raw
-`<table>` block; `-t markdown` gave 221 lines, `<table` count 0, all 21 arxiv links and all 13 lecture
-rows intact. The cost is that a multiline table is not GFM — it reads as aligned plain text in a viewer
+`-t markdown` removes the raw `<table>` block (evidence: [references/evidence.md](references/evidence.md)). The cost is that a multiline table is not GFM — it reads as aligned plain text in a viewer
 that renders only GFM, rather than as a table.
 
 Any other failure gets re-run through the JS-hydrated path — render with Playwright, extract

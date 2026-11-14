@@ -10,6 +10,8 @@ version: 0.4.2
 One direction only: Markdown here becomes a page there. `confluence-content/spaces/*/publish/` is
 the source and Confluence is a copy of it.
 
+Paths such as `confluence-content/` and `README.md` are relative to the content repository you publish from, not to agentic-workbench.
+
 **Which `confluence-sync-md` runs.** Every command below is `uv run --no-sync -- confluence-sync-md`: in a
 repository that pins the tool (`uv add`), that is the pinned copy in its `.venv`; anywhere else it is
 the global install from `workstation/cli/confluence-sync-md/install.md`. `--no-sync` keeps it from
@@ -75,17 +77,17 @@ call, not a side effect of a publish.
 This decides the page tree, and it is decided by **filenames**, not by flags.
 
 A directory becomes a *page with children* when it contains one of these. **md2conf checks them in
-this order and takes the first it finds** (`processor.py:305-310`) — which is not the order to
+this order and takes the first it finds** (in `processor.py`) — which is not the order to
 recommend authoring them in:
 
 | Checked | File in the directory | |
 |---|---|---|
 | 1st | `index.md` | works |
-| 2nd | `README.md` | works — **and silently outranks the next row** |
+| 2nd | `README.md` in that source directory | works — **and silently outranks the next row** |
 | 3rd | `<dirname>.md` — e.g. `solution-architecture/solution-architecture.md` | **recommend authoring this** |
 
 **Recommend `<dirname>.md`**: it keeps a real, authored document as the section page, and reads as
-content rather than scaffolding. But check for a `README.md` first — adding a `<dirname>.md` beside
+content rather than scaffolding. But check the source directory for a `README.md` first — adding a `<dirname>.md` beside
 one has no effect, and the README becomes the section page instead. `confluence-sync-md publish
 layout <source>` prints which document actually wins, and under which title, before anything is sent.
 
@@ -152,8 +154,7 @@ to route around it: that is how one of them silently overwrites the other.
 
 **`must be deleted in Confluence first` failed.** Those pages already exist and carry attachments,
 so a republish 401s mid-run and leaves them stale. `check` prints the page URLs. Give them to the
-user and ask them to delete the pages — [the rule](#rules-that-must-not-be-inferred) is that
-deleting is a human action here. Never attempt the delete.
+user and follow the republishing rule in [Rules that must not be inferred](#rules-that-must-not-be-inferred).
 
 A page reported under `will be overwritten` is **not** a failure — it has no attachments and
 republishes cleanly. It is still an overwrite, so say so before publishing rather than after: the
@@ -201,42 +202,8 @@ key reports `(not installed)` when the install shipped without the templates.
 They sit outside a space, so `publish convert` refuses them by design. Verify an edit with md2conf
 directly against the path above.
 
-Eleven native macros are reachable: `toc`, `children`, `code`, `status`, `info`, `tip`, `note`,
-`warning`, `panel`, `expand` and `anchor`. Three points are worth carrying without opening a template:
-
-- **The admonition keyword is not the panel name, and neither is the macro name.** Three registers,
-  all different words, so say which one you mean. This is the whole mapping
-  (`converter.py:1045-1062`) — seventeen keywords onto four macros:
-
-  | `!!!` keyword | Macro Confluence **stores** | Panel Confluence **displays** |
-  |---|---|---|
-  | `info`, `note`, `abstract`, `example`, `question`, `quote` | `info` | Info — blue "i" |
-  | `success`, `tip`, `hint` | `tip` | Success — green check |
-  | `warning`, `attention`, `important` | `note` | Warning — orange "!" |
-  | `error`, `danger`, `bug`, `caution`, `failure` | `warning` | Error — red "x" |
-
-  So `!!! tip` and `!!! success` are the same macro, and `!!! note` produces an **Info** panel
-  rather than a warning of any kind. **A keyword outside this table is not a surprise panel — it is
-  a hard failure**: `DocumentError: unsupported admonition type: <word>`, which aborts the whole
-  conversion. Confluence's own **Note** panel is unreachable by any keyword: it needs an
-  `ac:adf-extension` tree md2conf does not generate.
-
-  `--use-panel` (below) accepts the same seventeen plus `disclaimer` and `flag`, so those two
-  convert only with that flag and fail without it.
-- **Every page gets an `info` banner you did not write.** md2conf prepends an `info` macro reading
-  "This page has been generated with a tool." above the `<h1>` of every page, by default. It is the
-  reason a converted document always emits one more `info` than its Markdown accounts for.
-  `--no-generated-by` removes it and `--generated-by MARKDOWN` replaces the wording; both are
-  pass-through. Mention it before a first publish — an author who did not expect it reads it as a
-  defect.
-- **Four flags change what is emitted**, and all are pass-through, so they go after `--`:
-  `--use-panel` swaps the four admonition macros for `panel`; `--no-render-latex` emits maths
-  macros instead of rasterising formulas to attached images; `--heading-anchors` adds an `anchor`
-  to every heading; `--no-generated-by` drops the banner above. Say which one you passed when
-  reporting a publish.
-- **Anything unmodelled goes through a `csf` fenced block**, which passes Confluence storage format
-  through untouched — the route for `pagetree`, `view-file` and third-party app macros. Nothing
-  validates it, so a malformed macro fails on the page rather than during conversion.
+The converter reaches eleven native macros. An `!!!` keyword outside the mapping aborts the whole conversion with `unsupported admonition type`.
+Read [references/macro-mapping.md](references/macro-mapping.md) before you use an admonition, a pass-through flag or a `csf` block.
 
 ## Images and attachments change how a page republishes
 
@@ -281,10 +248,7 @@ this *before* adding an image to a document that will be republished, not after 
   attachment. Deleting is a human action here: **never attempt the delete, and never propose adding
   a delete scope to the token.** The procedure is in
   `confluence-content/README.md#republishing-a-page-delete-it-first`.
-- **Pages are matched by title, and the title is the front-matter `title:` when there is one** —
-  the `# Heading` only otherwise. With no stored page ID, changing that string creates a new page
-  and leaves the old one behind, while changing the *other* one does nothing at all. Never report a
-  page's title from its heading; run `publish layout` and read what it prints.
+- **Pages are matched by title.** The rule is in [Where the page title comes from](#where-the-page-title-comes-from). Never report a page's title from its heading.
 
 ## After publishing
 
@@ -320,22 +284,9 @@ Exit codes are part of the contract: `0` succeeded or every check passed, `1` re
 
 | Topic | Where |
 |---|---|
-| Tools, install, authentication, md2conf flags | `README.md` |
+| Tools, install, authentication, md2conf flags | the content repository's `README.md` |
 | Layout, the space rule, republishing, credentials | `confluence-content/README.md` |
 | Renderer install and the version-shadowing traps | the tool's `docs/renderers.md` |
 | Every native macro, and a publish smoke test | the tool's `templates/`, located by `capabilities --json` |
 
-### Kept in sync by hand
-
-A skill has to be readable on its own, so several rules are stated here *and* elsewhere. Nothing
-checks that the copies agree — when one changes, change all of them. Canonical location first:
-
-| Rule | Canonical | Also stated in |
-|---|---|---|
-| `index.md` / `README.md` / `<dirname>.md` precedence | `confluence-content/README.md#how-the-documents-must-be-organised` | this file; the tool's `capabilities` output |
-| Where the page title comes from | `confluence-content/README.md#where-the-page-title-comes-from` | this file; `confluence-macro-md-examples/README.md` |
-| Admonition keyword → macro → panel | **this file** | `confluence-macro-md-examples/README.md` (stored names only) — and `make check` prints the macros that directory really emits |
-| Delete before republishing | `confluence-content/README.md#republishing-a-page-delete-it-first` | this file; `README.md` |
-| What the content root is | the tool's `--help` | this file; `../confluence-export/SKILL.md`; `.env.example` |
-| The token is scoped, and the gateway URL | `confluence-content/README.md#the-token-is-a-scoped-token-and-its-prefix-does-not-say-so` | `README.md`; `.env.example` |
-| The `python -m` fallback for a quarantined exe | the `confluence-sync-md` tool repo's `docs/user_guide.md#windows-a-quarantined-console-script-exe` | this file; `../confluence-export/SKILL.md` |
+Maintainers: see [references/maintenance.md](references/maintenance.md) for the rules that exist in several places.
