@@ -288,12 +288,15 @@ agent-facing English into ASD-STE100 Simplified Technical English. Background an
 # Claude Code — the repo is its own marketplace
 claude plugin marketplace add danyuchn/asd-ste100-skill
 claude plugin install asd-ste100@asd-ste100-skill
-claude plugin details asd-ste100          # confirm: skill asd-ste100, enabled
+claude plugin details asd-ste100          # confirm: Source asd-ste100@asd-ste100-skill, Skills (1) asd-ste100
 
 # Copilot CLI — install straight from the repo
 copilot plugin install danyuchn/asd-ste100-skill
-copilot plugin list                       # confirm: asd-ste100, enabled
+copilot plugin list                       # confirm: asd-ste100 under "Installed plugins"
 ```
+
+Verified on macOS on 2026-11-14: both commands gave the output above after a fresh install, and
+Claude Code projects the skill's always-on cost at ~182 tokens per session.
 
 The plugin's bundled Python linter imports only the standard library, so it needs no dependency.
 
