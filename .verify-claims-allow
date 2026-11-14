@@ -36,6 +36,9 @@ workstation/mcp/*/reference.md
 # Named narrowly: this repo now owns .agents/rules/workbench.md (Antigravity's
 # route to AGENTS.md), and `.agents/**` would exempt that from checking too.
 .agents/skills/**
+# Homebrew's Linux/WSL prefix, named in cli/brew/install.md as the path to use
+# there. Neither machine note is Linux, so it is meant not to exist here.
+/home/linuxbrew/.linuxbrew
 
 # The pre-push hook is installed per clone and is never tracked, so it cannot
 # exist on a fresh checkout of any machine. Both references to it are true as

@@ -24,7 +24,7 @@ cat note.md | markdownlint-cli2 --format > fixed.md    # stdin → fixed stdout
 |---|---|
 | `glob ...` | globby patterns; `#` or `!` prefix negates; `:` prefix is a literal path; `-` is stdin |
 | `--config <file>` | base config from a non-default path |
-| `--configPointer <ptr>` | JSON Pointer into `--config`, e.g. `/tool/markdownlint` in `pyproject.toml` |
+| `--configPointer <ptr>` | JSON Pointer into `--config`, to nest config inside `package.json` or `pyproject.toml` |
 | `--fix` | rewrite files to resolve fixable issues |
 | `--format` | stdin → fixed stdout; ignores globs; never exits `1` |
 | `--no-globs` | ignore the config file's `globs` property |
