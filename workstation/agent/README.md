@@ -272,6 +272,34 @@ Hooks, MCP servers and `settings.json` are deliberately **not** part of this plu
 the hand-merge/link route above, since folding them in would touch the provider-bound `env` block
 area this file already treats as sensitive.
 
+## Third-party skills
+
+Installed as plugins from their own repositories — never vendored into `skills/` or the `SKILLS`
+tuple. Each is registered in [`SOURCES.md`](../../SOURCES.md) under *Agent working practice*. The user
+runs these commands; an entry here records the route, not a live install.
+
+### ASD-STE100 skill
+
+[`danyuchn/asd-ste100-skill`](https://github.com/danyuchn/asd-ste100-skill) (MIT) rewrites
+agent-facing English into ASD-STE100 Simplified Technical English. Background and alternatives:
+[`docs/guidance/Using ADT-SE100.md`](../../docs/guidance/Using%20ADT-SE100.md).
+
+```sh
+# Claude Code — the repo is its own marketplace
+claude plugin marketplace add danyuchn/asd-ste100-skill
+claude plugin install asd-ste100@asd-ste100-skill
+claude plugin details asd-ste100          # confirm: skill asd-ste100, enabled
+
+# Copilot CLI — install straight from the repo
+copilot plugin install danyuchn/asd-ste100-skill
+copilot plugin list                       # confirm: asd-ste100, enabled
+```
+
+The plugin's bundled Python linter imports only the standard library, so it needs no dependency.
+
+The README's other two routes are not used here. `npx skills add` sends install telemetry. A
+`git clone` into `~/.claude/skills/` serves Claude Code only, and updates only on a manual `git pull`.
+
 ## Deliberately not tracked
 
 - `.env` in this directory — holds `ANTHROPIC_API_KEY`. Excluded by the repo's

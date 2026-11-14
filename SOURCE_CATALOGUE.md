@@ -207,6 +207,8 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [Langfuse Claude Code Observability Plugin](https://github.com/langfuse/Claude-Observability-Plugin) — Claude Code marketplace plugin that traces session telemetry into Langfuse via a hook.
 * [Langfuse GitHub Copilot integration](https://langfuse.com/integrations/developer-tools/github-copilot) — Wiring Copilot's built-in OpenTelemetry export to Langfuse's OTLP ingestion endpoint.
 * [Langfuse Kiro integration](https://langfuse.com/integrations/developer-tools/kiro) — Kiro IDE hooks that send tool-use and agent-session traces to Langfuse.
+* [ASD-STE100](https://www.asd-ste100.org/) — Simplified Technical English: the aerospace controlled-language standard for unambiguous technical writing, free from ASD.
+* [ASD-STE100 skill](https://github.com/danyuchn/asd-ste100-skill) — Claude Code plugin rewriting agent-facing English into STE, with a stdlib-only structural linter.
 
 #### Background and legacy material
 

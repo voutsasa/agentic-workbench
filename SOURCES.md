@@ -268,6 +268,8 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 * [Langfuse Claude Code Observability Plugin](https://github.com/langfuse/Claude-Observability-Plugin)
 * [Langfuse GitHub Copilot integration](https://langfuse.com/integrations/developer-tools/github-copilot)
 * [Langfuse Kiro integration](https://langfuse.com/integrations/developer-tools/kiro)
+* [ASD-STE100](https://www.asd-ste100.org/)
+* [ASD-STE100 skill](https://github.com/danyuchn/asd-ste100-skill)
 
 #### Background and legacy material
 
