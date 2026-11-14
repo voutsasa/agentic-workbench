@@ -4,7 +4,7 @@ command: dbml2sql, sql2dbml, db2dbml
 product: DBML CLI
 verified: 2026-08-20
 author: Achilleas Voutsas
-version: 0.4.2
+version: 0.5.0
 ---
 
 # dbml-cli — install

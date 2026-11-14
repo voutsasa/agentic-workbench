@@ -3,6 +3,20 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.5.0] - 2026-11-14
+
+### Added
+
+- **agent:** **BREAKING** Require ASD-STE100 replies; list gate-free steps; drop the token-count stop (f701b56)
+
+### Fixed
+
+- **skills:** Resolve review findings on skill consistency (0304af7)
+
+### Changed
+
+- **skills:** Move evidence logs and maintainer tables to references/ (6f0428e)
+
 ## [0.4.2] - 2026-11-14
 
 ### Fixed
