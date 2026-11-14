@@ -216,8 +216,18 @@ elif [ -f "$TESTS_FILE" ] && [ -z "${PRE_PUSH_IN_TESTS:-}" ]; then
     # temporary tree would otherwise read as this machine's state. stdin is
     # /dev/null so nothing a test reads can consume this loop's file or git's
     # ref list.
-    PRE_PUSH_IN_TESTS=1 "$PYTHON" -m unittest discover -q -b \
-      -s "$REPO_ROOT/$dir" -t "$REPO_ROOT/$dir" < /dev/null
+    #
+    # The subshell unsets git's location variables first. From a linked worktree,
+    # git exports GIT_DIR to this hook. A suite that inherits it sends each
+    # fixture `git init`, `commit` and `config` to the pushed repository instead
+    # of its temporary one. On 2026-11-14 that moved `main`, created branches and
+    # set `core.bare=true`.
+    (
+      unset GIT_DIR GIT_WORK_TREE GIT_INDEX_FILE GIT_COMMON_DIR GIT_OBJECT_DIRECTORY \
+        GIT_ALTERNATE_OBJECT_DIRECTORIES GIT_NAMESPACE GIT_PREFIX
+      PRE_PUSH_IN_TESTS=1 "$PYTHON" -m unittest discover -q -b \
+        -s "$REPO_ROOT/$dir" -t "$REPO_ROOT/$dir" < /dev/null
+    )
     status=$?
 
     case "$status" in

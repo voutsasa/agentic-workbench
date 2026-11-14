@@ -154,6 +154,17 @@ class Sample(unittest.TestCase):
         self.fail("deliberate failure")
 """
 
+#: Fails when it can see a variable that points git at another repository.
+GIT_ENV_PROBE_SUITE = """import os
+import unittest
+
+
+class Sample(unittest.TestCase):
+    def test_no_git_location_inherited(self):
+        names = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR")
+        self.assertEqual([n for n in names if n in os.environ], [])
+"""
+
 #: Variables that change what the hook does; stripped so the developer's own
 #: shell, or an outer hook run, cannot decide a test's outcome.
 HOOK_ENV_FLAGS = (
@@ -462,6 +473,25 @@ class UnitTestStepTests(HookRepoCase):
         self.assertEqual(result.returncode, 0)
         self.assertIn("SKIP_PRE_PUSH_TESTS=1", result.stderr)
         self.assertNotIn("unit tests in", result.stderr)
+
+    def test_suites_do_not_inherit_the_pushed_repos_git_location(self) -> None:
+        """From a linked worktree, git exports GIT_DIR to the hook.
+
+        A suite that inherits it sends every fixture ``git init``, ``commit`` and
+        ``config`` to the pushed repository instead of its temporary one. On
+        2026-11-14 that moved ``main``, created branches and set ``core.bare``.
+        """
+        self.commit("README.md")
+        self.write_suite("suite", GIT_ENV_PROBE_SUITE)
+        self.name_dirs("suite\n")
+        git_dir = str(self.root / ".git")
+        result = self.run_hook(
+            GIT_DIR=git_dir,
+            GIT_WORK_TREE=str(self.root),
+            GIT_INDEX_FILE=git_dir + "/index",
+        )
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertIn("unit tests in suite", result.stderr)
 
     def test_hook_started_from_a_suite_does_not_rerun_the_suites(self) -> None:
         self.write_suite("suite", FAILING_SUITE)
