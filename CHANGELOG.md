@@ -3,6 +3,12 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.5.1] - 2026-11-14
+
+### Fixed
+
+- **review:** Pre-push suites no longer inherit the pushed repo's GIT_DIR (83e5667)
+
 ## [0.5.0] - 2026-11-14
 
 ### Added

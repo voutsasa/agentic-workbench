@@ -2,7 +2,7 @@
 tool: magick
 updated: 2026-08-01
 author: Achilleas Voutsas
-version: 0.5.0
+version: 0.5.1
 ---
 
 # magick — quick start

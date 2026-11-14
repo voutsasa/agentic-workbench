@@ -4,7 +4,7 @@ command: mmdc
 product: Mermaid CLI
 verified: 2026-08-20
 author: Achilleas Voutsas
-version: 0.5.0
+version: 0.5.1
 ---
 
 # mermaid-cli — install
