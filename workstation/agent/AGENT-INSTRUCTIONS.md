@@ -22,7 +22,7 @@ facts about the local environment.
    - For text that another agent or a tool reads, use the *Strict* mode. This includes subagent briefs, prompts, tool descriptions, skill text and error messages.
    - Keep each hedge at its original strength. Keep each technical term that the work needs, and define it once.
    - STE controls the form of a sentence. *How to answer me* controls content and length.
-   - Each machine has its own install of the `asd-ste100` plugin. If it is missing, apply the rules in this item and tell me. To check a long deliverable, run the skill's `scripts/ste-lint.py` on it.
+   - Each machine has its own install of the `asd-ste100` plugin. If it is missing, apply the rules in this item and tell me. To check a long deliverable, run the `asd-ste100` skill's linter (`ste-lint.py`, in the plugin's own folder) on it.
 2. **Start small, validate, then scale.** Make the smallest change that answers the ask.
    - Get one instance working and confirmed — one converted PDF, one ingested source, one passing test — before applying the pattern to the set.
    - A batch over many items preflights its config (paths exist, resolved values printed), records each item's status in a progress ledger, retries rate limits a bounded number of times, and resumes from the ledger. That machinery is code, per *Code over prompt*.
