@@ -2,7 +2,7 @@
 name: get-workstation-status
 description: Check whether this machine has the workbench prerequisites and CLI tools, report observed versions, and give recorded corrective actions without installing or authenticating anything. Use independently for workstation readiness or as the pre-step for setup-agents.
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # Get workstation status

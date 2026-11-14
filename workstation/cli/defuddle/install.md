@@ -5,7 +5,7 @@ product: Defuddle
 used_by: fetch-to-markdown
 verified: 2026-08-20
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # defuddle — install

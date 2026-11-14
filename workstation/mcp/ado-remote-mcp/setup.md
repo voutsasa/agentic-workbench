@@ -6,7 +6,7 @@ version_observed: n/a (hosted, no local version)
 verified: 2026-09-28
 pinned: false
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # ado-remote-mcp — setup

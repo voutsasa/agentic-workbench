@@ -1,6 +1,6 @@
 ---
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # Agentic workbench principles and setup

@@ -8,7 +8,7 @@
       "name": "workbench-skills",
       "source": "./",
       "description": "The agentic-workbench's global, register-free skills: review, python-quality, verify-docs, fix-findings, pdf-deliverable, fetch-to-markdown, confluence-publish, confluence-export, setup-mcp-servers, session-signature, build-html-presentation.",
-      "version": "0.4.0"
+      "version": "0.4.1"
     }
   ]
 }

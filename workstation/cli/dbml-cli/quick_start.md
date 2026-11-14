@@ -2,7 +2,7 @@
 tool: dbml-cli
 updated: 2026-08-01
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # dbml-cli — quick start

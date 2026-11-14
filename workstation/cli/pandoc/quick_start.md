@@ -2,7 +2,7 @@
 tool: pandoc
 updated: 2026-08-01
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # pandoc — quick start

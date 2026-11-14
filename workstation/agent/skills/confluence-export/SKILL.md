@@ -2,7 +2,7 @@
 name: confluence-export
 description: Retrieve pages, subtrees or whole spaces from Confluence Cloud into this repository as Markdown, using cme. Use whenever the user asks to export, fetch, pull or retrieve Confluence content. Previews the destination and the resulting directory structure for approval before fetching anything. Not for sending Markdown to Confluence — that is confluence-publish.
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # Exporting Confluence pages to Markdown

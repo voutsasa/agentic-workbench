@@ -2,7 +2,7 @@
 name: verify-docs
 description: Audit a repo's documentation for claims that are no longer true, by executing a command that proves or refutes each one. Use when asked to verify, de-stale, or fact-check docs, to check install instructions and CLI flags against reality, or to find drift between what the docs say and what the tools, paths, registries and git state actually do. Produces an evidence table; fixes only what the evidence makes unambiguous.
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # Verify docs

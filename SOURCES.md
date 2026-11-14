@@ -3,7 +3,7 @@ role: Source register — source of truth for what belongs in the project
 updated: 2026-11-01
 verified: never
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # Agentic Workbench — Source Register

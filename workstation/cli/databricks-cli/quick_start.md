@@ -2,7 +2,7 @@
 tool: databricks-cli
 updated: 2026-10-06
 author: Achilleas Voutsas
-version: 0.4.0
+version: 0.4.1
 ---
 
 # databricks-cli — quick start

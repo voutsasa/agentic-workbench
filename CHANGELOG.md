@@ -3,6 +3,17 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.4.1] - 2026-11-14
+
+### Fixed
+
+- **cli:** Clear two false REFUTED path claims blocking pre-push (c5ba143)
+
+### Documentation
+
+- **agent:** Register ASD-STE100 and record the asd-ste100 skill's plugin route (03cc786)
+- **agent:** Record the asd-ste100 plugin install as verified on macOS (1d40f6f)
+
 ## [0.4.0] - 2026-11-14
 
 ### Added
