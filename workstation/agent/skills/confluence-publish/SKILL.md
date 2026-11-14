@@ -2,7 +2,7 @@
 name: confluence-publish
 description: Publish Markdown from this repository to a Confluence Cloud page, under a target page you name. Use whenever the user asks to publish, push, upload or sync a document or a directory to Confluence. Takes the target page's URL and the source path, declares the space if it is new, and handles the page hierarchy, the local conversion check, the renderer requirements and the delete-before-republish rule. Not for retrieving pages from Confluence — that is confluence-export.
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # Publishing Markdown to Confluence

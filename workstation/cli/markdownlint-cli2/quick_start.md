@@ -2,7 +2,7 @@
 tool: markdownlint-cli2
 updated: 2026-11-14
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # markdownlint-cli2 — quick start

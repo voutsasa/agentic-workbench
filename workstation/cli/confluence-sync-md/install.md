@@ -5,7 +5,7 @@ product: confluence-sync-md
 used_by: confluence-publish, confluence-export
 verified: 2026-09-27
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # confluence-sync-md — install

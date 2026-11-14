@@ -6,7 +6,7 @@ version_observed: "1.0.0 — npm registry dist-tag latest, 2026-09-30; not yet r
 verified: 2026-09-30
 pinned: false
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # powerbi-modeling-mcp — setup

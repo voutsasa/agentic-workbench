@@ -5,7 +5,7 @@ product: Typst
 used_by: pdf-deliverable
 verified: 2026-09-18
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # typst — install

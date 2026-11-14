@@ -4,7 +4,7 @@ command: scoop
 product: Scoop
 verified: 2026-10-09
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # scoop — install

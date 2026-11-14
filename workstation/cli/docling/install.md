@@ -5,7 +5,7 @@ product: Docling
 used_by: fetch-to-markdown
 verified: 2026-09-27
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # docling — install

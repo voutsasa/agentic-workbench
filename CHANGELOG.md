@@ -3,6 +3,12 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.4.2] - 2026-11-14
+
+### Fixed
+
+- **cli:** Probe pdftohtml with -v; refresh the macOS machine inventory (8e399df)
+
 ## [0.4.1] - 2026-11-14
 
 ### Fixed

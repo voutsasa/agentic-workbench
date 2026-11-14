@@ -2,7 +2,7 @@
 name: review
 description: Produce a structured, read-only review report for a repo, incl. a set of documents and/or a body of code. Use whenever the user asks to review from, assess, critique, or score a document (guideline, spec, legal/regulatory text, README) or existing code, and wants findings rather than edits. Read-only by default; it applies fixes only when the user explicitly asks for them in the same pass (see Apply mode). Not for code changes the user has asked you to make.
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # Review

@@ -2,7 +2,7 @@
 name: python-quality
 description: Apply quality gates to a Python project — ruff, pyright, pytest with a coverage floor, radon, dependency audit, and generated documentation — with thresholds derived from the code as it is rather than imposed on it. Use when asked to set up or improve linting, type checking, static analysis, complexity, test coverage, docs generation or uv project structure, on a new project or an existing one. Not for reviewing code — that is `review`.
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # Python quality gates

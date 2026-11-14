@@ -2,7 +2,7 @@
 tool: jq
 updated: 2026-09-28
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # jq — quick start

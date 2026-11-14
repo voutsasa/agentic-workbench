@@ -6,7 +6,7 @@ version_observed: v2
 verified: 2026-10-13
 pinned: true
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # atlassian-mcp — setup

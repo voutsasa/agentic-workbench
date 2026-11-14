@@ -6,7 +6,7 @@ version_observed: n/a (hosted; tool contract pinned by header, Fabric.Routing.Fa
 verified: 2026-09-30
 pinned: false
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # fabric-iq-mcp — setup

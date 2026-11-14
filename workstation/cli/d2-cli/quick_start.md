@@ -2,7 +2,7 @@
 tool: d2-cli
 updated: 2026-08-01
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # d2-cli — quick start

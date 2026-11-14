@@ -2,7 +2,7 @@
 tool: poppler
 updated: 2026-10-29
 author: Achilleas Voutsas
-version: 0.4.1
+version: 0.4.2
 ---
 
 # poppler — quick start
