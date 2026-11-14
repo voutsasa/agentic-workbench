@@ -43,6 +43,7 @@ extraPaths = [
     "workstation/agent/skills/review/scripts",
     "workstation/agent/skills/session-signature/scripts",
     "workstation/agent/skills/verify-docs/scripts",
+    "workstation/agent/skills/check-links/scripts",
 ]
 # Setting `exclude` replaces pyright's defaults, so they are restated first. The
 # python-quality templates are copied into other projects and import packages

@@ -22,3 +22,11 @@
 # synonym. Covers every `git diff --staged` in the repo's docs — the command a
 # reviewer runs, named in more than one place.
 git diff --staged
+
+# `--follow` and `--name-status` are documented git-log options: the man page
+# (`git log --help`) lists both, and `git log --follow --name-status -1 --
+# README.md` exits 0 on git 2.x on macOS. `git log -h` prints only a usage line
+# and names neither. Covers check-links' SKILL.md, which finds where a link's
+# target moved.
+git log --follow
+git log --name-status

@@ -24,6 +24,7 @@ workstation/agent/skills/setup-mcp-servers/tests
 workstation/agent/skills/session-signature/tests
 workstation/agent/skills/build-html-presentation/tests
 workstation/agent/skills/verify-docs/tests
+workstation/agent/skills/check-links/tests
 
 # The post-edit hook scripts linked by link_config.py --hooks.
 workstation/agent/hooks/tests

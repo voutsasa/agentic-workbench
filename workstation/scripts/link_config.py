@@ -103,6 +103,7 @@ SKILLS = (
     "setup-mcp-servers",
     "session-signature",
     "build-html-presentation",
+    "check-links",
 )
 
 #: Post-edit hook scripts under ``workstation/agent/hooks/``, linked with ``--hooks``.

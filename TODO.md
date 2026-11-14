@@ -23,6 +23,29 @@ names its kind of evidence. Item numbers are never reused.
 
 ## Open
 
+### 62. `check-links` has not run on Windows
+
+Type `verify` · Quality Portability · Impact L · Priority L · Complexity S
+
+Opened 2026-11-14 with the skill. `workstation/agent/skills/check-links/scripts/check_links.py`
+(stdlib) and its tests ran only on macOS. Path resolution and `%20` decoding of Windows paths are
+unobserved.
+
+**Closes when:** `command`: on a Windows machine, from the repo root,
+`python -m unittest discover -s workstation\agent\skills\check-links\tests -t workstation\agent\skills\check-links\tests`
+prints `OK`, and `python workstation\agent\skills\check-links\scripts\check_links.py README.md`
+prints `0 broken links in 1 file`.
+
+### 61. `check-links` has not been discovered by a Copilot session
+
+Type `verify` · Quality Compatibility · Impact L · Priority L · Complexity S
+
+Opened 2026-11-14. `~/.copilot/skills/check-links` links to the skill on macOS, and Claude Code
+lists it. No Copilot session has listed or invoked it yet.
+
+**Closes when:** `observation`: a Copilot CLI session asked to "check the links in README.md" loads
+`check-links` and runs `check_links.py`, recorded in this item's closing commit body.
+
 ### 60. `verify-docs` has no Azure OpenAI/OpenAI driver, and it needs a design first
 
 *Type:* feat · *Quality:* Compatibility · *Impact:* M · *Priority:* L · *Complexity:* L — Priority L:

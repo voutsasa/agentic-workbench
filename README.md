@@ -62,7 +62,7 @@ copilot plugin install workbench-skills@agentic-workbench
 ```
 
 This gets you `review`, `verify-docs`, `fetch-to-markdown`, `python-quality`, `pdf-deliverable`,
-`fix-findings`, `confluence-publish`, `confluence-export`, `setup-mcp-servers`, `session-signature` and `build-html-presentation` — not this repo's
+`fix-findings`, `confluence-publish`, `confluence-export`, `setup-mcp-servers`, `session-signature`, `build-html-presentation` and `check-links` — not this repo's
 own `SOURCES.md`/register-aware skills, and not the shared instructions, since both assume the full
 clone. [`workstation/agent/README.md` § *Install the skills as a plugin
 instead*](workstation/agent/README.md#install-the-skills-as-a-plugin-instead) has the manifest layout
@@ -157,6 +157,7 @@ Repo skills serve this workbench; global skills work in any repo. The authoritat
 | [`setup-mcp-servers`](workstation/agent/skills/setup-mcp-servers/SKILL.md) | global | Guides safe setup of documented MCP servers, collecting non-secret choices and handing registration commands to the user. |
 | [`session-signature`](workstation/agent/skills/session-signature/SKILL.md) | global | Stamps an output with a signature id — workstation, user, AI assistant and workbench versions, model, UTC time — or the full JSON as the extended signature. |
 | [`build-html-presentation`](workstation/agent/skills/build-html-presentation/SKILL.md) | global | Builds Reveal.js presentations under `docs/html-presentations/` with Reveal.js stored locally: checks for a newer release, scaffolds a named deck, writes its slides and render-checks every one. |
+| [`check-links`](workstation/agent/skills/check-links/SKILL.md) | global | Checks that the relative links and `#anchors` in Markdown files resolve, offline and deterministically. |
 
 ## Layout
 
