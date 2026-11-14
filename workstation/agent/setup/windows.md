@@ -174,6 +174,11 @@ request. `core.pager` and `GIT_PAGER` do not control the HTML-help browser behav
   `link_config.py` cannot tell repo drift apart from a local note you added, so it skips either way.
 - **`core.symlinks` is `false`.** A symlink committed to this repo would check out here as a text file
   containing its target path. Nothing in the repo relies on one.
+- **Do not commit a repo's `.claude/skills/<name>` link. Gitignore it and make it again in each clone.**
+  A junction's target is an absolute path on one machine, so git stores the skill's files as a second
+  copy. A committed symlink (mode `120000`) checks out as a text file wherever `core.symlinks=false`.
+  `link_config.py --project --apply` makes the link. If a repo does not use `link_config.py`, write
+  its link command in that repo's `skills/README.md`.
 
 ## Verify
 

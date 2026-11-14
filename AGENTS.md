@@ -25,7 +25,7 @@ What each file and folder is: [`README.md`](README.md) — § *Layout*, then the
 
 - `SOURCES.md` is the source of truth and is edited first when a source is added or removed. Its relative links reach only the process documents that govern it — `SOURCE_CATALOGUE.md`, this file, `skills/` and the `workstation/*/README.md` indexes — enforced by `checks.register.link_allow_globs` in the `review` skill's `checks.toml`.
 - Every change to `SOURCES.md` gets a matching change to `SOURCE_CATALOGUE.md`: one sentence of ≤20 words per source, mirroring structure and entries exactly. `README.md` carries no source entries.
-- `docs/landing-zone/` and every `reference.md` under `workstation/cli/` and `workstation/mcp/` are machine-written — never hand-edit them.
+- `docs/landing-zone/` and every `reference.md` under `workstation/cli/` and `workstation/mcp/` are machine-written. Do not hand-edit them, because the next ingestion or fetch overwrites the edit. Change the source entry or the tool instead.
 - `docs/guidance/`: every note declares its provenance; read `docs/guidance/README.md` before adding one.
 - `DEVELOPMENT-PLAN.md`'s ✓/➕ markers say whether a source is registered, not whether its file is on disk — check the path. ➕ means write the `SOURCES.md` entry first.
 - `TODO.md` holds only committed new work and unproven existing gaps, each saying what would close it. Delete an item when its evidence exists, not when it feels handled. Anything found but not fixed, or started but not completed, is recorded here in the same commit.
@@ -33,13 +33,14 @@ What each file and folder is: [`README.md`](README.md) — § *Layout*, then the
 **Skills**
 
 - `skills/` holds skills that name `SOURCES.md`, `docs/landing-zone/` or `workstation/`; `workstation/agent/skills/` holds global ones. The line and the per-clone `.claude/skills/` links are in `skills/README.md`. A global skill may still name a `workstation/` path when it locates the workbench clone through the machine note's `repo:` field rather than assuming it is the current repo — `setup-mcp-servers` does this (`workstation/agent/skills/setup-mcp-servers/SKILL.md`).
-- `ingest-source` does register mechanics only — no routing, no conversion. `fetch-to-markdown` is global: never add a register or destination directory to it.
+- `ingest-source` owns the register. It resolves where an entry lands and its filename, writes the catalogue entry, and, for a workstation tooling entry, writes the authored `install.md`, `quick_start.md` or `setup.md`. It hands every fetch and conversion to `fetch-to-markdown`, and has no fetch or conversion route of its own.
+- `fetch-to-markdown` is global. Do not add a register or a destination directory to it, because it must work in any repo.
 - `setup-agents` carries no route of its own and never writes a settings file.
-- The global skill list is `link_config.py`'s `SKILLS` tuple — never a prose copy.
+- The global skill list is `link_config.py`'s `SKILLS` tuple. Point to it instead of writing a prose copy, because a copy drifts.
 
 **Workstation**
 
-- Read `workstation/cli/<tool>/quick_start.md` before invoking a tool you haven't used this session.
+- Tool use follows the global instructions, § *Workstation tooling* in `workstation/agent/AGENT-INSTRUCTIONS.md`. That section has the `quick_start.md` rule.
 - MCP servers *authored* here are project output and do not belong in `workstation/mcp/`.
 - `workstation/agent/` is shared by every machine, unmodified — nothing machine-specific goes there. Its paths are linked into `~/.claude/`, so check `git status` before editing them. If it is moved or renamed, repoint the links or every session silently loses its global instructions.
 - `workstation/agent/settings.json` is merged into `~/.claude/settings.json` by hand — never linked, never overwritten by any command (`workstation/agent/README.md` § *Settings are merged, never linked*). The `workstation/agent/setup/<platform>.md` routes overwrite `~/.claude/CLAUDE.md` and leave `settings.json` alone.
