@@ -3,6 +3,42 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.4.0] - 2026-11-14
+
+### Added
+
+- **skills:** Build-html-presentation global skill; Reveal.js registered as the HTML deck framework (fbe7def)
+
+### Fixed
+
+- Correct Atlassian MCP metadata (9ff046e)
+
+### Documentation
+
+- Clarify Copilot Langfuse integration (557a1f8)
+- Add Atlassian MCP setup (059ff83)
+- Register Atlassian MCP at user scope (c727469)
+- Close TODO 53 — atlassian-mcp Confluence search verified in both clients (e84d402)
+- **cli:** Add psql, the PostgreSQL client that databricks psql starts (5d34b5d)
+- **agent:** Classify TODO items; GFM replaces the Zed rendering rule (ed9b258)
+- **agent:** Number the key principles 1-6; "concise" spelt right (02e9666)
+- **agent:** The review and verify-docs skills and the README name MAX_REPLY_CEILING (a9d8bde)
+- **agent:** Run Python as uv run --no-sync python -m; binary-only tools as uv run --no-sync <tool> (c57a2dc)
+- **agent:** "commit and push" is the first-commit OK; "verbatim" means the full output inline (72c1969)
+- **todo:** Record the && flag-attribution gap (#54) and the /ship skill design (#55) (9f1ad5d)
+- **cli:** Poppler, the PDF text utilities, with its version floor (1acd700)
+- **presentations:** Reveal.js info-session deck on the workbench, with vendored Reveal.js 5.1.0 (db7b800)
+- **agent:** Expand TODO classification to six dimensions; resolve item-id clash with origin (a429cb4)
+- **sources:** Register architecture and requirements sources, including ArchiMate 101 (c235ab5)
+- **sources:** Register the draw.io ArchiMate 3.2 shape library (5d46f8d)
+- **plan:** Mark spec-kit and Kiro Specs as registered (b5b8db2)
+- Add ASD-STE100 guidance with harness architecture and tool recommendations (b553121)
+- **cli:** Add markdownlint-cli2, the Markdown linter (91cb5dc)
+
+### Other
+
+- Update response brevity instructions (760bfcc)
+
 ## [0.3.0] - 2026-10-12
 
 ### Added

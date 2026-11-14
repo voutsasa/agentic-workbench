@@ -2,7 +2,7 @@
 name: setup-agents
 description: Identify this machine and the AI coding assistants on it (Claude Code, GitHub Copilot CLI, VS Code, and others found on PATH), ask which to set up, whether Claude runs on AWS Bedrock or the user's own subscription, whether this workbench's instructions and skills should be global, and whether to continue to MCP server setup — then describe every change and either apply the links or hand the user the commands. Use when setting up a new machine, adding an assistant, switching Claude's provider, checking whether the global config is in place, or beginning workstation MCP setup. Not for installing or signing in to an assistant.
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # Set up the agents on this machine

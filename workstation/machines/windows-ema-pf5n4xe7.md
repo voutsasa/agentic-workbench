@@ -7,7 +7,7 @@ python: 3.14.7
 repo: C:\Users\voutsas\Work\Development\agentic-coding\agentic-workbench
 verified: 2026-09-29
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # Windows 11 — `EMA-PF5N4XE7`

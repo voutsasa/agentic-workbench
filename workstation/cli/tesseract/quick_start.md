@@ -2,7 +2,7 @@
 tool: tesseract
 updated: 2026-08-01
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # tesseract — quick start

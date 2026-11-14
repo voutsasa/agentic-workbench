@@ -2,7 +2,7 @@
 name: setup-mcp-servers
 description: "Set up documented workstation MCP servers safely: detect client and tool readiness, ask for non-secret route choices, generate user-run commands, and verify read-only state. Use when setting up draw.io, Azure DevOps, or Databricks MCP servers."
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # Set up MCP servers

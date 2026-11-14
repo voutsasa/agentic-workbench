@@ -2,7 +2,7 @@
 name: build-html-presentation
 description: Create or update a Reveal.js HTML presentation stored in the repository under docs/html-presentations/, with Reveal.js kept locally beside the decks so they run offline. Checks the stored Reveal.js against the latest release, scaffolds a named deck, writes its slides from the user's brief, and render-checks every slide. Use when asked to build, create, make, update or check an HTML presentation, slide deck or Reveal.js deck. Not for PowerPoint or PDF decks.
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # Build an HTML presentation

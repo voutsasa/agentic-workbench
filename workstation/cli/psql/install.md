@@ -4,7 +4,7 @@ command: psql
 product: PostgreSQL client (psql)
 verified: 2026-10-20
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # psql — install

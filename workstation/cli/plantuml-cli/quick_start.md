@@ -2,7 +2,7 @@
 tool: plantuml-cli
 updated: 2026-08-05
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # plantuml-cli — quick start

@@ -4,7 +4,7 @@ command: databricks
 product: Databricks CLI
 verified: 2026-09-27
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # databricks-cli — install

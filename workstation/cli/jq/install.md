@@ -4,7 +4,7 @@ command: jq
 product: jq
 verified: 2026-09-28
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # jq — install

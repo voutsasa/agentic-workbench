@@ -2,7 +2,7 @@
 tool: sem-cli
 updated: 2026-08-24
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # sem-cli — quick start

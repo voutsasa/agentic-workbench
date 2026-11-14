@@ -5,7 +5,7 @@ product: WeasyPrint
 used_by: pdf-deliverable
 verified: 2026-08-20
 author: Achilleas Voutsas
-version: 0.3.0
+version: 0.4.0
 ---
 
 # weasyprint — install
