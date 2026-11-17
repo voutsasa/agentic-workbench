@@ -1,6 +1,6 @@
 ---
 role: Phased capability curriculum, doubling as a prioritised ingestion backlog
-updated: 2026-09-29
+updated: 2026-11-17
 verified: never
 author: Achilleas Voutsas
 version: 0.6.1
@@ -166,8 +166,12 @@ The order is deliberate — understand the method before touching the tooling.
 | ✓ | ★★★★☆ | [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — current guidance; supersedes much of the two below |
 | ✓ | ★★★☆☆ | [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) — filed as background in the register |
 | ✓ | ★★★☆☆ | [Context Engineering for AI Agents: Memory vs. Compaction vs. Tool Clearing](https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools) — filed as background in the register |
+| ✓ | ★★★★☆ | [How Claude remembers your project](https://code.claude.com/docs/en/memory) — how `CLAUDE.md`, `AGENTS.md` and auto memory load; the mechanics behind this week's deliverable |
+| ✓ | ★★★★☆ | [Extend Claude Code](https://code.claude.com/docs/en/features-overview) — when to use `CLAUDE.md`, skills, subagents, hooks, MCP or plugins; Anthropic's own version of the Month 5 ladder |
+| ✓ | ★★★☆☆ | [About customizing GitHub Copilot responses](https://docs.github.com/en/copilot/concepts/prompting/response-customization) — *if you also use Copilot:* how it loads `AGENTS.md` and custom instructions, so one file serves both assistants |
+| ➕ | ★★☆☆☆ | *Optional.* [Claude Code in Action — Anthropic Academy](https://anthropic.skilljar.com/claude-code-in-action) — **course**, free. A guided video path over the same ground as the best-practices page |
 
-**Do:** write a `CLAUDE.md` for your project repo against the best-practices guidance, as a live exercise. Read this workbench's own `CLAUDE.md` first as a worked example of the form.
+**Do:** write a `CLAUDE.md` for your project repo against the best-practices guidance, as a live exercise. Read this workbench's own `AGENTS.md` first as a worked example of the form — its `CLAUDE.md` holds only `@AGENTS.md`, so Claude Code and Copilot read the same instructions.
 **Deliverable:** ⓟ a `CLAUDE.md` your project actually uses, and ⓦ constitution v0.2 with an **agent working agreement** section — what agents may change unasked, context discipline, when to stop and ask.
 
 ### Week 3 — First skills (B)
@@ -180,6 +184,8 @@ The order is deliberate — understand the method before touching the tooling.
 | ✓ | ★★★★★ | [Claude Code — Skills](https://code.claude.com/docs/en/skills) — where skills actually live in the tool you use; the platform docs cover the API surface, not this |
 | ➕ | ★★★★☆ | [Claude Skills Cookbook](https://github.com/anthropics/claude-cookbooks/tree/main/skills) — **tutorial:** runnable notebooks; the guided path, without the course overhead |
 | ✓ | ★★★☆☆ | [Agent Skills](https://agentskills.io/home) — the portable open standard; thinner than Anthropic's own docs |
+| ✓ | ★★★☆☆ | [Adding agent skills for GitHub Copilot CLI](https://docs.github.com/en/copilot/how-tos/copilot-cli/customize-copilot/add-skills) — *if you also use Copilot:* where Copilot CLI looks for `SKILL.md` folders; the reason `link_config.py` links skills into both assistants |
+| ➕ | ★★★☆☆ | [Introduction to agent skills — Anthropic Academy](https://anthropic.skilljar.com/introduction-to-agent-skills) — **course**, free and short. The guided option to take before the DeepLearning.AI course below |
 | ➕ | ★★☆☆☆ | *Optional.* [Agent Skills overview](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/overview) — the orientation piece. Largely subsumed by the two docs above; read it only if you want the concepts before the practice. |
 | ➕ | ★★☆☆☆ | *Optional.* [Agent Skills with Anthropic — DeepLearning.AI](https://www.deeplearning.ai/courses/agent-skills-with-anthropic) — **course.** Same ground as the Cookbook at much greater time cost; take it only if a guided video format is what makes material stick for you. |
 
@@ -194,6 +200,9 @@ The order is deliberate — understand the method before touching the tooling.
 | ✓ | ★★★★★ | [Build an MCP server](https://modelcontextprotocol.io/docs/develop/build-server) — **the canonical tutorial** |
 | ✓ | ★★★★★ | [FastMCP](https://gofastmcp.com/servers/server) — the ergonomic layer you will actually build on |
 | ➕ | ★★★☆☆ | [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk) — reference for when FastMCP abstracts something you need to reach under |
+| ➕ | ★★★☆☆ | [Introduction to Model Context Protocol — Anthropic Academy](https://anthropic.skilljar.com/introduction-to-model-context-protocol) — **course**, free. A guided alternative to the tutorial above |
+
+> **Spec version.** The MCP docs now track specification **2026-07-28**, which made the protocol stateless: no `initialize` handshake and no session ID. Check that the FastMCP release you install supports it before you build against the tutorial.
 
 **Do:** build a minimal server exposing search and read over `docs/landing-zone/`.
 **Deliverable:** ⓦ a running local MCP server, plus a written note on **where the skill/MCP boundary sits** — you will need that rule in month 4.
@@ -210,7 +219,7 @@ The order is deliberate — understand the method before touching the tooling.
 |---|---|---|
 | ✓ | ★★★★☆ | [LLM Wiki](https://gist.github.com/karpathy/442a6bf555914893e9891c11519de94f) — the raw → wiki → schema pattern you're implementing |
 | ✓ | — | Your own corpus, as built on Day 0 — this month is mostly *distillation*, not new intake |
-| ➕ | — | Close the **§2 gaps** — C4 model, integration patterns (EIP) and API design, security architecture (OWASP ASVS/Top 10, threat modelling), well-architected/quality-attribute framework. The `architecture-and-views` and `nfr-checklist` notes have nothing to cite without them. |
+| ➕ | — | Close the **§2 gaps** — integration patterns (EIP) and API design, security architecture (OWASP ASVS/Top 10, threat modelling), well-architected/quality-attribute framework. The `architecture-and-views` and `nfr-checklist` notes have nothing to cite without them. |
 
 **Do:** write `docs/guidance/` files to the bar in [`docs/guidance/README.md`](README.md) — dense tables, "reach for it when" / "watch out", each citing its backing corpus files.
 **Deliverable:** ⓦ `docs/guidance/` populated (sdd-workflow, context-engineering, skill-authoring, architecture-and-views, nfr-checklist); **§2 closed** in the register and ingested.
@@ -223,7 +232,10 @@ The order is deliberate — understand the method before touching the tooling.
 | ➕ | ★★★★☆ | [Humans and Agents in Software Engineering Loops](https://martinfowler.com/articles/exploring-gen-ai/humans-and-agents.html) — where the human review points belong |
 | ➕ | ★★★★☆ | [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) |
 | ➕ | — | Close the **§5 gaps** — commit and versioning conventions (Conventional Commits, SemVer), branching and release strategy, CI pipeline definition, pre-commit hook policy, test strategy, code review policy. §5 is the layer a constitution actually rules on, and this is the month it meets real code. |
-| ➕ | — | Close one **§1 gap** — requirements/user-story practice (BDD, story mapping). You are writing specs this month; the rest of §1 waits for month 6. |
+| ✓ | ★★★★☆ | [User Story Mapping](https://jpattonassociates.com/story-mapping/) — requirements/user-story practice, because you are writing specs this month |
+| ✓ | ★★★☆☆ | [INVEST in Good Stories, and SMART Tasks](https://xp123.com/invest-in-good-stories-and-smart-tasks/) — the quality bar for one story |
+| ✓ | ★★★★☆ | [EARS](https://alistairmavin.com/ears/) — requirement sentence patterns; Kiro's specs use them |
+| ✓ | ★★★☆☆ | [Gherkin Reference](https://cucumber.io/docs/gherkin/reference/) — BDD acceptance criteria an agent can turn into tests |
 
 **Do:** take **the project you chose at step 2 of Next steps** through constitution → spec → plan → tasks → implementation. Record every point where the constitution failed to constrain something it should have. This is the month the plan exists for.
 **Deliverable:** ⓟ working software in your project repo, built Spec-Driven end to end; ⓦ an `examples/` worked example distilled from it, **constitution v1.0** hardened by contact with reality rather than by more reading, and **§5 closed**.
@@ -241,6 +253,7 @@ The order is deliberate — understand the method before touching the tooling.
 | ➕ | ★★★★★ | [Code execution with MCP: building more efficient agents](https://www.anthropic.com/engineering/code-execution-with-mcp) — why tool-per-call stops scaling; this month's whole rationale |
 | ✓ | ★★★★★ | [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — the tool-design discipline the shared server needs |
 | ✓ | ★★★☆☆ | [MCP specification](https://modelcontextprotocol.io/specification) — reference, not a read-through |
+| ➕ | ★★★☆☆ | [Model Context Protocol: Advanced Topics — Anthropic Academy](https://anthropic.skilljar.com/model-context-protocol-advanced-topics) — **course**, free. Follows the Week 4 introduction |
 
 **Do:** this is the plan's shared-functionality convention made real — what several skills need in common gets refactored into a local MCP server. By month 4 you will have enough skills for the duplication to be visible rather than hypothetical.
 **Deliverable:** ⓦ one shared MCP server replacing duplicated per-skill scripts.
@@ -252,6 +265,9 @@ The order is deliberate — understand the method before touching the tooling.
 | ✓ | ★★★★☆ | [DeepEval](https://deepeval.com/docs/introduction) — the harness itself |
 | ✓ | ★★★★☆ | [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview) — needed to drive generation programmatically enough to evaluate it |
 | ✓ | ★★★☆☆ | [langfuse](https://langfuse.com/docs/observability/sdk/overview) — valuable, but tracing can follow once the eval loop exists |
+| ✓ | ★★★★☆ | [Test plugins with evals](https://code.claude.com/docs/en/plugin-evals) — `claude plugin eval` scores runs with and without a plugin; the cheapest first answer to the question below, before you build a DeepEval harness |
+| ✓ | ★★★☆☆ | [Create custom subagents](https://code.claude.com/docs/en/sub-agents) — level 3 of the ladder below: a review pass in its own context |
+| ➕ | ★★☆☆☆ | *Optional.* [Introduction to subagents — Anthropic Academy](https://anthropic.skilljar.com/introduction-to-subagents) — **course**, free. The guided version of the page above |
 | ➕ | ★★★☆☆ | Close one **§4 gap** — observability beyond LLM tracing (OpenTelemetry). langfuse traces the model calls; OTel traces everything around them. |
 
 **Do:** build an eval harness that scores generated artefacts, then use it to answer **the question this whole plan rests on**.
@@ -296,8 +312,11 @@ This was one month in earlier drafts and could not fit: twelve register entries 
 | ✓ | ★★★★★ | [DDD Reference](https://www.domainlanguage.com/wp-content/uploads/2016/05/DDD_Reference_2015-03.pdf) — the vocabulary the business-domain template is built from |
 | ✓ | ★★★★★ | [Rozanski & Woods Viewpoint Catalogue](https://www.viewpoints-and-perspectives.info/home/viewpoints/) + your organisation's views — reconcile the two into one view set before templating |
 | ➕ | ★★★★☆ | Your organisation's own non-functional requirements and enterprise architecture principles — this workbench ships none; see Day 0 step 4 |
-| ➕ | ★★★★☆ | Close the remaining **§1 gaps** — domain discovery (event storming or equivalent), business capability modelling, process notation (BPMN or similar). Three entries. They read as abstract until one real project is behind you, which is why they wait until now. |
-| ➕ | ★★★★☆ | The **§2 gaps** — C4, EIP/API design, OWASP ASVS, quality-attribute framework — collected back in **month 2**. Nothing new to gather; the solution template is built from them. |
+| ✓ | ★★★★☆ | [EventStorming](https://www.eventstorming.com/) — domain discovery. It reads as abstract until one real project is behind you, which is why it waits until now |
+| ✓ | ★★★★☆ | [Ardoq Business Capability Modeling](https://www.ardoq.com/knowledge-hub/business-capability-modeling) — business capability modelling, for the same reason |
+| ➕ | ★★★★☆ | Close the last **§1 gap** — process notation (BPMN or similar). One entry. |
+| ✓ | ★★★★☆ | [C4 model](https://c4model.com/) — the solution template's diagram levels |
+| ➕ | ★★★★☆ | The other **§2 gaps** — EIP/API design, OWASP ASVS, quality-attribute framework — collected back in **month 2**. Nothing new to gather; the solution template is built from them. |
 
 **Do:** build the business-domain and solution-architecture templates. Reconcile the public view catalogue against your organisation's before you template either — doing it after means templating a view set you then have to unpick.
 **Deliverable:** ⓦ two templates — business domain, solution architecture; **§1 closed**.
@@ -320,7 +339,7 @@ This was one month in earlier drafts and could not fit: twelve register entries 
 | ➕ | ★★★★☆ | The **§5 gaps** — commit conventions, branching, CI, hooks, test strategy, review policy — collected back in **month 3**. Nothing new to gather; the implementation template is built from them. |
 
 **Do:** build the technical and implementation templates, then the part that is easy to skip and hardest to retrofit — **write down how the four input layers compose into the per-project implementation architecture**. Which template feeds which section, what a conflict between two layers means, and who resolves it.
-**Deliverable:** ⓦ the five-layer artefact set complete, plus the composition rules. **Every gap in the register is now closed** — 24 of 24.
+**Deliverable:** ⓦ the five-layer artefact set complete, plus the composition rules. **Every gap in the register is now closed** — 20 of 20.
 
 ## Phase 5 — Months 9–15 · Operate and scale
 
@@ -342,9 +361,10 @@ This was one month in earlier drafts and could not fit: twelve register entries 
 
 | | Importance | Reading / tutorial |
 |---|---|---|
-| ➕ | ★★★★★ | [MCP Authorization specification](https://modelcontextprotocol.io/specification/draft/basic/authorization) — OAuth 2.1; essential the moment a server stops being stdio-only, irrelevant until then |
+| ➕ | ★★★★★ | [MCP Authorization specification](https://modelcontextprotocol.io/specification/2026-07-28/basic/authorization) — OAuth 2.1, aligned with OpenID Connect in the 2026-07-28 release; essential the moment a server stops being stdio-only, irrelevant until then |
 | ➕ | ★★★★☆ | OWASP ASVS — for the MCP tool surface, once ingested |
 | ✓ | ★★★☆☆ | Revisit context-engineering material against a year of real traces |
+| ✓ | ★★★☆☆ | [The components of agent memory](https://www.anthropic.com/research/components-of-agent-memory) — memory and offline "dreaming"; read it against the same traces |
 
 **Do:** security-review the MCP surface. Measure artefact quality over the year — which constitution clauses actually got cited or enforced, and which were decoration. Cut the decoration.
 **Deliverable:** ⓦ **constitution v2** driven by evidence; documented MCP security posture; publishable skills.
@@ -355,19 +375,18 @@ This was one month in earlier drafts and could not fit: twelve register entries 
 
 ### The gap schedule
 
-`SOURCES.md` lists **24 unsourced gaps** across the five layers — the collection backlog. They are not closed in one pass. Each closes in the month that first needs it, so you are never reading about Kubernetes to satisfy a checklist.
+`SOURCES.md` lists **20 unsourced gaps** across the five layers — the collection backlog. They are not closed in one pass. Each closes in the month that first needs it, so you are never reading about Kubernetes to satisfy a checklist.
 
 | Layer | Gaps | Closes in | Because |
 |---|---|---|---|
-| **§2** Solution architecture | 4 | Month 2 | `architecture-and-views` and `nfr-checklist` are written that month and have nothing to cite without them. |
+| **§2** Solution architecture | 3 | Month 2 | `architecture-and-views` and `nfr-checklist` are written that month and have nothing to cite without them. |
 | **§5** Implementation architecture | 6 | Month 3 | This is the layer a constitution rules on. Month 3 is where the constitution first meets real code. |
-| **§1** Business domain | 1 of 4 | Month 3 | Requirements/user-story practice, because you are writing specs. |
 | **§4** Technical architecture | 1 of 5 | Month 5 | OpenTelemetry, in the observability month. |
-| **§1** Business domain | 3 of 4 | Month 6 | Domain discovery, capability modelling and process notation feed the business-domain template — and read as abstract until one project is behind you. |
+| **§1** Business domain | 1 | Month 6 | Process notation feeds the business-domain template. Requirements practice, domain discovery and capability modelling are already registered. |
 | **§3** Data architecture | 5 | Month 7 | The data template is built that month; until then the layer is storage engines and ORMs only. |
 | **§4** Technical architecture | 4 of 5 | Month 8 | The technical template is built that month. |
 
-By the end of Month 8 the register carries no open gaps. Phase 4 absorbs twelve of the twenty-four across three months — three, then five, then four — which is why it was given its own phase rather than crammed into one month. Intake there is reference-depth rather than read-through.
+By the end of Month 8 the register carries no open gaps. Phase 4 absorbs ten of the twenty across three months — one, then five, then four — which is why it was given its own phase rather than crammed into one month. Intake there is reference-depth rather than read-through.
 
 **A gap you cannot source is still a result.** If your organisation has no view catalogue or no branching policy, record that in the register as an open gap rather than substituting someone else's and calling the layer covered. An artefact built on a borrowed standard nobody follows is worse than one that names the hole.
 

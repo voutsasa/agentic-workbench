@@ -192,6 +192,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [Agent Skills](https://agentskills.io/home) — Open standard for packaging reusable, on-demand agent capabilities as portable `SKILL.md` folders.
 * [Agent Skills specification](https://agentskills.io/specification) — The `SKILL.md` format: required frontmatter fields, directory layout, and progressive-disclosure rules for portable skills.
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — Anthropic on why newer models need fewer explicit constraints, cutting Claude Code's system prompt over 80%.
+* [The components of agent memory](https://www.anthropic.com/research/components-of-agent-memory) — Anthropic on agent memory components, evaluated, and on "dreaming": offline review of transcripts to reorganise and correct memory.
 * [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — Anthropic's guide to designing agent-friendly tool interfaces, refined using agents themselves.
 * [Using Claude Code: The unreasonable effectiveness of HTML](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html) — Claude blog post on HTML as a surprisingly versatile agent output and interaction format.
 * [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview) — Anthropic's SDK for building custom agents programmatically on Claude Code's harness, in Python and TypeScript.
@@ -203,6 +204,10 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [Best practices for Claude Code](https://code.claude.com/docs/en/best-practices) — Anthropic's guide to working effectively with Claude Code: instruction files, workflows, tooling and context discipline.
 * [Extend Claude with skills](https://code.claude.com/docs/en/skills) — How Claude Code discovers and loads skills, and where `SKILL.md` folders live.
 * [Claude Code plugins overview](https://code.claude.com/docs/en/plugins) — Packaging skills, agents, hooks and MCP servers as installable plugins, distributed through marketplaces.
+* [Extend Claude Code](https://code.claude.com/docs/en/features-overview) — When to use CLAUDE.md, skills, subagents, hooks, MCP or plugins, and how each loads into context.
+* [How Claude remembers your project](https://code.claude.com/docs/en/memory) — How Claude Code loads CLAUDE.md, AGENTS.md and rules files, and keeps auto memory between sessions.
+* [Create custom subagents](https://code.claude.com/docs/en/sub-agents) — Defining Claude Code subagents with their own prompt, tools and context window for delegated tasks.
+* [Test plugins with evals](https://code.claude.com/docs/en/plugin-evals) — Writing eval cases for a Claude Code plugin and grading runs against a no-plugin baseline.
 * [About GitHub Copilot plugins](https://docs.github.com/en/copilot/concepts/agents/about-plugins) — Copilot's own plugin manifest, marketplace and install-source formats.
 * [Langfuse Claude Code Observability Plugin](https://github.com/langfuse/Claude-Observability-Plugin) — Claude Code marketplace plugin that traces session telemetry into Langfuse via a hook.
 * [Langfuse GitHub Copilot integration](https://langfuse.com/integrations/developer-tools/github-copilot) — Wiring Copilot's built-in OpenTelemetry export to Langfuse's OTLP ingestion endpoint.
