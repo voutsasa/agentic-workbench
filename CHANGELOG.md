@@ -3,6 +3,13 @@
 All notable changes to this project are documented here. Versions follow
 [Semantic Versioning 2.0.0](https://semver.org/spec/v2.0.0.html); the policy is in VERSIONING.md.
 
+## [0.6.2] - 2026-11-18
+
+### Documentation
+
+- **plan:** Refresh development plan against current sources (14bf3fa)
+- Close TODO 63-66 from the plan refresh (a5f28e5)
+
 ## [0.6.1] - 2026-11-14
 
 ### Documentation

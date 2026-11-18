@@ -4,7 +4,7 @@ command: tesseract
 product: Tesseract OCR
 verified: 2026-08-20
 author: Achilleas Voutsas
-version: 0.6.1
+version: 0.6.2
 ---
 
 # tesseract — install

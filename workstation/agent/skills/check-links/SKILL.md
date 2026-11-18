@@ -2,7 +2,7 @@
 name: check-links
 description: Check that the relative links in Markdown files resolve — each linked file or folder exists, and each #anchor into a Markdown file matches a heading (GitHub slug rules) or an HTML id. Use when asked to check, verify or fix links in a README or docs, or after editing, moving or renaming Markdown files or headings. Deterministic and offline; does not fetch external URLs.
 author: Achilleas Voutsas
-version: 0.6.1
+version: 0.6.2
 ---
 
 # Check links
