@@ -159,6 +159,11 @@ A generator's own class name is a shortcut when the page has one, for example Do
 which §2's noise check catches; too narrow silently drops content, which it does not — so confirm the
 last section of the page survived.
 
+**When no node holds the article without chrome**, give defuddle the page URL instead:
+`defuddle parse <url> --md --frontmatter > "<dest>.md"`. With a URL, defuddle fetches the page,
+resolves relative links and writes `source:` itself. Run §2's checks on its output as usual
+(evidence: [references/evidence.md](references/evidence.md)).
+
 ### Do not use WebFetch for this
 
 WebFetch paraphrases the source through its own small model **even under an explicit "verbatim" instruction**. That fails §2 outright. The extractor route puts no model in the loop at all (evidence: [references/evidence.md](references/evidence.md)).

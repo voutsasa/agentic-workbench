@@ -110,7 +110,7 @@ The order is deliberate — understand the method before touching the tooling.
 |---|---|---|---|
 | **1** | [Understanding Spec-Driven-Development: Kiro, spec-kit, and Tessl](https://martinfowler.com/articles/exploring-gen-ai/sdd-3-tools.html) | 1h | Pick your level — spec-first, spec-anchored, or spec-as-source. Write down which, and why. |
 | **2–3** | [github/spec-kit](https://github.com/github/spec-kit) + [docs](https://github.github.com/spec-kit/) | 4h | Run it end-to-end on one small **real** feature. A spec/plan/tasks triple you wrote yourself. |
-| **4** | [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) | 1.5h | List three tasks you do weekly; label each *workflow* or *agent*. Most are workflows. |
+| **4** | [Building effective agents](https://www.anthropic.com/research/building-effective-agents) | 1.5h | List three tasks you do weekly; label each *workflow* or *agent*. Most are workflows. |
 | **5** | [Claude Code best practices](https://code.claude.com/docs/en/best-practices) | 2h | A `CLAUDE.md` for one repo you actually work in. |
 
 **By the end of week 1** you can write a spec an agent can execute against, and set up a repo so an agent works well in it. That is most of the practical value.
@@ -161,10 +161,10 @@ The order is deliberate — understand the method before touching the tooling.
 
 | | Importance | Reading / tutorial |
 |---|---|---|
-| ➕ | ★★★★★ | [Building effective agents](https://www.anthropic.com/engineering/building-effective-agents) — workflows vs. agents; the foundational piece |
+| ➕ | ★★★★★ | [Building effective agents](https://www.anthropic.com/research/building-effective-agents) — workflows vs. agents; the foundational piece |
 | ✓ | ★★★★★ | [Claude Code best practices](https://code.claude.com/docs/en/best-practices) — most directly actionable item this week |
 | ✓ | ★★★★☆ | [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — current guidance; supersedes much of the two below |
-| ✓ | ★★★☆☆ | [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) — filed as background in the register |
+| ✓ | ★★★☆☆ | [Effective context engineering for AI agents](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents) — filed as background in the register |
 | ✓ | ★★★☆☆ | [Context Engineering for AI Agents: Memory vs. Compaction vs. Tool Clearing](https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools) — filed as background in the register |
 | ✓ | ★★★★☆ | [How Claude remembers your project](https://code.claude.com/docs/en/memory) — how `CLAUDE.md`, `AGENTS.md` and auto memory load; the mechanics behind this week's deliverable |
 | ✓ | ★★★★☆ | [Extend Claude Code](https://code.claude.com/docs/en/features-overview) — when to use `CLAUDE.md`, skills, subagents, hooks, MCP or plugins; Anthropic's own version of the Month 5 ladder |
@@ -180,7 +180,7 @@ The order is deliberate — understand the method before touching the tooling.
 |---|---|---|
 | ➕ | ★★★★★ | [Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices) — **the single most important document in this track** |
 | ➕ | ★★★★★ | [anthropics/skills](https://github.com/anthropics/skills) — **tutorial:** read `docx`/`pdf`/`pptx` as production reference implementations |
-| ➕ | ★★★★☆ | [Equipping agents for the real world with Agent Skills](https://www.anthropic.com/engineering/equipping-agents-for-the-real-world-with-agent-skills) — progressive disclosure, the core mechanic |
+| ➕ | ★★★★☆ | [Equipping agents for the real world with Agent Skills](https://www.anthropic.com/research/equipping-agents-for-the-real-world-with-agent-skills) — progressive disclosure, the core mechanic |
 | ✓ | ★★★★★ | [Claude Code — Skills](https://code.claude.com/docs/en/skills) — where skills actually live in the tool you use; the platform docs cover the API surface, not this |
 | ➕ | ★★★★☆ | [Claude Skills Cookbook](https://github.com/anthropics/claude-cookbooks/tree/main/skills) — **tutorial:** runnable notebooks; the guided path, without the course overhead |
 | ✓ | ★★★☆☆ | [Agent Skills](https://agentskills.io/home) — the portable open standard; thinner than Anthropic's own docs |
@@ -202,7 +202,7 @@ The order is deliberate — understand the method before touching the tooling.
 | ➕ | ★★★☆☆ | [modelcontextprotocol/python-sdk](https://github.com/modelcontextprotocol/python-sdk) — reference for when FastMCP abstracts something you need to reach under |
 | ➕ | ★★★☆☆ | [Introduction to Model Context Protocol — Anthropic Academy](https://anthropic.skilljar.com/introduction-to-model-context-protocol) — **course**, free. A guided alternative to the tutorial above |
 
-> **Spec version.** The MCP docs now track specification **2026-07-28**, which made the protocol stateless: no `initialize` handshake and no session ID. Check that the FastMCP release you install supports it before you build against the tutorial.
+> **Spec version.** The MCP docs now track specification **2026-07-28**, which made the protocol stateless: no `initialize` handshake and no session ID. FastMCP supports it from [v4.0.0](https://github.com/PrefectHQ/fastmcp/releases/tag/v4.0.0) (2026-08-31), which also keeps older clients working. Install v4.0.0 or later.
 
 **Do:** build a minimal server exposing search and read over `docs/landing-zone/`.
 **Deliverable:** ⓦ a running local MCP server, plus a written note on **where the skill/MCP boundary sits** — you will need that rule in month 4.
@@ -230,8 +230,8 @@ The order is deliberate — understand the method before touching the tooling.
 |---|---|---|
 | ➕ | ★★★★★ | [Spec-Driven Development — best practices so far (Allegro)](https://blog.allegro.tech/2026/06/spec-driven-development-best-practices.html) — field report, not vendor material; the only item here written by people who've already made the mistakes |
 | ➕ | ★★★★☆ | [Humans and Agents in Software Engineering Loops](https://martinfowler.com/articles/exploring-gen-ai/humans-and-agents.html) — where the human review points belong |
-| ➕ | ★★★★☆ | [Effective harnesses for long-running agents](https://www.anthropic.com/engineering/effective-harnesses-for-long-running-agents) |
-| ➕ | — | Close the **§5 gaps** — commit and versioning conventions (Conventional Commits, SemVer), branching and release strategy, CI pipeline definition, pre-commit hook policy, test strategy, code review policy. §5 is the layer a constitution actually rules on, and this is the month it meets real code. |
+| ➕ | ★★★★☆ | [Effective harnesses for long-running agents](https://www.anthropic.com/research/effective-harnesses-for-long-running-agents) |
+| ➕ | — | Close the **§5 gaps** — commit conventions (Conventional Commits; SemVer is already registered), branching and release strategy, CI pipeline definition, pre-commit hook policy, test strategy, code review policy. §5 is the layer a constitution actually rules on, and this is the month it meets real code. |
 | ✓ | ★★★★☆ | [User Story Mapping](https://jpattonassociates.com/story-mapping/) — requirements/user-story practice, because you are writing specs this month |
 | ✓ | ★★★☆☆ | [INVEST in Good Stories, and SMART Tasks](https://xp123.com/invest-in-good-stories-and-smart-tasks/) — the quality bar for one story |
 | ✓ | ★★★★☆ | [EARS](https://alistairmavin.com/ears/) — requirement sentence patterns; Kiro's specs use them |
@@ -250,8 +250,8 @@ The order is deliberate — understand the method before touching the tooling.
 
 | | Importance | Reading / tutorial |
 |---|---|---|
-| ➕ | ★★★★★ | [Code execution with MCP: building more efficient agents](https://www.anthropic.com/engineering/code-execution-with-mcp) — why tool-per-call stops scaling; this month's whole rationale |
-| ✓ | ★★★★★ | [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — the tool-design discipline the shared server needs |
+| ➕ | ★★★★★ | [Code execution with MCP: building more efficient agents](https://www.anthropic.com/research/code-execution-with-mcp) — why tool-per-call stops scaling; this month's whole rationale |
+| ✓ | ★★★★★ | [Writing effective tools for agents — with agents](https://www.anthropic.com/research/writing-tools-for-agents) — the tool-design discipline the shared server needs |
 | ✓ | ★★★☆☆ | [MCP specification](https://modelcontextprotocol.io/specification) — reference, not a read-through |
 | ➕ | ★★★☆☆ | [Model Context Protocol: Advanced Topics — Anthropic Academy](https://anthropic.skilljar.com/model-context-protocol-advanced-topics) — **course**, free. Follows the Week 4 introduction |
 

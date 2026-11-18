@@ -193,7 +193,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 * [Agent Skills specification](https://agentskills.io/specification) — The `SKILL.md` format: required frontmatter fields, directory layout, and progressive-disclosure rules for portable skills.
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models) — Anthropic on why newer models need fewer explicit constraints, cutting Claude Code's system prompt over 80%.
 * [The components of agent memory](https://www.anthropic.com/research/components-of-agent-memory) — Anthropic on agent memory components, evaluated, and on "dreaming": offline review of transcripts to reorganise and correct memory.
-* [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents) — Anthropic's guide to designing agent-friendly tool interfaces, refined using agents themselves.
+* [Writing effective tools for agents — with agents](https://www.anthropic.com/research/writing-tools-for-agents) — Anthropic's guide to designing agent-friendly tool interfaces, refined using agents themselves.
 * [Using Claude Code: The unreasonable effectiveness of HTML](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html) — Claude blog post on HTML as a surprisingly versatile agent output and interaction format.
 * [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview) — Anthropic's SDK for building custom agents programmatically on Claude Code's harness, in Python and TypeScript.
 * [Claude Code hooks reference](https://code.claude.com/docs/en/hooks) — Lifecycle hook events, matchers and input/output schema for enforcing rules deterministically rather than by prompt.
@@ -218,7 +218,7 @@ See [`SOURCES.md`](SOURCES.md) for the full layer definitions, register conventi
 #### Background and legacy material
 
 * [Context Engineering for AI Agents: Memory vs. Compaction vs. Tool Clearing](https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools) — Anthropic cookbook comparing strategies for managing long-running agent context windows.
-* [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents) — Anthropic engineering guide on curating and structuring what agents keep in context.
+* [Effective context engineering for AI agents](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents) — Anthropic engineering guide on curating and structuring what agents keep in context.
 
 ### 2. Workstation tooling
 

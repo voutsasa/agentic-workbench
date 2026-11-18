@@ -23,53 +23,6 @@ names its kind of evidence. Item numbers are never reused.
 
 ## Open
 
-### 66. FastMCP support for MCP spec 2026-07-28 is unchecked
-
-Type `verify` · Quality Compatibility · Impact M · Priority M · Complexity S
-
-Opened 2026-11-17. `docs/guidance/DEVELOPMENT-PLAN.md` Week 4 now warns that the MCP docs track
-spec 2026-07-28 (stateless) and tells the reader to check FastMCP support. No one has checked which
-FastMCP release supports it.
-
-**Closes when:** `artefact`: the Week 4 note names the first FastMCP version that supports
-2026-07-28, with the FastMCP changelog URL that states it, or names that no release supports it yet.
-
-### 65. Server-rendered route keeps a hidden aside on anthropic.com/research pages
-
-Type `fix` · Quality Functional suitability · Impact L · Priority L · Complexity S
-
-Opened 2026-11-17 while ingesting *The components of agent memory*. `extract_article.py` with
-`main#main-content` kept a `<div class="aside" style="visibility:hidden">` ("Related articles"), so
-the markup check gave 1. `defuddle parse <url> --md --frontmatter` gave 0 noise, the same body, and a
-`source:` field. `fetch-to-markdown`'s route table does not list defuddle with a URL argument.
-
-**Closes when:** `artefact`: `workstation/agent/skills/fetch-to-markdown/SKILL.md` names a route for
-this case (a narrower selector or defuddle by URL), with the measurement in `references/evidence.md`.
-
-### 64. Register still lists SemVer as a §5 gap
-
-Type `docs` · Quality – · Impact L · Priority L · Complexity S
-
-Opened 2026-11-17. `SOURCES.md` registers [Semantic Versioning](https://semver.org/) under *Source
-code versioning*, but its §5 gap list still reads "Commit and versioning conventions (Conventional
-Commits, SemVer)". The gap is half closed. Changing its text changes the plan's gap schedule wording.
-
-**Closes when:** `artefact`: the §5 gap line in `SOURCES.md` reads "Commit conventions (Conventional
-Commits)", or Conventional Commits is registered and the gap is deleted, with the plan's count kept equal.
-
-### 63. Anthropic `engineering/` source URLs redirect to `research/`
-
-Type `docs` · Quality Maintainability · Impact L · Priority L · Complexity S
-
-Opened 2026-11-17. `curl -sL -o /dev/null -w '%{url_effective}'` on each
-`https://www.anthropic.com/engineering/<slug>` URL in `SOURCES.md` and `DEVELOPMENT-PLAN.md` returns
-`https://www.anthropic.com/research/<slug>` with HTTP 200. The links work. A future removal of the
-redirect would break them. The register and the plan must change together, because
-`test_plan_markers.py` matches plan URLs to register URLs.
-
-**Closes when:** `command`: `grep -c 'anthropic.com/engineering/' SOURCES.md SOURCE_CATALOGUE.md docs/guidance/DEVELOPMENT-PLAN.md`
-prints 0 for each file, and the `workstation/scripts/tests` suite prints `OK`.
-
 ### 62. `check-links` has not run on Windows
 
 Type `verify` · Quality Portability · Impact L · Priority L · Complexity S

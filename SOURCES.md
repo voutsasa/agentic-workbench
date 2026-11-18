@@ -233,7 +233,7 @@ The per-project output layer: how work is specified, built, verified, and govern
 
 > Every static-analysis tool is here; almost none of the *process* an implementation constitution actually rules on.
 
-- Commit and versioning conventions (Conventional Commits, SemVer)
+- Commit conventions (Conventional Commits)
 - Branching and release strategy
 - CI pipeline definition
 - Pre-commit hook policy
@@ -254,7 +254,7 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 * [Agent Skills specification](https://agentskills.io/specification)
 * [The new rules of context engineering for Claude 5 generation models](https://claude.com/blog/the-new-rules-of-context-engineering-for-claude-5-generation-models)
 * [The components of agent memory](https://www.anthropic.com/research/components-of-agent-memory)
-* [Writing effective tools for agents — with agents](https://www.anthropic.com/engineering/writing-tools-for-agents)
+* [Writing effective tools for agents — with agents](https://www.anthropic.com/research/writing-tools-for-agents)
 * [Using Claude Code: The unreasonable effectiveness of HTML](https://claude.com/blog/using-claude-code-the-unreasonable-effectiveness-of-html)
 * [Agent SDK overview](https://code.claude.com/docs/en/agent-sdk/overview)
 * [Claude Code hooks reference](https://code.claude.com/docs/en/hooks)
@@ -279,7 +279,7 @@ Governs how the agent works, not how the system is built. Feeds the agent workin
 #### Background and legacy material
 
 * [Context Engineering for AI Agents: Memory vs. Compaction vs. Tool Clearing](https://platform.claude.com/cookbook/tool-use-context-engineering-context-engineering-tools)
-* [Effective context engineering for AI agents](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
+* [Effective context engineering for AI agents](https://www.anthropic.com/research/effective-context-engineering-for-ai-agents)
 
 ### 2. Workstation tooling
 

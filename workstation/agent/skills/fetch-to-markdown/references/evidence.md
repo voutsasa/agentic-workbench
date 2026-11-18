@@ -51,6 +51,12 @@ d2lang.com, drawio.com). Where it does not, the grep above is the answer: plantu
 in `<main id="D7">` → `main#D7`; rdi.berkeley.edu's Jekyll syllabus in `<section class="main-content">`
 → `section.main-content`.
 
+When no node excludes the chrome: anthropic.com/research pages put a hidden "Related articles"
+block, `<div class="aside" style="visibility:hidden">`, inside `main#main-content`, which is the only
+node that holds the whole article. The extractor with that selector gave markup 1. `defuddle parse
+<url> --md --frontmatter` (defuddle 0.19.6) gave markup 0, no relative links, every `h3` section
+heading, and a `source:` line. Measured on `components-of-agent-memory`, 2026-11-17.
+
 ## Do not use WebFetch
 
 Verified 2026-09-04: WebFetch paraphrases the source through its own small model **even under an
